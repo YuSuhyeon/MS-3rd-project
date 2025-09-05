@@ -1,0 +1,69 @@
+{
+  "name": "Route",
+  "type": "object",
+  "properties": {
+    "route_name": {
+      "type": "string",
+      "description": "경로 이름"
+    },
+    "start_location": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        }
+      }
+    },
+    "end_location": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        }
+      }
+    },
+    "waypoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "order": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "route_data": {
+      "type": "object",
+      "description": "카카오 API 응답 데이터"
+    },
+    "total_distance": {
+      "type": "number"
+    },
+    "total_duration": {
+      "type": "number"
+    }
+  },
+  "required": []
+}

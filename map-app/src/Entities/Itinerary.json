@@ -1,0 +1,95 @@
+{
+  "name": "Itinerary",
+  "type": "object",
+  "properties": {
+    "itinerary_name": {
+      "type": "string",
+      "description": "일정 이름"
+    },
+    "days": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "day_number": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "activities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "time": {
+                  "type": "string"
+                },
+                "duration": {
+                  "type": "number"
+                },
+                "place_name": {
+                  "type": "string"
+                },
+                "place_type": {
+                  "type": "string",
+                  "enum": [
+                    "attraction",
+                    "restaurant",
+                    "accommodation",
+                    "transport",
+                    "activity",
+                    "shopping"
+                  ]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "image_url": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "object",
+                  "properties": {
+                    "lat": {
+                      "type": "number"
+                    },
+                    "lng": {
+                      "type": "number"
+                    },
+                    "address": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "tips": {
+                  "type": "string"
+                },
+                "cost_estimate": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "total_days": {
+      "type": "number"
+    },
+    "destination": {
+      "type": "string"
+    },
+    "travel_style": {
+      "type": "string"
+    },
+    "estimated_cost": {
+      "type": "number"
+    }
+  },
+  "required": []
+}

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 서울 여행 페르소나</title>
+    <style>
+      body {
+        font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+        background: #f8f9fa;
+        color: #333;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 840px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 32px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      h1 {
+        text-align: center;
+        color: #0056b3;
+        font-size: 2.2em;
+        margin: 0 0 8px;
+      }
+      h2 {
+        text-align: center;
+        color: #555;
+        font-size: 1.05em;
+        font-weight: 400;
+        margin: 0 0 28px;
+      }
+      .question {
+        margin-bottom: 26px;
+      }
+      .question h3 {
+        margin: 0 0 12px;
+        color: #333;
+        border-left: 4px solid #007bff;
+        padding-left: 10px;
+        font-size: 1.05em;
+      }
+      .options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .options input[type="radio"],
+      .options input[type="checkbox"] {
+        display: none;
+      }
+      .options label {
+        background: #e9ecef;
+        border: 1px solid #dee2e6;
+        padding: 12px 18px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: 0.2s;
+        user-select: none;
+      }
+      .options input:checked + label {
+        background: #007bff;
+        color: #fff;
+        border-color: #0056b3;
+        font-weight: 600;
+      }
+      .submit-btn {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        font-size: 1.15em;
+        font-weight: 700;
+        color: #fff;
+        background: #28a745;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 32px;
+      }
+      .submit-btn:hover {
+        background: #218838;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AI 서울 여행 페르소나</h1>
+      <h2>5개의 질문에 답하고 맞춤 추천을 받아보세요</h2>
+
+      <form action="/analyze" method="post" id="personaForm">
+        <!-- Step 1: 방문 경험 -->
+        <div class="question">
+          <h3>Step 1/5: 서울 방문은 몇 번째인가요?</h3>
+          <div class="options">
+            <input
+              type="radio"
+              id="rvit1"
+              name="RVIT_1"
+              value="1"
+              data-group="RVIT"
+            />
+            <label for="rvit1">첫 방문</label>
+
+            <input
+              type="radio"
+              id="rvit2"
+              name="RVIT_2"
+              value="1"
+              data-group="RVIT"
+            />
+            <label for="rvit2">2번째</label>
+
+            <input
+              type="radio"
+              id="rvit3"
+              name="RVIT_3"
+              value="1"
+              data-group="RVIT"
+            />
+            <label for="rvit3">3번째</label>
+
+            <input
+              type="radio"
+              id="rvit4"
+              name="RVIT_4"
+              value="1"
+              data-group="RVIT"
+            />
+            <label for="rvit4">4회 이상</label>
+          </div>
+        </div>
+
+        <!-- Step 2: 여행 목적 -->
+        <div class="question">
+          <h3>Step 2/5: 이번 여행의 주된 목적은 무엇인가요?</h3>
+          <div class="options">
+            <input
+              type="radio"
+              id="q1_1"
+              name="Q1_1"
+              value="1"
+              data-group="Q1"
+            />
+            <label for="q1_1">관광/휴양 & 여행</label>
+
+            <input
+              type="radio"
+              id="q1_2"
+              name="Q1_2"
+              value="1"
+              data-group="Q1"
+            />
+            <label for="q1_2">친구/가족 만나기</label>
+          </div>
+        </div>
+
+        <!-- Step 3: 관심 활동 (복수 선택 최대 3개) -->
+        <div class="question">
+          <h3>Step 3/5: 어떤 활동에 관심이 있나요? (최대 3개)</h3>
+          <div class="options" id="activity-options">
+            <input
+              type="checkbox"
+              id="act_shop"
+              name="considered_쇼핑"
+              value="1"
+            />
+            <label for="act_shop">쇼핑</label>
+
+            <input
+              type="checkbox"
+              id="act_food"
+              name="considered_맛집/카페"
+              value="1"
+            />
+            <label for="act_food">맛집/카페</label>
+
+            <input
+              type="checkbox"
+              id="act_kpop"
+              name="considered_KPOP/한류체험"
+              value="1"
+            />
+            <label for="act_kpop">K-POP/한류</label>
+
+            <input
+              type="checkbox"
+              id="act_history"
+              name="considered_고궁/역사유적지"
+              value="1"
+            />
+            <label for="act_history">고궁/역사유적지</label>
+
+            <input
+              type="checkbox"
+              id="act_nature"
+              name="considered_자연경관감상"
+              value="1"
+            />
+            <label for="act_nature">자연/힐링</label>
+
+            <input
+              type="checkbox"
+              id="act_museum"
+              name="considered_박물관/전시관"
+              value="1"
+            />
+            <label for="act_museum">박물관/전시</label>
+          </div>
+        </div>
+
+        <!-- Step 4: 체류 기간 -->
+        <div class="question">
+          <h3>Step 4/5: 아마도 머무를 일정은?</h3>
+          <div class="options">
+            <input
+              type="radio"
+              id="rhap_3"
+              name="R체HAP_3"
+              value="1"
+              data-group="RHAP"
+            />
+            <label for="rhap_3">8–10일</label>
+
+            <input
+              type="radio"
+              id="rhap_5"
+              name="R체HAP_5"
+              value="1"
+              data-group="RHAP"
+            />
+            <label for="rhap_5">15–30일</label>
+
+            <input
+              type="radio"
+              id="rhap_11"
+              name="R체HAP_11"
+              value="1"
+              data-group="RHAP"
+            />
+            <label for="rhap_11">1개월 이상</label>
+          </div>
+        </div>
+
+        <!-- Step 5: 예산 -->
+        <div class="question">
+          <h3>Step 5/5: 1인당 예상 경비 규모는? (항공료 제외)</h3>
+          <div class="options">
+            <input
+              type="radio"
+              id="ctot_1"
+              name="C총액1인TOT2_1"
+              value="1"
+              data-group="CTOT2"
+            />
+            <label for="ctot_1">~ $1000</label>
+
+            <input
+              type="radio"
+              id="ctot_2"
+              name="C총액1인TOT2_2"
+              value="1"
+              data-group="CTOT2"
+            />
+            <label for="ctot_2">$1000 ~ $2000</label>
+
+            <input
+              type="radio"
+              id="ctot_3"
+              name="C총액1인TOT2_3"
+              value="1"
+              data-group="CTOT2"
+            />
+            <label for="ctot_3">$2000 ~ $3000</label>
+
+            <input
+              type="radio"
+              id="ctot_4"
+              name="C총액1인TOT2_4"
+              value="1"
+              data-group="CTOT2"
+            />
+            <label for="ctot_4">$3000 ~ $5000</label>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">AI 페르소나 분석하기</button>
+      </form>
+    </div>
+
+    <script>
+      // Radio: allow toggle-off and enforce single choice per logical group
+      document
+        .querySelectorAll('input[type="radio"][data-group]')
+        .forEach((rb) => {
+          rb.addEventListener("mousedown", function () {
+            this.dataset.wasChecked = this.checked ? "true" : "false";
+          });
+          rb.addEventListener("click", function () {
+            const group = this.getAttribute("data-group");
+            const wasChecked = this.dataset.wasChecked === "true";
+            if (wasChecked) {
+              this.checked = false; // toggle off
+              return;
+            }
+            // ensure single selection in same data-group
+            document
+              .querySelectorAll(
+                'input[type="radio"][data-group="' + group + '"]'
+              )
+              .forEach((other) => {
+                if (other !== this) other.checked = false;
+              });
+          });
+        });
+
+      // Checkboxes: limit to max 3 selections
+      const checkboxGroup = document.getElementById("activity-options");
+      if (checkboxGroup) {
+        const maxSel = 3;
+        checkboxGroup
+          .querySelectorAll('input[type="checkbox"]')
+          .forEach((cb) => {
+            cb.addEventListener("click", function () {
+              const count = checkboxGroup.querySelectorAll(
+                'input[type="checkbox"]:checked'
+              ).length;
+              if (count > maxSel) {
+                alert(`관심 활동은 최대 ${maxSel}개까지 선택 가능합니다.`);
+                this.checked = false;
+              }
+            });
+          });
+      }
+
+      // Simple validation: require one answer for each radio group
+      const form = document.getElementById("personaForm");
+      form.addEventListener("submit", function (e) {
+        const requiredGroups = ["RVIT", "Q1", "RHAP", "CTOT2"];
+        for (const g of requiredGroups) {
+          const anyChecked = Array.from(
+            document.querySelectorAll(
+              'input[type="radio"][data-group="' + g + '"]'
+            )
+          ).some((rb) => rb.checked);
+          if (!anyChecked) {
+            alert("모든 단계의 선택을 완료해 주세요.");
+            e.preventDefault();
+            return;
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

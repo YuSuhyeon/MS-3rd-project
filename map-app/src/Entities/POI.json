@@ -1,0 +1,73 @@
+{
+  "name": "POI",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "장소 이름"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "tourist_attraction",
+        "restaurant",
+        "accommodation",
+        "shopping",
+        "entertainment",
+        "culture",
+        "nature"
+      ],
+      "description": "장소 카테고리"
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        },
+        "address": {
+          "type": "string"
+        }
+      }
+    },
+    "description": {
+      "type": "string",
+      "description": "장소 설명"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "장소 이미지"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "장소 태그"
+    },
+    "opening_hours": {
+      "type": "string",
+      "description": "운영시간"
+    },
+    "contact_info": {
+      "type": "object",
+      "properties": {
+        "phone": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": []
+}
