@@ -1,7 +1,53 @@
+import os
+import requests
+from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from ..services import persona_service , tourism_service
 
 api_bp = Blueprint('api', __name__)
+
+
+load_dotenv()
+AZURE_VISION_ENDPOINT = os.getenv('AZURE_VISION_ENDPOINT')
+AZURE_VISION_KEY = os.getenv('AZURE_VISION_KEY')
+# Azure Computer Vision OCR API
+@api_bp.route('/vision/ocr', methods=['POST'])
+def ocr_image():
+    api_version = '2024-02-01'
+    features = 'caption,read'
+    model_version = 'latest'
+    language = 'en'
+
+    if 'image_file' in request.files:
+        image_file = request.files['image_file']
+        vision_url = f"{AZURE_VISION_ENDPOINT}/computervision/imageanalysis:analyze?features={features}&model-version={model_version}&language={language}&api-version={api_version}"
+        headers = {
+            'Ocp-Apim-Subscription-Key': AZURE_VISION_KEY,
+            'Content-Type': 'application/octet-stream'
+        }
+        response = requests.post(
+            vision_url,
+            headers=headers,
+            data=image_file.read()
+        )
+        return jsonify(response.json())
+
+    data = request.get_json()
+    image_url = data.get('image_url') if data else None
+    if image_url:
+        vision_url = f"{AZURE_VISION_ENDPOINT}/computervision/imageanalysis:analyze?features={features}&model-version={model_version}&language={language}&api-version={api_version}"
+        headers = {
+            'Ocp-Apim-Subscription-Key': AZURE_VISION_KEY,
+            'Content-Type': 'application/json'
+        }
+        response = requests.post(
+            vision_url,
+            headers=headers,
+            json={'url': image_url}
+        )
+        return jsonify(response.json())
+
+    return jsonify({'error': 'No image_file or image_url provided'}), 400
 
 #페르소나 분석에 필요한 질문 목록을 반환하는 API
 @api_bp.route('/persona/questions', methods=['GET'])
