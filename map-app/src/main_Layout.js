@@ -56,6 +56,11 @@ const navigationItems = [
     url: "/vision-ocr",
     icon: Eye,
   },
+  {
+    title: "커뮤니티",
+    url: createPageUrl("CommunityMain"),
+    icon: Compass,
+  },
 ];
 
 export default function Layout({ children, currentPageName }) {

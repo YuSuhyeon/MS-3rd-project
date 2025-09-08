@@ -4,8 +4,7 @@ from app import create_app
 # create_app() 함수에서 이미 모든 blueprint가 등록됩니다
 app = create_app()
 
-# 이 줄을 제거하세요 - 중복 등록입니다!
-# app.register_blueprint(api_bp, url_prefix='/api')
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', '5001'))

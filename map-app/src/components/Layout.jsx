@@ -8,7 +8,11 @@ const navigationItems = [
   { title: "일정 플래너", url: "/itinerary", icon: null },
   { title: "경로 편집", url: "/directions", icon: null },
   { title: "AI 도슨트", url: "/docent", icon: null },
+<<<<<<< HEAD
   { title: "AI Vision OCR", url: "/vision-ocr", icon: null },
+=======
+  { title: "커뮤니티", url: "/community", icon: null },
+>>>>>>> 14780b024435b7b891a1b4bcd9cd560bcd1f11c1
 ];
 
 export default function Layout({ children }) {
