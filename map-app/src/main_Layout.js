@@ -24,7 +24,7 @@ const navigationItems = [
     icon: Sparkles,
   },
   {
-    title: "결과 대시보드", 
+    title: "결과 대시보드",
     url: createPageUrl("ResultDashboard"),
     icon: Home,
   },
@@ -43,6 +43,11 @@ const navigationItems = [
     url: createPageUrl("DocentMantine"),
     icon: Compass,
   },
+  {
+    title: "커뮤니티",
+    url: createPageUrl("CommunityMain"),
+    icon: Compass,
+  },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -58,12 +63,14 @@ export default function Layout({ children, currentPageName }) {
                 <MapPin className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="font-bold text-gray-900 text-lg">AI 투어 플래너</h2>
+                <h2 className="font-bold text-gray-900 text-lg">
+                  AI 투어 플래너
+                </h2>
                 <p className="text-xs text-gray-500">맞춤형 여행 계획 서비스</p>
               </div>
             </div>
           </SidebarHeader>
-          
+
           <SidebarContent className="p-3">
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">
@@ -73,13 +80,18 @@ export default function Layout({ children, currentPageName }) {
                 <SidebarMenu>
                   {navigationItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
+                      <SidebarMenuButton
+                        asChild
                         className={`hover:bg-pink-50 hover:text-pink-700 transition-all duration-200 rounded-xl mb-1 ${
-                          location.pathname === item.url ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg' : ''
+                          location.pathname === item.url
+                            ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                            : ""
                         }`}
                       >
-                        <Link to={item.url} className="flex items-center gap-3 px-4 py-3">
+                        <Link
+                          to={item.url}
+                          className="flex items-center gap-3 px-4 py-3"
+                        >
                           <item.icon className="w-5 h-5" />
                           <span className="font-medium">{item.title}</span>
                         </Link>
@@ -97,8 +109,12 @@ export default function Layout({ children, currentPageName }) {
                 <span className="text-white font-medium text-sm">U</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm truncate">여행자</p>
-                <p className="text-xs text-gray-500 truncate">AI와 함께 여행 계획</p>
+                <p className="font-medium text-gray-900 text-sm truncate">
+                  여행자
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  AI와 함께 여행 계획
+                </p>
               </div>
             </div>
           </SidebarFooter>
@@ -112,9 +128,7 @@ export default function Layout({ children, currentPageName }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto">
-            {children}
-          </div>
+          <div className="flex-1 overflow-auto">{children}</div>
         </main>
       </div>
     </SidebarProvider>

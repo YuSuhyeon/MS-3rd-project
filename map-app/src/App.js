@@ -1,13 +1,20 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './pages/Home';
-import ResultDashboard from './pages/ResultDashboard';
-import ItineraryView from './pages/ItineraryView';
-import DocentMantine from './pages/DocentMantine';
-import DirectionsMantine from './pages/DirectionsMantine';
-import Landing from './pages/Landing';
-import './styles/layout.css';
+import React from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import Layout from "./components/Layout";
+import Home from "./pages/Home";
+import ResultDashboard from "./pages/ResultDashboard";
+import ItineraryView from "./pages/ItineraryView";
+import DocentMantine from "./pages/DocentMantine";
+import DirectionsMantine from "./pages/DirectionsMantine";
+import CommunityMain from "./pages/CommunityMain";
+import Landing from "./pages/Landing";
+import "./styles/layout.css";
 
 export default function App() {
   return (
@@ -21,7 +28,7 @@ function AppRoutes() {
   const location = useLocation();
 
   // Landing page without app layout
-  if (location.pathname === '/') {
+  if (location.pathname === "/") {
     return <Landing />;
   }
 
@@ -34,6 +41,7 @@ function AppRoutes() {
         <Route path="/docent" element={<DocentMantine />} />
         <Route path="/directions" element={<DirectionsMantine />} />
         <Route path="/itinerary" element={<ItineraryView />} />
+        <Route path="/community" element={<CommunityMain />} />
         <Route path="*" element={<Navigate to="/persona" replace />} />
       </Routes>
     </Layout>
