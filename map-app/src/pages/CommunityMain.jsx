@@ -31,24 +31,24 @@ import {
 const mockGoods = [
   {
     id: 1,
-    title: "NewJeans 'ETA' 뮤비 촬영지 투어",
+    title: "Squid Game 촬영지 투어",
     location: "강남역, 홍대, 명동",
     image:
-      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvgS_upvUlNBu-lYY0zA_pjG8TvxnAgX2sEA&s",
     price: "₩35,000",
     category: "location",
     kpopGroup: "NewJeans",
-    description: "'ETA' 뮤비에 등장한 서울의 핫플레이스들을 직접 방문해보세요!",
-    tags: ["뮤비촬영지", "서울", "핫플"],
+    description: "오징어게임에 등장한 서울의 핫플레이스들을 직접 방문해보세요!",
+    tags: ["뮤비촬영지", "서울", "squid game"],
     rating: 4.8,
     reviews: 247,
   },
   {
     id: 2,
-    title: "IVE 'LOVE DIVE' 아크릴 스탠드",
+    title: "IVE 'XOXZ' 아크릴 스탠드",
     location: "온라인 배송",
     image:
-      "https://images.unsplash.com/photo-1613376023733-0a73315d9b06?w=400&h=300&fit=crop",
+      "https://www.chosun.com/resizer/v2/WEX5U35HPIURB6TVS47V45FXRM.jpg?auth=bf6b1a51face01ab138fbf0ffee75db210edf897483487b15fb05f6f1fd8f41b&width=616",
     price: "₩15,000",
     category: "goods",
     kpopGroup: "IVE",
@@ -59,14 +59,14 @@ const mockGoods = [
   },
   {
     id: 3,
-    title: "SEVENTEEN 'God of Music' 댄스 클래스",
+    title: "BTS 댄스 클래스",
     location: "홍대 댄스 스튜디오",
     image:
-      "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400&h=300&fit=crop",
+      "https://www.msd-korea.com/wp-content/uploads/sites/30/2023/08/%EC%B0%B8%EA%B3%A0%EC%82%AC%EC%A7%841-%ED%95%9C%EA%B5%ADMSD-%EA%B7%B8%EB%A3%B9-%EC%84%B8%EB%B8%90%ED%8B%B4-HPV-%EC%98%88%EB%B0%A9-%EC%BA%A0%ED%8E%98%EC%9D%B8-%EA%B8%80%EB%A1%9C%EB%B2%8C-%EC%97%A0%EB%B2%A0%EC%84%9C%EB%8D%94%EB%A1%9C-%EC%84%A0%EC%A0%95.jpg",
     price: "₩25,000",
     category: "experience",
-    kpopGroup: "SEVENTEEN",
-    description: "전문 댄서와 함께 배우는 'God of Music' 안무 클래스",
+    kpopGroup: "BTS",
+    description: "스우파 전문 댄서와 함께 배우는 안무 클래스",
     tags: ["댄스", "체험", "홍대"],
     rating: 4.7,
     reviews: 89,
@@ -76,7 +76,7 @@ const mockGoods = [
     title: "케이팝데몬헌터스 먹방 투어",
     location: "케이팝 데몬헌터스, 먹방",
     image:
-      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLiWcK_wdHqPO36POy7O1MfKRO8XSs-EEzbA&s",
     price: "₩89,000",
     category: "location",
     kpopGroup: "기타",
