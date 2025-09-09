@@ -16,7 +16,6 @@ import Landing from "./pages/Landing";
 import "./styles/layout.css";
 import VisionOCR from "./pages/VisionOCR";
 import CommunityMain from "./pages/CommunityMain";
-import Landing from "./pages/Landing";
 import "./styles/layout.css";
 
 export default function App() {

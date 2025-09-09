@@ -2,7 +2,8 @@ import os
 import requests
 from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
-from ..services import persona_service , tourism_service
+from ..services import persona_service
+# from ..services import persona_service , tourism_service
 
 api_bp = Blueprint('api', __name__)
 

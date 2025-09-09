@@ -1,129 +1,120 @@
 import React, { useState, useEffect } from "react";
-import { FileImage, Loader2, AlertCircle } from "lucide-react";
+import {
+  FileImage,
+  Loader2,
+  AlertCircle,
+  Star,
+  Eye,
+  Bot,
+  Upload,
+  Sparkles,
+  Coffee,
+  CheckCircle,
+  Zap,
+  Target,
+} from "lucide-react";
 import Papa from "papaparse";
 
 function VisionOCR() {
+  // 메뉴 정보 JSON 불러오기
+  useEffect(() => {
+    fetch("/merged_annotations_merged.json")
+      .then((res) => res.json())
+      .then((data) => setMenuData(data));
+  }, []);
+  const canvasRef = React.useRef(null);
+  const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
+
+  // 바운딩 박스 클릭 시 메뉴 정보 매칭
+  function handleBoxClick(line) {
+    // OCR 텍스트에서 메뉴 정보 찾기
+    const menuInfo = fuzzyFindMenuInfo(line.text, menuData);
+    const foodDesc = fuzzyFindFoodDesc(line.text, foodDescData);
+    if (menuInfo && foodDesc) {
+      setMatchedMenuInfo({ json: menuInfo, csv: foodDesc });
+    } else {
+      setMatchedMenuInfo(null);
+    }
+    setSelectedBox(line);
+  }
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [menuData, setMenuData] = useState([]);
-  const [menuList, setMenuList] = useState([]); // OCR에서 추출한 메뉴+가격 리스트
-  const [selectedMenuIdx, setSelectedMenuIdx] = useState(null);
-  const [selectedMenu, setSelectedMenu] = useState(null); // 클릭한 메뉴
-  const [selectedMenuInfo, setSelectedMenuInfo] = useState(null); // json에서 찾은 메뉴 정보
-  const [selectedAiAnswer, setSelectedAiAnswer] = useState(""); // 선택 메뉴 AI 답변
-  const [selectedAiLoading, setSelectedAiLoading] = useState(false);
-  const [aiMenuList, setAiMenuList] = useState("");
-  const [aiMenuListLoading, setAiMenuListLoading] = useState(false);
   const [foodDescData, setFoodDescData] = useState([]);
-  const [selectedFoodDesc, setSelectedFoodDesc] = useState(""); // 선택 메뉴 음식 설명
-
-  // 메뉴 데이터 불러오기
+  const [selectedBox, setSelectedBox] = useState(null); // 클릭한 바운딩 박스 정보
+  const [matchedMenuInfo, setMatchedMenuInfo] = useState(null); // JSON/CSV 모두 일치하는 메뉴 정보
+  // OCR 바운딩 박스(라인 단위)와 텍스트 그리기
   useEffect(() => {
-    fetch("/merged_annotations.json")
-      .then((res) => res.json())
-      .then((data) => setMenuData(data));
-  }, []);
-
-  // OCR 결과에서 메뉴명과 가격 추출 (AI 결과로만 리스트 세팅, OCR 파싱 결과는 UI에 사용하지 않음)
-  useEffect(() => {
-    // OCR 결과가 도착해도 menuList를 세팅하지 않음
-  }, [result]);
-
-  // AI 메뉴 리스트를 파싱해서 menuList로 변환
-  useEffect(() => {
-    if (aiMenuList) {
-      // 줄 단위로 파싱: "메뉴명 - 가격" 또는 "메뉴명: 가격" 등
-      const lines = aiMenuList
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter(Boolean);
-      const aiParsed = lines
-        .map((line) => {
-          // "메뉴명 - 가격" 또는 "메뉴명: 가격" 또는 "메뉴명 가격"
-          const match = line.match(/(.+?)[-: ]+([0-9,]+)\s*원?/);
-          if (match) {
-            return {
-              name: match[1].trim(),
-              price: match[2].replace(/,/g, ""),
-            };
-          }
-          return null;
-        })
-        .filter(Boolean);
-      if (aiParsed.length > 0) {
-        setMenuList(aiParsed);
-      }
-    }
-  }, [aiMenuList]);
-
-  // OCR 전체 텍스트를 AI에게 메뉴/가격 리스트로 정리 요청
-  const handleAiMenuList = async () => {
-    if (!result || !result.readResult) return;
-    setAiMenuListLoading(true);
-    setAiMenuList("");
-    // 모든 라인 합치기
-    const lines = result.readResult.blocks.flatMap((block) =>
-      block.lines.map((line) => line.text)
-    );
-    const ocrText = lines.join("\n");
-    const prompt = `아래는 음식점 메뉴판에서 OCR로 추출한 텍스트입니다. 이 텍스트에서 메뉴명과 가격을 정확히 한 쌍씩 리스트로 정리해 주세요.\n- 괄호, 숫자, 옵션 등은 메뉴명에 포함시키고, 가격은 숫자만 추출해 주세요.\n- 예시: 메뉴명 - 가격\n[텍스트]\n${ocrText}`;
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_AZURE_OPENAI_ENDPOINT}/openai/deployments/${process.env.REACT_APP_AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=${process.env.REACT_APP_AZURE_OPENAI_API_VERSION}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "api-key": process.env.REACT_APP_AZURE_OPENAI_KEY,
-          },
-          body: JSON.stringify({
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a helpful assistant for extracting menu and price from OCR text.",
+    if (!result || !preview || !result.readResult || !result.readResult.blocks)
+      return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const img = new window.Image();
+    img.src = preview;
+    img.onload = () => {
+      // 원본 이미지 크기
+      canvas.width = result.metadata?.width || img.width;
+      canvas.height = result.metadata?.height || img.height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#7B2FF2";
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "rgba(123,47,242,0.2)";
+      // 각 블록, 라인별 바운딩 박스와 텍스트
+      result.readResult.blocks.forEach((block) => {
+        block.lines.forEach((line) => {
+          const poly = line.boundingPolygon;
+          if (poly && poly.length === 4) {
+            // 바운딩 박스
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(poly[0].x, poly[0].y);
+            for (let i = 1; i < poly.length; i++) {
+              ctx.lineTo(poly[i].x, poly[i].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            ctx.globalAlpha = 0.2;
+            ctx.fillStyle = "#7B2FF2";
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+            // 중앙 좌표 계산
+            const center = poly.reduce(
+              (acc, p) => {
+                acc.x += p.x;
+                acc.y += p.y;
+                return acc;
               },
-              { role: "user", content: prompt },
-            ],
-            max_tokens: 500,
-          }),
-        }
-      );
-      const data = await response.json();
-      setAiMenuList(
-        data.choices?.[0]?.message?.content ||
-          "AI 메뉴 리스트를 받아오지 못했습니다."
-      );
-    } catch (err) {
-      setAiMenuList("AI 메뉴 리스트 요청 중 오류가 발생했습니다.");
-    } finally {
-      setAiMenuListLoading(false);
-    }
-  };
-
-  // OCR 결과가 있을 때 메뉴 리스트가 너무 적거나 엉뚱하면 자동으로 AI 메뉴 리스트 요청
-  useEffect(() => {
-    if (result && result.readResult) {
-      handleAiMenuList(); // OCR 결과가 있으면 무조건 AI 메뉴 리스트 요청
-    }
-    // eslint-disable-next-line
-  }, [result]);
+              { x: 0, y: 0 }
+            );
+            center.x /= poly.length;
+            center.y /= poly.length;
+            // 텍스트 표시 (라인 전체)
+            ctx.font = "bold 16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 3;
+            ctx.strokeText(line.text, center.x, center.y);
+            ctx.fillStyle = "#222";
+            ctx.fillText(line.text, center.x, center.y);
+            ctx.restore();
+          }
+        });
+      });
+    };
+  }, [result, preview]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setImageFile(file);
     setError(null);
     setResult(null);
-    setMenuList([]); // 이미지 변경 시 메뉴 리스트 초기화
-    setSelectedMenuIdx(null); // 선택 메뉴 초기화
-    setSelectedMenu(null);
-    setSelectedMenuInfo(null);
-    setSelectedAiAnswer("");
-    setSelectedAiLoading(false);
-    setSelectedFoodDesc("");
+    // 삭제: 메뉴 관련 상태 초기화 (더 이상 사용하지 않음)
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setPreview(reader.result);
@@ -234,234 +225,293 @@ function VisionOCR() {
     return null;
   }
 
-  // 메뉴 클릭 시 메뉴 정보와 AI 답변/음식 설명 생성
-  const handleMenuClick = async (menu, idx) => {
-    setSelectedMenuIdx(idx);
-    setSelectedMenu(menu);
-    setSelectedAiAnswer("");
-    setSelectedAiLoading(false);
-    setSelectedFoodDesc("");
-    // json에서 메뉴 정보 찾기 (부분 일치 허용)
-    const found = fuzzyFindMenuInfo(menu.name, menuData);
-    setSelectedMenuInfo(found ? found : null);
-    // CSV 음식 설명 찾기 (부분 일치 허용)
-    const foodDescRow = fuzzyFindFoodDesc(menu.name, foodDescData);
-    if (foodDescRow) {
-      setSelectedFoodDesc(foodDescRow);
-    } else {
-      setSelectedFoodDesc("");
-    }
-    // 기존 생성형 AI 답변 로직 (환각 방지: CSV에 없으면만 실행)
-    if (!foodDescRow) {
-      setSelectedAiLoading(true);
-      const prompt = `다음은 한국 음식점의 메뉴 정보입니다.\n메뉴명: ${
-        menu.name
-      }\n가격: ${menu.price}\n$${
-        found
-          ? `성분: ${
-              found["ingredients.ko"]?.join(", ") || "정보 없음"
-            }\n알러지: ${found.allergy?.join(", ") || "정보 없음"}`
-          : ""
-      }\n이 메뉴를 외국인에게 친절하게 설명해 주세요. (영어로)`;
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_AZURE_OPENAI_ENDPOINT}/openai/deployments/${process.env.REACT_APP_AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=${process.env.REACT_APP_AZURE_OPENAI_API_VERSION}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "api-key": process.env.REACT_APP_AZURE_OPENAI_KEY,
-            },
-            body: JSON.stringify({
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    "You are a helpful assistant for foreigners in Korea.",
-                },
-                { role: "user", content: prompt },
-              ],
-              max_tokens: 500,
-            }),
-          }
-        );
-        const data = await response.json();
-        setSelectedAiAnswer(
-          data.choices?.[0]?.message?.content || "답변을 받아오지 못했습니다."
-        );
-      } catch (err) {
-        setSelectedAiAnswer("AI 설명 요청 중 오류가 발생했습니다.");
-      } finally {
-        setSelectedAiLoading(false);
-      }
-    }
-  };
+  // ...기존 메뉴 클릭/AI 설명 함수 제거...
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-0">
-      <div className="w-full max-w-none mx-0">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <FileImage className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-12 text-center">
+          <div className="inline-flex items-center gap-4 mb-6">
+            <div className="relative">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/25">
+                <Eye className="w-8 h-8 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center">
+                <Zap className="w-3 h-3 text-white" />
+              </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">AI Vision OCR</h1>
+            <div className="text-left">
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                AI Vision OCR
+              </h1>
+              <p className="text-slate-600 text-lg font-medium">
+                지능형 텍스트 인식 및 메뉴 정보 분석
+              </p>
+            </div>
           </div>
-          <p className="text-gray-600 text-lg">
-            이미지를 업로드하면 AI가 텍스트를 추출해줍니다
+          <p className="text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            이미지를 업로드하면 AI가 텍스트를 추출하고, 바운딩 박스를 클릭하면
+            상세한 메뉴 정보를 제공합니다
           </p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full px-4 lg:px-0">
-          {/* 이미지 업로드/분석 칸 */}
-          <div className="col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                이미지 업로드
-              </h2>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="mb-2"
-              />
-              <button
-                onClick={handleAnalyze}
-                disabled={loading || !imageFile}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="animate-spin w-4 h-4" /> 분석 중...
-                  </span>
-                ) : (
-                  "OCR 분석"
-                )}
-              </button>
-              {error && (
-                <div className="mt-2 text-red-600 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" /> {error}
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Upload className="w-6 h-6 text-white" />
                 </div>
-              )}
-              {preview && (
-                <div className="mt-4">
-                  <img
-                    src={preview}
-                    alt="preview"
-                    className="max-w-full max-h-48 rounded border"
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">
+                    이미지 업로드
+                  </h2>
+                  <p className="text-slate-500 text-sm">
+                    JPG, PNG 파일을 지원합니다
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="relative group">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="block w-full text-sm text-slate-600 file:mr-4 file:py-4 file:px-8 file:rounded-2xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-blue-50 file:to-indigo-50 file:text-blue-700 hover:file:from-blue-100 hover:file:to-indigo-100 file:transition-all file:duration-300 file:shadow-lg hover:file:shadow-xl file:cursor-pointer cursor-pointer"
                   />
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* 메뉴 리스트 칸 */}
-          <div className="col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                OCR 메뉴/가격 리스트
-              </h2>
-              {menuList.length === 0 ? (
-                <p className="text-gray-500">
-                  AI가 정리한 메뉴/가격 리스트가 없습니다.
-                </p>
-              ) : (
-                <ul className="divide-y divide-gray-200">
-                  {menuList.map((menu, idx) => (
-                    <li
-                      key={idx}
-                      className={`py-3 cursor-pointer hover:bg-blue-50 px-2 rounded ${
-                        selectedMenuIdx === idx
-                          ? "ring-2 ring-blue-400 bg-blue-100"
-                          : ""
-                      }`}
-                      onClick={() => handleMenuClick(menu, idx)}
-                    >
-                      <span className="font-bold text-blue-700">
-                        {menu.name}
-                      </span>
-                      <span className="ml-2 text-gray-600">₩{menu.price}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {/* AI 메뉴 리스트 결과 표시 */}
-              {aiMenuListLoading && (
-                <div className="mt-4 text-purple-600">
-                  AI가 메뉴/가격 리스트를 정리 중...
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 선택 메뉴 정보 + AI 답변 칸 */}
-          <div className="col-span-1">
-            {selectedMenu && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-bold text-purple-700 mb-2">
-                  선택한 메뉴 정보 및 AI 설명
-                </h3>
-                <div className="mb-4">
-                  <div>
-                    <strong>메뉴명:</strong> {selectedMenu.name}
-                  </div>
-                  <div>
-                    <strong>가격:</strong> ₩{selectedMenu.price}
-                  </div>
-                  {selectedMenuInfo && (
-                    <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-gray-900">
-                      <strong>추가 메뉴 정보 (JSON):</strong>
-                      <div className="mt-2">
-                        <div>
-                          <strong>메뉴명:</strong> {selectedMenuInfo.ko}
-                        </div>
-                        <div>
-                          <strong>성분:</strong>{" "}
-                          {selectedMenuInfo["ingredients.ko"]?.join(", ") ||
-                            "정보 없음"}
-                        </div>
-                        <div>
-                          <strong>알러지:</strong>{" "}
-                          {selectedMenuInfo.allergy?.join(", ") || "정보 없음"}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {/* 음식 설명 별도 표시 */}
-                {selectedFoodDesc && typeof selectedFoodDesc === "object" && (
-                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-gray-900">
-                    <strong>공식 음식 설명 (CSV):</strong>
-                    <div className="mt-2">
-                      <div>
-                        <strong>음식명:</strong> {selectedFoodDesc["음식명"]}
-                      </div>
-                      <div>
-                        <strong>영문명:</strong> {selectedFoodDesc["영문"]}
-                      </div>
-                      <div className="mt-2 whitespace-pre-line">
-                        {selectedFoodDesc["음식설명"]}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div
-                  style={{
-                    maxHeight: "400px",
-                    minHeight: "120px",
-                    overflowY: "auto",
-                  }}
-                  className="bg-purple-50 border border-purple-200 rounded-lg p-4"
+                <button
+                  onClick={handleAnalyze}
+                  disabled={loading || !imageFile}
+                  className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-semibold shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 transform hover:scale-[1.02] disabled:hover:scale-100 text-lg"
                 >
-                  <strong>AI 메뉴 설명 (영어):</strong>
-                  {selectedAiLoading ? (
-                    <div className="mt-2 text-purple-600">
-                      AI 설명 생성 중...
-                    </div>
+                  {loading ? (
+                    <>
+                      <Loader2 className="animate-spin w-6 h-6" />
+                      AI 분석 중...
+                    </>
                   ) : (
-                    <div className="mt-2 whitespace-pre-line">
-                      {selectedAiAnswer}
-                    </div>
+                    <>
+                      <Target className="w-6 h-6" />
+                      OCR 분석 시작
+                    </>
                   )}
+                </button>
+              </div>
+
+              {error && (
+                <div className="mt-6 p-5 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-2xl animate-pulse">
+                  <div className="flex items-center gap-3 text-red-700">
+                    <AlertCircle className="w-6 h-6" />
+                    <span className="font-medium">{error}</span>
+                  </div>
+                </div>
+              )}
+
+              {preview && (
+                <div className="mt-8 animate-fadeIn">
+                  <div className="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl p-4 shadow-inner">
+                    <div
+                      className="relative mx-auto rounded-xl overflow-visible shadow-2xl"
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "60vh",
+                        background: "#f8fafc",
+                      }}
+                    >
+                      {preview && (
+                        <img
+                          src={preview || "/placeholder.svg"}
+                          alt="preview"
+                          style={{
+                            width: "100%",
+                            height: "auto",
+                            maxWidth: "100%",
+                            maxHeight: "60vh",
+                            display: "block",
+                          }}
+                          className="rounded-xl"
+                          onLoad={(e) => {
+                            setImgSize({
+                              width: e.target.naturalWidth,
+                              height: e.target.naturalHeight,
+                            });
+                          }}
+                        />
+                      )}
+
+                      <canvas
+                        ref={canvasRef}
+                        width={imgSize.width}
+                        height={imgSize.height}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          maxWidth: "100%",
+                          maxHeight: "60vh",
+                          pointerEvents: "none",
+                        }}
+                      />
+
+                      {result &&
+                        result.readResult &&
+                        result.readResult.blocks &&
+                        imgSize.width > 0 &&
+                        imgSize.height > 0 && (
+                          <svg
+                            viewBox={`0 0 ${imgSize.width} ${imgSize.height}`}
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              maxWidth: "100%",
+                              maxHeight: "60vh",
+                              pointerEvents: "all",
+                            }}
+                          >
+                            {result.readResult.blocks.flatMap((block, bIdx) =>
+                              block.lines.map((line, lIdx) => {
+                                const points = line.boundingPolygon || [];
+                                if (points.length !== 4) return null;
+                                return (
+                                  <polygon
+                                    key={`box-${bIdx}-${lIdx}`}
+                                    points={points
+                                      .map((p) => `${p.x},${p.y}`)
+                                      .join(" ")}
+                                    fill="rgba(255,0,255,0.0)"
+                                    stroke="transparent"
+                                    strokeWidth="20"
+                                    style={{
+                                      cursor: "pointer",
+                                      pointerEvents: "all",
+                                    }}
+                                    onClick={() => handleBoxClick(line)}
+                                  />
+                                );
+                              })
+                            )}
+                          </svg>
+                        )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {matchedMenuInfo ? (
+              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 animate-fadeIn hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-slate-800">
+                      메뉴 정보
+                    </h3>
+                    <p className="text-slate-500 text-sm">
+                      AI가 분석한 상세 정보
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border border-slate-200/50 shadow-lg">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-slate-600 font-semibold">
+                          메뉴명
+                        </span>
+                        <span className="font-bold text-slate-900 text-lg text-right">
+                          {matchedMenuInfo.json.ko}
+                        </span>
+                      </div>
+                      <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-slate-600 font-semibold">
+                          주요 성분
+                        </span>
+                        <span className="font-medium text-slate-800 text-right max-w-xs">
+                          {matchedMenuInfo.json["ingredients.ko"]?.join(", ") ||
+                            "정보 없음"}
+                        </span>
+                      </div>
+                      <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-slate-600 font-semibold">
+                          알러지 정보
+                        </span>
+                        <span className="font-medium text-slate-800 text-right max-w-xs">
+                          {matchedMenuInfo.json.allergy?.join(", ") ||
+                            "정보 없음"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl shadow-lg">
+                    <h4 className="font-bold text-blue-800 mb-4 flex items-center gap-3 text-lg">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                        <Star className="w-4 h-4 text-white" />
+                      </div>
+                      공식 음식 설명
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-3">
+                        <div className="flex justify-between items-center">
+                          <strong className="text-blue-700 font-semibold">
+                            음식명:
+                          </strong>
+                          <span className="text-slate-700 font-medium">
+                            {matchedMenuInfo.csv["음식명"]}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <strong className="text-blue-700 font-semibold">
+                            영문명:
+                          </strong>
+                          <span className="text-slate-700 font-medium">
+                            {matchedMenuInfo.csv["영문"]}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-4 p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm">
+                        <div className="text-slate-700 leading-relaxed font-medium">
+                          {matchedMenuInfo.csv["음식설명"]}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 animate-fadeIn hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300">
+                <div className="text-center py-20">
+                  <div className="w-24 h-24 bg-gradient-to-br from-slate-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg">
+                    <FileImage className="w-12 h-12 text-slate-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-800 mb-4">
+                    메뉴를 선택해주세요
+                  </h3>
+                  <p className="text-slate-500 leading-relaxed max-w-sm mx-auto">
+                    이미지에서 메뉴 바운딩 박스를 클릭하면
+                    <br />
+                    <span className="font-semibold text-slate-600">
+                      AI가 분석한 상세한 메뉴 정보
+                    </span>
+                    가
+                    <br />
+                    이곳에 표시됩니다
+                  </p>
                 </div>
               </div>
             )}
