@@ -33,20 +33,20 @@ def ocr_image():
         )
         return jsonify(response.json())
 
-    data = request.get_json()
-    image_url = data.get('image_url') if data else None
-    if image_url:
-        vision_url = f"{AZURE_VISION_ENDPOINT}/computervision/imageanalysis:analyze?features={features}&model-version={model_version}&language={language}&api-version={api_version}"
-        headers = {
-            'Ocp-Apim-Subscription-Key': AZURE_VISION_KEY,
-            'Content-Type': 'application/json'
-        }
-        response = requests.post(
-            vision_url,
-            headers=headers,
-            json={'url': image_url}
-        )
-        return jsonify(response.json())
+    # data = request.get_json()
+    # image_url = data.get('image_url') if data else None
+    # if image_url:
+    #     vision_url = f"{AZURE_VISION_ENDPOINT}/computervision/imageanalysis:analyze?features={features}&model-version={model_version}&language={language}&api-version={api_version}"
+    #     headers = {
+    #         'Ocp-Apim-Subscription-Key': AZURE_VISION_KEY,
+    #         'Content-Type': 'application/json'
+    #     }
+    #     response = requests.post(
+    #         vision_url,
+    #         headers=headers,
+    #         json={'url': image_url}
+    #     )
+    #     return jsonify(response.json())
 
     return jsonify({'error': 'No image_file or image_url provided'}), 400
 
