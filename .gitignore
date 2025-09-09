@@ -36,3 +36,5 @@ __pycache__/
 .idea/
 .DS_Store
 Thumbs.db
+
+map-app/public/merged_annotations_merged.json
