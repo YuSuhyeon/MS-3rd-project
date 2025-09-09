@@ -1,15 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import {
-  MapPin,
-  Home,
-  Route,
-  Compass,
-  Sparkles,
-  Calendar,
-  Eye,
-} from "lucide-react";
+import { MapPin, Home, Route, Compass, Sparkles, Calendar } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -52,13 +44,13 @@ const navigationItems = [
     icon: Compass,
   },
   {
-    title: "AI Vision OCR",
-    url: "/vision-ocr",
-    icon: Eye,
-  },
-  {
     title: "커뮤니티",
     url: createPageUrl("CommunityMain"),
+    icon: Compass,
+  },
+  {
+    title: "Vision OCR",
+    url: createPageUrl("VisionOCR"),
     icon: Compass,
   },
 ];

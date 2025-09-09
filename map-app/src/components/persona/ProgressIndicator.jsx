@@ -2,7 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 
 export default function ProgressIndicator({ currentStep, totalSteps }) {
-  const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
+  const safeTotal = totalSteps > 0 ? totalSteps : 1;
+  const progressPercentage = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;
 
   return (
     <div className="mb-8">
@@ -19,7 +20,7 @@ export default function ProgressIndicator({ currentStep, totalSteps }) {
         />
       </div>
       <div className="flex justify-between mt-2">
-        {Array.from({ length: totalSteps }, (_, i) => (
+        {Array.from({ length: safeTotal }, (_, i) => (
           <motion.div
             key={i}
             className={`w-3 h-3 rounded-full transition-colors duration-300 ${

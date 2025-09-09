@@ -1,0 +1,133 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "components/ui/button";
+import { Music, LogIn, LogOut } from "lucide-react";
+
+const SpotifyPlaylistGenerator = () => {
+  const [spotifyUser, setSpotifyUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const API_BASE_URL = "http://127.0.0.1:5001";
+
+  // 1. 컴포넌트가 로드될 때 로그인 상태 확인
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/spotify/user`, {
+          credentials: "include",
+        });
+
+        // 응답이 HTML인 경우 처리
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          console.log("Received HTML instead of JSON, user not logged in");
+          setSpotifyUser(null);
+          return;
+        }
+
+        const data = await response.json();
+
+        // 백엔드 응답 형식에 맞춰 수정
+        if (response.ok && data.is_logged_in) {
+          setSpotifyUser(data.user); // data.user 객체를 저장
+        } else {
+          setSpotifyUser(null);
+        }
+      } catch (error) {
+        console.error("Error checking Spotify login status:", error);
+        setSpotifyUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/spotify/login`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Expected JSON but received:", contentType);
+        window.location.href = `${API_BASE_URL}/spotify/login`;
+        return;
+      }
+      const data = await response.json();
+      if (data.auth_url) {
+        window.location.href = data.auth_url;
+      } else {
+        window.location.href = `${API_BASE_URL}/spotify/login`;
+      }
+    } catch (error) {
+      console.error("Error initiating Spotify login:", error);
+      window.location.href = `${API_BASE_URL}/spotify/login`;
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/spotify/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (response.ok) {
+        setSpotifyUser(null);
+      }
+    } catch (error) {
+      console.error("Error logging out from Spotify:", error);
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading Spotify status...</div>;
+  }
+
+  return (
+    <div className="p-4 border rounded-lg bg-gray-50">
+      <div className="flex items-center justify-between">
+        {spotifyUser ? (
+          <div className="flex items-center gap-4">
+            {spotifyUser.avatar && (
+              <img
+                src={spotifyUser.avatar}
+                alt="Spotify avatar"
+                className="w-10 h-10 rounded-full"
+              />
+            )}
+            <div>
+              <p className="font-semibold">
+                환영합니다, {spotifyUser.display_name || "Unknown User"}님!
+              </p>
+              <p className="text-sm text-gray-500">
+                Spotify 계정이 연결되었습니다.
+              </p>
+            </div>
+            <Button onClick={handleLogout} variant="outline" size="sm">
+              <LogOut className="w-4 h-4 mr-2" />
+              로그아웃
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4">
+            <Music className="w-8 h-8 text-green-500" />
+            <div>
+              <h3 className="font-semibold">나만의 플레이리스트 만들기</h3>
+              <p className="text-sm text-gray-500">
+                Spotify에 로그인하고 여행에 어울리는 음악을 추천받으세요.
+              </p>
+            </div>
+            <Button onClick={handleLogin}>
+              <LogIn className="w-4 h-4 mr-2" />
+              Spotify 로그인
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SpotifyPlaylistGenerator;
