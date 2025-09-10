@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import BrandLogo from "components/BrandLogo";
 
@@ -10,11 +10,16 @@ const navigationItems = [
   { title: "AI 도슨트", url: "/docent", icon: null },
   { title: "커뮤니티", url: "/community", icon: null },
   { title: "VisionOcr", url: "/visionocr", icon: null },
+  { title: "AI 사진인식", url: "/vision", icon: null },
+
 ];
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(true);
 
+  const toggleMenu = () => setMenuOpen((prev) => !prev);
+  
   return (
     <div className="min-h-screen flex w-full bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
       {/* Sidebar */}
@@ -89,6 +94,7 @@ export default function Layout({ children }) {
             <button
               className="hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200"
               aria-label="메뉴"
+              onClick={toggleMenu}
             >
               <svg width="20" height="20" viewBox="0 0 20 20">
                 <path
