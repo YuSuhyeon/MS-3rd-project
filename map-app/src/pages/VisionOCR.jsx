@@ -14,6 +14,10 @@ import {
 import Papa from "papaparse";
 
 function VisionOCR() {
+  // localStorage 키
+  const LS_IMAGE = "visionocr_image";
+  const LS_PREVIEW = "visionocr_preview";
+  const LS_RESULT = "visionocr_result";
   const [imageFile, setImageFile] = useState(null); // 업로드 이미지 파일
   const [preview, setPreview] = useState(null); // 이미지 미리보기
   const [result, setResult] = useState(null); // OCR 분석 결과
@@ -22,6 +26,7 @@ function VisionOCR() {
   const [menuData, setMenuData] = useState([]); // 메뉴 정보(성분,알러지) -> json
   const [foodDescData, setFoodDescData] = useState([]); // 음식 설명 -> csv
   const [foodData, setFoodData] = useState([]); // 800개의 한,영,일,중 메뉴 정보(설명)
+  const LS_SELECTED_BOX = "visionocr_selectedBox";
   const [selectedBox, setSelectedBox] = useState(null); // 클릭한 바운딩 박스 정보
   const [matchedMenuInfo, setMatchedMenuInfo] = useState(null); // JSON/CSV 모두 일치하는 메뉴 정보
   const [matchedFoodData, setMatchedFoodData] = useState(null); // foodData에서 일치하는 메뉴 정보
@@ -75,11 +80,20 @@ function VisionOCR() {
     setResult(null);
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result);
+      reader.onloadend = () => {
+        setPreview(reader.result);
+        // 저장
+        localStorage.setItem(LS_PREVIEW, reader.result);
+      };
       reader.readAsDataURL(file);
+      // 파일명만 저장 (실제 파일은 저장 불가)
+      localStorage.setItem(LS_IMAGE, file.name || "uploaded");
     } else {
       setPreview(null);
+      localStorage.removeItem(LS_PREVIEW);
+      localStorage.removeItem(LS_IMAGE);
     }
+    localStorage.removeItem(LS_RESULT);
   };
 
   // OCR 분석
@@ -102,12 +116,32 @@ function VisionOCR() {
       const data = await response.json();
       console.log("OCR API 응답:", data); // OCR 결과 구조 확인용 로그
       setResult(data);
+      // OCR 결과 저장
+      localStorage.setItem(LS_RESULT, JSON.stringify(data));
     } catch (err) {
       setError("분석 요청 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
   };
+  // 페이지 마운트 시 localStorage에서 복원
+  useEffect(() => {
+    const savedPreview = localStorage.getItem(LS_PREVIEW);
+    const savedResult = localStorage.getItem(LS_RESULT);
+    const savedBox = localStorage.getItem(LS_SELECTED_BOX);
+    if (savedBox) {
+      try {
+        setSelectedBox(JSON.parse(savedBox));
+      } catch {}
+    }
+    if (savedPreview) setPreview(savedPreview);
+
+    if (savedResult) {
+      try {
+        setResult(JSON.parse(savedResult));
+      } catch {}
+    }
+  }, []);
 
   // 바운딩 박스 클릭 시 메뉴 정보 매칭
   function handleBoxClick(line) {
@@ -125,6 +159,9 @@ function VisionOCR() {
       setMatchedMenuInfo(foodMenu ? { foodMenu } : null);
     }
     setSelectedBox(line);
+    // 바운딩 박스 선택 정보 저장
+    localStorage.setItem(LS_SELECTED_BOX, JSON.stringify(line));
+    // 페이지 마운트 시 localStorage에서 selectedBox도 복원
 
     // foodData에서 언어와 상관없이 일치하는 메뉴 정보 찾기
     function fuzzyFindFoodData(menuName, foodData) {
@@ -604,31 +641,11 @@ function VisionOCR() {
                             메뉴명
                           </span>
                           <span className="font-bold text-slate-900 text-lg text-right">
-                            {/* {ocrLang === "ko" && matchedMenuInfo?.json?.["ko"]}
+                            {ocrLang === "ko" && matchedMenuInfo?.json?.["ko"]}
                             {ocrLang === "en" && matchedMenuInfo?.json?.["en"]}
                             {ocrLang === "ja" && matchedMenuInfo?.json?.["ja"]}
                             {ocrLang === "zh-Hans" &&
-                              matchedMenuInfo?.json?.["zh_CN"]} */}
-                            {(() => {
-                              if (ocrLang === "ko")
-                                return (
-                                  matchedMenuInfo?.json?.["ko"] || "정보 없음"
-                                );
-                              if (ocrLang === "en")
-                                return (
-                                  matchedMenuInfo?.json?.["en"] || "정보 없음"
-                                );
-                              if (ocrLang === "ja")
-                                return (
-                                  matchedMenuInfo?.json?.["ja"] || "정보 없음"
-                                );
-                              if (ocrLang === "zh-Hans")
-                                return (
-                                  matchedMenuInfo?.json?.["zh_CN"] ||
-                                  "정보 없음"
-                                );
-                              return "정보 없음";
-                            })()}
+                              matchedMenuInfo?.json?.["zh_CN"]}
                           </span>
                         </div>
                         <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
@@ -637,38 +654,26 @@ function VisionOCR() {
                             주요 성분
                           </span>
                           <span className="font-medium text-slate-800 text-right max-w-xs">
-                            {(() => {
-                              if (ocrLang === "ko")
-                                return (
-                                  matchedMenuInfo?.json?.["ingredients.ko"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "en")
-                                return (
-                                  matchedMenuInfo?.json?.["ingredients.en"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "ja")
-                                return (
-                                  matchedMenuInfo?.json?.["ingredients.ja"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "zh-Hans")
-                                return (
-                                  matchedMenuInfo?.json?.[
-                                    "ingredients.zh_CN"
-                                  ] || "정보 없음"
-                                );
-                              return "정보 없음";
-                            })()}
-                            {/* {ocrLang === "ko" &&
-                              matchedMenuInfo?.json?.["ingredients.ko"]}
+                            {ocrLang === "ko" &&
+                              (matchedMenuInfo.json["ingredients.ko"]?.join(
+                                ", "
+                              ) ||
+                                "정보 없음")}
                             {ocrLang === "en" &&
-                              matchedMenuInfo?.json?.["ingredients.en"]}
+                              (matchedMenuInfo.json["ingredients.en"]?.join(
+                                ", "
+                              ) ||
+                                "None")}
                             {ocrLang === "ja" &&
-                              matchedMenuInfo?.json?.["ingredients.ja"]}
+                              (matchedMenuInfo.json["ingredients.ja"]?.join(
+                                ", "
+                              ) ||
+                                "なし")}
                             {ocrLang === "zh-Hans" &&
-                              matchedMenuInfo?.json?.["ingredients.zh_CN"]} */}
+                              (matchedMenuInfo.json["ingredients.zh_CN"]?.join(
+                                ", "
+                              ) ||
+                                "无")}
                           </span>
                         </div>
                         <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
@@ -678,37 +683,18 @@ function VisionOCR() {
                           </span>
                           {/* 번역은 나중에 수정 필요 */}
                           <span className="font-medium text-slate-800 text-right max-w-xs">
-                            {(() => {
-                              if (ocrLang === "ko")
-                                return (
-                                  matchedMenuInfo?.json?.["allergy"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "en")
-                                return (
-                                  matchedMenuInfo?.json?.["allergy"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "ja")
-                                return (
-                                  matchedMenuInfo?.json?.["allergy"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "zh-Hans")
-                                return (
-                                  matchedMenuInfo?.json?.["allergy"] ||
-                                  "정보 없음"
-                                );
-                              return "정보 없음";
-                            })()}
-                            {/* {ocrLang === "ko" &&
-                              matchedMenuInfo?.json?.["allergy"]}
+                            {ocrLang === "ko" &&
+                              (matchedMenuInfo.json.allergy?.join(", ") ||
+                                "정보 없음")}
                             {ocrLang === "en" &&
-                              matchedMenuInfo?.json?.["allergy"]}
+                              (matchedMenuInfo.json.allergy?.join(", ") ||
+                                "None")}
                             {ocrLang === "ja" &&
-                              matchedMenuInfo?.json?.["allergy"]}
+                              (matchedMenuInfo.json.allergy?.join(", ") ||
+                                "なし")}
                             {ocrLang === "zh-Hans" &&
-                              matchedMenuInfo?.json?.["allergy"]} */}
+                              (matchedMenuInfo.json.allergy?.join(", ") ||
+                                "无")}
                           </span>
                         </div>
                       </div>
