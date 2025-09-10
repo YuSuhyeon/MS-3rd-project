@@ -26,33 +26,34 @@ function VisionOCR() {
   const [loading, setLoading] = useState(false);
   const [ocrLang, setOcrLang] = useState("ko");
 
+  const [imageFile, setImageFile] = useState(null); // 업로드 이미지 파일
+  const [preview, setPreview] = useState(null); // 이미지 미리보기
+  const [result, setResult] = useState(null); // OCR 분석 결과
+  const [error, setError] = useState(null);
+  const [selectedBox, setSelectedBox] = useState(null);
+  const canvasRef = React.useRef(null); // OCR 결과 표시
+  const [imgSize, setImgSize] = useState({ width: 0, height: 0 }); // 업로드된 이미지 실제 크기
+
   const [matched, setMatched] = useState(null); // OCR & 데이터 일치
 
   // AI 답변 요청 취소용 ref
   const aiRequestRef = React.useRef(0);
-  // 언어별 번역 결과 캐시
-  const [descCache, setDescCache] = useState({});
-  const [nameCache, setNameCache] = useState({});
+
   // 번역 결과 상태
   const [translatedDesc, setTranslatedDesc] = useState("");
-  const [imageFile, setImageFile] = useState(null); // 업로드 이미지 파일
-  const [preview, setPreview] = useState(null); // 이미지 미리보기
-  const [result, setResult] = useState(null); // OCR 분석 결과
-  const [error, setError] = useState(null); // 에러 메세지 장
-  const [selectedBox, setSelectedBox] = useState(null); // 클릭한 바운딩 박스 정보
+
+  // 언어별 번역 결과 캐시
+  const [nameCache, setNameCache] = useState({});
+  const [descCache, setDescCache] = useState({});
+  const [allergyCache, setAllergyCache] = useState({});
+  const [translatedAllergy, setTranslatedAllergy] = useState("");
 
   const [translationLoading, setTranslationLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
-  const canvasRef = React.useRef(null); // OCR 결과 표시
-  const [imgSize, setImgSize] = useState({ width: 0, height: 0 }); // 업로드된 이미지 실제 크기
-
   const [aiMenuAnswer, setAiMenuAnswer] = useState("");
 
   const pronunciation = selectedBox && romanize(selectedBox.text);
-
-  const [allergyCache, setAllergyCache] = useState({});
-  const [translatedAllergy, setTranslatedAllergy] = useState("");
 
   const languageOptions = [
     { value: "ko", code: "KO", label: "한국어" },
