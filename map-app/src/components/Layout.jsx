@@ -9,26 +9,37 @@ const navigationItems = [
   { title: "경로 편집", url: "/directions", icon: null },
   { title: "AI 도슨트", url: "/docent", icon: null },
   { title: "커뮤니티", url: "/community", icon: null },
-  { title: "VisionOcr", url: "/visionocr", icon: null },
-  { title: "AI 사진인식", url: "/vision", icon: null },
-
+  { title: "VisionOcr", url: "/visionocr", icon: null, exact: true },
+  { title: "AI 사진인식", url: "/vision", icon: null, exact: true },
 ];
 
 export default function Layout({ children }) {
   const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false); // mobile 기본 닫힘
 
-  const toggleMenu = () => setMenuOpen((prev) => !prev);
-  
+  const isActive = (path, exact) => {
+    if (exact) return location.pathname === path;
+    return (
+      location.pathname === path || location.pathname.startsWith(path + "/") // prefix 매칭은 하위 path만
+    );
+  };
+
   return (
     <div className="min-h-screen flex w-full bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
       {/* Sidebar */}
-      <aside className="w-72 bg-white/80 backdrop-blur-sm border-r border-white/20 flex flex-col">
+      {/* 모바일: 슬라이드 인/아웃, 데스크톱: 고정 */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/80 backdrop-blur-sm
+                    border-r border-white/20 flex flex-col transform transition-transform duration-200
+                    ${menuOpen ? "translate-x-0" : "-translate-x-full"}
+                    md:static md:translate-x-0`}
+      >
         {/* Header */}
         <div className="border-b border-gray-200/50 p-6">
           <Link
             to="/"
             className="flex items-center gap-3 hover:opacity-95 transition-opacity"
+            onClick={() => setMenuOpen(false)}
           >
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
               <BrandLogo size={40} />
@@ -49,18 +60,19 @@ export default function Layout({ children }) {
           </div>
           <nav className="px-2">
             {navigationItems.map((item) => {
-              const active =
-                location.pathname === item.url ||
-                (item.url !== "/" && location.pathname.startsWith(item.url));
+              const active = isActive(item.url, item.exact);
               return (
                 <Link
                   key={item.title}
                   to={item.url}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 mb-1 hover:bg-pink-50 hover:text-pink-700 ${
-                    active
-                      ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
-                      : ""
-                  }`}
+                  onClick={() => setMenuOpen(false)} // 모바일에서 자동 닫힘
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 mb-1
+                              hover:bg-pink-50 hover:text-pink-700
+                              ${
+                                active
+                                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                                  : ""
+                              }`}
                 >
                   <span className="font-medium">{item.title}</span>
                 </Link>
@@ -86,15 +98,23 @@ export default function Layout({ children }) {
           </div>
         </div>
       </aside>
+      {/* 모바일 오버레이 (열렸을 때만) */}
+      {menuOpen && (
+        <button
+          className="fixed inset-0 z-40 bg-black/30 md:hidden"
+          aria-label="사이드바 닫기"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
 
       {/* Main */}
       <main className="flex-1 flex flex-col">
-        <header className="bg-white/80 backdrop-blur-md border-b border-white/20 px-6 py-4 md:hidden">
+        <header className="bg-white/80 backdrop-blur-md border-b border-white/20 px-6 py-4 md:hidden sticky top-0 z-50">
           <div className="flex items-center gap-4">
             <button
               className="hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200"
               aria-label="메뉴"
-              onClick={toggleMenu}
+              onClick={() => setMenuOpen((v) => !v)}
             >
               <svg width="20" height="20" viewBox="0 0 20 20">
                 <path
@@ -108,7 +128,11 @@ export default function Layout({ children }) {
             <h1 className="text-xl font-semibold">AI 여행 플래너</h1>
           </div>
         </header>
-        <div className="flex-1 overflow-auto">{children}</div>
+        <div className="flex-1 overflow-auto">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+            {children}
+          </div>
+        </div>
       </main>
     </div>
   );
