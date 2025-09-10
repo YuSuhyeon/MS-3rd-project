@@ -9,11 +9,12 @@ import {
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import ResultDashboard from "./pages/ResultDashboard";
+import PersonaAnalysis from "./pages/PersonaAnalysis";
 import ItineraryView from "./pages/ItineraryView";
 import DocentMantine from "./pages/DocentMantine";
-import DirectionsMantine from "./pages/DirectionsMantine";
-import Landing from "./pages/Landing";
-import "./styles/layout.css";
+// Naver/WALK/TRANSIT ready directions view
+// Redesigned route editor (Myro-like UI)
+import DirectionsMyro from "./pages/DirectionsMyro";
 import VisionOCR from "./pages/VisionOCR";
 import CommunityMain from "./pages/CommunityMain";
 import "./styles/layout.css";
@@ -31,20 +32,21 @@ function AppRoutes() {
 
   // Landing page without app layout
   if (location.pathname === "/") {
-    return <Landing />;
+    return <Home />;
   }
 
   // App pages wrapped with the sidebar layout
   return (
     <Layout>
       <Routes>
-        <Route path="/persona" element={<Home />} />
+        <Route path="/persona" element={<PersonaAnalysis />} />
         <Route path="/result" element={<ResultDashboard />} />
         <Route path="/docent" element={<DocentMantine />} />
-        <Route path="/directions" element={<DirectionsMantine />} />
+        <Route path="/directions" element={<DirectionsMyro />} />
         <Route path="/itinerary" element={<ItineraryView />} />
-        <Route path="/vision-ocr" element={<VisionOCR />} />
         <Route path="/community" element={<CommunityMain />} />
+        <Route path="/community/*" element={<CommunityMain />} />
+        <Route path="/visionocr" element={<VisionOCR />} />
         <Route path="*" element={<Navigate to="/persona" replace />} />
       </Routes>
     </Layout>

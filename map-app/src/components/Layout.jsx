@@ -9,9 +9,8 @@ const navigationItems = [
   { title: "경로 편집", url: "/directions", icon: null },
   { title: "AI 도슨트", url: "/docent", icon: null },
   { title: "커뮤니티", url: "/community", icon: null },
+  { title: "VisionOcr", url: "/visionocr", icon: null },
 ];
-
-const aiTools = [{ title: "AI Vision OCR", url: "/vision-ocr", icon: null }];
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -45,30 +44,6 @@ export default function Layout({ children }) {
           </div>
           <nav className="px-2">
             {navigationItems.map((item) => {
-              const active =
-                location.pathname === item.url ||
-                (item.url !== "/" && location.pathname.startsWith(item.url));
-              return (
-                <Link
-                  key={item.title}
-                  to={item.url}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 mb-1 hover:bg-pink-50 hover:text-pink-700 ${
-                    active
-                      ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
-                      : ""
-                  }`}
-                >
-                  <span className="font-medium">{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
-          {/* AI 도구 그룹 */}
-          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2 mt-6">
-            AI 도구
-          </div>
-          <nav className="px-2">
-            {aiTools.map((item) => {
               const active =
                 location.pathname === item.url ||
                 (item.url !== "/" && location.pathname.startsWith(item.url));

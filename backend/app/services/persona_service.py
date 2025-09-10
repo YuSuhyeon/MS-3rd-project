@@ -1,170 +1,276 @@
 import os
 import json
-import joblib
+from typing import Any, Dict, List, Optional
 
-# --- 경로 설정 (파일 위치가 바뀌었으므로 경로 계산 수정) ---
+try:
+    import joblib  # type: ignore
+except Exception:  # pragma: no cover
+    joblib = None
 
-# os.path.abspath(__file__) -> 현재 파일의 절대 경로
-# os.path.dirname(...) -> 폴더 경로 ('services')
-# os.path.dirname(...) -> 한 단계 위 폴더 경로 ('app')
-# os.path.dirname(...) -> 또 한 단계 위 폴더 경로 ('backend')
+
+# Paths relative to backend/
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
 QUESTIONS_PATH = os.path.join(DATA_DIR, 'persona_questions.json')
-MODEL_PATH = os.path.join(MODELS_DIR, 'persona_classifier_model_k6.joblib')
-
-# --- 전역 변수 ---
-# 메모리 효율을 위해 모델과 질문은 한번만 로드합니다.
-_PERSONA_MODEL = None
-_QUESTIONS = None
 
 
-def load_questions():
+# Caches
+_MODEL = None
+_LABEL_ENCODER = None
+_MODEL_COLUMNS: Optional[List[str]] = None
+_QUESTIONS: Optional[Dict[str, Any]] = None
+
+
+def _artifact_paths() -> List[str]:
+    return [
+        os.path.join(MODELS_DIR, 'persona_classifier_model_k6.joblib'),
+        os.path.join(BASE_DIR, 'persona_classifier_model_k6.joblib'),
+    ]
+
+
+def _try_import_pandas():
+    try:
+        import pandas as pd
+        return pd
+    except Exception:
+        return None
+
+
+def load_questions() -> Dict[str, Any]:
     global _QUESTIONS
     if _QUESTIONS is None:
         try:
             with open(QUESTIONS_PATH, 'r', encoding='utf-8') as f:
                 _QUESTIONS = json.load(f)
-        except Exception as e:
-            # 파일이 없거나 오류 발생 시 기본값 반환
+        except Exception:
             _QUESTIONS = { 'questions': [] }
     return _QUESTIONS
 
 
-def load_model():
-    global _PERSONA_MODEL
-    if _PERSONA_MODEL is None:
+def _load_artifacts():
+    global _MODEL, _LABEL_ENCODER, _MODEL_COLUMNS
+    if _MODEL is not None:
+        return
+    if joblib is None:
+        return
+    for p in _artifact_paths():
         try:
-            _PERSONA_MODEL = joblib.load(MODEL_PATH)
-        except Exception as e:
-            # 모델 파일이 없거나 오류 발생 시 None 반환
-            _PERSONA_MODEL = None
-    return _PERSONA_MODEL
+            if not os.path.exists(p):
+                continue
+            obj = joblib.load(p)
+            if isinstance(obj, dict):
+                _MODEL = obj.get('model')
+                _LABEL_ENCODER = obj.get('label_encoder')
+                cols = obj.get('columns')
+                if isinstance(cols, (list, tuple)):
+                    _MODEL_COLUMNS = list(cols)
+            else:
+                _MODEL = obj
+            break
+        except Exception:
+            continue
 
 
-# --- 피처 엔지니어링 관련 설정 및 함수 ---
-CATS_RVIT = ['v1','v2','v3','v4plus']
-CATS_Q1 = ['leisure','friends']
-CATS_R19HAP = ['h1','h2','h3','h4','h5']
-CATS_COST = ['c1','c2','c3','c4','c5']
-CATS_CONSIDERED = ['food','shopping','nature','relaxation','heritage','tradition','museum','kpop','arts','festival','nightlife','themepark','beauty','medical','sports_view','sports_play','other']
+def _map_simple_answers_to_feature_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
+    
+    vmap_rvit = {'v1': 1, 'v2': 2, 'v3': 3, 'v4plus': 4}
+    vmap_q1 = {'leisure': 1, 'friends': 2}
+    vmap_stay = {'h1': 1, 'h2': 2, 'h3': 3, 'h4': 4, 'h5': 5}
+    vmap_budget = {'c1': 1, 'c2': 2, 'c3': 3, 'c4': 4, 'c5': 4}
 
-PERSONA_LABELS = ['문화 탐험가', '미식가', '자연 힐링러', '액티브 모험가', '럭셔리 트래블러']
+    def pick_col(prefix_hints: List[str], idx: int) -> Optional[str]:
+        if not _MODEL_COLUMNS:
+            return None
+        idx_str = f"_{idx}"
+        up_cols = [(c, c.upper()) for c in _MODEL_COLUMNS]
+        for hint in prefix_hints:
+            U = hint.upper()
+            for orig, up in up_cols:
+                if U in up and up.endswith(idx_str):
+                    return orig
+        return None
 
-ACT_LABEL = {
-    'food':'식도락관광','shopping':'쇼핑','nature':'자연경관감상','relaxation':'휴양/휴식','heritage':'고궁/역사유적지',
-    'tradition':'전통문화체험','museum':'박물관/전시관','kpop':'K-POP/한류체험','arts':'공연관람','festival':'지역축제',
-    'nightlife':'유흥','themepark':'놀이공원/테마파크','beauty':'뷰티/미용 관광','medical':'치료/건강검진','sports_view':'스포츠/레포츠 관람','sports_play':'스포츠/레포츠 참가','other':'기타'
-}
+    rvit_idx = vmap_rvit.get(str(answers.get('rvit', '')).lower())
+    q1_idx = vmap_q1.get(str(answers.get('q1_purpose', '')).lower())
+    stay_idx = vmap_stay.get(str(answers.get('r19hap', '')).lower())
+    budget_idx = vmap_budget.get(str(answers.get('cost', '')).lower())
 
-def one_hot(value, categories):
-    return [1 if value == c else 0 for c in categories]
+    rvit_key = pick_col(['RVIT_'], rvit_idx) if rvit_idx else None
+    q1_key = pick_col(['Q1_'], q1_idx) if q1_idx else None
+    stay_key = pick_col(['R19HAP_', 'RHAP_', 'HAP_', 'STAY_'], stay_idx) if stay_idx else None
+    budget_key = pick_col(['TOT2_', 'BUDGET_', 'C'], budget_idx) if budget_idx else None
 
-def multi_hot(values, categories):
-    values = values or []
-    return [1 if c in values else 0 for c in categories]
+    considered = answers.get('considered') or []
+    considered_keys: List[str] = []
+    if _MODEL_COLUMNS:
+        colset = set(_MODEL_COLUMNS)
+        for t in considered:
+            if t in colset:
+                considered_keys.append(t)
+                continue
+            cand = f"considered_{t}"
+            if cand in colset:
+                considered_keys.append(cand)
+                continue
+            t_up = str(t).upper()
+            hits = [c for c in _MODEL_COLUMNS if t_up in c.upper()]
+            if hits:
+                considered_keys.append(hits[0])
 
-def encode_answers(answers: dict):
-    rvit_vec = one_hot(answers.get('rvit'), CATS_RVIT)
-    q1_vec = one_hot(answers.get('q1_purpose'), CATS_Q1)
-    r19_vec = one_hot(answers.get('r19hap'), CATS_R19HAP)
-    cost_vec = one_hot(answers.get('cost'), CATS_COST)
-    considered_vec = multi_hot(answers.get('considered'), CATS_CONSIDERED)
-    vec = rvit_vec + q1_vec + r19_vec + cost_vec + considered_vec
-    answers['_vector_length'] = len(vec)
-    return vec
+    return {
+        'rvit_key': rvit_key,
+        'q1_key': q1_key,
+        'stay_key': stay_key,
+        'budget_key': budget_key,
+        'considered_keys': considered_keys,
+    }
 
 
-def build_recommendations(label: str, activities: list):
+def _vectorize(columns: Optional[List[str]], mapped: Dict[str, Any]):
+    cols = columns or []
+    feat = { c: 0 for c in cols }
+    for k in ('rvit_key', 'q1_key', 'stay_key', 'budget_key'):
+        ck = mapped.get(k)
+        if ck in feat:
+            feat[ck] = 1
+    for ck in mapped.get('considered_keys') or []:
+        if ck in feat:
+            feat[ck] = 1
+
+    pd = _try_import_pandas()
+    if pd is not None and cols:
+        return pd.DataFrame([feat]).reindex(columns=cols, fill_value=0)
+    return [[feat.get(c, 0) for c in cols]]
+
+
+def _persona_description(name: str) -> str:
+    desc = {
+        '문화 체험가': '전통·유산·박물관 등 문화 경험을 선호합니다.',
+        '미식가': '현지 맛집 탐방과 다양한 음식 경험을 선호합니다.',
+        '자연 힐링형': '자연 풍경 감상과 휴식을 선호합니다.',
+        '액티브 모험가': '액티비티와 역동적인 체험을 즐깁니다.',
+        '럭셔리 트래블러': '프리미엄 숙소와 편안한 휴식을 선호합니다.',
+    }
+    return desc.get(name, '')
+
+
+def _recommend_destinations(label: str, activities: Optional[List[str]] = None) -> List[Dict[str, Any]]:
     base = {
-        '문화 탐험가': [
-            { 'name': '경주', 'description': '신라 천년 고도의 매력', 'image_url': '', 'activities': ['사적지 투어','전통체험'] },
-            { 'name': '전주', 'description': '한옥마을과 미식', 'image_url': '', 'activities': ['한옥 산책','미식 투어'] },
+        '문화 체험가': [
+            { 'name': '경주 불국사', 'description': '천년의 숨결을 느끼는 문화유산 탐방', 'image_url': '', 'activities': ['유적지', '전통체험'] },
+            { 'name': '전주 한옥마을', 'description': '한옥 골목 산책과 전통문화 체험', 'image_url': '', 'activities': ['한옥', '전통체험'] },
+            { 'name': '서울 국립중앙박물관', 'description': '대한민국 최대 규모의 박물관 전시', 'image_url': '', 'activities': ['박물관'] },
         ],
         '미식가': [
-            { 'name': '서울', 'description': '골목맛집부터 파인다이닝까지', 'image_url': '', 'activities': ['미식 투어','시장 탐방'] },
-            { 'name': '전주', 'description': '비빔밥과 한식 미식', 'image_url': '', 'activities': ['미식 투어'] },
+            { 'name': '서울 미슐랭 골목', 'description': '로컬부터 미슐랭까지 다채로운 미식 코스', 'image_url': '', 'activities': ['미식', '시장투어'] },
+            { 'name': '전주 비빔밥 거리', 'description': '전통 미식의 정수, 전주의 맛', 'image_url': '', 'activities': ['미식'] },
+            { 'name': '부산 자갈치 시장', 'description': '신선한 해산물 미식 경험', 'image_url': '', 'activities': ['미식', '시장'] },
         ],
-        '자연 힐링러': [
-            { 'name': '제주', 'description': '자연과 함께하는 힐링', 'image_url': '', 'activities': ['오름 트레킹','해안 드라이브'] },
-            { 'name': '강원', 'description': '숲과 계곡의 청량함', 'image_url': '', 'activities': ['숲 산책','릴렉스 스파'] },
+        '자연 힐링형': [
+            { 'name': '제주 오름', 'description': '한적한 오름 산책과 드라이브', 'image_url': '', 'activities': ['자연', '산책'] },
+            { 'name': '강원 설악산', 'description': '계곡과 숲길이 어우러진 힐링 트레일', 'image_url': '', 'activities': ['등산', '트레킹'] },
+            { 'name': '서울 한강공원', 'description': '도심 속 여유로운 강변 산책', 'image_url': '', 'activities': ['산책', '피크닉'] },
         ],
         '액티브 모험가': [
-            { 'name': '양양', 'description': '서핑과 액티비티', 'image_url': '', 'activities': ['서핑','패러글라이딩'] },
-            { 'name': '단양', 'description': '레포츠 천국', 'image_url': '', 'activities': ['레프팅','짚라인'] },
+            { 'name': '양양 서핑', 'description': '동해 바다에서 즐기는 서핑 액티비티', 'image_url': '', 'activities': ['서핑', '액티비티'] },
+            { 'name': '용인 짚라인', 'description': '스릴 넘치는 공중 활강 체험', 'image_url': '', 'activities': ['짚라인', '액티비티'] },
+            { 'name': '한강 카약', 'description': '도심 속 수상 레저 경험', 'image_url': '', 'activities': ['카약', '수상'] },
         ],
         '럭셔리 트래블러': [
-            { 'name': '부산', 'description': '럭셔리 마리나&리조트', 'image_url': '', 'activities': ['요트','스파'] },
-            { 'name': '제주', 'description': '럭셔리 풀빌라', 'image_url': '', 'activities': ['풀빌라','미식'] },
+            { 'name': '부산 럭셔리 리조트', 'description': '오션뷰 스파와 프리미엄 다이닝', 'image_url': '', 'activities': ['스파', '휴식'] },
+            { 'name': '서울 5성급 호텔', 'description': '클래식한 객실과 미식 경험', 'image_url': '', 'activities': ['호텔', '미식'] },
+            { 'name': '제주 프라이빗 빌라', 'description': '프라이버시를 중시한 여유로운 휴식', 'image_url': '', 'activities': ['프라이빗', '휴식'] },
         ],
     }
-    recs = base.get(label, [])
-    if 'shopping' in (activities or []):
-        recs.insert(0, { 'name': '서울(명동·강남)', 'description': '쇼핑과 야경, 트렌드의 중심', 'image_url': '', 'activities': ['쇼핑','야경'] })
-    if 'food' in (activities or []):
-        recs.insert(0, { 'name': '전주(한옥마을)', 'description': '전통과 미식의 조화', 'image_url': '', 'activities': ['미식','한옥'] })
-    return recs[:3]
+    out = list(base.get(label, []))
+    acts = activities or []
+    if 'shopping' in acts:
+        out.insert(0, { 'name': '서울(명동·강남)', 'description': '쇼핑과 트렌드의 중심지', 'image_url': '', 'activities': ['쇼핑', '도심'] })
+    if 'food' in acts:
+        out.insert(0, { 'name': '전주 한옥마을', 'description': '전통과 미식의 조화', 'image_url': '', 'activities': ['미식', '전통'] })
+    return out[:3]
 
 
-def analyze_persona(answers: dict):
+def analyze_persona(answers: Dict[str, Any]) -> Dict[str, Any]:
+    """Persona analysis integrating model artifacts when available.
+
+    Accepts UI answers with keys: rvit, q1_purpose, r19hap, cost, considered.
     """
-    답변 딕셔너리를 받아 페르소나 분석 결과를 반환하는 핵심 서비스 함수.
-    """
-    x = encode_answers(answers)
-    model = load_model()
-    scores = None
-    model_loaded = model is not None
+    _load_artifacts()
+    model_loaded = all([_MODEL is not None, _LABEL_ENCODER is not None])
 
-    if model is not None:
+    mapped = _map_simple_answers_to_feature_keys(answers)
+    persona_name: Optional[str] = None
+    scores: Dict[str, float] = {}
+
+    if model_loaded and _MODEL_COLUMNS:
         try:
-            if hasattr(model, 'predict_proba'):
-                proba = model.predict_proba([x])[0]
-                idx = int(max(range(len(proba)), key=lambda i: proba[i]))
-                k = min(len(PERSONA_LABELS), len(proba))
-                scores = { PERSONA_LABELS[i]: float(proba[i]) for i in range(k) }
-            else:
-                pred = model.predict([x])
-                idx = int(pred[0]) if hasattr(pred, '__getitem__') else int(pred)
+            X = _vectorize(_MODEL_COLUMNS, mapped)
+            pred_ids = _MODEL.predict(X)  # type: ignore[attr-defined]
+            pred_id = int(pred_ids[0]) if hasattr(pred_ids, '__getitem__') else int(pred_ids)
+            try:
+                persona_name = str(_LABEL_ENCODER.inverse_transform([pred_id])[0])  # type: ignore[attr-defined]
+            except Exception:
+                persona_name = str(pred_id)
+            proba = getattr(_MODEL, 'predict_proba', None)
+            if callable(proba):
+                probs = proba(X)[0]
+                for i, p in enumerate(probs):
+                    try:
+                        name_i = str(_LABEL_ENCODER.inverse_transform([i])[0])  # type: ignore[attr-defined]
+                    except Exception:
+                        name_i = str(i)
+                    scores[name_i] = float(round(p, 4))
         except Exception:
-            idx = 0  # 모델 추론 실패 시 기본값
-    else:
-        # 모델이 없을 경우를 대비한 간단한 규칙 기반 대체 로직
-        style = answers.get('travel_style')
-        if style == 'cultural': idx = 0
-        elif style == 'luxury': idx = 4
-        elif style in ('adventurous', 'adventure'): idx = 3
-        elif style in ('relaxed', 'relaxation', 'nature'): idx = 2
-        else: idx = 1
+            persona_name = None
 
-    label = PERSONA_LABELS[idx % len(PERSONA_LABELS)]
-    activities = answers.get('considered') or []
+    if not persona_name:
+        cons = answers.get('considered') or []
+        purpose = str(answers.get('q1_purpose') or '')
+        if 'food' in cons:
+            persona_name = '미식가'
+        elif 'culture' in cons or 'heritage' in cons:
+            persona_name = '문화 체험가'
+        elif 'nature' in cons or 'relaxation' in cons:
+            persona_name = '자연 힐링형'
+        elif purpose == 'friends':
+            persona_name = '액티브 모험가'
+        else:
+            persona_name = '럭셔리 트래블러'
+        if not scores:
+            candidates = ['문화 체험가','미식가','자연 힐링형','액티브 모험가','럭셔리 트래블러']
+            for n in candidates:
+                scores[n] = 0.7 if n == persona_name else round(0.3/(len(candidates)-1), 3)
 
-    if scores is None:
-        scores = { l: (0.7 if l == label else 0.075) for l in PERSONA_LABELS }
+    recs = _recommend_destinations(persona_name or '', activities=answers.get('considered'))
 
-    # 최종 결과를 구성합니다.
-    result = {
-        'persona_type': label,
-        'persona_description': {
-            '문화 탐험가': '역사와 전통을 사랑하고 깊이 있는 경험을 선호합니다.',
-            '미식가': '지역 미식과 로컬 푸드를 탐방합니다.',
-            '자연 힐링러': '자연 속에서 휴식과 재충전을 즐깁니다.',
-            '액티브 모험가': '액티비티와 도전을 즐기는 스타일입니다.',
-            '럭셔리 트래블러': '프리미엄 서비스와 편안함을 추구합니다.'
-        }.get(label, ''),
-        'analysis_reason': '질문 응답을 바탕으로 모델이 추정한 페르소나입니다.',
+    # Build dataset-like input codes for UI
+    rvit_code = mapped.get('rvit_key') or {
+        'v1':'RVIT_1','v2':'RVIT_2','v3':'RVIT_3','v4plus':'RVIT_4'
+    }.get(str(answers.get('rvit')))
+    q1_code = mapped.get('q1_key') or {
+        'leisure':'Q1_1','friends':'Q1_2'
+    }.get(str(answers.get('q1_purpose')))
+    stay_code = mapped.get('stay_key') or {
+        'h1':'STAY_1','h2':'STAY_2','h3':'STAY_3','h4':'STAY_4','h5':'STAY_5'
+    }.get(str(answers.get('r19hap')))
+    budget_code = mapped.get('budget_key') or {
+        'c1':'BUDGET_1','c2':'BUDGET_2','c3':'BUDGET_3','c4':'BUDGET_4','c5':'BUDGET_4'
+    }.get(str(answers.get('cost')))
+
+    return {
+        'model_loaded': bool(model_loaded),
+        'persona_type': persona_name,
+        'persona_description': _persona_description(persona_name or ''),
+        'analysis_reason': '질문 응답을 바탕으로 산출된 결과입니다.',
         'scores': scores,
+        'recommended_destinations': recs,
         'inputs': {
-            'rvit': {'v1':'1회','v2':'2회','v3':'3회','v4plus':'4회 이상'}.get(answers.get('rvit')),
-            'q1_purpose': {'leisure':'여가/위락/개별휴가', 'friends':'친구/친지 방문'}.get(answers.get('q1_purpose')),
-            'stay': {'h1':'2~3일','h2':'4~7일','h3':'8~15일','h4':'16~30일','h5':'31일 이상'}.get(answers.get('r19hap')),
-            'cost': {'c1':'$1,000 미만','c2':'$1,000~$2,000','c3':'$2,000~$3,000','c4':'$3,000~$5,000','c5':'$5,000 이상'}.get(answers.get('cost')),
-            'considered': [ACT_LABEL.get(a, a) for a in (answers.get('considered') or [])]
+            'rvit': rvit_code,
+            'q1_purpose': q1_code,
+            'stay': stay_code,
+            'budget': budget_code,
+            'considered': answers.get('considered') or [],
         },
-        'recommended_destinations': build_recommendations(label, activities),
-        'model_loaded': model_loaded,
-        'vector_length': answers.get('_vector_length')
     }
-    return result
-

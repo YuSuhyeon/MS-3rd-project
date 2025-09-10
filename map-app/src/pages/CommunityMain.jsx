@@ -27,6 +27,8 @@ import {
   Globe,
 } from "lucide-react";
 
+import SpotifyPlaylistGenerator from "components/community/SpotifyPlaylistGenerator";
+
 // Mock 데이터
 const mockGoods = [
   {
@@ -85,57 +87,6 @@ const mockGoods = [
     tags: ["영화", "케이팝데몬헌터스", "먹방"],
     rating: 4.6,
     reviews: 134,
-  },
-];
-
-const mockPlaylists = [
-  {
-    id: 1,
-    title: "Seoul City Vibes 🌃",
-    description: "서울 도심 여행할 때 듣기 좋은 어반 K-pop",
-    image:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-    songs: [
-      { title: "APT.", artist: "ROSÉ & Bruno Mars", duration: "2:49" },
-      { title: "Supernova", artist: "aespa", duration: "3:04" },
-      { title: "How Sweet", artist: "NewJeans", duration: "3:32" },
-      { title: "SPOT!", artist: "ZICO (Feat. JENNIE)", duration: "2:54" },
-    ],
-    totalDuration: "45분",
-    followers: 12500,
-    theme: "도시여행",
-  },
-  {
-    id: 2,
-    title: "SM Town과 함께하는 여름 바캉스 🏖️",
-    description: "청량한 K-pop",
-    image:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-    songs: [
-      { title: "Summer Breeze", artist: "IVE", duration: "3:15" },
-      { title: "Cookie", artist: "NewJeans", duration: "3:54" },
-      { title: "After LIKE", artist: "IVE", duration: "2:58" },
-      { title: "Feel My Rhythm", artist: "Red Velvet", duration: "3:27" },
-    ],
-    totalDuration: "52분",
-    followers: 8930,
-    theme: "여름 바캉스",
-  },
-  {
-    id: 3,
-    title: "Seoul  Night Market 🎪",
-    description: "야시장 분위기에 맞는 신나는 K-pop",
-    image:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-    songs: [
-      { title: "Dynamite", artist: "BTS", duration: "3:19" },
-      { title: "How You Like That", artist: "BLACKPINK", duration: "3:01" },
-      { title: "God of Music", artist: "SEVENTEEN", duration: "2:55" },
-      { title: "FEARLESS", artist: "LE SSERAFIM", duration: "2:48" },
-    ],
-    totalDuration: "38분",
-    followers: 15200,
-    theme: "야시장",
   },
 ];
 
@@ -523,15 +474,40 @@ const SocialPost = ({ post }) => {
 
 // 메인 컴포넌트
 export default function KpopTravelPlatform() {
-  const [activeTab, setActiveTab] = useState("goods");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("all");
-
   const tabs = [
     { id: "goods", label: "굿즈 & 체험", icon: ShoppingBag },
     { id: "playlists", label: "여행 플레이리스트", icon: Music },
     { id: "community", label: "커뮤니티", icon: Users },
   ];
+
+  const [activeTab, setActiveTab] = useState(() => {
+    // 초기 로드 시 URL 파라미터 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get("tab");
+    if (tabParam && ["goods", "playlists", "community"].includes(tabParam)) {
+      return tabParam;
+    }
+    return "goods";
+  });
+  console.log("activateTab:", activeTab);
+  // URL 파라미터 확인하여 탭 설정
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get("tab");
+      if (tabParam && ["goods", "playlists", "community"].includes(tabParam)) {
+        setActiveTab(tabParam);
+      } else {
+        setActiveTab("goods");
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
 
   const renderContent = () => {
     switch (activeTab) {
@@ -547,15 +523,7 @@ export default function KpopTravelPlatform() {
         );
 
       case "playlists":
-        return (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <AnimatePresence>
-              {mockPlaylists.map((playlist) => (
-                <PlaylistCard key={playlist.id} playlist={playlist} />
-              ))}
-            </AnimatePresence>
-          </div>
-        );
+        return <SpotifyPlaylistGenerator />;
 
       case "community":
         return (
@@ -643,7 +611,7 @@ export default function KpopTravelPlatform() {
         </div>
       </div>
 
-      {/* 필터 (굿즈 탭에서만 표시) */}
+      {/* 필터 (굿즈 탭) */}
       {activeTab === "goods" && (
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center gap-4">

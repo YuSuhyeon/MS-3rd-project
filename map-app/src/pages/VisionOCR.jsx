@@ -14,100 +14,14 @@ import {
 import Papa from "papaparse";
 
 function VisionOCR() {
-  const [imageFile, setImageFile] = useState(null); // 업로드 이미지 파일
-  const [preview, setPreview] = useState(null); // 이미지 미리보기
-  const [result, setResult] = useState(null); // OCR 분석 결과
-  const [loading, setLoading] = useState(false); // 로딩 상태
-  const [error, setError] = useState(null); // 에러 메세지 장
-  const [menuData, setMenuData] = useState([]); // 메뉴 정보(성분,알러지) -> json
-  const [foodDescData, setFoodDescData] = useState([]); // 음식 설명 -> csv
-  const [foodData, setFoodData] = useState([]); // 800개의 한,영,일,중 메뉴 정보(설명)
-  const [selectedBox, setSelectedBox] = useState(null); // 클릭한 바운딩 박스 정보
-  const [matchedMenuInfo, setMatchedMenuInfo] = useState(null); // JSON/CSV 모두 일치하는 메뉴 정보
-  const [matchedFoodData, setMatchedFoodData] = useState(null); // foodData에서 일치하는 메뉴 정보
-  // (중복 선언 제거, 아래 선언만 남김)
-
-  const canvasRef = React.useRef(null); // OCR 결과 표시
-  const [imgSize, setImgSize] = useState({ width: 0, height: 0 }); // 업로드된 이미지 실제 크기
-
-  const [ocrLang, setOcrLang] = useState("ko");
-
-  const languageOptions = [
-    { value: "ko", code: "KO", label: "한국어" },
-    { value: "en", code: "EN", label: "English" },
-    { value: "ja", code: "JA", label: "日本語" },
-    { value: "zh-Hans", code: "CN", label: "中文" },
-  ];
-
-  // 메뉴 정보(성분, 알러지) JSON
+  // 메뉴 정보 JSON 불러오기
   useEffect(() => {
     fetch("/merged_annotations_merged.json")
       .then((res) => res.json())
       .then((data) => setMenuData(data));
   }, []);
-
-  // CSV 음식 설명 데이터
-  useEffect(() => {
-    fetch("/한국국제교류재단_한국음식정보_영문_20240215.csv")
-      .then((res) => res.text())
-      .then((csvText) => {
-        Papa.parse(csvText, {
-          header: true,
-          complete: (results) => {
-            setFoodDescData(results.data);
-          },
-        });
-      });
-  }, []);
-
-  // 메뉴 정보(한,영,일,중 설명) JSON
-  useEffect(() => {
-    fetch("/output.json")
-      .then((res) => res.json())
-      .then((data) => setFoodData(data));
-  }, []);
-
-  // 이미지 파일 업로드
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setImageFile(file);
-    setError(null);
-    setResult(null);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result);
-      reader.readAsDataURL(file);
-    } else {
-      setPreview(null);
-    }
-  };
-
-  // OCR 분석
-  const handleAnalyze = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (!imageFile) {
-        setError("이미지 파일을 업로드하세요.");
-        setLoading(false);
-        return;
-      }
-      const formData = new FormData();
-      formData.append("image_file", imageFile);
-      formData.append("ocr_lang", ocrLang); // 선택된 언어 추가
-      const response = await fetch("/api/vision/ocr", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      console.log("OCR API 응답:", data); // OCR 결과 구조 확인용 로그
-      setResult(data);
-    } catch (err) {
-      setError("분석 요청 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const canvasRef = React.useRef(null);
+  const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
 
   // 바운딩 박스 클릭 시 메뉴 정보 매칭
   function handleBoxClick(line) {
@@ -125,55 +39,16 @@ function VisionOCR() {
       setMatchedMenuInfo(foodMenu ? { foodMenu } : null);
     }
     setSelectedBox(line);
-
-    // foodData에서 언어와 상관없이 일치하는 메뉴 정보 찾기
-    function fuzzyFindFoodData(menuName, foodData) {
-      const normMenu = normalize(menuName);
-      // 모든 언어 컬럼에서 완전 일치 또는 부분 일치
-      const langCols = ["요리명.1"];
-      let found = foodData.find((row) =>
-        langCols.some((col) => row[col] && normalize(row[col]) === normMenu)
-      );
-      if (!found) {
-        found = foodData.find((row) =>
-          langCols.some(
-            (col) => row[col] && normMenu.includes(normalize(row[col]))
-          )
-        );
-      }
-      return found || null;
-    }
   }
-
-  // 언어별 컬럼 매핑
-  const foodLangMap = {
-    ko: { name: "요리명.1", desc: "설명(요리명제외)" },
-    en: { name: "영어", desc: "설명(요리명제외).1" },
-    ja: { name: "일본어", desc: "설명(요리명제외).2" },
-    "zh-Hans": { name: "중문1", desc: "설명(요리명제외).3" },
-  };
-
-  // OCR 텍스트와 foodData에서 일치하는 메뉴 찾기
-  function fuzzyFindFoodMenu(menuName, foodData, lang) {
-    const { name, desc } = foodLangMap[lang] || foodLangMap.ko;
-    const normMenu = normalize(menuName);
-    let found = foodData.find(
-      (row) => row[name] && normalize(row[name]) === normMenu
-    );
-    if (!found) {
-      // 부분 일치 허용
-      found = foodData.find(
-        (row) => row[name] && normMenu.includes(normalize(row[name]))
-      );
-    }
-    if (found) {
-      return {
-        menuName: found[name],
-        description: found[desc],
-      };
-    }
-    return null;
-  }
+  const [imageFile, setImageFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [menuData, setMenuData] = useState([]);
+  const [foodDescData, setFoodDescData] = useState([]);
+  const [selectedBox, setSelectedBox] = useState(null); // 클릭한 바운딩 박스 정보
+  const [matchedMenuInfo, setMatchedMenuInfo] = useState(null); // JSON/CSV 모두 일치하는 메뉴 정보
   // OCR 바운딩 박스(라인 단위)와 텍스트 그리기
   useEffect(() => {
     if (!result || !preview || !result.readResult || !result.readResult.blocks)
@@ -522,195 +397,35 @@ function VisionOCR() {
                   </div>
                 </div>
                 <div className="space-y-6">
-                  <div className="flex items-center justify-center gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
-                        <Globe className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-white backdrop-blur-sm border border-slate-200 rounded-2xl shadow-lg p-1">
-                      {languageOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => handleLanguageSelect(option.value)}
-                          className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 ${
-                            ocrLang === option.value
-                              ? "bg-blue-600 text-white shadow-lg transform scale-105"
-                              : "text-slate-800 hover:text-slate-900 hover:bg-slate-50"
-                          }`}
-                        >
-                          {option.code}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {/* 안내 문구: 데이터와 일치하는 정보가 없을 때 */}
-                  {!matchedMenuInfo?.json &&
-                    !matchedMenuInfo?.csv &&
-                    !matchedFoodData && (
-                      <div className="p-6 bg-gradient-to-br from-red-50 to-rose-50 border border-red-200/50 rounded-2xl shadow-lg mb-6">
-                        <h4 className="font-bold text-red-800 mb-2">
-                          정보를 찾을 수 없습니다
-                        </h4>
-                        <p className="text-slate-700 text-base font-medium">
-                          데이터에 해당 메뉴 정보가 없어요.
-                          <br />
-                          <span className="font-semibold text-red-700">
-                            정확한 성분이나 알러지 정보가 필요하다면 매장에 직접
-                            문의해보세요!
-                          </span>
-                        </p>
-                      </div>
-                    )}
-                  {/* foodData에서 일치하는 메뉴 정보 표시 (언어 선택과 무관) */}
-                  {matchedFoodData && (
-                    <div className="p-6 bg-gradient-to-br from-teal-50 to-blue-50 border border-teal-200/50 rounded-2xl shadow-lg mb-6">
-                      <h4 className="font-bold text-teal-800 mb-2">
-                        메뉴 정보
-                      </h4>
-                      <div className="mb-2">
-                        <span className="font-semibold text-slate-700 text-lg">
-                          메뉴명:{" "}
+                  <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border border-slate-200/50 shadow-lg">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-slate-600 font-semibold">
+                          메뉴명
                         </span>
-                        <span className="font-bold text-slate-900 text-2xl">
-                          {ocrLang === "ko" && matchedFoodData?.["요리명.1"]}
-                          {ocrLang === "en" && matchedFoodData?.["영어"]}
-                          {ocrLang === "ja" && matchedFoodData?.["일본어"]}
-                          {ocrLang === "zh-Hans" && matchedFoodData?.["중문1"]}
+                        <span className="font-bold text-slate-900 text-lg text-right">
+                          {matchedMenuInfo.json.ko}
                         </span>
                       </div>
-                      <div className="mt-2 text-slate-700 text-base">
-                        <span className="font-semibold text-lg">설명: </span>
-                        <span className="font-medium text-lg">
-                          {ocrLang === "ko" &&
-                            matchedFoodData?.["설명(요리명제외)"]}
-                          {ocrLang === "en" &&
-                            matchedFoodData?.["설명(요리명제외).1"]}
-                          {ocrLang === "ja" &&
-                            matchedFoodData?.["설명(요리명제외).2"]}
-                          {ocrLang === "zh-Hans" &&
-                            matchedFoodData?.["설명(요리명제외).3"]}
+                      <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-slate-600 font-semibold">
+                          주요 성분
+                        </span>
+                        <span className="font-medium text-slate-800 text-right max-w-xs">
+                          {matchedMenuInfo.json["ingredients.ko"]?.join(", ") ||
+                            "정보 없음"}
                         </span>
                       </div>
-                    </div>
-                  )}
-
-                  {/* json 정보가 있을 때만 표시 */}
-                  {matchedMenuInfo?.json && (
-                    <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border border-slate-200/50 shadow-lg">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-start">
-                          <span className="text-sm text-slate-600 font-semibold">
-                            메뉴명
-                          </span>
-                          <span className="font-bold text-slate-900 text-lg text-right">
-                            {/* {ocrLang === "ko" && matchedMenuInfo?.json?.["ko"]}
-                            {ocrLang === "en" && matchedMenuInfo?.json?.["en"]}
-                            {ocrLang === "ja" && matchedMenuInfo?.json?.["ja"]}
-                            {ocrLang === "zh-Hans" &&
-                              matchedMenuInfo?.json?.["zh_CN"]} */}
-                            {(() => {
-                              if (ocrLang === "ko")
-                                return (
-                                  matchedMenuInfo?.json?.["ko"] || "정보 없음"
-                                );
-                              if (ocrLang === "en")
-                                return (
-                                  matchedMenuInfo?.json?.["en"] || "정보 없음"
-                                );
-                              if (ocrLang === "ja")
-                                return (
-                                  matchedMenuInfo?.json?.["ja"] || "정보 없음"
-                                );
-                              if (ocrLang === "zh-Hans")
-                                return (
-                                  matchedMenuInfo?.json?.["zh_CN"] ||
-                                  "정보 없음"
-                                );
-                              return "정보 없음";
-                            })()}
-                          </span>
-                        </div>
-                        <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-sm text-slate-600 font-semibold">
-                            주요 성분
-                          </span>
-                          <span className="font-medium text-slate-800 text-right max-w-xs">
-                            {(() => {
-                              if (ocrLang === "ko")
-                                return (
-                                  matchedMenuInfo?.json?.["ingredients.ko"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "en")
-                                return (
-                                  matchedMenuInfo?.json?.["ingredients.en"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "ja")
-                                return (
-                                  matchedMenuInfo?.json?.["ingredients.ja"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "zh-Hans")
-                                return (
-                                  matchedMenuInfo?.json?.[
-                                    "ingredients.zh_CN"
-                                  ] || "정보 없음"
-                                );
-                              return "정보 없음";
-                            })()}
-                            {/* {ocrLang === "ko" &&
-                              matchedMenuInfo?.json?.["ingredients.ko"]}
-                            {ocrLang === "en" &&
-                              matchedMenuInfo?.json?.["ingredients.en"]}
-                            {ocrLang === "ja" &&
-                              matchedMenuInfo?.json?.["ingredients.ja"]}
-                            {ocrLang === "zh-Hans" &&
-                              matchedMenuInfo?.json?.["ingredients.zh_CN"]} */}
-                          </span>
-                        </div>
-                        <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-sm text-slate-600 font-semibold">
-                            알러지 정보
-                          </span>
-                          {/* 번역은 나중에 수정 필요 */}
-                          <span className="font-medium text-slate-800 text-right max-w-xs">
-                            {(() => {
-                              if (ocrLang === "ko")
-                                return (
-                                  matchedMenuInfo?.json?.["allergy"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "en")
-                                return (
-                                  matchedMenuInfo?.json?.["allergy"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "ja")
-                                return (
-                                  matchedMenuInfo?.json?.["allergy"] ||
-                                  "정보 없음"
-                                );
-                              if (ocrLang === "zh-Hans")
-                                return (
-                                  matchedMenuInfo?.json?.["allergy"] ||
-                                  "정보 없음"
-                                );
-                              return "정보 없음";
-                            })()}
-                            {/* {ocrLang === "ko" &&
-                              matchedMenuInfo?.json?.["allergy"]}
-                            {ocrLang === "en" &&
-                              matchedMenuInfo?.json?.["allergy"]}
-                            {ocrLang === "ja" &&
-                              matchedMenuInfo?.json?.["allergy"]}
-                            {ocrLang === "zh-Hans" &&
-                              matchedMenuInfo?.json?.["allergy"]} */}
-                          </span>
-                        </div>
+                      <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-slate-600 font-semibold">
+                          알러지 정보
+                        </span>
+                        <span className="font-medium text-slate-800 text-right max-w-xs">
+                          {matchedMenuInfo.json.allergy?.join(", ") ||
+                            "정보 없음"}
+                        </span>
                       </div>
                     </div>
                   )}

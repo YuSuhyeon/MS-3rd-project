@@ -1,186 +1,144 @@
-# AI Seoul Tour Planner & Docent 웹 서비스 기능 명세서 (FRS)
+# AI Seoul Tour Planner & Docent 기능 명세서(FRS)
 
 버전: 2.01  
-작성일: 2025-09-02
+문서 갱신: 2025-09-09
 
 ## 1. 개요
 
-### 1.1. 문서 목적
-본 문서는 ‘AI Seoul Tour Planner & Docent’ 웹 서비스의 기능적/비기능적 요구사항을 상세히 정의한다. 페르소나 분석, 경로 추천 및 편집, 실시간 위치 기반 도슨트(멀티랭·TTS) 등 핵심 기능 구현의 기준을 제공하며, 프로젝트 이해관계자 간 통일된 이해를 돕는다.
+### 1.1 목적
+본 문서는 AI Seoul Tour Planner & Docent의 최신 기능(경로 편집/타임라인/검색/테마)을 상세히 정리합니다.
 
-### 1.2. 시스템 개요
-본 시스템은 다음 두 가지 주요 서비스로 구성된 통합 서울 관광 솔루션이다.
-- AI Tour Planner: 사용자의 여행 스타일을 AI로 분석해 6가지 페르소나로 분류하고, 맞춤형 하루 추천 코스를 시각적으로 제공하며, 사용자가 직접 경로를 수정할 수 있는 동적 여행 계획 서비스.
-- AI Docent: 사용자의 실시간 GPS 위치를 기반으로 주변 관광지(POI) 정보를 음성(TTS)으로 자동 안내하고, 다국어 번역 및 RAG 기반 챗봇을 통해 상세 정보를 제공하는 실시간 가이드 서비스.
+### 1.2 범위
+- AI Tour Planner: 성향 설문 기반 페르소나 분석, 코스/경로 제안
+- AI Docent: 지도 기반 POI 탐색/설명, 추천/요약, 음성 안내(TTS)
 
-### 1.3. 사용자 프로필
-- 대상: 서울을 여행하는 내·외국인 자유여행객(FIT)
-- 특징: 개인화된 여행 계획과 깊이 있는 정보를 원함. 모바일 웹 사용에 익숙. 여행 중 실시간 정보(길찾기, 주변 정보) 요구가 높음.
+## 2. 경로 편집(Directions)
 
-## 2. 기능 요구사항 (Functional Requirements)
+[진행] 2025-09-09: 경로 편집 페이지 UI/UX를 마이로(Myro) 유사 레이아웃으로 개편했습니다.
+- 좌측 스텝 네비 + 중앙 다일차(1~N) 컬럼 카드 + 우측 풀높이 지도
+- Day 탭 → 컬럼 카드로 전환, 각 일차별 타임라인·요약 표시, 활성 일차는 강조 표시 및 체류 입력 가능
+- 기존 계산/검색/우선순위/출발시간 컨트롤은 상단 툴바 유지
+- Kakao Waypoints 경로 계산/마커 렌더링 로직은 유지
 
-### Part A: AI Tour Planner 서비스
+### 2.1 주요 기능(최신 구현)
+- 출발/도착/경유지 자동완성: Kakao Places 기반 입력(PlaceSearchInput)
+- 경유지 검색 모달(강화):
+  - 키워드 검색, 카테고리 토글(카페/음식/공원/박물관/쇼핑), 거리·이름 정렬
+  - 다중 선택(체크박스) → “선택 N건 추가”로 일괄 추가
+  - 거리(km) 표기: 출발지(없으면 지도 중심) 기준 haversine 계산
+  - 더보기: Kakao Places pagination 지원 시 다음 페이지 로드(미지원 시 graceful degrade)
+- 경유지 순서 변경: 드래그 앤 드롭 + 상/하 버튼
+- 체류 시간: 출발/각 경유/도착지 체류(분) 입력 → 타임라인 누적 반영
+- 이동 수단: 자동차(정식), 도보/대중교통(베타)
+  - 자동차: Kakao Mobility Waypoints 경로 응답(routes[0].summary/sections[*].summary)로
+    - 총 거리/시간, 구간 거리/시간 정확 표기
+    - 지도 폴리라인(도로 vertexes) 렌더링
+  - 도보/대중교통(베타):
+    - 현재는 직선거리 기반 추정치(도보 4.5km/h, 대중교통 25km/h + 환승 5분/구간)
+    - 점선 폴리라인으로 시각화(정식 경로 API 미연동 시)
+- 타임라인(테마 보정):
+  - myro 유사 수직 타임라인(좌: 점/선, 우: 카드)
+  - 각 지점: 이름, 도착 예상 시각, (이전 구간) 이동거리·시간, 체류 시간
+  - 상단 요약: 총 이동거리/총 이동시간, 예상 종료 시각(출발 + 이동 + 체류)
+- 마커 표시/아이콘: 출발/경유/도착 마커 이미지 적용
+  - 경로: `map-app/public/marker_ko/*.png` 활용
+  - 크기 36x36, 경유지는 색상/번호 변형 이미지 순환 적용
 
-#### 2.1. 사용자 입력 페이지 (Home)
-- 기능 ID: FR-PLAN-100  
-  기능명: 페르소나 분석을 위한 사용자 정보 입력
-  - FR-PLAN-101: 질문 1, 2, 4, 5는 단일 선택(Radio) 그룹이며, 선택된 항목을 다시 클릭하여 선택 해제 가능.
-  - FR-PLAN-102: 질문 3(관심 활동)은 다중 선택(Checkbox) 그룹, 최대 3개까지. 4개 이상 선택 시 경고 후 선택 취소.
-  - FR-PLAN-103: 제출 시 단일 선택 그룹 유효성 검사. 미답변 시 경고 및 제출 차단.
+### 2.2 화면 구성
+- 상단 3열 그리드: 출발(자동완성+체류), 도착(자동완성+체류), [경유지 검색][경로 계산]
+- 하단 3열 그리드: 우선순위(추천/최단시간/최단거리), 출발 시간, 이동 수단(자동차/도보/대중교통)
+- 경유지 목록: 자동완성, 체류(분), 드래그 정렬/삭제/상하 이동
+- 지도(좌) + 타임라인(우)
 
-수용 기준(예):
-- 단일선택 항목은 토글 해제가 가능해야 하며, 각 문항 상태가 즉시 UI에 반영된다.
-- 다중선택 4번째 클릭 시 경고 메시지 표출 및 체크 상태가 유지되지 않는다.
-- 제출 시 미답변 문항이 하이라이트되고 안내 문구가 표시된다.
+### 2.3 타임라인 계산 로직
+- 입력: 출발 시각(HH:mm), 구간 이동 시간, 각 지점 체류 시간
+- 도착 시간: 출발 → (구간 이동) → 도착 → (체류) → 다음 구간 이동 … 방식으로 누적
+- 총합: 총 이동거리(sum(sections.distance)/1000), 총 이동시간(sum(sections.duration)/60), 종료 시각(마지막 누적 분)
 
-#### 2.2. 추천 결과 페이지 (Result Dashboard)
-- 기능 ID: FR-PLAN-200  
-  기능명: 페르소나 분석 결과 및 추천 코스 요약 표시
-  - FR-RSLT-001: 상단에 예측된 페르소나 이름, 상세 설명, 키워드를 표시.
-  - FR-RSLT-002: AI 분석의 근거가 된 사용자의 선택 항목을 표시.
-  - TOP 3 활동을 만족도(%)와 함께 목록으로 표시.
-  - 추천 하루 코스(오전/오후/저녁)를 타임라인 형태로 시각화.
-  - ‘나만의 경로 만들기’ 클릭 시 추천 코스 정보를 포함하여 경로 편집 페이지로 이동.
+### 2.4 Kakao 통합
+- 프런트: Kakao Maps JS SDK(`libraries=services`) 로딩
+- 백엔드 프록시: `POST /api/kakao-waypoints`
+  - 헤더: `Authorization: KakaoAK {KAKAO_REST_API_KEY}`
+  - 바디: `{ origin:{x,y}, destination:{x,y}, waypoints:[{x,y}], priority }`
+  - 응답: Kakao Mobility `v1/waypoints/directions` JSON 그대로 전달
+  - 환경변수: `KAKAO_REST_API_KEY` 또는 `REACT_APP_KAKAO_API_KEY`
 
-수용 기준(예):
-- 코스 타임라인에 최소 3구간(오전/오후/저녁)이 표현되고, 각 구간은 대표 활동과 요약이 있다.
-- 이동 시 Route Editor로 전달되는 초기 경로 데이터(POI 목록, 순서, 메타)가 유지된다.
+### 2.5 도보/대중교통 정식 경로 API(네이버)
+- 백엔드 프록시 추가(키 필요):
+  - `POST /api/naver/walking` → 보행 구간별 요청(연속 다구간 구성)
+  - `POST /api/naver/transit` → 대중교통 구간별 요청(연속 다구간 구성)
+- 요청 바디(공통):
+  - `{ origin:{x,y}, destination:{x,y}, waypoints:[{x,y}] }`  // x=경도, y=위도, 문자열 허용
+- 응답 형식(공통):
+  - `{ routes:[{ summary:{distance, duration}, sections:[ { summary:{distance, duration}, path:[[x,y], ...] } ] } ] }`
+- 키/헤더(Naver Cloud Platform):
+  - `X-NCP-APIGW-API-KEY-ID: ${NAVER_MAPS_API_KEY_ID}`
+  - `X-NCP-APIGW-API-KEY: ${NAVER_MAPS_API_KEY}`
+- 프런트 동작:
+  - 모드가 WALK/TRANSIT일 때 네이버 프록시 우선 호출 → 성공 시 섹션별 거리/시간/좌표에 기반하여 타임라인/폴리라인 표시, 실패 시 추정(도보 4.5km/h, 대중교통 25km/h+5분/구간)
 
-#### 2.3. 경로 편집 페이지 (Route Editor)
-- 기능 ID: FR-PLAN-300  
-  기능명: 추천 경로 시각화 및 편집 (2단 구성: 중앙 지도, 우측 요약 패널)
+## 3. UI/테마 사양(마이로 유사)
 
-지도 영역 (Map View)
-- FR-PLAN-301: 추천된 장소(POI)를 지도 위에 순서 마커(①, ②, ③)와 폴리라인으로 표시.
-- FR-PLAN-302: 마커 클릭 시 이름/사진이 포함된 인포윈도우 표시.
-- FR-PLAN-303: 경로 순서 마커 드래그 앤 드롭으로 방문 순서 변경. 변경 시 우측 패널 및 폴리라인 실시간 동기화.
+### 3.1 색/레이아웃
+- 카드형 레이아웃(얕은 그림자), 중립 배경(#f8f9fb 계열), 주요 액션 인디고 계열 버튼
+- 좌측 고정 스텝 네비게이션(STEP 1/2/3), 중앙 컨텐츠 패널(폭 360~520px), 우측 풀 높이 지도
+- 타임라인: 수직 라인 + 원형 노드(출발=녹색, 도착=적색, 경유=보라), 우측 카드에 정보 배치
 
-요약 정보 패널 (Summary Panel)
-- FR-PLAN-304: 이동 순서 목록 제공. 드래그 앤 드롭으로 순서 변경(지도와 동기화), 각 항목 ‘삭제’ 버튼 제공.
-- FR-PLAN-305: 검색창을 통해 새로운 장소를 검색·추가. 추가 즉시 지도·목록 반영.
-- FR-PLAN-306: 교통수단 선택(대중교통/도보/자전거 등) 옵션 제공.
-- FR-PLAN-307: 순서·교통수단 변경 시 카카오 길찾기 API로 총 예상 이동 시간/비용을 실시간 업데이트.
-- FR-PLAN-308: 최종 경로 저장/공유(공유 링크 생성) 기능 제공.
+### 3.2 타임라인 컴포넌트(CSS)
+- 파일: `map-app/src/styles/directions.css`
+- 클래스: `.timeline`, `.timeline-item`, `.timeline-dot(start|wp|end)`, `.timeline-line`, `.timeline-content`
+- 레이아웃: `.directions-wrapper`, `.directions-leftbar`, `.step-nav`, `.directions-panel`, `.directions-mapbox`
+- 접근성: 텍스트 대비 준수, 간결한 정보 밀도 유지
 
-수용 기준(예):
-- 순서 변경 시 폴리라인 재계산 및 Bounds 자동 맞춤.
-- 교통수단 변경 시 API 요청 파라미터가 달라지고, 총 이동 시간/비용이 3초 내 갱신.
-- 공유 링크는 동일 경로를 재구성할 수 있는 식별자/파라미터를 포함한다.
+### 3.3 마커 아이콘
+- 경로: `public/marker_ko/`
+  - `marker_start.png`, `marker_end.png`, `marker_waypoint_1~5.png`
+- 적용: `kakao.maps.MarkerImage(src, Size(36,36))`
+- 배치: 출발/경유/도착 순으로 마커 표시, 경유는 1~5 순환 이미지 사용
 
-### Part B: AI Docent 서비스
+## 4. 기술 상세
 
-#### 2.4. 도슨트 메인 페이지 (Docent View)
-- 기능 ID: FR-DOCENT-100  
-  기능명: 실시간 위치 기반 주변 정보 제공 (3단 레이아웃)
+### 4.1 프런트 소스(핵심)
+- `src/pages/DirectionsPro.jsx`
+  - 모드: DRIVE/WALK/TRANSIT
+  - 우선순위: RECOMMEND/FAST/SHORTEST(자동차)
+  - 체류 시간, 출발 시간, 경유지 검색 모달(필터/정렬/더보기), 드래그 정렬
+  - 자동차: 백엔드 프록시로 Kakao Waypoints 요청 → 폴리라인/요약(정확)
+  - 도보/대중교통: 추정 로직 + 점선 폴리라인(정식 연동 시 교체 예정)
+  - 마커: `public/marker_ko` 이미지 적용
+- `src/components/directions/PlaceSearchInput.jsx`
+  - Kakao Places 자동완성(디바운스, 키보드 탐색, 선택)
+- `src/styles/directions.css`
+  - 타임라인 스타일 정의
+- 라우팅: `src/App.js` → `/directions`가 `DirectionsPro` 페이지로 연결
 
-공통 기능
-- FR-DOCENT-101(다국어 지원): 한국어/English/日本語/中文(简体) 선택. UI 텍스트, POI 정보(이름/주소/설명), 챗봇 응답, TTS가 선택 언어로 제공. Azure Translator API 사용.
-- FR-DOCENT-102(실시간 위치 추적): Geolocation API로 현재 좌표 수신. 지도에 내 위치 마커(my_walk.png)와 현재 주소 텍스트 표시. ‘현재 위치로 이동’ 버튼 제공.
-- FR-DOCENT-103(POI 데이터 로딩): 시작 시 final_visit_seoul.csv에서 모든 POI 로드 및 내부 관리.
+### 4.2 백엔드 API
+- `POST /api/kakao-waypoints` → Kakao Mobility `v1/waypoints/directions` 프록시
+- `GET /api/persona/courses` → 코스 CSV 파싱/그룹
+- 기타 헬스체크/데이터 집계 엔드포인트
 
-좌측 패널 (POI List Panel)
-- FR-DOCENT-104: 카테고리 필터(예: 고궁, 미술관&박물관), 이름/주소 검색.
-- FR-DOCENT-105: 목록 클릭 시 지도 중앙 이동 + 우측 상세 패널에 정보 표시.
+### 4.3 환경변수
+- 프런트: `REACT_APP_KAKAO_API_KEY`(Maps JS SDK)
+- 백엔드: `KAKAO_REST_API_KEY`(Mobility REST), `BACKEND_HOST/BACKEND_PORT`
+- 네이버: `NAVER_MAPS_API_KEY_ID`, `NAVER_MAPS_API_KEY` (NCP API GW 헤더 값)
 
-중앙 지도 (Map View)
-- FR-DOCENT-106: 모든 POI 위치에 마커(card_blue.png) 표시.
-- FR-DOCENT-107: 마커 클릭 시 해당 POI 선택, 인포윈도우(‘길찾기’ 버튼 포함) 표시.
-- FR-DOCENT-108: 내 위치(또는 클릭 위치) 중심 반경 50m Circle 표시.
+## 5. 운영
 
-우측 패널 (Detail & Recommendation)
-- FR-DOCENT-109: 선택된 POI의 상세(이름·설명·주소)를 언어 설정에 따라 번역 표시.
-- FR-DOCENT-110: ‘AI Docent ON/OFF’ 토글 제공. ON일 때 50m 근접 또는 선택 시 Azure Speech TTS로 설명 자동 재생. 재생 중 ‘오디오 중지’, 정지 시 ‘오디오 재생’ 제공. OFF일 때 모든 음성 기능 비활성화.
-- FR-DOCENT-111: 현재 위치에서 가장 가까운 POI 3개를 거리와 함께 추천. 각 항목에 ‘설명 보기’/‘길찾기’ 제공.
-- FR-DOCENT-112: 반경 50m 내 POI 목록 별도 표시.
+### 5.1 개발 실행
+- 백엔드: `python backend/app.py` (또는 가상환경 활성화 후 실행)
+- 프런트: `cd map-app && npm start` (프록시: `src/setupProxy.js`)
 
-수용 기준(예):
-- 언어 전환 시 1초 내 UI 텍스트와 선택된 POI 상세가 번역 반영.
-- 근접 이벤트 발생 시 1초 내 TTS 재생 시작(네트워크 환경 정상 가정).
-- 지도 인터랙션은 60fps에 근접한 반응성을 유지(마커/원 렌더링 최적화).
+### 5.2 빌드
+- 프런트 빌드: `cd map-app && npm run build`
+- 백엔드가 CRA build 정적 자산 제공(있을 경우)
 
-### Part C: RAG 기반 챗봇 서비스
+## 6. 알려진 이슈/한계
+- 도보/대중교통 정식 경로: 공개 REST/JS API 제약으로 미연동(추정치 제공). 외부 키 제공 시 바로 연동 가능
+- 회피 옵션: 요청 범위 밖으로 구현 보류(우선순위 낮음)
+- 카테고리 정확도: Kakao Places 응답의 `category_name`에 의존(간단 필터)
 
-#### 2.5. 챗봇 (Chatbot)
-- 기능 ID: FR-CHAT-100  
-  기능명: 서울 관광 정보 질의응답 (Azure Cognitive Search + Azure OpenAI RAG)
-  - UX: 우측 하단 플로팅 ‘챗봇에게 질문’ 버튼 → 패널 열림 → 질문 입력 → 전송.
-  - 언어 감지/번역: 비한국어 입력 시 Azure Translator로 한국어 번역(검색 정확도 향상).
-  - 검색: 한국어 질의로 Search 인덱스(seoul-report-index) 검색.
-  - 생성: 검색 결과와 원 질문을 모델 프롬프트로 전달. “검색된 결과만으로 답변” 지시 포함.
-  - 응답/재번역: 모델 응답(한국어)을 사용자의 원 언어로 재번역 후 UI 표시.
-  - FR-CHAT-101: 검색 결과가 없을 경우 추측 없이 부재 안내.
-  - FR-CHAT-102: 대화 초기화/다시 시도 기능 포함.
-
-수용 기준(예):
-- 첫 응답까지 5초 이내 시작(네트워크 정상 가정, 스트리밍 가능 시 점진 표시).
-- 근거 문서/출처(타이틀/링크)를 선택적으로 함께 표기 가능.
-
-## 3. 비기능 요구사항 (NFR)
-
-### 3.1. 성능
-- Planner: 페르소나 분석 결과 3초 이내 로드.
-- Docent: 지도 로딩 및 POI 마커 표시 2초 이내 완료. 챗봇 첫 응답 5초 이내 시작.
-
-### 3.2. 보안/키 관리
-- 모든 Azure/Kakao API 키는 클라이언트 코드에 하드코딩 금지. 서버 또는 환경 변수로 관리.
-- Dev 예시: `REACT_APP_KAKAO_JS_KEY`(브라우저), `KAKAO_REST_API_KEY`(서버 프록시). 배포 시 보안 저장소 사용.
-
-### 3.3. 사용성
-- 직관적 UI, 다국어 사용자 고려. 명확한 아이콘 및 간결한 텍스트. 모바일 우선/반응형.
-
-### 3.4. 호환성
-- 최신 Chrome, Safari, Edge 및 iOS/Android 모바일 웹 환경 지원.
-
-## 4. 데이터/API/환경
-
-### 4.1. 데이터 소스 (POI)
-- 원본: `public/final_visit_seoul.csv` 및 `public/seoul_data/*.csv`
-- 주요 필드(예): `poi_id, category, name_ko, lat, lon, address_ko, rag_seed_text_ko`
-- 통합 API: `GET /api/seoul-data?q=키워드` → `{ count, items: [{ id, name, lat, lng, addr, category, desc }] }`
-
-### 4.2. 외부 API
-- Kakao Maps JavaScript SDK: 지도·마커·지오코딩
-- Kakao Mobility Directions: 길찾기/경로(서버 프록시 경유)
-- Azure Translator: 다국어 번역
-- Azure Speech Service: TTS
-- Azure Cognitive Search + Azure OpenAI: RAG 챗봇
-
-### 4.3. 프록시/엔드포인트
-- 프록시: `src/setupProxy.js`
-  - `/api/kakao-directions` → `https://apis-navi.kakaomobility.com/v1/directions`
-  - `/api/kakao-waypoints` → 동일 타깃, `Content-Type: application/json`
-  - 인증 헤더: `Authorization: KakaoAK ${KAKAO_REST_API_KEY}` (서버 환경 변수)
-
-### 4.4. 라우팅/페이지
-- `/docent`(Docent View), `/directions`(Route Editor), `/itinerary`(Itinerary View)
-
-### 4.5. 환경 변수/포트
-- 개발 포트: `PORT=5000`
-- 브라우저 키: `REACT_APP_KAKAO_JS_KEY`
-- 서버 키: `KAKAO_REST_API_KEY`
-
-## 5. 품질 보증/테스트(개요)
-
-### 5.1. 단위/통합 테스트 (예)
-- Planner 입력 검증(라디오 토글, 체크박스 3개 제한, 제출 차단) 테스트.
-- Route Editor 순서 변경 시 지도 폴리라인/요약 동기화 테스트.
-- Docent 위치 권한 부여/거부 플로우 및 50m 반경 판정 테스트.
-- 번역/음성 API 오류 시 폴백 메시지/재시도 버튼 동작.
-
-### 5.2. 성능 측정 (예)
-- 마커 렌더링 수(최대 500개) 시 초기 로딩 시간 측정(2초 내 목표).
-- 챗봇 응답 지연 시간 95퍼센타일 5초 이내.
-
-## 6. 구현 가이드(요약)
-
-- 키 관리: 클라이언트(맵 JS 키), 서버 프록시(REST 키) 분리. 리포에 키 하드코딩 금지.
-- 데이터 적재: CSV → 서버에서 정규화 후 `/api/seoul-data`로 제공.
-- 경로 계산: 클라이언트는 입력 상태 관리, CAR 모드 시 프록시를 통해 Kakao Directions 호출.
-- i18n: UI 사전 + Translator 결합. POI 텍스트는 요청 시 번역/캐시.
-- TTS: 선택/근접 트리거 시 Speech SDK 호출. 동시 재생 방지/중지 토글 제공.
-- RAG: Translator(입력) → Search → OpenAI(생성) → Translator(출력) 파이프라인.
-
----
-
-본 FRS는 Ver 2.01 기준으로 작성되었으며, 세부 항목(페르소나 정의, 요금 정책 등)이 확정될 경우 후속 버전에서 보완한다.
-
+## 7. 향후 계획(제안)
+- 도보/대중교통 정식 연동(Naver/Tmap/Google 중 택1)
+- 회피 옵션(유료/고속도로 등) Kakao 스펙 확인 후 안전 반영
+- 검색 모달 고도화: 평점/혼잡도/가격대가 있는 소스와 결합, 지도 미리보기
+- 공유/저장: 경로 상태를 URL/백엔드에 저장, 링크 공유/즐겨찾기
