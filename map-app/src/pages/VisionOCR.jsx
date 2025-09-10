@@ -22,7 +22,7 @@ function VisionOCR() {
   // 한국국제교류재단.csv => 영문 설명
   const [foodENData, setFoodENData] = useState([]);
   // output.json => 한,영,일,중 메뉴 정보
-  const [foodData, setFoodData] = useState([]);
+  const [foodAllData, setFoodAllData] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [ocrLang, setOcrLang] = useState("ko");
@@ -39,8 +39,7 @@ function VisionOCR() {
   const [result, setResult] = useState(null); // OCR 분석 결과
   const [error, setError] = useState(null); // 에러 메세지 장
   const [selectedBox, setSelectedBox] = useState(null); // 클릭한 바운딩 박스 정보
-  const [matchedMenuInfo, setMatchedMenuInfo] = useState(null); // JSON/CSV 모두 일치하는 메뉴 정보
-  const [matchedFoodData, setMatchedFoodData] = useState(null); // foodData에서 일치하는 메뉴 정보
+  const [matched, setMatched] = useState(null); // JSON/CSV 모두 일치하는 메뉴 정보
   const [translationLoading, setTranslationLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -83,7 +82,7 @@ function VisionOCR() {
   useEffect(() => {
     fetch("/output.json")
       .then((res) => res.json())
-      .then((data) => setFoodData(data));
+      .then((data) => setFoodAllData(data));
   }, []);
 
   // 이미지 파일 업로드
@@ -138,39 +137,17 @@ function VisionOCR() {
     setAllergyCache({});
     setTranslatedAllergy("");
 
-    // OCR 텍스트에서 메뉴 정보 찾기
-    const menuInfo = fuzzyFindMenuInfo(line.text, menuData);
-    const foodDesc = fuzzyFindFoodDesc(line.text, foodENData);
-    const foodMenu = fuzzyFindFoodMenu(line.text, foodData, ocrLang);
+    // OCR 텍스트와 데이터 일치하는 부분
+    const matchedMenuInfo = fuzzyFindMenuInfo(line.text, menuData);
+    const matchedFoodEN = fuzzyFindFoodEN(line.text, foodENData);
+    const matchedFoodAll = fuzzyFindFoodAllData(line.text, foodAllData);
 
-    // foodData에서 언어와 상관없이 일치하는 메뉴 정보 찾기
-    const matchedFood = fuzzyFindFoodData(line.text, foodData);
-    setMatchedFoodData(matchedFood);
-
-    if (menuInfo && foodDesc) {
-      setMatchedMenuInfo({ json: menuInfo, csv: foodDesc, foodMenu });
-    } else {
-      setMatchedMenuInfo(foodMenu ? { foodMenu } : null);
-    }
+    setMatched({
+      menuInfo: matchedMenuInfo,
+      foodEN: matchedFoodEN,
+      foodAll: matchedFoodAll,
+    });
     setSelectedBox(line);
-
-    // foodData에서 언어와 상관없이 일치하는 메뉴 정보 찾기
-    function fuzzyFindFoodData(menuName, foodData) {
-      const normMenu = normalize(menuName);
-      // 모든 언어 컬럼에서 완전 일치 또는 부분 일치
-      const langCols = ["요리명.1"];
-      let found = foodData.find((row) =>
-        langCols.some((col) => row[col] && normalize(row[col]) === normMenu)
-      );
-      if (!found) {
-        found = foodData.find((row) =>
-          langCols.some(
-            (col) => row[col] && normMenu.includes(normalize(row[col]))
-          )
-        );
-      }
-      return found || null;
-    }
   }
 
   // 언어별 컬럼 매핑
@@ -180,27 +157,22 @@ function VisionOCR() {
     ja: { name: "일본어", desc: "설명(요리명제외).2" },
     "zh-Hans": { name: "중문1", desc: "설명(요리명제외).3" },
   };
-
-  // OCR 텍스트와 foodData에서 일치하는 메뉴 찾기
-  function fuzzyFindFoodMenu(menuName, foodData, lang) {
-    const { name, desc } = foodLangMap[lang] || foodLangMap.ko;
+  // foodAllData에서 언어와 상관없이 일치하는 메뉴 정보 찾기
+  function fuzzyFindFoodAllData(menuName, foodAllData) {
     const normMenu = normalize(menuName);
-    let found = foodData.find(
-      (row) => row[name] && normalize(row[name]) === normMenu
+    // 모든 언어 컬럼에서 완전 일치 또는 부분 일치
+    const langCols = ["요리명.1"];
+    let found = foodAllData.find((row) =>
+      langCols.some((col) => row[col] && normalize(row[col]) === normMenu)
     );
     if (!found) {
-      // 부분 일치 허용
-      found = foodData.find(
-        (row) => row[name] && normMenu.includes(normalize(row[name]))
+      found = foodAllData.find((row) =>
+        langCols.some(
+          (col) => row[col] && normMenu.includes(normalize(row[col]))
+        )
       );
     }
-    if (found) {
-      return {
-        menuName: found[name],
-        description: found[desc],
-      };
-    }
-    return null;
+    return found || null;
   }
 
   // OCR 바운딩 박스(라인 단위)와 텍스트 그리기
@@ -273,8 +245,8 @@ function VisionOCR() {
       .replace(/[^가-힣a-zA-Z0-9]/g, "")
       .toLowerCase();
   }
-  // ...FOOD_WHITELIST removed: no longer used in fuzzyFindFoodDesc
-  function fuzzyFindFoodDesc(menuName, foodENData) {
+  // ...FOOD_WHITELIST removed: no longer used in fuzzyFindFoodEN
+  function fuzzyFindFoodEN(menuName, foodENData) {
     const normMenu = normalize(menuName);
     // 1. 완전 일치
     const found = foodENData.find(
@@ -337,7 +309,7 @@ function VisionOCR() {
   // 공식 음식설명 번역: 메뉴/언어 변경 시 자동 번역 (캐싱)
   useEffect(() => {
     async function doTranslate() {
-      if (!matchedMenuInfo?.csv?.["음식설명"]) {
+      if (!matched?.foodEN?.["음식설명"]) {
         setTranslatedDesc("");
         setTranslationLoading(false);
         return;
@@ -351,12 +323,9 @@ function VisionOCR() {
       let result = "";
       try {
         if (ocrLang === "ko") {
-          result = await translateToKorean(matchedMenuInfo.csv["음식설명"]);
+          result = await translateToKorean(matched.foodEN["음식설명"]);
         } else if (ocrLang !== "en") {
-          result = await translateText(
-            matchedMenuInfo.csv["음식설명"],
-            ocrLang
-          );
+          result = await translateText(matched.foodEN["음식설명"], ocrLang);
         }
       } catch (err) {
         result = "";
@@ -366,21 +335,18 @@ function VisionOCR() {
       setTranslationLoading(false);
     }
     doTranslate();
-  }, [matchedMenuInfo, ocrLang]);
+  }, [matched, ocrLang]);
 
   useEffect(() => {
     async function doTranslateName() {
       if (
-        matchedMenuInfo?.csv?.["음식명"] &&
+        matched?.foodEN?.["음식명"] &&
         (ocrLang === "ja" || ocrLang === "zh-Hans")
       ) {
         if (!nameCache[ocrLang]) {
           let nameResult = "";
           try {
-            nameResult = await translateText(
-              matchedMenuInfo.csv["음식명"],
-              ocrLang
-            );
+            nameResult = await translateText(matched.foodEN["음식명"], ocrLang);
           } catch (err) {
             nameResult = "";
           }
@@ -389,14 +355,14 @@ function VisionOCR() {
       }
     }
     doTranslateName();
-  }, [matchedMenuInfo, ocrLang]);
+  }, [matched, ocrLang]);
 
   const [allergyCache, setAllergyCache] = useState({});
   const [translatedAllergy, setTranslatedAllergy] = useState("");
   // 알러지 정보 번역: 메뉴/언어 변경 시 자동 번역 (캐싱)
   useEffect(() => {
     async function doTranslateAllergy() {
-      const allergyArr = matchedMenuInfo?.json?.allergy;
+      const allergyArr = matched?.menuInfo?.allergy;
       if (
         !allergyArr ||
         !Array.isArray(allergyArr) ||
@@ -426,16 +392,16 @@ function VisionOCR() {
       setTranslatedAllergy(result);
     }
     doTranslateAllergy();
-  }, [matchedMenuInfo, ocrLang]);
+  }, [matched, ocrLang]);
 
   useEffect(() => {
-    const hasFoodData = matchedFoodData != null;
-    const hasFoodDesc = matchedMenuInfo?.csv != null;
-    const hasMenuJson = matchedMenuInfo?.json != null;
-    const onlyMenuJson = hasMenuJson && !hasFoodData && !hasFoodDesc;
+    const hasFoodAllData = matched?.foodAll != null;
+    const hasFoodEN = matched?.foodEN != null;
+    const hasMenuJson = matched?.menuInfo != null;
+    const onlyMenuJson = hasMenuJson && !hasFoodAllData && !hasFoodEN;
     if (
       selectedBox &&
-      ((!hasFoodData && !hasFoodDesc && !hasMenuJson) || onlyMenuJson)
+      ((!hasFoodAllData && !hasFoodEN && !hasMenuJson) || onlyMenuJson)
     ) {
       setAiLoading(true);
       // AI 답변 요청 취소 관리
@@ -454,7 +420,7 @@ function VisionOCR() {
       setAiMenuAnswer("");
       setAiLoading(false);
     }
-  }, [matchedMenuInfo, matchedFoodData, selectedBox, ocrLang]);
+  }, [matched, selectedBox, ocrLang]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8">
@@ -765,7 +731,7 @@ function VisionOCR() {
                     )
                   )}
                 </div>
-                {matchedFoodData && (
+                {matched?.foodAll && (
                   <div className="p-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/50 rounded-3xl shadow-xl shadow-emerald-200/25 mb-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-emerald-200/20 to-teal-200/20 rounded-full -translate-y-14 translate-x-14"></div>
                     <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-cyan-200/20 to-blue-200/20 rounded-full translate-y-10 -translate-x-10"></div>
@@ -783,12 +749,12 @@ function VisionOCR() {
                               </td>
                               <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
                                 {ocrLang === "ko" &&
-                                  matchedFoodData?.["요리명.1"]}
-                                {ocrLang === "en" && matchedFoodData?.["영어"]}
+                                  matched?.foodAll?.["요리명.1"]}
+                                {ocrLang === "en" && matched?.foodAll?.["영어"]}
                                 {ocrLang === "ja" &&
-                                  matchedFoodData?.["일본어"]}
+                                  matched?.foodAll?.["일본어"]}
                                 {ocrLang === "zh-Hans" &&
-                                  matchedFoodData?.["중문1"]}
+                                  matched?.foodAll?.["중문1"]}
                               </td>
                             </tr>
                             <tr>
@@ -797,20 +763,20 @@ function VisionOCR() {
                               </td>
                               <td className="py-3 px-2 text-slate-800 font-medium">
                                 {ocrLang === "ko" &&
-                                  matchedFoodData?.["설명(요리명제외)"]}
+                                  matched?.foodAll?.["설명(요리명제외)"]}
                                 {ocrLang === "en" &&
-                                  matchedFoodData?.["설명(요리명제외).1"]}
+                                  matched?.foodAll?.["설명(요리명제외).1"]}
                                 {ocrLang === "ja" &&
-                                  matchedFoodData?.["설명(요리명제외).2"]}
+                                  matched?.foodAll?.["설명(요리명제외).2"]}
                                 {ocrLang === "zh-Hans" &&
-                                  matchedFoodData?.["설명(요리명제외).3"]}
+                                  matched?.foodAll?.["설명(요리명제외).3"]}
                               </td>
                             </tr>
                           </tbody>
                         </table>
                       </div>
                     </div>
-                    {matchedMenuInfo?.csv && (
+                    {matched?.foodEN && (
                       <div className="bg-white rounded-xl shadow-md p-6 w-full mt-6">
                         <div className="mb-2 text-xs text-slate-400 font-medium">
                           출처: 한국국제교류재단 한국음식정보
@@ -823,9 +789,8 @@ function VisionOCR() {
                               </td>
                               <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
                                 {ocrLang === "ko" &&
-                                  matchedMenuInfo?.csv?.["음식명"]}
-                                {ocrLang === "en" &&
-                                  matchedMenuInfo?.csv?.["영문"]}
+                                  matched?.foodEN?.["음식명"]}
+                                {ocrLang === "en" && matched?.foodEN?.["영문"]}
                                 {ocrLang === "ja" &&
                                   (translationLoading ? (
                                     <span className="text-blue-500 animate-pulse">
@@ -854,7 +819,7 @@ function VisionOCR() {
                                     번역 중...
                                   </span>
                                 ) : ocrLang === "en" ? (
-                                  matchedMenuInfo?.csv?.["음식설명"]
+                                  matched?.foodEN?.["음식설명"]
                                 ) : (
                                   translatedDesc
                                 )}
@@ -866,7 +831,7 @@ function VisionOCR() {
                     )}
                   </div>
                 )}
-                {matchedMenuInfo?.json && (
+                {matched?.menuInfo && (
                   <div className="bg-white rounded-xl shadow-md p-6 w-full mx-auto">
                     <div className="mb-2 text-xs text-slate-400 font-medium">
                       출처: AI Hub (한국지능정보사회진흥원), 관광 음식메뉴판
@@ -879,11 +844,11 @@ function VisionOCR() {
                             메뉴명
                           </td>
                           <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
-                            {ocrLang === "ko" && matchedMenuInfo?.json?.["ko"]}
-                            {ocrLang === "en" && matchedMenuInfo?.json?.["en"]}
-                            {ocrLang === "ja" && matchedMenuInfo?.json?.["ja"]}
+                            {ocrLang === "ko" && matched?.menuInfo?.["ko"]}
+                            {ocrLang === "en" && matched?.menuInfo?.["en"]}
+                            {ocrLang === "ja" && matched?.menuInfo?.["ja"]}
                             {ocrLang === "zh-Hans" &&
-                              matchedMenuInfo?.json?.["zh_CN"]}
+                              matched?.menuInfo?.["zh_CN"]}
                           </td>
                         </tr>
                         <tr className="border-b">
@@ -892,22 +857,16 @@ function VisionOCR() {
                           </td>
                           <td className="py-3 px-2 text-slate-800 font-medium">
                             {ocrLang === "ko" &&
-                              (matchedMenuInfo.json["ingredients.ko"]?.join(
-                                ", "
-                              ) ||
+                              (matched.menuInfo["ingredients.ko"]?.join(", ") ||
                                 "정보 없음")}
                             {ocrLang === "en" &&
-                              (matchedMenuInfo.json["ingredients.en"]?.join(
-                                ", "
-                              ) ||
+                              (matched.menuInfo["ingredients.en"]?.join(", ") ||
                                 "None")}
                             {ocrLang === "ja" &&
-                              (matchedMenuInfo.json["ingredients.ja"]?.join(
-                                ", "
-                              ) ||
+                              (matched.menuInfo["ingredients.ja"]?.join(", ") ||
                                 "なし")}
                             {ocrLang === "zh-Hans" &&
-                              (matchedMenuInfo.json["ingredients.zh_CN"]?.join(
+                              (matched.menuInfo["ingredients.zh_CN"]?.join(
                                 ", "
                               ) ||
                                 "无")}
