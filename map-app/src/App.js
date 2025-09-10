@@ -16,6 +16,7 @@ import DocentMantine from "./pages/DocentMantine";
 // Redesigned route editor (Myro-like UI)
 import DirectionsMyro from "./pages/DirectionsMyro";
 import VisionOCR from "./pages/VisionOCR";
+import DocentVision from "./pages/DocentVision";
 import CommunityMain from "./pages/CommunityMain";
 import "./styles/layout.css";
 
@@ -47,6 +48,8 @@ function AppRoutes() {
         <Route path="/community" element={<CommunityMain />} />
         <Route path="/community/*" element={<CommunityMain />} />
         <Route path="/visionocr" element={<VisionOCR />} />
+        <Route path="/vision" element={<DocentVision />} />
+
         <Route path="*" element={<Navigate to="/persona" replace />} />
       </Routes>
     </Layout>
