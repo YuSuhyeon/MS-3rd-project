@@ -1,6 +1,8 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import BrandLogo from "components/BrandLogo";
+import { useAuth } from "context/AuthContext";
+import { LogOut, LogIn } from "lucide-react";
 
 const navigationItems = [
   { title: "페르소나 분석", url: "/persona", icon: null },
@@ -9,11 +11,12 @@ const navigationItems = [
   { title: "경로 편집", url: "/directions", icon: null },
   { title: "AI 도슨트", url: "/docent", icon: null },
   { title: "커뮤니티", url: "/community", icon: null },
-  { title: "VisionOcr", url: "/visionocr", icon: null },
+  { title: "VisionOCR", url: "/visionocr", icon: null },
 ];
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const { profile, login, logout } = useAuth();
 
   return (
     <div className="min-h-screen flex w-full bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
@@ -65,20 +68,55 @@ export default function Layout({ children }) {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200/50 p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-sm">U</span>
+        <div className="border-t border-gray-200/50 p-6 mt-auto">
+          {profile ? (
+            // 로그인 했을 때
+            <div className="flex items-center gap-3">
+              <img
+                src={profile.picture}
+                alt={profile.name}
+                className="w-8 h-8 rounded-full"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 text-sm truncate">
+                  {profile.name}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {profile.email}
+                </p>
+              </div>
+              {/* 로그아웃 버튼  */}
+              <button
+                onClick={logout}
+                title="로그아웃"
+                className="p-2 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
+              >
+                <LogOut size={18} />
+              </button>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-900 text-sm truncate">
-                여행자
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                AI와 함께 여행 계획
-              </p>
+          ) : (
+            // 로그인 안 했을 때
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-gray-500 font-medium text-sm">?</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 text-sm truncate">
+                  여행자님, 환영합니다!
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  AI와 함께 여행 계획
+                </p>
+              </div>
+              <button
+                onClick={() => login()}
+                title="로그인"
+                className="p-2 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
+              >
+                <LogIn size={18} />
+              </button>
             </div>
-          </div>
+          )}
         </div>
       </aside>
 

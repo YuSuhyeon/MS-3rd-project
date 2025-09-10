@@ -473,7 +473,8 @@ const SocialPost = ({ post }) => {
 };
 
 // 메인 컴포넌트
-export default function KpopTravelPlatform() {
+//export default function KpopTravelPlatform() {
+export default function CommunityMain() {
   const tabs = [
     { id: "goods", label: "굿즈 & 체험", icon: ShoppingBag },
     { id: "playlists", label: "여행 플레이리스트", icon: Music },
@@ -523,7 +524,11 @@ export default function KpopTravelPlatform() {
         );
 
       case "playlists":
-        return <SpotifyPlaylistGenerator />;
+        return (
+          <div>
+            <SpotifyPlaylistGenerator />{" "}
+          </div>
+        );
 
       case "community":
         return (
@@ -544,7 +549,7 @@ export default function KpopTravelPlatform() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       {/* 헤더 */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
+      {/* <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -578,7 +583,7 @@ export default function KpopTravelPlatform() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* 탭 네비게이션 */}
       <div className="bg-white/60 backdrop-blur-sm border-b border-gray-200">

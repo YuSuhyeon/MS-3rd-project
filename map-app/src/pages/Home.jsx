@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Sparkles, Wand2, Map, Edit3 } from "lucide-react";
 import BrandLogo from "components/BrandLogo";
+import { useAuth } from "../context/AuthContext";
 
 const Section = ({ id, children, className = "" }) => (
   <section
@@ -14,6 +15,8 @@ const Section = ({ id, children, className = "" }) => (
 );
 
 export default function Home() {
+  const { profile, login, logout } = useAuth();
+
   return (
     <div className="bg-white text-gray-900">
       {/* Section 1: Hero */}
@@ -43,20 +46,17 @@ export default function Home() {
             backgroundPosition: "center",
           }}
         />
+
         <div className="absolute inset-0 z-0">
           <video
             className="w-full h-full object-cover"
-            // Use absolute path from public for reliability
             src={"/assets/landing/hero.mp4"}
-            // Poster is optional; omit if not present
-            // poster={"/assets/landing/hero.jpg"}
             autoPlay
             muted
             loop
             playsInline
             preload="metadata"
             onError={(e) => {
-              // Gracefully hide the video layer if the asset fails to load
               try {
                 e.currentTarget.style.display = "none";
               } catch {}
@@ -83,6 +83,59 @@ export default function Home() {
           </Link>
         </div>
 
+        <div className="absolute top-6 right-6 z-20">
+          {profile ? (
+            <div className="flex items-center gap-4">
+              <img
+                src={profile.picture}
+                alt="profile"
+                className="w-8 h-8 rounded-full"
+              />
+              <span className="text-white/90 font-semibold">
+                {profile.name}님 환영합니다! {/* 4. 상태에 저장된 이름 표시 */}
+              </span>
+              <button
+                onClick={logout}
+                className="px-4 py-2 rounded-xl font-semibold text-white/90 border border-white/30 hover:bg-white/10 transition-colors"
+              >
+                로그아웃
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => login()}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white/90 border border-white/30 hover:bg-white/10 transition-colors"
+            >
+              {/* Google SVG Logo */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                x="0px"
+                y="0px"
+                width="20"
+                height="20"
+                viewBox="0 0 48 48"
+              >
+                <path
+                  fill="#FFC107"
+                  d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+                ></path>
+                <path
+                  fill="#FF3D00"
+                  d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+                ></path>
+                <path
+                  fill="#4CAF50"
+                  d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
+                ></path>
+                <path
+                  fill="#1976D2"
+                  d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.089,5.571l6.19,5.238C44.591,35.021,48,29.412,48,24C48,22.659,47.862,21.35,47.611,20.083z"
+                ></path>
+              </svg>
+              <span>Google로 시작하기</span>
+            </button>
+          )}
+        </div>
         {/* Hero copy */}
         <div className="relative z-10 text-center px-6">
           <motion.div

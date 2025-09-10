@@ -14,6 +14,8 @@ export function createPageUrl(name) {
       return "/itinerary";
     case "CommunityMain":
       return "/community";
+    case "VisionOCR":
+      return "/visionocr";
     default:
       return "/";
   }

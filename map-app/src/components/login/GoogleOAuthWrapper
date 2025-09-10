@@ -1,0 +1,19 @@
+// src/components/login/GoogleOAuthWrapper.jsx
+import React from "react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AuthProvider } from "../../contexts/AuthContext";
+
+const GoogleOAuthWrapper = ({ children, clientId }) => {
+  if (!clientId) {
+    console.error("Google Client ID is required");
+    return children;
+  }
+
+  return (
+    <GoogleOAuthProvider clientId={clientId}>
+      <AuthProvider>{children}</AuthProvider>
+    </GoogleOAuthProvider>
+  );
+};
+
+export default GoogleOAuthWrapper;
