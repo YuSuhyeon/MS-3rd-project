@@ -5,15 +5,16 @@ import {
   FileImage,
   Loader2,
   AlertCircle,
-  Star,
   Eye,
   Upload,
   Sparkles,
   Zap,
   Target,
   Globe,
+  Star,
 } from "lucide-react";
 import Papa from "papaparse";
+import { convert as romanize } from "hangul-romanization";
 
 function VisionOCR() {
   // 언어별 번역 결과 캐시
@@ -32,7 +33,8 @@ function VisionOCR() {
   const [selectedBox, setSelectedBox] = useState(null); // 클릭한 바운딩 박스 정보
   const [matchedMenuInfo, setMatchedMenuInfo] = useState(null); // JSON/CSV 모두 일치하는 메뉴 정보
   const [matchedFoodData, setMatchedFoodData] = useState(null); // foodData에서 일치하는 메뉴 정보
-  // (중복 선언 제거, 아래 선언만 남김)
+  const [translationLoading, setTranslationLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const canvasRef = React.useRef(null); // OCR 결과 표시
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 }); // 업로드된 이미지 실제 크기
@@ -40,6 +42,8 @@ function VisionOCR() {
   const [ocrLang, setOcrLang] = useState("ko");
 
   const [aiMenuAnswer, setAiMenuAnswer] = useState("");
+
+  const pronunciation = selectedBox && romanize(selectedBox.text);
 
   const languageOptions = [
     { value: "ko", code: "KO", label: "한국어" },
@@ -283,7 +287,7 @@ function VisionOCR() {
   function fuzzyFindFoodDesc(menuName, foodDescData) {
     const normMenu = normalize(menuName);
     // 1. 완전 일치
-    let found = foodDescData.find(
+    const found = foodDescData.find(
       (row) => row["음식명"] && normalize(row["음식명"]) === normMenu
     );
     if (found && found["음식설명"]) return found;
@@ -315,7 +319,7 @@ function VisionOCR() {
   function fuzzyFindMenuInfo(menuName, menuData) {
     const normMenu = normalize(menuName);
     // 1. 완전 일치
-    let found = menuData.find(
+    const found = menuData.find(
       (a) => a.menu_information && normalize(a.menu_information.ko) === normMenu
     );
     if (found) return found.menu_information;
@@ -336,6 +340,7 @@ function VisionOCR() {
   }
 
   const handleLanguageSelect = (langValue) => {
+    setTranslationLoading(true);
     setOcrLang(langValue);
   };
 
@@ -344,11 +349,13 @@ function VisionOCR() {
     async function doTranslate() {
       if (!matchedMenuInfo?.csv?.["음식설명"]) {
         setTranslatedDesc("");
+        setTranslationLoading(false);
         return;
       }
       // 캐시된 번역이 있으면 사용
       if (descCache[ocrLang]) {
         setTranslatedDesc(descCache[ocrLang]);
+        setTranslationLoading(false);
         return;
       }
       let result = "";
@@ -366,6 +373,7 @@ function VisionOCR() {
       }
       setDescCache((prev) => ({ ...prev, [ocrLang]: result }));
       setTranslatedDesc(result);
+      setTranslationLoading(false);
     }
     doTranslate();
   }, [matchedMenuInfo, ocrLang]);
@@ -437,10 +445,15 @@ function VisionOCR() {
       !matchedFoodData &&
       selectedBox
     ) {
+      setAiLoading(true);
       // 메뉴 정보가 없을 때 AI 답변 요청
-      getOpenAIMenuAnswer(selectedBox.text, ocrLang).then(setAiMenuAnswer);
+      getOpenAIMenuAnswer(selectedBox.text, ocrLang).then((answer) => {
+        setAiMenuAnswer(answer);
+        setAiLoading(false);
+      });
     } else {
       setAiMenuAnswer("");
+      setAiLoading(false);
     }
   }, [matchedMenuInfo, matchedFoodData, selectedBox, ocrLang]);
 
@@ -648,32 +661,30 @@ function VisionOCR() {
             {selectedBox ? (
               <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 animate-fadeIn hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300">
                 {/* ...기존 정보 렌더링 영역... */}
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-slate-800">
-                      메뉴 정보
-                    </h3>
-                    <p className="text-slate-500 text-sm">
-                      AI가 분석한 상세 정보
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-center gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
-                        <Globe className="w-5 h-5 text-white" />
-                      </div>
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/25">
+                      <Sparkles className="w-7 h-7 text-white" />
                     </div>
-                    <div className="flex items-center bg-white backdrop-blur-sm border border-slate-200 rounded-2xl shadow-lg p-1">
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-800">
+                        메뉴 정보
+                      </h3>
+                      <p className="text-slate-500 text-sm">
+                        AI가 분석한 상세 정보
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Globe className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex items-center bg-white backdrop-blur-sm border border-slate-200 rounded-xl shadow p-1">
                       {languageOptions.map((option) => (
                         <button
                           key={option.value}
                           onClick={() => handleLanguageSelect(option.value)}
-                          className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                          className={`px-3 py-1 rounded-lg font-semibold text-sm transition-all duration-300 ${
                             ocrLang === option.value
                               ? "bg-blue-600 text-white shadow-lg transform scale-105"
                               : "text-slate-800 hover:text-slate-900 hover:bg-slate-50"
@@ -684,122 +695,267 @@ function VisionOCR() {
                       ))}
                     </div>
                   </div>
-                  {/* 안내 문구: 데이터와 일치하는 정보가 없을 때 */}
-                  {!matchedMenuInfo?.json &&
-                    !matchedMenuInfo?.csv &&
-                    !matchedFoodData && (
-                      <div className="p-6 bg-gradient-to-br from-red-50 to-rose-50 border border-red-200/50 rounded-2xl shadow-lg mb-6">
-                        <h4 className="font-bold text-red-800 mb-2">
-                          정보를 찾을 수 없습니다
-                        </h4>
-                        <p className="text-slate-700 text-base font-medium">
-                          데이터에 해당 메뉴 정보가 없어요.
-                          <br />
-                          <span className="font-semibold text-red-700">
-                            정확한 성분이나 알러지 정보가 필요하다면 매장에 직접
-                            문의해보세요!
+                </div>
+                {selectedBox && (
+                  <div>
+                    <div className="relative z-10">
+                      <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-cyan-100 shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-2xl font-bold text-slate-900">
+                            {selectedBox.text}
                           </span>
-                        </p>
-                        {aiMenuAnswer && (
-                          <div className="mt-4 p-4 bg-white/80 rounded-xl border border-red-100 shadow-sm text-slate-800">
-                            <strong>AI 답변:</strong>
-                            <br />
+                          {pronunciation && (
+                            <span className="text-base text-slate-600 font-medium">
+                              {pronunciation}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-6"></div>
+                  </div>
+                )}
+                <div className="space-y-6">
+                  {aiLoading ? (
+                    <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <Zap className="w-5 h-5 text-white animate-pulse" />
+                        </div>
+                        <h5 className="font-bold text-blue-800 text-lg">
+                          AI가 답변을 생성하고 있습니다...
+                        </h5>
+                      </div>
+                      <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                          <span className="text-blue-700 font-medium text-sm">
+                            분석 중
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-3 bg-blue-200/50 rounded animate-pulse"></div>
+                          <div className="h-3 bg-blue-200/50 rounded animate-pulse w-4/5"></div>
+                          <div className="h-3 bg-blue-200/50 rounded animate-pulse w-3/5"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    aiMenuAnswer && (
+                      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <Zap className="w-5 h-5 text-white" />
+                          </div>
+                          <h5 className="font-bold text-blue-800 text-lg">
+                            AI 분석 결과
+                          </h5>
+                        </div>
+                        <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm">
+                          <div className="text-slate-800 leading-relaxed font-medium whitespace-pre-wrap">
                             {aiMenuAnswer}
                           </div>
-                        )}
+                        </div>
+                        <div className="mt-4 p-3 bg-blue-100/50 rounded-xl border border-blue-200/30">
+                          <p className="text-blue-700 text-sm font-medium flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4" />이 정보는 AI가
+                            생성한 참고용 답변입니다
+                          </p>
+                        </div>
                       </div>
-                    )}
-                  {/* foodData에서 일치하는 메뉴 정보 표시 (언어 선택과 무관) */}
-                  {matchedFoodData && (
-                    <div className="p-6 bg-gradient-to-br from-teal-50 to-blue-50 border border-teal-200/50 rounded-2xl shadow-lg mb-6">
-                      <h4 className="font-bold text-teal-800 mb-2">
-                        메뉴 정보
-                      </h4>
-                      <div className="mb-2">
-                        <span className="font-semibold text-slate-700 text-lg">
-                          메뉴명:{" "}
-                        </span>
-                        <span className="font-bold text-slate-900 text-2xl">
-                          {ocrLang === "ko" && matchedFoodData?.["요리명.1"]}
-                          {ocrLang === "en" && matchedFoodData?.["영어"]}
-                          {ocrLang === "ja" && matchedFoodData?.["일본어"]}
-                          {ocrLang === "zh-Hans" && matchedFoodData?.["중문1"]}
-                        </span>
-                      </div>
-                      <div className="mt-2 text-slate-700 text-base">
-                        <span className="font-semibold text-lg">설명: </span>
-                        <span className="font-medium text-lg">
-                          {ocrLang === "ko" &&
-                            matchedFoodData?.["설명(요리명제외)"]}
-                          {ocrLang === "en" &&
-                            matchedFoodData?.["설명(요리명제외).1"]}
-                          {ocrLang === "ja" &&
-                            matchedFoodData?.["설명(요리명제외).2"]}
-                          {ocrLang === "zh-Hans" &&
-                            matchedFoodData?.["설명(요리명제외).3"]}
-                        </span>
-                      </div>
-                      {/* 공식 음식 설명: csv 정보가 있을 때만 전체 영역 렌더링 */}
-                      {matchedMenuInfo?.csv && (
-                        <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl shadow-lg">
-                          <h4 className="font-bold text-blue-800 mb-4 flex items-center gap-3 text-lg">
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                              <Star className="w-4 h-4 text-white" />
-                            </div>
-                            공식 음식 설명
+                    )
+                  )}
+                </div>
+                {matchedFoodData && (
+                  <div className="p-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/50 rounded-3xl shadow-xl shadow-emerald-200/25 mb-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-emerald-200/20 to-teal-200/20 rounded-full -translate-y-14 translate-x-14"></div>
+                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-cyan-200/20 to-blue-200/20 rounded-full translate-y-10 -translate-x-10"></div>
+
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/25">
+                          <Star className="w-7 h-7 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 bg-clip-text text-transparent">
+                            메뉴 정보
                           </h4>
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-1 gap-3">
-                              <div className="flex justify-between items-center">
-                                <strong className="text-blue-700 font-semibold">
-                                  음식명:
-                                </strong>
-                                <span className="text-slate-700 font-medium">
+                          <p className="text-emerald-600 font-medium">
+                            데이터베이스에서 찾은 정보
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 mb-6">
+                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-emerald-100 shadow-lg">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-emerald-700 font-bold text-lg">
+                              메뉴명
+                            </span>
+                            <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center">
+                              <Target className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+                          <div className="text-2xl font-bold text-slate-900">
+                            {ocrLang === "ko" && matchedFoodData?.["요리명.1"]}
+                            {ocrLang === "en" && matchedFoodData?.["영어"]}
+                            {ocrLang === "ja" && matchedFoodData?.["일본어"]}
+                            {ocrLang === "zh-Hans" &&
+                              matchedFoodData?.["중문1"]}
+                          </div>
+                        </div>
+
+                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-emerald-100 shadow-lg">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-emerald-700 font-bold text-lg">
+                              설명
+                            </span>
+                            <div className="w-8 h-8 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl flex items-center justify-center">
+                              <FileImage className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+                          <div className="text-slate-800 leading-relaxed font-medium text-lg">
+                            {ocrLang === "ko" &&
+                              matchedFoodData?.["설명(요리명제외)"]}
+                            {ocrLang === "en" &&
+                              matchedFoodData?.["설명(요리명제외).1"]}
+                            {ocrLang === "ja" &&
+                              matchedFoodData?.["설명(요리명제외).2"]}
+                            {ocrLang === "zh-Hans" &&
+                              matchedFoodData?.["설명(요리명제외).3"]}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {matchedMenuInfo?.csv && (
+                      <div className="mt-6">
+                        <div className="p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200/50 rounded-2xl shadow-xl shadow-blue-200/25 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/20 to-indigo-200/20 rounded-full -translate-y-16 translate-x-16"></div>
+                          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-200/20 to-pink-200/20 rounded-full translate-y-12 -translate-x-12"></div>
+                          <div className="relative z-10">
+                            <div className="flex items-center gap-4 mb-4">
+                              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                                <Star className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-bold bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent">
+                                  추가 설명
+                                </h4>
+                                <p className="text-blue-600 font-medium text-sm">
+                                  한국국제교류재단 공식 데이터
+                                </p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                              <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-100 shadow">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-blue-700 font-bold text-base">
+                                    음식명
+                                  </span>
+                                  <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-indigo-400 rounded flex items-center justify-center">
+                                    <Target className="w-3 h-3 text-white" />
+                                  </div>
+                                </div>
+                                <div className="text-lg font-bold text-slate-900">
                                   {ocrLang === "ko" &&
                                     matchedMenuInfo?.csv?.["음식명"]}
                                   {ocrLang === "en" &&
                                     matchedMenuInfo?.csv?.["영문"]}
-                                  {ocrLang === "ja" && nameCache.ja}
+                                  {ocrLang === "ja" &&
+                                    (translationLoading ? (
+                                      <span className="text-blue-500 animate-pulse">
+                                        번역 중...
+                                      </span>
+                                    ) : (
+                                      nameCache.ja
+                                    ))}
                                   {ocrLang === "zh-Hans" &&
-                                    nameCache["zh-Hans"]}
-                                </span>
+                                    (translationLoading ? (
+                                      <span className="text-blue-500 animate-pulse">
+                                        번역 중...
+                                      </span>
+                                    ) : (
+                                      nameCache["zh-Hans"]
+                                    ))}
+                                </div>
                               </div>
-                            </div>
-                            <div className="mt-4 p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm">
-                              <div className="text-slate-700 leading-relaxed font-medium">
-                                {ocrLang === "en"
-                                  ? matchedMenuInfo?.csv?.["음식설명"]
-                                  : translatedDesc}
+                              <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-100 shadow">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-blue-700 font-bold text-base">
+                                    상세 설명
+                                  </span>
+                                  <div className="w-6 h-6 bg-gradient-to-r from-indigo-400 to-purple-400 rounded flex items-center justify-center">
+                                    <FileImage className="w-3 h-3 text-white" />
+                                  </div>
+                                </div>
+                                <div className="text-slate-800 leading-relaxed font-medium text-base">
+                                  {translationLoading ? (
+                                    <span className="text-blue-500 animate-pulse">
+                                      번역 중...
+                                    </span>
+                                  ) : ocrLang === "en" ? (
+                                    matchedMenuInfo?.csv?.["음식설명"]
+                                  ) : (
+                                    translatedDesc
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {matchedMenuInfo?.json && (
+                  <div className="p-8 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border border-violet-200/50 rounded-3xl shadow-xl shadow-violet-200/25 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-violet-200/20 to-purple-200/20 rounded-full -translate-y-14 translate-x-14"></div>
+                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-fuchsia-200/20 to-pink-200/20 rounded-full translate-y-10 -translate-x-10"></div>
 
-                  {/* json 정보가 있을 때만 표시 */}
-                  {matchedMenuInfo?.json && (
-                    <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border border-slate-200/50 shadow-lg">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-start">
-                          <span className="text-sm text-slate-600 font-semibold">
-                            메뉴명
-                          </span>
-                          <span className="font-bold text-slate-900 text-lg text-right">
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="w-14 h-14 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-2xl flex items-center justify-center shadow-xl shadow-violet-500/25">
+                          <Sparkles className="w-7 h-7 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-2xl font-bold bg-gradient-to-r from-violet-700 via-purple-700 to-fuchsia-700 bg-clip-text text-transparent">
+                            상세 성분 정보
+                          </h4>
+                          <p className="text-violet-600 font-medium">
+                            알러지 및 주요 성분
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-violet-100 shadow-lg">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-violet-700 font-bold text-lg">
+                              메뉴명
+                            </span>
+                            <div className="w-8 h-8 bg-gradient-to-r from-violet-400 to-purple-400 rounded-xl flex items-center justify-center">
+                              <Target className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+                          <div className="text-xl font-bold text-slate-900">
                             {ocrLang === "ko" && matchedMenuInfo?.json?.["ko"]}
                             {ocrLang === "en" && matchedMenuInfo?.json?.["en"]}
                             {ocrLang === "ja" && matchedMenuInfo?.json?.["ja"]}
                             {ocrLang === "zh-Hans" &&
                               matchedMenuInfo?.json?.["zh_CN"]}
-                          </span>
+                          </div>
                         </div>
-                        <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-sm text-slate-600 font-semibold">
-                            주요 성분
-                          </span>
-                          <span className="font-medium text-slate-800 text-right max-w-xs">
+
+                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-violet-100 shadow-lg">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-violet-700 font-bold text-lg">
+                              주요 성분
+                            </span>
+                            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-fuchsia-400 rounded-xl flex items-center justify-center">
+                              <Star className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+                          <div className="text-slate-800 font-medium text-base">
                             {ocrLang === "ko" &&
                               (matchedMenuInfo.json["ingredients.ko"]?.join(
                                 ", "
@@ -820,16 +976,26 @@ function VisionOCR() {
                                 ", "
                               ) ||
                                 "无")}
-                          </span>
+                          </div>
                         </div>
-                        <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-sm text-slate-600 font-semibold">
-                            알러지 정보
-                          </span>
-                          {/* 번역은 나중에 수정 필요 */}
-                          <span className="font-medium text-slate-800 text-right max-w-xs">
-                            {translatedAllergy ||
+
+                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-violet-100 shadow-lg">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-violet-700 font-bold text-lg">
+                              알러지 정보
+                            </span>
+                            <div className="w-8 h-8 bg-gradient-to-r from-fuchsia-400 to-pink-400 rounded-xl flex items-center justify-center">
+                              <AlertCircle className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+                          <div className="text-slate-800 font-medium text-base">
+                            {(translationLoading ? (
+                              <span className="text-blue-500 animate-pulse">
+                                번역 중...
+                              </span>
+                            ) : (
+                              translatedAllergy
+                            )) ||
                               (ocrLang === "ko"
                                 ? "정보 없음"
                                 : ocrLang === "en"
@@ -839,12 +1005,12 @@ function VisionOCR() {
                                 : ocrLang === "zh-Hans"
                                 ? "无"
                                 : "정보 없음")}
-                          </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 animate-fadeIn hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300">
