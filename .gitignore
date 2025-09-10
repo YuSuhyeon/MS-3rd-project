@@ -6,6 +6,7 @@ map-app/node_modules/
 
 # Cache and temporary files
 .cache/
+.cache
 .tmp/
 
 # Build outputs
