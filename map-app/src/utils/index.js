@@ -8,6 +8,10 @@ export function createPageUrl(name) {
       return "/directions";
     case "DocentMantine":
       return "/docent";
+    case "DocentVision":
+      return "/vision";
+    case "VisionOCR":
+      return "/visionocr";
     case "ItineraryPlanner":
       return "/itinerary";
     case "ItineraryView":

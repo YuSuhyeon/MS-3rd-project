@@ -10,7 +10,7 @@ import ItineraryView from "./pages/ItineraryView";
 import DocentMantine from "./pages/DocentMantine";
 import DirectionsMyro from "./pages/DirectionsMyro";
 import VisionOCR from "./pages/VisionOCR";
-// CommunityMain.jsx에서 KpopTravelPlatform을 export default 하고 있다고 가정합니다.
+import DocentVision from "./pages/DocentVision";
 import CommunityMain from "./pages/CommunityMain";
 
 // 스타일 임포트
@@ -38,6 +38,7 @@ function AppRoutes() {
               <Route path="/community" element={<CommunityMain />} />
               <Route path="/community/*" element={<CommunityMain />} />
               <Route path="/visionocr" element={<VisionOCR />} />
+              <Route path="/vision" element={<DocentVision />} />
               {/* 위 경로들과 일치하지 않으면 "/persona"로 리다이렉트합니다. */}
               <Route path="*" element={<Navigate to="/persona" replace />} />
             </Routes>
