@@ -20,6 +20,10 @@ export function createPageUrl(name) {
       return "/community";
     case "VisionOCR":
       return "/visionocr";
+    case "Tour":
+      return "/tour";
+    case "TourDetail":
+      return "/tour/:id";
     default:
       return "/";
   }

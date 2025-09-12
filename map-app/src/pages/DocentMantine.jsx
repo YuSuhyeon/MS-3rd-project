@@ -29,7 +29,6 @@ const UI = {
         "케이팝 데몬 헌터스 촬영지",
         "명동 맛집 추천",
         "북촌한옥마을 정보",
-        "오징어게임 촬영지",
       ],
     },
   },
@@ -331,7 +330,6 @@ export default function DocentMantine() {
     setIsPlaying(false);
   };
 
-  // 챗봇 API 호출 함수
   // 챗봇 API 호출 함수 - Azure Functions 사용
   const callTourismAPI = async (userQuery) => {
     // Azure Functions URL로 변경

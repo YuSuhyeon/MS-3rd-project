@@ -1,7 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// 컴포넌트 및 페이지 임포트
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import ResultDashboard from "./pages/ResultDashboard";
@@ -12,6 +11,9 @@ import DirectionsMyro from "./pages/DirectionsMyro";
 import VisionOCR from "./pages/VisionOCR";
 import DocentVision from "./pages/DocentVision";
 import CommunityMain from "./pages/CommunityMain";
+import Tour from "./pages/Tour";
+import TourDetail from "./pages/TourDetail";
+
 import "./styles/layout.css";
 
 function AppRoutes() {
@@ -36,6 +38,8 @@ function AppRoutes() {
               <Route path="/community/*" element={<CommunityMain />} />
               <Route path="/visionocr" element={<VisionOCR />} />
               <Route path="/vision" element={<DocentVision />} />
+              <Route path="/tour" element={<Tour />} />
+              <Route path="/tour/:id" element={<TourDetail />} />
               {/* 위 경로들과 일치하지 않으면 "/persona"로 리다이렉트합니다. */}
               <Route path="*" element={<Navigate to="/persona" replace />} />
             </Routes>
