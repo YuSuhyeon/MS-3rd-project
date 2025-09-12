@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,6 +22,7 @@ import {
   Sun,
   CloudRain,
   Thermometer,
+  Snowflake,
   Wind,
   Droplets,
   RefreshCw,
@@ -31,55 +32,40 @@ import {
 // 목업 데이터 임포트
 import { tourProducts, partnershipData } from "../utils/mockTourData";
 
-// API 호출 함수들
+// API call functions
 const callExchangeRateAPI = async () => {
   const functionUrl =
     "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/ExchangeRateAPI";
-
   try {
     const response = await fetch(functionUrl, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    return result;
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
   } catch (error) {
-    console.error("환율 API 호출 오류:", error);
-    throw error;
+    console.error("ExchangeRateAPI call error:", error);
+    return null;
   }
 };
 
 const callWeatherAPI = async () => {
   const functionUrl =
-    "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/WeatherAPI?";
+    "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/WeatherAPI";
   try {
     const response = await fetch(functionUrl, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    return result;
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
   } catch (error) {
-    console.error("날씨 API 호출 오류:", error);
-    throw error;
+    console.error("WeatherAPI call error:", error);
+    return null;
   }
 };
 
-// 실시간 정보 표시 컴포넌트
+// Live Info Bar Component
 const LiveInfoBar = () => {
   const [exchangeData, setExchangeData] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
@@ -91,80 +77,101 @@ const LiveInfoBar = () => {
     setLoading(true);
     setError(null);
 
-    try {
-      const [exchangeResult, weatherResult] = await Promise.all([
-        callExchangeRateAPI(),
-        callWeatherAPI(),
-      ]);
+    const [exchangeResult, weatherResult] = await Promise.allSettled([
+      callExchangeRateAPI(),
+      callWeatherAPI(),
+    ]);
 
-      setExchangeData(exchangeResult);
-      setWeatherData(weatherResult);
-      setLastUpdated(new Date());
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
+    if (exchangeResult.status === "fulfilled" && exchangeResult.value) {
+      setExchangeData(exchangeResult.value);
+    } else {
+      console.error("Failed to fetch exchange rate:", exchangeResult.reason);
+      setExchangeData(null); // Clear old data on failure
     }
+
+    if (weatherResult.status === "fulfilled" && weatherResult.value) {
+      setWeatherData(weatherResult.value);
+    } else {
+      console.error("Failed to fetch weather:", weatherResult.reason);
+      setWeatherData(null); // Clear old data on failure
+    }
+
+    if (
+      exchangeResult.status === "rejected" ||
+      weatherResult.status === "rejected"
+    ) {
+      setError("Could not load some live data. Please try again.");
+    }
+
+    setLastUpdated(new Date());
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchData();
-
-    // 5분마다 데이터 갱신
-    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    const interval = setInterval(fetchData, 5 * 60 * 1000); // 5 minutes
     return () => clearInterval(interval);
   }, []);
 
   const getWeatherIcon = (condition) => {
-    switch (condition?.toLowerCase()) {
-      case "sunny":
-      case "clear":
-        return <Sun className="w-5 h-5 text-yellow-500" />;
-      case "cloudy":
-      case "overcast":
-        return <Cloud className="w-5 h-5 text-gray-500" />;
-      case "rain":
-      case "rainy":
-        return <CloudRain className="w-5 h-5 text-blue-500" />;
-      default:
-        return <Sun className="w-5 h-5 text-yellow-500" />;
-    }
+    if (!condition) return <Sun className="w-5 h-5 text-yellow-500" />;
+    const lowerCaseCondition = condition.toLowerCase();
+    if (
+      lowerCaseCondition.includes("sunny") ||
+      lowerCaseCondition.includes("clear")
+    )
+      return <Sun className="w-5 h-5 text-yellow-500" />;
+    if (
+      lowerCaseCondition.includes("cloud") ||
+      lowerCaseCondition.includes("overcast")
+    )
+      return <Cloud className="w-5 h-5 text-gray-500" />;
+    if (lowerCaseCondition.includes("rain"))
+      return <CloudRain className="w-5 h-5 text-blue-500" />;
+    if (lowerCaseCondition.includes("snow"))
+      return <Snowflake className="w-5 h-5 text-blue-200" />;
+    return <Sun className="w-5 h-5 text-yellow-500" />;
   };
 
-  if (loading) {
+  if (loading && !exchangeData && !weatherData) {
+    // Show initial loading only
     return (
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-center gap-2">
             <RefreshCw className="w-4 h-4 animate-spin" />
-            <span className="text-sm">실시간 정보 로딩 중...</span>
+            <span className="text-sm">Loading Live Info...</span>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  // Simplified display for partial or full errors after initial load
+  if (error && (!exchangeData || !weatherData)) {
     return (
       <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white p-4">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
-              <span className="text-sm">데이터 로딩 실패: {error}</span>
+              <span className="text-sm">{error}</span>
             </div>
             <button
               onClick={fetchData}
               className="flex items-center gap-1 px-3 py-1 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
             >
               <RefreshCw className="w-3 h-3" />
-              <span className="text-xs">재시도</span>
+              <span className="text-xs">Retry</span>
             </button>
           </div>
         </div>
       </div>
     );
   }
+
+  const usdRate = exchangeData?.exchangeRates?.USD?.dealRate;
+  const weatherSummary = weatherData?.summary;
 
   return (
     <motion.div
@@ -175,79 +182,67 @@ const LiveInfoBar = () => {
     >
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* 환율 정보 */}
+          {/* Exchange Rate Info */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-green-300" />
               <div className="text-sm">
                 <span className="font-semibold">USD/KRW: </span>
-                {exchangeData?.rate ? (
+                {usdRate ? (
                   <span className="text-green-200">
-                    {typeof exchangeData.rate === "number"
-                      ? exchangeData.rate.toLocaleString()
-                      : exchangeData.rate}
-                    원
+                    {usdRate.toLocaleString(undefined, {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    })}
                   </span>
                 ) : (
-                  <span className="text-gray-300">1,300원</span>
+                  <span className="text-gray-300">N/A</span>
                 )}
               </div>
             </div>
-
-            {exchangeData?.change && (
-              <div
-                className={`text-xs px-2 py-1 rounded-full ${
-                  exchangeData.change > 0
-                    ? "bg-green-500/20 text-green-200"
-                    : "bg-red-500/20 text-red-200"
-                }`}
-              >
-                {exchangeData.change > 0 ? "+" : ""}
-                {exchangeData.change}%
-              </div>
-            )}
           </div>
 
-          {/* 날씨 정보 */}
+          {/* Weather Info */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              {getWeatherIcon(weatherData?.condition)}
+              {getWeatherIcon(weatherSummary?.weather)}
               <div className="text-sm">
-                <span className="font-semibold">서울: </span>
-                {weatherData?.temperature ? (
+                <span className="font-semibold">Seoul: </span>
+                {weatherSummary?.temperature ? (
                   <span className="text-blue-200">
-                    {weatherData.temperature}°C
+                    {weatherSummary.temperature}
                   </span>
                 ) : (
-                  <span className="text-gray-300">22°C</span>
+                  <span className="text-gray-300">N/A</span>
                 )}
               </div>
             </div>
 
-            {weatherData?.humidity && (
+            {weatherSummary?.humidity && (
               <div className="flex items-center gap-1 text-xs">
                 <Droplets className="w-3 h-3 text-blue-300" />
-                <span className="text-blue-200">{weatherData.humidity}%</span>
+                <span className="text-blue-200">{weatherSummary.humidity}</span>
               </div>
             )}
-
-            {weatherData?.wind && (
+            {weatherSummary?.windSpeed && (
               <div className="flex items-center gap-1 text-xs">
                 <Wind className="w-3 h-3 text-gray-300" />
-                <span className="text-gray-200">{weatherData.wind}m/s</span>
+                <span className="text-gray-200">
+                  {weatherSummary.windSpeed}
+                </span>
               </div>
             )}
           </div>
 
-          {/* 새로고침 및 업데이트 시간 */}
+          {/* Refresh and Update Time */}
           <div className="flex items-center gap-2">
             {lastUpdated && (
               <span className="text-xs text-white/70">
-                {lastUpdated.toLocaleTimeString("ko-KR", {
+                Updated:{" "}
+                {lastUpdated.toLocaleTimeString("en-US", {
                   hour: "2-digit",
                   minute: "2-digit",
-                })}{" "}
-                업데이트
+                })}
               </span>
             )}
             <button
