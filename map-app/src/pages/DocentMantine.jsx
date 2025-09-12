@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { POI } from "Entities/POI";
 import { Button } from "components/ui/button";
 import { Switch } from "components/ui/switch";
@@ -109,6 +110,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 export default function DocentMantine() {
+  const { t } = useTranslation();
   const [pois, setPOIs] = useState([]);
   const [selectedPOI, setSelectedPOI] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -394,8 +396,8 @@ export default function DocentMantine() {
           <div className="flex flex-col h-full">
             {/* 챗봇 헤더 */}
             <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-t-lg">
-              <h3 className="font-semibold">{ui.chatbot}</h3>
-              <p className="text-sm opacity-90">{ui.askQuestion}</p>
+              <h3 className="font-semibold">{t("docent.chatbot")}</h3>
+              <p className="text-sm opacity-90">{t("docent.ask")}</p>
             </div>
 
             {/* 챗봇 내용 */}
@@ -404,10 +406,10 @@ export default function DocentMantine() {
               {!chatAnswer && (
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    {ui.examples.title}
+                    {t("docent.examples.title")}
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {ui.examples.items.map((example, index) => (
+                    {(t("docent.examples.items", { returnObjects: true }) || []).map((example, index) => (
                       <button
                         key={index}
                         onClick={() => handleExampleClick(example)}
@@ -446,11 +448,7 @@ export default function DocentMantine() {
                   type="text"
                   value={chatQuery}
                   onChange={(e) => setChatQuery(e.target.value)}
-                  placeholder={
-                    selectedLang === "ko"
-                      ? "질문을 입력하세요..."
-                      : "Enter your question..."
-                  }
+                  placeholder={t("docent.input.placeholder")}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   disabled={chatLoading}
                 />
@@ -479,8 +477,8 @@ export default function DocentMantine() {
               <Navigation className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{ui.title}</h1>
-              <p className="text-xs text-gray-500">{ui.subtitle}</p>
+              <h1 className="text-xl font-bold text-gray-900">{t("docent.title")}</h1>
+              <p className="text-xs text-gray-500">{t("docent.subtitle")}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -489,10 +487,10 @@ export default function DocentMantine() {
               onChange={(e) => setSelectedLang(e.target.value)}
               className="border rounded-md px-2 py-1 text-sm"
             >
-              <option value="ko">한국어</option>
-              <option value="en">English</option>
-              <option value="ja">日本語</option>
-              <option value="zh">中文(简体)</option>
+              <option value="ko">{t("lang.ko")}</option>
+              <option value="en">{t("lang.en")}</option>
+              <option value="ja">{t("lang.ja")}</option>
+              <option value="zh">{t("lang.zh")}</option>
             </select>
             <div className="flex items-center gap-2">
               <Switch
@@ -502,7 +500,7 @@ export default function DocentMantine() {
                   setIsDocentActive(v);
                 }}
               />
-              <span className="text-sm font-medium">{ui.aiDocent}</span>
+              <span className="text-sm font-medium">{t("docent.ai_docent")}</span>
             </div>
             {isPlaying && (
               <Button
@@ -512,7 +510,7 @@ export default function DocentMantine() {
                 className="text-red-600 hover:text-red-700"
               >
                 <VolumeX className="w-4 h-4 mr-1" />
-                {ui.stopVoice}
+                {t("docent.stop_voice")}
               </Button>
             )}
           </div>

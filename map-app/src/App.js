@@ -16,15 +16,16 @@ import Landing from "./pages/Landing";
 import "./styles/layout.css";
 import VisionOCR from "./pages/VisionOCR";
 import CommunityMain from "./pages/CommunityMain";
-import "./styles/layout.css";
+import LanguageSelector from "./components/ui/LanguageSelector";
 
-export default function App() {
-  return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
-  );
-}
+import { useEffect } from "react";
+import {
+  translatePageContent,
+  startAutoTranslate,
+  stopAutoTranslate,
+  setObserverLanguage,
+} from "./integrations/translator";
+import { useLanguage, LanguageProvider } from "./hooks/useLanguage";
 
 function AppRoutes() {
   const location = useLocation();
@@ -50,3 +51,50 @@ function AppRoutes() {
     </Layout>
   );
 }
+
+// Router 내부에서 useLocation, useLanguage 사용
+function App() {
+  return (
+    <LanguageProvider>
+      <BrowserRouter>
+        <AppWithTranslation />
+        <LanguageSelector />
+      </BrowserRouter>
+    </LanguageProvider>
+  );
+}
+
+function AppWithTranslation() {
+  const location = useLocation();
+  const { selectedLanguage } = useLanguage();
+
+  useEffect(() => {
+    // i18n이 구현되었으므로 Azure Translator 호출을 최소화
+    // 동적 DOM 변경 자동 번역은 유지하되, 디바운스 시간을 늘림
+    startAutoTranslate(selectedLanguage);
+    
+    // 페이지 이동 시에만 한 번 번역 (i18n으로 대부분 처리되므로)
+    if (selectedLanguage !== "ko") {
+      const timer = setTimeout(() => {
+        translatePageContent(selectedLanguage);
+      }, 1000); // 디바운스 시간 증가
+      return () => {
+        clearTimeout(timer);
+        stopAutoTranslate();
+      };
+    }
+    
+    return () => {
+      stopAutoTranslate();
+    };
+  }, [location, selectedLanguage]);
+
+  useEffect(() => {
+    // 언어 변경 시 옵저버에도 반영
+    setObserverLanguage(selectedLanguage);
+  }, [selectedLanguage]);
+
+  return <AppRoutes />;
+}
+
+export default App;

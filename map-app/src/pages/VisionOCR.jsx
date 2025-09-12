@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { translateText, translateToKorean } from "../integrations/translator";
 import { getOpenAIMenuAnswer } from "../integrations/openai";
 import {
@@ -16,6 +17,7 @@ import Papa from "papaparse";
 import { convert as romanize } from "hangul-romanization";
 
 function VisionOCR() {
+  const { t } = useTranslation();
   // merged_annotations_merged.json => 성분,알러지
   const [menuData, setMenuData] = useState([]);
   // 한국국제교류재단.csv => 영문 설명
@@ -55,10 +57,10 @@ function VisionOCR() {
   const [translatedAllergy, setTranslatedAllergy] = useState("");
 
   const languageOptions = [
-    { value: "ko", code: "KO", label: "한국어" },
-    { value: "en", code: "EN", label: "English" },
-    { value: "ja", code: "JA", label: "日本語" },
-    { value: "zh-Hans", code: "CN", label: "中文" },
+    { value: "ko", code: "KO", label: t("lang.ko") },
+    { value: "en", code: "EN", label: t("lang.en") },
+    { value: "ja", code: "JA", label: t("lang.ja") },
+    { value: "zh-Hans", code: "CN", label: t("lang.zh") },
   ];
 
   // 메뉴 정보(성분, 알러지) JSON
@@ -112,7 +114,7 @@ function VisionOCR() {
     setError(null);
     try {
       if (!imageFile) {
-        setError("이미지 파일을 업로드하세요.");
+        setError(t("vision.error.no_image"));
         setLoading(false);
         return;
       }
@@ -426,21 +428,19 @@ function VisionOCR() {
             </div>
             <div className="text-left">
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                AI Vision OCR
+                {t("vision.title")}
               </h1>
               <p className="text-slate-600 text-lg font-medium">
-                지능형 텍스트 인식 및 메뉴 정보 분석
+                {t("vision.intro.title")}
               </p>
             </div>
           </div>
           <p className="text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            이미지를 업로드하면 AI가 텍스트를 추출하고, 바운딩 박스를 클릭하면
-            상세한 메뉴 정보를 제공합니다
+            {t("vision.intro.desc1")}
           </p>
           <div className="mt-6 flex justify-center">
             <div className="px-6 py-3 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-normal w-fit whitespace-nowrap text-center">
-              ※ 제공되는 정보는 참고용입니다. 성분, 알러지 등 정확한 정보가
-              필요하다면 반드시 매장에 직접 문의해 주세요!
+              {t("vision.intro.notice")}
             </div>
           </div>
         </div>
@@ -454,10 +454,10 @@ function VisionOCR() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-slate-800">
-                    이미지 업로드
+                    {t("vision.upload")}
                   </h2>
                   <p className="text-slate-500 text-sm">
-                    JPG, PNG 파일을 지원합니다
+                    {t("vision.upload.hint")}
                   </p>
                 </div>
               </div>
@@ -479,12 +479,12 @@ function VisionOCR() {
                   {loading ? (
                     <>
                       <Loader2 className="animate-spin w-6 h-6" />
-                      AI 분석 중...
+                      {t("vision.ai.analyzing")}
                     </>
                   ) : (
                     <>
                       <Target className="w-6 h-6" />
-                      OCR 분석 시작
+                      {t("vision.ocr.start")}
                     </>
                   )}
                 </button>
@@ -762,7 +762,7 @@ function VisionOCR() {
                     {matched?.foodEN && (
                       <div className="bg-white rounded-xl shadow-md p-6 w-full mt-6">
                         <div className="mb-2 text-xs text-slate-400 font-medium">
-                          출처: 한국국제교류재단 한국음식정보
+                          {t("vision.source.koica")}
                         </div>
                         <table className="w-full text-left">
                           <tbody>
@@ -794,12 +794,12 @@ function VisionOCR() {
                             </tr>
                             <tr>
                               <td className="py-3 px-2 text-slate-600 font-semibold">
-                                상세 설명
+                                {t("vision.field.desc")}
                               </td>
                               <td className="py-3 px-2 text-slate-800 font-medium">
                                 {translationLoading ? (
                                   <span className="text-blue-500 animate-pulse">
-                                    번역 중...
+                                    {t("vision.translating")}
                                   </span>
                                 ) : ocrLang === "en" ? (
                                   matched?.foodEN?.["음식설명"]
@@ -818,14 +818,13 @@ function VisionOCR() {
                 {matched?.menuInfo && (
                   <div className="bg-white rounded-xl shadow-md p-6 w-full mx-auto">
                     <div className="mb-2 text-xs text-slate-400 font-medium">
-                      출처: AI Hub (한국지능정보사회진흥원), 관광 음식메뉴판
-                      데이터
+                      {t("vision.source.aihub")}
                     </div>
                     <table className="w-full text-left">
                       <tbody>
                         <tr className="border-b">
                           <td className="py-3 px-2 text-slate-600 font-semibold w-1/3">
-                            메뉴명
+                            {t("vision.field.name")}
                           </td>
                           <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
                             {ocrLang === "ko" && matched?.menuInfo?.["ko"]}
@@ -837,12 +836,12 @@ function VisionOCR() {
                         </tr>
                         <tr className="border-b">
                           <td className="py-3 px-2 text-slate-600 font-semibold">
-                            주요 성분
+                            {t("vision.field.ingredients")}
                           </td>
                           <td className="py-3 px-2 text-slate-800 font-medium">
                             {ocrLang === "ko" &&
                               (matched.menuInfo["ingredients.ko"]?.join(", ") ||
-                                "정보 없음")}
+                                t("vision.info.none"))}
                             {ocrLang === "en" &&
                               (matched.menuInfo["ingredients.en"]?.join(", ") ||
                                 "None")}
@@ -858,25 +857,25 @@ function VisionOCR() {
                         </tr>
                         <tr>
                           <td className="py-3 px-2 text-slate-600 font-semibold">
-                            알러지 정보
+                            {t("vision.field.allergy")}
                           </td>
                           <td className="py-3 px-2 text-slate-800 font-medium">
                             {(translationLoading ? (
                               <span className="text-blue-500 animate-pulse">
-                                번역 중...
+                                {t("vision.translating")}
                               </span>
                             ) : (
                               translatedAllergy
                             )) ||
                               (ocrLang === "ko"
-                                ? "정보 없음"
+                                ? t("vision.info.none")
                                 : ocrLang === "en"
                                 ? "None"
                                 : ocrLang === "ja"
                                 ? "なし"
                                 : ocrLang === "zh-Hans"
                                 ? "无"
-                                : "정보 없음")}
+                                : t("vision.info.none"))}
                           </td>
                         </tr>
                       </tbody>

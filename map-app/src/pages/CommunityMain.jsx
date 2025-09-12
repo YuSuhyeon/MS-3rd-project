@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Route } from "Entities/Route";
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -315,6 +316,7 @@ const GoodsCard = ({ item }) => {
 // 플레이리스트 카드 컴포넌트
 const PlaylistCard = ({ playlist }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const { t } = useTranslation(); // 추가
 
   return (
     <motion.div
@@ -365,7 +367,7 @@ const PlaylistCard = ({ playlist }) => {
           ))}
           {playlist.songs.length > 2 && (
             <div className="text-xs text-gray-500">
-              +{playlist.songs.length - 2}곡 더 보기
+              {t("community.more.songs", { count: playlist.songs.length - 2 })}
             </div>
           )}
         </div>
@@ -381,9 +383,12 @@ const PlaylistCard = ({ playlist }) => {
         </div>
 
         <div className="flex gap-2">
-          <button className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium flex items-center justify-center gap-2">
+          <button
+            className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+            data-i18n-ignore="true"
+          >
             <ExternalLink className="w-4 h-4" />
-            Spotify에서 열기
+            {t("community.open.spotify")}
           </button>
           <button className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <Share2 className="w-4 h-4 text-gray-600" />
@@ -523,6 +528,7 @@ const SocialPost = ({ post }) => {
 
 // 메인 컴포넌트
 export default function KpopTravelPlatform() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("goods");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -586,9 +592,11 @@ export default function KpopTravelPlatform() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    Community
+                    {t("community.title")}
                   </h1>
-                  <p className="text-xs text-gray-500">한류와 함께하는 여행</p>
+                  <p className="text-xs text-gray-500">
+                    {t("community.subtitle")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -600,7 +608,7 @@ export default function KpopTravelPlatform() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="검색..."
+                  placeholder={t("community.search.placeholder")}
                   className="pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors w-64"
                 />
               </div>
@@ -660,12 +668,12 @@ export default function KpopTravelPlatform() {
                   }`}
                 >
                   {category === "all"
-                    ? "전체"
+                    ? t("community.category.all")
                     : category === "location"
-                    ? "촬영지"
+                    ? t("community.category.location")
                     : category === "goods"
-                    ? "굿즈"
-                    : "체험"}
+                    ? t("community.category.goods")
+                    : t("community.category.experience")}
                 </button>
               ))}
             </div>
