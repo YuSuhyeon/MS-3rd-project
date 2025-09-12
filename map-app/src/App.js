@@ -12,11 +12,8 @@ import DirectionsMyro from "./pages/DirectionsMyro";
 import VisionOCR from "./pages/VisionOCR";
 import DocentVision from "./pages/DocentVision";
 import CommunityMain from "./pages/CommunityMain";
-
-// 스타일 임포트
 import "./styles/layout.css";
 
-// AppRoutes 컴포넌트: 라우팅 규칙을 정의합니다.
 function AppRoutes() {
   return (
     <Routes>
@@ -49,7 +46,6 @@ function AppRoutes() {
   );
 }
 
-// App 컴포넌트는 수정할 필요 없습니다.
 export default function App() {
   return (
     <BrowserRouter>
