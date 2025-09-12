@@ -30,7 +30,7 @@ import {
 import SpotifyPlaylistGenerator from "components/community/SpotifyPlaylistGenerator";
 
 // Mock 데이터
-const mockGoods = [
+const mocksurvival = [
   {
     id: 1,
     title: "Squid Game 촬영지 투어",
@@ -52,41 +52,12 @@ const mockGoods = [
     image:
       "https://www.chosun.com/resizer/v2/WEX5U35HPIURB6TVS47V45FXRM.jpg?auth=bf6b1a51face01ab138fbf0ffee75db210edf897483487b15fb05f6f1fd8f41b&width=616",
     price: "₩15,000",
-    category: "goods",
+    category: "survival",
     kpopGroup: "IVE",
     description: "고화질 홀로그램 효과가 적용된 프리미엄 아크릴 스탠드",
     tags: ["굿즈", "아크릴", "컬렉션"],
     rating: 4.9,
     reviews: 156,
-  },
-  {
-    id: 3,
-    title: "BTS 댄스 클래스",
-    location: "홍대 댄스 스튜디오",
-    image:
-      "https://www.msd-korea.com/wp-content/uploads/sites/30/2023/08/%EC%B0%B8%EA%B3%A0%EC%82%AC%EC%A7%841-%ED%95%9C%EA%B5%ADMSD-%EA%B7%B8%EB%A3%B9-%EC%84%B8%EB%B8%90%ED%8B%B4-HPV-%EC%98%88%EB%B0%A9-%EC%BA%A0%ED%8E%98%EC%9D%B8-%EA%B8%80%EB%A1%9C%EB%B2%8C-%EC%97%A0%EB%B2%A0%EC%84%9C%EB%8D%94%EB%A1%9C-%EC%84%A0%EC%A0%95.jpg",
-    price: "₩25,000",
-    category: "experience",
-    kpopGroup: "BTS",
-    description: "스우파 전문 댄서와 함께 배우는 안무 클래스",
-    tags: ["댄스", "체험", "홍대"],
-    rating: 4.7,
-    reviews: 89,
-  },
-  {
-    id: 4,
-    title: "케이팝데몬헌터스 먹방 투어",
-    location: "케이팝 데몬헌터스, 먹방",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLiWcK_wdHqPO36POy7O1MfKRO8XSs-EEzbA&s",
-    price: "₩89,000",
-    category: "location",
-    kpopGroup: "기타",
-    description:
-      "화제의 영화 '케이팝데몬헌터스'에 나온 먹거리들과 함께하는 1일 투어",
-    tags: ["영화", "케이팝데몬헌터스", "먹방"],
-    rating: 4.6,
-    reviews: 134,
   },
 ];
 
@@ -155,8 +126,8 @@ const mockPosts = [
   },
 ];
 
-// 굿즈/체험 카드 컴포넌트
-const GoodsCard = ({ item }) => {
+//survival 카드 컴포넌트
+const SurvivalCard = ({ item }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
@@ -189,14 +160,14 @@ const GoodsCard = ({ item }) => {
             className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
               item.category === "location"
                 ? "bg-purple-500/90 text-white"
-                : item.category === "goods"
+                : item.category === "survivals"
                 ? "bg-pink-500/90 text-white"
                 : "bg-blue-500/90 text-white"
             }`}
           >
             {item.category === "location"
               ? "📍 촬영지"
-              : item.category === "goods"
+              : item.category === "survival"
               ? "🛍️ 굿즈"
               : "🎭 체험"}
           </span>
@@ -473,21 +444,22 @@ const SocialPost = ({ post }) => {
 };
 
 // 메인 컴포넌트
-export default function KpopTravelPlatform() {
+//export default function KpopTravelPlatform() {
+export default function CommunityMain() {
   const tabs = [
-    { id: "goods", label: "굿즈 & 체험", icon: ShoppingBag },
-    { id: "playlists", label: "여행 플레이리스트", icon: Music },
-    { id: "community", label: "커뮤니티", icon: Users },
+    { id: "survival", label: "survival kit ", icon: ShoppingBag },
+    { id: "playlists", label: "playlists", icon: Music },
+    { id: "social", label: "social", icon: Users },
   ];
 
   const [activeTab, setActiveTab] = useState(() => {
     // 초기 로드 시 URL 파라미터 확인
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get("tab");
-    if (tabParam && ["goods", "playlists", "community"].includes(tabParam)) {
+    if (tabParam && ["survival", "playlists", "social"].includes(tabParam)) {
       return tabParam;
     }
-    return "goods";
+    return "survival";
   });
   console.log("activateTab:", activeTab);
   // URL 파라미터 확인하여 탭 설정
@@ -495,10 +467,10 @@ export default function KpopTravelPlatform() {
     const handlePopState = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const tabParam = urlParams.get("tab");
-      if (tabParam && ["goods", "playlists", "community"].includes(tabParam)) {
+      if (tabParam && ["survival", "playlists", "social"].includes(tabParam)) {
         setActiveTab(tabParam);
       } else {
-        setActiveTab("goods");
+        setActiveTab("survival");
       }
     };
 
@@ -511,21 +483,25 @@ export default function KpopTravelPlatform() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "goods":
+      case "survival":
         return (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <AnimatePresence>
-              {mockGoods.map((item) => (
-                <GoodsCard key={item.id} item={item} />
+              {mocksurvival.map((item) => (
+                <SurvivalCard key={item.id} item={item} />
               ))}
             </AnimatePresence>
           </div>
         );
 
       case "playlists":
-        return <SpotifyPlaylistGenerator />;
+        return (
+          <div>
+            <SpotifyPlaylistGenerator />{" "}
+          </div>
+        );
 
-      case "community":
+      case "social":
         return (
           <div className="max-w-2xl mx-auto space-y-6">
             <AnimatePresence>
@@ -544,7 +520,7 @@ export default function KpopTravelPlatform() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       {/* 헤더 */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
+      {/* <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -578,7 +554,7 @@ export default function KpopTravelPlatform() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* 탭 네비게이션 */}
       <div className="bg-white/60 backdrop-blur-sm border-b border-gray-200">
@@ -611,7 +587,7 @@ export default function KpopTravelPlatform() {
         </div>
       </div>
 
-      {/* 필터 (굿즈 탭) */}
+      {/* 필터 (굿즈 탭)
       {activeTab === "goods" && (
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
@@ -639,7 +615,7 @@ export default function KpopTravelPlatform() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* 메인 콘텐츠 */}
       <div className="max-w-7xl mx-auto px-6 py-8">{renderContent()}</div>

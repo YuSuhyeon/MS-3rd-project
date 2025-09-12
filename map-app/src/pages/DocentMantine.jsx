@@ -10,6 +10,7 @@ import Papa from "papaparse";
 import POIList from "components/docent/POIList";
 import LocationMap from "components/docent/LocationMap";
 import POIDetails from "components/docent/POIDetails";
+import useIsMobile from "./useIsMobile";
 
 const UI = {
   ko: {
@@ -28,7 +29,6 @@ const UI = {
         "케이팝 데몬 헌터스 촬영지",
         "명동 맛집 추천",
         "북촌한옥마을 정보",
-        "오징어게임 촬영지",
       ],
     },
   },
@@ -126,6 +126,8 @@ export default function DocentMantine() {
   const [chatLoading, setChatLoading] = useState(false);
 
   const ui = UI[selectedLang] || UI.ko;
+
+  const isMobile = useIsMobile();
 
   const watchId = useRef(null);
   const poisRef = useRef([]);
@@ -293,6 +295,12 @@ export default function DocentMantine() {
     })();
   }, [isDocentActive, selectedPOI, translatedDesc, selectedLang]);
 
+  // ★ 변경: 화면에 보이는 카드 수 제한
+  const VISIBLE_LIMIT = 10;
+  const limitedListData = useMemo(
+    () => listData.slice(0, VISIBLE_LIMIT),
+    [listData]
+  ); // ★ 변경
   const nearbyCsvCards = useMemo(() => {
     if (!userLocation || !csvData.length) return [];
     return csvData.filter((card) => {
@@ -302,13 +310,26 @@ export default function DocentMantine() {
       return getDistance(userLocation.lat, userLocation.lng, lat, lon) <= 0.05;
     });
   }, [userLocation, csvData]);
+  const limitedNearby = useMemo(
+    () => nearbyCsvCards.slice(0, VISIBLE_LIMIT),
+    [nearbyCsvCards]
+  ); // ★ 변경
+  // 지도에 줄 데이터: 선택됐으면 그 하나만, 아니면 기본 목록
+  const mapPoisMobile = useMemo(
+    () => (selectedPOI ? [selectedPOI] : limitedListData),
+    [selectedPOI, limitedListData]
+  );
+
+  const mapPoisDesktop = useMemo(
+    () => (selectedPOI ? [selectedPOI] : listData),
+    [selectedPOI, listData]
+  );
 
   const stopAllTTS = () => {
     stopTTS();
     setIsPlaying(false);
   };
 
-  // 챗봇 API 호출 함수
   // 챗봇 API 호출 함수 - Azure Functions 사용
   const callTourismAPI = async (userQuery) => {
     // Azure Functions URL로 변경
@@ -372,186 +393,387 @@ export default function DocentMantine() {
     setChatQuery(example);
   };
 
-  return (
-    <div className="h-screen bg-gray-50">
-      {/* 챗봇 플로팅 버튼 */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Button
-          onClick={() => setIsChatbotOpen(!isChatbotOpen)}
-          className="w-14 h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg"
-        >
-          {isChatbotOpen ? (
-            <X className="w-6 h-6 text-white" />
-          ) : (
-            <MessageCircle className="w-6 h-6 text-white" />
-          )}
-        </Button>
-      </div>
-
-      {/* 챗봇 모달 */}
-      {isChatbotOpen && (
-        <div className="fixed bottom-24 right-6 z-40 w-96 h-96 bg-white rounded-lg shadow-xl border border-gray-200">
-          <div className="flex flex-col h-full">
-            {/* 챗봇 헤더 */}
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-t-lg">
-              <h3 className="font-semibold">{ui.chatbot}</h3>
-              <p className="text-sm opacity-90">{ui.askQuestion}</p>
-            </div>
-
-            {/* 챗봇 내용 */}
-            <div className="flex-1 p-4 overflow-y-auto">
-              {/* 예시 질문들 */}
-              {!chatAnswer && (
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    {ui.examples.title}
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {ui.examples.items.map((example, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleExampleClick(example)}
-                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md border text-gray-700 transition-colors"
-                        disabled={chatLoading}
-                      >
-                        {example}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 답변 표시 */}
-              {chatAnswer && (
-                <div className="bg-gray-50 p-3 rounded-lg mb-4">
-                  <h4 className="font-medium text-gray-800 mb-2">답변:</h4>
-                  <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                    {chatAnswer}
-                  </div>
-                </div>
-              )}
-
-              {/* 로딩 상태 */}
-              {chatLoading && (
-                <div className="text-center py-4 text-gray-500">
-                  답변을 생성하고 있습니다...
-                </div>
-              )}
-            </div>
-
-            {/* 챗봇 입력 폼 */}
-            <div className="border-t border-gray-200 p-4">
-              <form onSubmit={handleChatSubmit} className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatQuery}
-                  onChange={(e) => setChatQuery(e.target.value)}
-                  placeholder={
-                    selectedLang === "ko"
-                      ? "질문을 입력하세요..."
-                      : "Enter your question..."
-                  }
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  disabled={chatLoading}
-                />
-                <Button
-                  type="submit"
-                  disabled={chatLoading || !chatQuery.trim()}
-                  className="px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-md disabled:opacity-50"
-                >
-                  {chatLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                </Button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 기존 UI */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Navigation className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">{ui.title}</h1>
-              <p className="text-xs text-gray-500">{ui.subtitle}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <select
-              value={selectedLang}
-              onChange={(e) => setSelectedLang(e.target.value)}
-              className="border rounded-md px-2 py-1 text-sm"
-            >
-              <option value="ko">한국어</option>
-              <option value="en">English</option>
-              <option value="ja">日本語</option>
-              <option value="zh">中文(简体)</option>
-            </select>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={isDocentActive}
-                onCheckedChange={(v) => {
-                  if (!v) stopAllTTS();
-                  setIsDocentActive(v);
-                }}
-              />
-              <span className="text-sm font-medium">{ui.aiDocent}</span>
-            </div>
-            {isPlaying && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={stopAllTTS}
-                className="text-red-600 hover:text-red-700"
-              >
-                <VolumeX className="w-4 h-4 mr-1" />
-                {ui.stopVoice}
-              </Button>
+  // =========================
+  // 모바일 레이아웃
+  // =========================
+  if (isMobile) {
+    return (
+      <div className="h-screen bg-gray-50">
+        {/* 챗봇 플로팅 버튼 */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
+            onClick={() => setIsChatbotOpen(!isChatbotOpen)}
+            className="w-14 h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg"
+          >
+            {isChatbotOpen ? (
+              <X className="w-6 h-6 text-white" />
+            ) : (
+              <MessageCircle className="w-6 h-6 text-white" />
             )}
+          </Button>
+        </div>
+
+        {/* 챗봇 모달 */}
+        {isChatbotOpen && (
+          <div className="fixed bottom-24 right-6 z-40 w-[300px] h-96 bg-white rounded-lg shadow-xl border border-gray-200">
+            <div className="flex flex-col h-full">
+              {/* 챗봇 헤더 */}
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-t-lg">
+                <h3 className="font-semibold">{ui.chatbot}</h3>
+                <p className="text-sm opacity-90">{ui.askQuestion}</p>
+              </div>
+
+              {/* 챗봇 내용 */}
+              <div className="flex-1 p-4 overflow-y-auto">
+                {/* 예시 질문들 */}
+                {!chatAnswer && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      {ui.examples.title}
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {ui.examples.items.map((example, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleExampleClick(example)}
+                          className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md border text-gray-700 transition-colors"
+                          disabled={chatLoading}
+                        >
+                          {example}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 답변 표시 */}
+                {chatAnswer && (
+                  <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                    <h4 className="font-medium text-gray-800 mb-2">답변:</h4>
+                    <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                      {chatAnswer}
+                    </div>
+                  </div>
+                )}
+
+                {/* 로딩 상태 */}
+                {chatLoading && (
+                  <div className="text-center py-4 text-gray-500">
+                    답변을 생성하고 있습니다...
+                  </div>
+                )}
+              </div>
+
+              {/* 챗봇 입력 폼 */}
+              <div className="border-t border-gray-200 p-4">
+                <form onSubmit={handleChatSubmit} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatQuery}
+                    onChange={(e) => setChatQuery(e.target.value)}
+                    placeholder={
+                      selectedLang === "ko"
+                        ? "질문을 입력하세요..."
+                        : "Enter your question..."
+                    }
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={chatLoading}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={chatLoading || !chatQuery.trim()}
+                    className="px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-md disabled:opacity-50"
+                  >
+                    {chatLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 헤더 */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <Navigation className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{ui.title}</h1>
+                <p className="text-xs text-gray-500">{ui.subtitle}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <select
+                value={selectedLang}
+                onChange={(e) => setSelectedLang(e.target.value)}
+                className="border rounded-md px-2 py-1 text-sm"
+              >
+                <option value="ko">한국어</option>
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+                <option value="zh">中文(简体)</option>
+              </select>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={isDocentActive}
+                  onCheckedChange={(v) => {
+                    if (!v) stopAllTTS();
+                    setIsDocentActive(v);
+                  }}
+                />
+                <span className="text-sm font-medium">{ui.aiDocent}</span>
+              </div>
+              {isPlaying && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={stopAllTTS}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <VolumeX className="w-4 h-4 mr-1" />
+                  {ui.stopVoice}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 모바일: 맵 + (오른쪽 패널 대신) 아래로 카드 */}
+        <div className="flex flex-col" style={{ height: "calc(100vh - 80px)" }}>
+          <div className="flex-1 min-h-[40vh]">
+            <LocationMap
+              userLocation={userLocation}
+              pois={mapPoisMobile} // ✅ 선택 시 한 개만
+              selectedPOI={selectedPOI}
+              onSelectPOI={setSelectedPOI}
+              showSelectedPopup // ✅ 선택 핀 위 팝업(아래 3번 참고)
+            />
+          </div>
+
+          {/* 상세(접고 펼칠 수 있게 하고 싶으면 Collapsible로 교체 가능) */}
+          <div className="border-t bg-white">
+            <POIDetails
+              poi={
+                selectedPOI
+                  ? { ...selectedPOI, description: translatedDesc }
+                  : null
+              }
+              userLocation={userLocation}
+              onPlayTTS={() => speakText(translatedDesc, selectedLang)}
+              isDocentActive={isDocentActive}
+            />
+          </div>
+
+          {/* 목록: 10개만, 세로 스크롤 */}
+          <div className="bg-white border-t max-h-[40vh] overflow-y-auto">
+            {" "}
+            {/* ★ 스크롤 영역 */}
+            <POIList
+              pois={limitedListData} /* ★ 10개 제한 */
+              selectedPOI={selectedPOI}
+              nearbyPOIs={limitedNearby} /* ★ 10개 제한 */
+              userLocation={userLocation}
+              onSelectPOI={(poi) => setSelectedPOI(poi)}
+              isDocentActive={isDocentActive}
+              isPlaying={isPlaying}
+            />
           </div>
         </div>
       </div>
+    );
+  } else {
+    return (
+      <div className="h-screen bg-gray-50">
+        {/* 챗봇 플로팅 버튼 */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
+            onClick={() => setIsChatbotOpen(!isChatbotOpen)}
+            className="w-14 h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg"
+          >
+            {isChatbotOpen ? (
+              <X className="w-6 h-6 text-white" />
+            ) : (
+              <MessageCircle className="w-6 h-6 text-white" />
+            )}
+          </Button>
+        </div>
 
-      <div className="flex h-[calc(100vh-80px)]">
-        <div className="w-80 bg-white border-r border-gray-200">
-          <POIList
-            pois={listData}
-            selectedPOI={selectedPOI}
-            nearbyPOIs={nearbyCsvCards}
-            userLocation={userLocation}
-            onSelectPOI={(poi) => setSelectedPOI(poi)}
-            isDocentActive={isDocentActive}
-            isPlaying={isPlaying}
-          />
+        {/* 챗봇 모달 */}
+        {isChatbotOpen && (
+          <div className="fixed bottom-24 right-6 z-40 w-96 h-96 bg-white rounded-lg shadow-xl border border-gray-200">
+            <div className="flex flex-col h-full">
+              {/* 챗봇 헤더 */}
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-t-lg">
+                <h3 className="font-semibold">{ui.chatbot}</h3>
+                <p className="text-sm opacity-90">{ui.askQuestion}</p>
+              </div>
+
+              {/* 챗봇 내용 */}
+              <div className="flex-1 p-4 overflow-y-auto">
+                {/* 예시 질문들 */}
+                {!chatAnswer && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      {ui.examples.title}
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {ui.examples.items.map((example, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleExampleClick(example)}
+                          className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md border text-gray-700 transition-colors"
+                          disabled={chatLoading}
+                        >
+                          {example}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 답변 표시 */}
+                {chatAnswer && (
+                  <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                    <h4 className="font-medium text-gray-800 mb-2">답변:</h4>
+                    <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                      {chatAnswer}
+                    </div>
+                  </div>
+                )}
+
+                {/* 로딩 상태 */}
+                {chatLoading && (
+                  <div className="text-center py-4 text-gray-500">
+                    답변을 생성하고 있습니다...
+                  </div>
+                )}
+              </div>
+
+              {/* 챗봇 입력 폼 */}
+              <div className="border-t border-gray-200 p-4">
+                <form onSubmit={handleChatSubmit} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatQuery}
+                    onChange={(e) => setChatQuery(e.target.value)}
+                    placeholder={
+                      selectedLang === "ko"
+                        ? "질문을 입력하세요..."
+                        : "Enter your question..."
+                    }
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={chatLoading}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={chatLoading || !chatQuery.trim()}
+                    className="px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-md disabled:opacity-50"
+                  >
+                    {chatLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 기존 UI */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <Navigation className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{ui.title}</h1>
+                <p className="text-xs text-gray-500">{ui.subtitle}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <select
+                value={selectedLang}
+                onChange={(e) => setSelectedLang(e.target.value)}
+                className="border rounded-md px-2 py-1 text-sm"
+              >
+                <option value="ko">한국어</option>
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+                <option value="zh">中文(简体)</option>
+              </select>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={isDocentActive}
+                  onCheckedChange={(v) => {
+                    if (!v) stopAllTTS();
+                    setIsDocentActive(v);
+                  }}
+                />
+                <span className="text-sm font-medium">{ui.aiDocent}</span>
+              </div>
+              {isPlaying && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={stopAllTTS}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <VolumeX className="w-4 h-4 mr-1" />
+                  {ui.stopVoice}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="flex-1">
-          <LocationMap
-            userLocation={userLocation}
-            pois={listData}
-            selectedPOI={selectedPOI}
-            onSelectPOI={setSelectedPOI}
-          />
-        </div>
-        <div className="w-80 bg-white border-l border-gray-200">
-          <POIDetails
-            poi={
-              selectedPOI
-                ? { ...selectedPOI, description: translatedDesc }
-                : null
-            }
-            userLocation={userLocation}
-            onPlayTTS={() => speakText(translatedDesc, selectedLang)}
-            isDocentActive={isDocentActive}
-          />
+
+        <div className="flex h-[calc(100vh-80px)]">
+          <div className="w-80 bg-white border-r border-gray-200">
+            <POIList
+              pois={listData}
+              selectedPOI={selectedPOI}
+              nearbyPOIs={nearbyCsvCards}
+              userLocation={userLocation}
+              onSelectPOI={(poi) => setSelectedPOI(poi)}
+              isDocentActive={isDocentActive}
+              isPlaying={isPlaying}
+            />
+          </div>
+          <div className="flex-1 relative min-w-0 min-h-0">
+            {" "}
+            {/* 클릭 레이어 문제 예방 */}
+            <div className="absolute inset-0">
+              <LocationMap
+                userLocation={userLocation}
+                pois={mapPoisDesktop} // ✅ 선택 시 한 개만
+                selectedPOI={selectedPOI}
+                onSelectPOI={setSelectedPOI}
+                showSelectedPopup // ✅ 선택 핀 위 팝업(아래 4번 참고)
+              />
+            </div>
+          </div>
+          <div className="w-80 bg-white border-l border-gray-200">
+            <POIDetails
+              poi={
+                selectedPOI
+                  ? { ...selectedPOI, description: translatedDesc }
+                  : null
+              }
+              userLocation={userLocation}
+              onPlayTTS={() => speakText(translatedDesc, selectedLang)}
+              isDocentActive={isDocentActive}
+            />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 }
