@@ -1,0 +1,181 @@
+﻿/* Directions timeline styles inspired by myro layout */
+.timeline {
+  display: grid;
+  gap: 12px;
+}
+.timeline-item {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+}
+.timeline-side { position: relative; display: flex; flex-direction: column; align-items: center; }
+.timeline-dot {
+  width: 12px; height: 12px; border-radius: 9999px; background: #cbd5e1; border: 2px solid #e2e8f0;
+}
+.timeline-dot.start { background: #22c55e; border-color: #bbf7d0; }
+.timeline-dot.end { background: #ef4444; border-color: #fecaca; }
+.timeline-dot.wp { background: #6366f1; border-color: #c7d2fe; }
+.timeline-line {
+  flex: 1 1 auto; width: 2px; background: linear-gradient(to bottom, #e5e7eb, #e5e7eb);
+  margin-top: 6px;
+}
+.timeline-content {
+  background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px;
+}
+
+/* Minor UI tweaks */
+.timeline-content .text-slate-500 { font-size: 12px; }
+.timeline-content .font-semibold { font-size: 14px; }
+
+/* Myro-like layout for directions */
+.directions-wrapper {
+  display: grid;
+  grid-template-columns: 84px 1fr 1fr; /* left rail + content + map (??50/50) */
+  gap: 0;
+  height: auto;
+  min-height: calc(100vh - 96px);
+}
+.directions-leftbar {
+  background: transparent;
+  padding: 16px 8px;
+  border-right: 1px solid #eef2f7;
+}
+.step-nav {
+  display: grid;
+  gap: 12px;
+  position: sticky;
+  top: 12px;
+}
+.step-item {
+  font-weight: 700;
+  font-size: 12px;
+  color: #60a5fa;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.step-item .label { color: #60a5fa; letter-spacing: 0.02em; }
+.step-item .title { color: #1f2937; }
+.directions-panel {
+  background: #fff;
+  padding: 16px;
+  border-right: 1px solid #e5e7eb;
+  overflow: auto;
+}
+.directions-mapbox { height: 100%; display: flex; min-height: 480px; }
+.directions-mapbox > div { flex: 1 1 auto; min-height: 100%; }
+.directions-footerbar {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  z-index: 20;
+}
+/* Make map column consume full available height */
+.directions-mapbox { height: 100%; display: flex; }
+.directions-mapbox > div { flex: 1 1 auto; }
+
+/* Day columns grid similar to reference */
+.day-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.day-card { min-width: 0; border-radius: 14px; }
+
+/* Travel separator row (?대룞 ?쒓컙) */
+.travel-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f6fa;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+/* Bottom action bar (痍⑥냼/?곸슜/??? */
+.directions-actionbar {
+  position: sticky;
+  left: 0;
+  bottom: 0;
+  display: grid;
+  gap: 8px;
+  padding: 12px 8px;
+}
+
+/* Left rail primary button */
+.leftbar-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #334155;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Hide legacy leftbar bottom action set; we use footerbar instead */
+.directions-leftbar .directions-actionbar:last-of-type { display: none; }
+
+/* Day quick nav (left rail) */
+.day-nav { display: grid; gap: 8px; margin: 12px 4px; }
+.day-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 12px;
+}
+.day-nav-btn.active { border-color: #6366f1; box-shadow: 0 0 0 2px #eef2ff inset; color: #4338ca; }
+
+/* Ensure button labels never wrap within Directions page */
+.directions-wrapper button { white-space: nowrap; }
+
+/* Date range modal */
+.date-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.date-modal { background: #fff; width: min(920px, 92vw); border-radius: 14px; box-shadow: 0 20px 40px rgba(2,6,23,0.25); }
+.date-modal .head { padding: 22px 24px 8px; text-align: center; font-weight: 800; font-size: 20px; color: #0f172a; }
+.date-modal .sub { text-align: center; color: #64748b; font-size: 12px; margin-bottom: 8px; }
+.date-modal .body { padding: 8px 16px 16px; }
+.cal-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.calendar { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+.calendar .cal-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; font-weight: 700; color: #334155; }
+.calendar .grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.calendar .cell { height: 40px; display: grid; place-items: center; font-size: 13px; }
+.calendar .dow { color: #94a3b8; font-weight: 600; background: #f8fafc; }
+.calendar .day { cursor: pointer; position: relative; }
+.calendar .day.disabled { color: #cbd5e1; cursor: not-allowed; }
+.calendar .day.selected { background: #0f172a; color: #fff; border-radius: 8px; }
+.calendar .day.in-range { background: #e2e8f0; color: #0f172a; border-radius: 8px; }
+.date-modal .foot { display: flex; justify-content: flex-end; padding: 12px 16px 16px; }
+.date-modal .apply { background: #0f172a; color: #fff; border-radius: 10px; padding: 10px 16px; font-weight: 700; }
+
+/* Category chip for place tags */
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  font-size: 10px;
+  font-weight: 700;
+}
