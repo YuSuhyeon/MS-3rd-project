@@ -11,12 +11,25 @@ import {
   Zap,
   Target,
   Globe,
-  Star,
 } from "lucide-react";
 import Papa from "papaparse";
 import { convert as romanize } from "hangul-romanization";
 
 function VisionOCR() {
+  // merged_annotations_merged.json => 성분,알러지
+  const [menuData, setMenuData] = useState([]);
+  // 한국국제교류재단.csv => 영문 설명
+  const [foodENData, setFoodENData] = useState([]);
+  // output.json => 한,영,일,중 메뉴 정보
+  const [foodAllData, setFoodAllData] = useState([]);
+
+  const [loading, setLoading] = useState(false);
+  const [ocrLang, setOcrLang] = useState("ko");
+
+  const [matched, setMatched] = useState(null); // OCR & 데이터 일치
+
+  // AI 답변 요청 취소용 ref
+  const aiRequestRef = React.useRef(0);
   // 언어별 번역 결과 캐시
   const [descCache, setDescCache] = useState({});
   const [nameCache, setNameCache] = useState({});
@@ -25,25 +38,21 @@ function VisionOCR() {
   const [imageFile, setImageFile] = useState(null); // 업로드 이미지 파일
   const [preview, setPreview] = useState(null); // 이미지 미리보기
   const [result, setResult] = useState(null); // OCR 분석 결과
-  const [loading, setLoading] = useState(false); // 로딩 상태
   const [error, setError] = useState(null); // 에러 메세지 장
-  const [menuData, setMenuData] = useState([]); // 메뉴 정보(성분,알러지) -> json
-  const [foodDescData, setFoodDescData] = useState([]); // 음식 설명 -> csv
-  const [foodData, setFoodData] = useState([]); // 800개의 한,영,일,중 메뉴 정보(설명)
   const [selectedBox, setSelectedBox] = useState(null); // 클릭한 바운딩 박스 정보
-  const [matchedMenuInfo, setMatchedMenuInfo] = useState(null); // JSON/CSV 모두 일치하는 메뉴 정보
-  const [matchedFoodData, setMatchedFoodData] = useState(null); // foodData에서 일치하는 메뉴 정보
+
   const [translationLoading, setTranslationLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
   const canvasRef = React.useRef(null); // OCR 결과 표시
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 }); // 업로드된 이미지 실제 크기
 
-  const [ocrLang, setOcrLang] = useState("ko");
-
   const [aiMenuAnswer, setAiMenuAnswer] = useState("");
 
   const pronunciation = selectedBox && romanize(selectedBox.text);
+
+  const [allergyCache, setAllergyCache] = useState({});
+  const [translatedAllergy, setTranslatedAllergy] = useState("");
 
   const languageOptions = [
     { value: "ko", code: "KO", label: "한국어" },
@@ -67,7 +76,7 @@ function VisionOCR() {
         Papa.parse(csvText, {
           header: true,
           complete: (results) => {
-            setFoodDescData(results.data);
+            setFoodENData(results.data);
           },
         });
       });
@@ -77,7 +86,7 @@ function VisionOCR() {
   useEffect(() => {
     fetch("/output.json")
       .then((res) => res.json())
-      .then((data) => setFoodData(data));
+      .then((data) => setFoodAllData(data));
   }, []);
 
   // 이미지 파일 업로드
@@ -109,13 +118,13 @@ function VisionOCR() {
       }
       const formData = new FormData();
       formData.append("image_file", imageFile);
-      formData.append("ocr_lang", ocrLang); // 선택된 언어 추가
+      formData.append("ocr_lang", ocrLang);
       const response = await fetch("/api/vision/ocr", {
         method: "POST",
         body: formData,
       });
       const data = await response.json();
-      console.log("OCR API 응답:", data); // OCR 결과 구조 확인용 로그
+      console.log("OCR API 응답:", data);
       setResult(data);
     } catch (err) {
       setError("분석 요청 중 오류가 발생했습니다.");
@@ -123,95 +132,6 @@ function VisionOCR() {
       setLoading(false);
     }
   };
-  // // 페이지 마운트 시 localStorage에서 복원
-  // useEffect(() => {
-  //   const savedPreview = localStorage.getItem(LS_PREVIEW);
-  //   const savedResult = localStorage.getItem(LS_RESULT);
-  //   const savedBox = localStorage.getItem(LS_SELECTED_BOX);
-  //   if (savedBox) {
-  //     try {
-  //       setSelectedBox(JSON.parse(savedBox));
-  //     } catch {}
-  //   }
-  //   if (savedPreview) setPreview(savedPreview);
-
-  //   if (savedResult) {
-  //     try {
-  //       setResult(JSON.parse(savedResult));
-  //     } catch {}
-  //   }
-  // }, []);
-
-  // 바운딩 박스 클릭 시 메뉴 정보 매칭
-  function handleBoxClick(line) {
-    // 메뉴가 바뀌면 번역 캐시 초기화
-    setDescCache({});
-    setNameCache({});
-    setAllergyCache({});
-    setTranslatedAllergy("");
-    // OCR 텍스트에서 메뉴 정보 찾기
-    const menuInfo = fuzzyFindMenuInfo(line.text, menuData);
-    const foodDesc = fuzzyFindFoodDesc(line.text, foodDescData);
-    const foodMenu = fuzzyFindFoodMenu(line.text, foodData, ocrLang);
-    // foodData에서 언어와 상관없이 일치하는 메뉴 정보 찾기
-    const matchedFood = fuzzyFindFoodData(line.text, foodData);
-    setMatchedFoodData(matchedFood);
-
-    if (menuInfo && foodDesc) {
-      setMatchedMenuInfo({ json: menuInfo, csv: foodDesc, foodMenu });
-    } else {
-      setMatchedMenuInfo(foodMenu ? { foodMenu } : null);
-    }
-    setSelectedBox(line);
-
-    // foodData에서 언어와 상관없이 일치하는 메뉴 정보 찾기
-    function fuzzyFindFoodData(menuName, foodData) {
-      const normMenu = normalize(menuName);
-      // 모든 언어 컬럼에서 완전 일치 또는 부분 일치
-      const langCols = ["요리명.1"];
-      let found = foodData.find((row) =>
-        langCols.some((col) => row[col] && normalize(row[col]) === normMenu)
-      );
-      if (!found) {
-        found = foodData.find((row) =>
-          langCols.some(
-            (col) => row[col] && normMenu.includes(normalize(row[col]))
-          )
-        );
-      }
-      return found || null;
-    }
-  }
-
-  // 언어별 컬럼 매핑
-  const foodLangMap = {
-    ko: { name: "요리명.1", desc: "설명(요리명제외)" },
-    en: { name: "영어", desc: "설명(요리명제외).1" },
-    ja: { name: "일본어", desc: "설명(요리명제외).2" },
-    "zh-Hans": { name: "중문1", desc: "설명(요리명제외).3" },
-  };
-
-  // OCR 텍스트와 foodData에서 일치하는 메뉴 찾기
-  function fuzzyFindFoodMenu(menuName, foodData, lang) {
-    const { name, desc } = foodLangMap[lang] || foodLangMap.ko;
-    const normMenu = normalize(menuName);
-    let found = foodData.find(
-      (row) => row[name] && normalize(row[name]) === normMenu
-    );
-    if (!found) {
-      // 부분 일치 허용
-      found = foodData.find(
-        (row) => row[name] && normMenu.includes(normalize(row[name]))
-      );
-    }
-    if (found) {
-      return {
-        menuName: found[name],
-        description: found[desc],
-      };
-    }
-    return null;
-  }
 
   // OCR 바운딩 박스(라인 단위)와 텍스트 그리기
   useEffect(() => {
@@ -231,7 +151,7 @@ function VisionOCR() {
       ctx.strokeStyle = "#7B2FF2";
       ctx.font = "16px Arial";
       ctx.fillStyle = "rgba(123,47,242,0.2)";
-      // 각 블록, 라인별 바운딩 박스와 텍스트
+      // 각 블록, 라인별 바운딩 박스
       result.readResult.blocks.forEach((block) => {
         block.lines.forEach((line) => {
           const poly = line.boundingPolygon;
@@ -249,26 +169,7 @@ function VisionOCR() {
             ctx.fillStyle = "#7B2FF2";
             ctx.fill();
             ctx.globalAlpha = 1.0;
-            // 중앙 좌표 계산
-            const center = poly.reduce(
-              (acc, p) => {
-                acc.x += p.x;
-                acc.y += p.y;
-                return acc;
-              },
-              { x: 0, y: 0 }
-            );
-            center.x /= poly.length;
-            center.y /= poly.length;
-            // 텍스트 표시 (라인 전체)
-            ctx.font = "bold 16px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 3;
-            ctx.strokeText(line.text, center.x, center.y);
-            ctx.fillStyle = "#222";
-            ctx.fillText(line.text, center.x, center.y);
+
             ctx.restore();
           }
         });
@@ -276,38 +177,92 @@ function VisionOCR() {
     };
   }, [result, preview]);
 
-  // CSV 음식 설명 찾기 (정규화 + 부분 일치 허용, 음식명/영문명/설명 반환)
+  // 바운딩 박스 클릭 시 메뉴 정보 매칭
+  function handleBoxClick(line) {
+    // 메뉴가 바뀌면 번역 캐시 및 AI 답변 초기화
+    setNameCache({});
+    setDescCache({});
+    setAllergyCache({});
+    setTranslatedAllergy("");
+    setAiMenuAnswer("");
+
+    // OCR 텍스트와 데이터 일치하는 부분
+    const matchedMenuInfo = fuzzyFindMenuInfo(line.text, menuData);
+    const matchedFoodEN = fuzzyFindFoodEN(line.text, foodENData);
+    const matchedFoodAll = fuzzyFindFoodAll(line.text, foodAllData);
+
+    setMatched({
+      menuInfo: matchedMenuInfo,
+      foodEN: matchedFoodEN,
+      foodAll: matchedFoodAll,
+    });
+    setSelectedBox(line);
+  }
+
+  // foodAllData 언어별 컬럼 매핑
+  const foodLangMap = {
+    ko: { name: "요리명.1", desc: "설명(요리명제외)" },
+    en: { name: "영어", desc: "설명(요리명제외).1" },
+    ja: { name: "일본어", desc: "설명(요리명제외).2" },
+    "zh-Hans": { name: "중문1", desc: "설명(요리명제외).3" },
+  };
+
+  // 메뉴명 정규화
   function normalize(str) {
     return str
       .replace(/\s+/g, "")
       .replace(/[^가-힣a-zA-Z0-9]/g, "")
       .toLowerCase();
   }
-  // ...FOOD_WHITELIST removed: no longer used in fuzzyFindFoodDesc
-  function fuzzyFindFoodDesc(menuName, foodDescData) {
+
+  // foodAllData에서 일치하는 정보 찾기
+  function fuzzyFindFoodAll(menuName, foodAllData) {
     const normMenu = normalize(menuName);
+    // 모든 언어 컬럼에서 완전 일치 또는 부분 일치
+    const langCols = ["요리명.1"];
+    let found = foodAllData.find((row) =>
+      langCols.some((col) => row[col] && normalize(row[col]) === normMenu)
+    );
+    if (!found) {
+      found = foodAllData.find((row) =>
+        langCols.some(
+          (col) => row[col] && normMenu.includes(normalize(row[col]))
+        )
+      );
+    }
+    return found || null;
+  }
+
+  // foodENData에서 일치하는 정보 찾기
+  function fuzzyFindFoodEN(menuName, foodENData) {
+    const normMenu = normalize(menuName);
+
     // 1. 완전 일치
-    const found = foodDescData.find(
+    const found = foodENData.find(
       (row) => row["음식명"] && normalize(row["음식명"]) === normMenu
     );
     if (found && found["음식설명"]) return found;
+
     // 2. 부분 포함 후보
-    const candidates = foodDescData.filter((row) => {
+    const candidates = foodENData.filter((row) => {
       if (!row["음식명"]) return false;
       const normFood = normalize(row["음식명"]);
       return normMenu.includes(normFood) || normFood.includes(normMenu);
     });
+
     // 2-1. 메뉴명이 DB 음식명으로 끝나는 후보만 우선 반환
     const endsWithCandidates = candidates.filter((row) => {
       const normFood = normalize(row["음식명"]);
       return normMenu.endsWith(normFood);
     });
+    // 음식명이 가장 긴 것 우선 반환
     if (endsWithCandidates.length > 0) {
       endsWithCandidates.sort(
         (a, b) => b["음식명"].length - a["음식명"].length
       );
       if (endsWithCandidates[0]["음식설명"]) return endsWithCandidates[0];
     }
+
     // 2-2. 그 외 후보 중 가장 긴 음식명 반환
     if (candidates.length > 0) {
       candidates.sort((a, b) => b["음식명"].length - a["음식명"].length);
@@ -316,13 +271,16 @@ function VisionOCR() {
     return null;
   }
 
+  // menuData에서 일치하는 정보 찾기
   function fuzzyFindMenuInfo(menuName, menuData) {
     const normMenu = normalize(menuName);
+
     // 1. 완전 일치
     const found = menuData.find(
       (a) => a.menu_information && normalize(a.menu_information.ko) === normMenu
     );
     if (found) return found.menu_information;
+
     // 2. 부분 포함: 음식명 길이가 가장 긴 항목 우선 반환
     const candidates = menuData.filter(
       (a) =>
@@ -330,6 +288,7 @@ function VisionOCR() {
         (normMenu.includes(normalize(a.menu_information.ko)) ||
           normalize(a.menu_information.ko).includes(normMenu))
     );
+
     if (candidates.length > 0) {
       candidates.sort(
         (a, b) => b.menu_information.ko.length - a.menu_information.ko.length
@@ -339,15 +298,37 @@ function VisionOCR() {
     return null;
   }
 
+  // 언어 변경
   const handleLanguageSelect = (langValue) => {
     setTranslationLoading(true);
     setOcrLang(langValue);
   };
 
-  // 공식 음식설명 번역: 메뉴/언어 변경 시 자동 번역 (캐싱)
+  // foodENData['음식명'] 번역
+  useEffect(() => {
+    async function doTranslateName() {
+      if (
+        matched?.foodEN?.["음식명"] &&
+        (ocrLang === "ja" || ocrLang === "zh-Hans")
+      ) {
+        if (!nameCache[ocrLang]) {
+          let nameResult = "";
+          try {
+            nameResult = await translateText(matched.foodEN["음식명"], ocrLang);
+          } catch (err) {
+            nameResult = "";
+          }
+          setNameCache((prev) => ({ ...prev, [ocrLang]: nameResult }));
+        }
+      }
+    }
+    doTranslateName();
+  }, [matched, ocrLang]);
+
+  // foodENData['음식설명'] 번역
   useEffect(() => {
     async function doTranslate() {
-      if (!matchedMenuInfo?.csv?.["음식설명"]) {
+      if (!matched?.foodEN?.["음식설명"]) {
         setTranslatedDesc("");
         setTranslationLoading(false);
         return;
@@ -361,12 +342,9 @@ function VisionOCR() {
       let result = "";
       try {
         if (ocrLang === "ko") {
-          result = await translateToKorean(matchedMenuInfo.csv["음식설명"]);
+          result = await translateToKorean(matched.foodEN["음식설명"]);
         } else if (ocrLang !== "en") {
-          result = await translateText(
-            matchedMenuInfo.csv["음식설명"],
-            ocrLang
-          );
+          result = await translateText(matched.foodEN["음식설명"], ocrLang);
         }
       } catch (err) {
         result = "";
@@ -376,37 +354,12 @@ function VisionOCR() {
       setTranslationLoading(false);
     }
     doTranslate();
-  }, [matchedMenuInfo, ocrLang]);
+  }, [matched, ocrLang]);
 
-  useEffect(() => {
-    async function doTranslateName() {
-      if (
-        matchedMenuInfo?.csv?.["음식명"] &&
-        (ocrLang === "ja" || ocrLang === "zh-Hans")
-      ) {
-        if (!nameCache[ocrLang]) {
-          let nameResult = "";
-          try {
-            nameResult = await translateText(
-              matchedMenuInfo.csv["음식명"],
-              ocrLang
-            );
-          } catch (err) {
-            nameResult = "";
-          }
-          setNameCache((prev) => ({ ...prev, [ocrLang]: nameResult }));
-        }
-      }
-    }
-    doTranslateName();
-  }, [matchedMenuInfo, ocrLang]);
-
-  const [allergyCache, setAllergyCache] = useState({});
-  const [translatedAllergy, setTranslatedAllergy] = useState("");
   // 알러지 정보 번역: 메뉴/언어 변경 시 자동 번역 (캐싱)
   useEffect(() => {
     async function doTranslateAllergy() {
-      const allergyArr = matchedMenuInfo?.json?.allergy;
+      const allergyArr = matched?.menuInfo?.allergy;
       if (
         !allergyArr ||
         !Array.isArray(allergyArr) ||
@@ -436,26 +389,27 @@ function VisionOCR() {
       setTranslatedAllergy(result);
     }
     doTranslateAllergy();
-  }, [matchedMenuInfo, ocrLang]);
+  }, [matched, ocrLang]);
 
+  // AI 답변 생성
   useEffect(() => {
-    if (
-      !matchedMenuInfo?.json &&
-      !matchedMenuInfo?.csv &&
-      !matchedFoodData &&
-      selectedBox
-    ) {
+    // foodEN과 foodAll이 모두 없을 때만 AI 답변 생성
+    if (selectedBox && !matched?.foodEN && !matched?.foodAll) {
       setAiLoading(true);
-      // 메뉴 정보가 없을 때 AI 답변 요청
+      const requestId = aiRequestRef.current + 1;
+      aiRequestRef.current = requestId;
       getOpenAIMenuAnswer(selectedBox.text, ocrLang).then((answer) => {
-        setAiMenuAnswer(answer);
-        setAiLoading(false);
+        if (aiRequestRef.current === requestId) {
+          setAiMenuAnswer(answer);
+          setAiLoading(false);
+        }
       });
-    } else {
+    } else if (!selectedBox) {
+      aiRequestRef.current += 1;
       setAiMenuAnswer("");
       setAiLoading(false);
     }
-  }, [matchedMenuInfo, matchedFoodData, selectedBox, ocrLang]);
+  }, [matched, selectedBox, ocrLang]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8">
@@ -696,28 +650,27 @@ function VisionOCR() {
                     </div>
                   </div>
                 </div>
-                {selectedBox && (
-                  <div>
-                    <div className="relative z-10">
-                      <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-cyan-100 shadow-sm">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-2xl font-bold text-slate-900">
-                            {selectedBox.text}
+                <div>
+                  <div className="relative z-10">
+                    <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-cyan-100 shadow-sm">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-2xl font-bold text-slate-900">
+                          {selectedBox.text}
+                        </span>
+                        {pronunciation && (
+                          <span className="text-base text-slate-600 font-medium">
+                            {pronunciation}
                           </span>
-                          {pronunciation && (
-                            <span className="text-base text-slate-600 font-medium">
-                              {pronunciation}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
-                    <div className="h-6"></div>
                   </div>
-                )}
+                  <div className="h-6"></div>
+                </div>
+
                 <div className="space-y-6">
                   {aiLoading ? (
-                    <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
+                    <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg mb-6">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
                           <Zap className="w-5 h-5 text-white animate-pulse" />
@@ -742,7 +695,7 @@ function VisionOCR() {
                     </div>
                   ) : (
                     aiMenuAnswer && (
-                      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
+                      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg mb-6">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
                             <Zap className="w-5 h-5 text-white" />
@@ -766,229 +719,148 @@ function VisionOCR() {
                     )
                   )}
                 </div>
-                {matchedFoodData && (
+                {(matched?.foodAll || matched?.foodEN) && (
                   <div className="p-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/50 rounded-3xl shadow-xl shadow-emerald-200/25 mb-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-emerald-200/20 to-teal-200/20 rounded-full -translate-y-14 translate-x-14"></div>
-                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-cyan-200/20 to-blue-200/20 rounded-full translate-y-10 -translate-x-10"></div>
-
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/25">
-                          <Star className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                          <h4 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 bg-clip-text text-transparent">
-                            메뉴 정보
-                          </h4>
-                          <p className="text-emerald-600 font-medium">
-                            데이터베이스에서 찾은 정보
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-4 mb-6">
-                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-emerald-100 shadow-lg">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-emerald-700 font-bold text-lg">
-                              메뉴명
-                            </span>
-                            <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center">
-                              <Target className="w-4 h-4 text-white" />
-                            </div>
+                    {matched?.foodAll && (
+                      <div className="relative z-10">
+                        <div className="bg-white rounded-xl shadow-md p-6 w-full mb-6">
+                          <div className="mb-2 text-xs text-slate-400 font-medium">
+                            출처: 한식진흥원, “한식메뉴 외국어표기 길라잡이
+                            800선”
                           </div>
-                          <div className="text-2xl font-bold text-slate-900">
-                            {ocrLang === "ko" && matchedFoodData?.["요리명.1"]}
-                            {ocrLang === "en" && matchedFoodData?.["영어"]}
-                            {ocrLang === "ja" && matchedFoodData?.["일본어"]}
-                            {ocrLang === "zh-Hans" &&
-                              matchedFoodData?.["중문1"]}
-                          </div>
-                        </div>
-
-                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-emerald-100 shadow-lg">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-emerald-700 font-bold text-lg">
-                              설명
-                            </span>
-                            <div className="w-8 h-8 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl flex items-center justify-center">
-                              <FileImage className="w-4 h-4 text-white" />
-                            </div>
-                          </div>
-                          <div className="text-slate-800 leading-relaxed font-medium text-lg">
-                            {ocrLang === "ko" &&
-                              matchedFoodData?.["설명(요리명제외)"]}
-                            {ocrLang === "en" &&
-                              matchedFoodData?.["설명(요리명제외).1"]}
-                            {ocrLang === "ja" &&
-                              matchedFoodData?.["설명(요리명제외).2"]}
-                            {ocrLang === "zh-Hans" &&
-                              matchedFoodData?.["설명(요리명제외).3"]}
-                          </div>
+                          <table className="w-full text-left">
+                            <tbody>
+                              <tr className="border-b">
+                                <td className="py-3 px-2 text-slate-600 font-semibold w-1/3">
+                                  메뉴명
+                                </td>
+                                <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
+                                  {
+                                    matched?.foodAll?.[
+                                      foodLangMap[ocrLang].name
+                                    ]
+                                  }
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="py-3 px-2 text-slate-600 font-semibold">
+                                  설명
+                                </td>
+                                <td className="py-3 px-2 text-slate-800 font-medium">
+                                  {
+                                    matched?.foodAll?.[
+                                      foodLangMap[ocrLang].desc
+                                    ]
+                                  }
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
                         </div>
                       </div>
-                    </div>
-                    {matchedMenuInfo?.csv && (
-                      <div className="mt-6">
-                        <div className="p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200/50 rounded-2xl shadow-xl shadow-blue-200/25 relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/20 to-indigo-200/20 rounded-full -translate-y-16 translate-x-16"></div>
-                          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-200/20 to-pink-200/20 rounded-full translate-y-12 -translate-x-12"></div>
-                          <div className="relative z-10">
-                            <div className="flex items-center gap-4 mb-4">
-                              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
-                                <Star className="w-5 h-5 text-white" />
-                              </div>
-                              <div>
-                                <h4 className="text-lg font-bold bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent">
-                                  추가 설명
-                                </h4>
-                                <p className="text-blue-600 font-medium text-sm">
-                                  한국국제교류재단 공식 데이터
-                                </p>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4">
-                              <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-100 shadow">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-blue-700 font-bold text-base">
-                                    음식명
-                                  </span>
-                                  <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-indigo-400 rounded flex items-center justify-center">
-                                    <Target className="w-3 h-3 text-white" />
-                                  </div>
-                                </div>
-                                <div className="text-lg font-bold text-slate-900">
-                                  {ocrLang === "ko" &&
-                                    matchedMenuInfo?.csv?.["음식명"]}
-                                  {ocrLang === "en" &&
-                                    matchedMenuInfo?.csv?.["영문"]}
-                                  {ocrLang === "ja" &&
-                                    (translationLoading ? (
-                                      <span className="text-blue-500 animate-pulse">
-                                        번역 중...
-                                      </span>
-                                    ) : (
-                                      nameCache.ja
-                                    ))}
-                                  {ocrLang === "zh-Hans" &&
-                                    (translationLoading ? (
-                                      <span className="text-blue-500 animate-pulse">
-                                        번역 중...
-                                      </span>
-                                    ) : (
-                                      nameCache["zh-Hans"]
-                                    ))}
-                                </div>
-                              </div>
-                              <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-100 shadow">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-blue-700 font-bold text-base">
-                                    상세 설명
-                                  </span>
-                                  <div className="w-6 h-6 bg-gradient-to-r from-indigo-400 to-purple-400 rounded flex items-center justify-center">
-                                    <FileImage className="w-3 h-3 text-white" />
-                                  </div>
-                                </div>
-                                <div className="text-slate-800 leading-relaxed font-medium text-base">
-                                  {translationLoading ? (
+                    )}
+                    {matched?.foodEN && (
+                      <div className="bg-white rounded-xl shadow-md p-6 w-full mt-6">
+                        <div className="mb-2 text-xs text-slate-400 font-medium">
+                          출처: 한국국제교류재단 한국음식정보
+                        </div>
+                        <table className="w-full text-left">
+                          <tbody>
+                            <tr className="border-b">
+                              <td className="py-3 px-2 text-slate-600 font-semibold w-1/3">
+                                음식명
+                              </td>
+                              <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
+                                {ocrLang === "ko" &&
+                                  matched?.foodEN?.["음식명"]}
+                                {ocrLang === "en" && matched?.foodEN?.["영문"]}
+                                {ocrLang === "ja" &&
+                                  (translationLoading ? (
                                     <span className="text-blue-500 animate-pulse">
                                       번역 중...
                                     </span>
-                                  ) : ocrLang === "en" ? (
-                                    matchedMenuInfo?.csv?.["음식설명"]
                                   ) : (
-                                    translatedDesc
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                                    nameCache.ja
+                                  ))}
+                                {ocrLang === "zh-Hans" &&
+                                  (translationLoading ? (
+                                    <span className="text-blue-500 animate-pulse">
+                                      번역 중...
+                                    </span>
+                                  ) : (
+                                    nameCache["zh-Hans"]
+                                  ))}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-3 px-2 text-slate-600 font-semibold">
+                                상세 설명
+                              </td>
+                              <td className="py-3 px-2 text-slate-800 font-medium">
+                                {translationLoading ? (
+                                  <span className="text-blue-500 animate-pulse">
+                                    번역 중...
+                                  </span>
+                                ) : ocrLang === "en" ? (
+                                  matched?.foodEN?.["음식설명"]
+                                ) : (
+                                  translatedDesc
+                                )}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     )}
                   </div>
                 )}
-                {matchedMenuInfo?.json && (
-                  <div className="p-8 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border border-violet-200/50 rounded-3xl shadow-xl shadow-violet-200/25 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-violet-200/20 to-purple-200/20 rounded-full -translate-y-14 translate-x-14"></div>
-                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-fuchsia-200/20 to-pink-200/20 rounded-full translate-y-10 -translate-x-10"></div>
 
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="w-14 h-14 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-2xl flex items-center justify-center shadow-xl shadow-violet-500/25">
-                          <Sparkles className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                          <h4 className="text-2xl font-bold bg-gradient-to-r from-violet-700 via-purple-700 to-fuchsia-700 bg-clip-text text-transparent">
-                            상세 성분 정보
-                          </h4>
-                          <p className="text-violet-600 font-medium">
-                            알러지 및 주요 성분
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-violet-100 shadow-lg">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-violet-700 font-bold text-lg">
-                              메뉴명
-                            </span>
-                            <div className="w-8 h-8 bg-gradient-to-r from-violet-400 to-purple-400 rounded-xl flex items-center justify-center">
-                              <Target className="w-4 h-4 text-white" />
-                            </div>
-                          </div>
-                          <div className="text-xl font-bold text-slate-900">
-                            {ocrLang === "ko" && matchedMenuInfo?.json?.["ko"]}
-                            {ocrLang === "en" && matchedMenuInfo?.json?.["en"]}
-                            {ocrLang === "ja" && matchedMenuInfo?.json?.["ja"]}
+                {matched?.menuInfo && (
+                  <div className="bg-white rounded-xl shadow-md p-6 w-full mx-auto">
+                    <div className="mb-2 text-xs text-slate-400 font-medium">
+                      출처: AI Hub (한국지능정보사회진흥원), 관광 음식메뉴판
+                      데이터
+                    </div>
+                    <table className="w-full text-left">
+                      <tbody>
+                        <tr className="border-b">
+                          <td className="py-3 px-2 text-slate-600 font-semibold w-1/3">
+                            메뉴명
+                          </td>
+                          <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
+                            {ocrLang === "ko" && matched?.menuInfo?.["ko"]}
+                            {ocrLang === "en" && matched?.menuInfo?.["en"]}
+                            {ocrLang === "ja" && matched?.menuInfo?.["ja"]}
                             {ocrLang === "zh-Hans" &&
-                              matchedMenuInfo?.json?.["zh_CN"]}
-                          </div>
-                        </div>
-
-                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-violet-100 shadow-lg">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-violet-700 font-bold text-lg">
-                              주요 성분
-                            </span>
-                            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-fuchsia-400 rounded-xl flex items-center justify-center">
-                              <Star className="w-4 h-4 text-white" />
-                            </div>
-                          </div>
-                          <div className="text-slate-800 font-medium text-base">
+                              matched?.menuInfo?.["zh_CN"]}
+                          </td>
+                        </tr>
+                        <tr className="border-b">
+                          <td className="py-3 px-2 text-slate-600 font-semibold">
+                            주요 성분
+                          </td>
+                          <td className="py-3 px-2 text-slate-800 font-medium">
                             {ocrLang === "ko" &&
-                              (matchedMenuInfo.json["ingredients.ko"]?.join(
-                                ", "
-                              ) ||
+                              (matched.menuInfo["ingredients.ko"]?.join(", ") ||
                                 "정보 없음")}
                             {ocrLang === "en" &&
-                              (matchedMenuInfo.json["ingredients.en"]?.join(
-                                ", "
-                              ) ||
+                              (matched.menuInfo["ingredients.en"]?.join(", ") ||
                                 "None")}
                             {ocrLang === "ja" &&
-                              (matchedMenuInfo.json["ingredients.ja"]?.join(
-                                ", "
-                              ) ||
+                              (matched.menuInfo["ingredients.ja"]?.join(", ") ||
                                 "なし")}
                             {ocrLang === "zh-Hans" &&
-                              (matchedMenuInfo.json["ingredients.zh_CN"]?.join(
+                              (matched.menuInfo["ingredients.zh_CN"]?.join(
                                 ", "
                               ) ||
                                 "无")}
-                          </div>
-                        </div>
-
-                        <div className="p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-violet-100 shadow-lg">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-violet-700 font-bold text-lg">
-                              알러지 정보
-                            </span>
-                            <div className="w-8 h-8 bg-gradient-to-r from-fuchsia-400 to-pink-400 rounded-xl flex items-center justify-center">
-                              <AlertCircle className="w-4 h-4 text-white" />
-                            </div>
-                          </div>
-                          <div className="text-slate-800 font-medium text-base">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 text-slate-600 font-semibold">
+                            알러지 정보
+                          </td>
+                          <td className="py-3 px-2 text-slate-800 font-medium">
                             {(translationLoading ? (
                               <span className="text-blue-500 animate-pulse">
                                 번역 중...
@@ -1005,10 +877,10 @@ function VisionOCR() {
                                 : ocrLang === "zh-Hans"
                                 ? "无"
                                 : "정보 없음")}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
