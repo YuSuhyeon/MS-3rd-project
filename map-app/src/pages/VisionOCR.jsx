@@ -26,34 +26,33 @@ function VisionOCR() {
   const [loading, setLoading] = useState(false);
   const [ocrLang, setOcrLang] = useState("ko");
 
-  const [imageFile, setImageFile] = useState(null); // 업로드 이미지 파일
-  const [preview, setPreview] = useState(null); // 이미지 미리보기
-  const [result, setResult] = useState(null); // OCR 분석 결과
-  const [error, setError] = useState(null);
-  const [selectedBox, setSelectedBox] = useState(null);
-  const canvasRef = React.useRef(null); // OCR 결과 표시
-  const [imgSize, setImgSize] = useState({ width: 0, height: 0 }); // 업로드된 이미지 실제 크기
-
   const [matched, setMatched] = useState(null); // OCR & 데이터 일치
 
   // AI 답변 요청 취소용 ref
   const aiRequestRef = React.useRef(0);
-
+  // 언어별 번역 결과 캐시
+  const [descCache, setDescCache] = useState({});
+  const [nameCache, setNameCache] = useState({});
   // 번역 결과 상태
   const [translatedDesc, setTranslatedDesc] = useState("");
-
-  // 언어별 번역 결과 캐시
-  const [nameCache, setNameCache] = useState({});
-  const [descCache, setDescCache] = useState({});
-  const [allergyCache, setAllergyCache] = useState({});
-  const [translatedAllergy, setTranslatedAllergy] = useState("");
+  const [imageFile, setImageFile] = useState(null); // 업로드 이미지 파일
+  const [preview, setPreview] = useState(null); // 이미지 미리보기
+  const [result, setResult] = useState(null); // OCR 분석 결과
+  const [error, setError] = useState(null); // 에러 메세지 장
+  const [selectedBox, setSelectedBox] = useState(null); // 클릭한 바운딩 박스 정보
 
   const [translationLoading, setTranslationLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
+  const canvasRef = React.useRef(null); // OCR 결과 표시
+  const [imgSize, setImgSize] = useState({ width: 0, height: 0 }); // 업로드된 이미지 실제 크기
+
   const [aiMenuAnswer, setAiMenuAnswer] = useState("");
 
   const pronunciation = selectedBox && romanize(selectedBox.text);
+
+  const [allergyCache, setAllergyCache] = useState({});
+  const [translatedAllergy, setTranslatedAllergy] = useState("");
 
   const languageOptions = [
     { value: "ko", code: "KO", label: "한국어" },
@@ -180,11 +179,12 @@ function VisionOCR() {
 
   // 바운딩 박스 클릭 시 메뉴 정보 매칭
   function handleBoxClick(line) {
-    // 메뉴가 바뀌면 번역 캐시 초기화
+    // 메뉴가 바뀌면 번역 캐시 및 AI 답변 초기화
     setNameCache({});
     setDescCache({});
     setAllergyCache({});
     setTranslatedAllergy("");
+    setAiMenuAnswer("");
 
     // OCR 텍스트와 데이터 일치하는 부분
     const matchedMenuInfo = fuzzyFindMenuInfo(line.text, menuData);
@@ -391,28 +391,20 @@ function VisionOCR() {
     doTranslateAllergy();
   }, [matched, ocrLang]);
 
+  // AI 답변 생성
   useEffect(() => {
-    const hasFoodAll = matched?.foodAll != null;
-    const hasFoodEN = matched?.foodEN != null;
-    const hasMenuInfo = matched?.menuInfo != null;
-    const onlyMenuJson = hasMenuInfo && !hasFoodAll && !hasFoodEN;
-    if (
-      selectedBox &&
-      ((!hasFoodAll && !hasFoodEN && !hasMenuInfo) || onlyMenuJson)
-    ) {
+    // foodEN과 foodAll이 모두 없을 때만 AI 답변 생성
+    if (selectedBox && !matched?.foodEN && !matched?.foodAll) {
       setAiLoading(true);
-      // AI 답변 요청 취소 관리
       const requestId = aiRequestRef.current + 1;
       aiRequestRef.current = requestId;
       getOpenAIMenuAnswer(selectedBox.text, ocrLang).then((answer) => {
-        // 만약 메뉴가 바뀌었으면 무시
         if (aiRequestRef.current === requestId) {
           setAiMenuAnswer(answer);
           setAiLoading(false);
         }
       });
-    } else {
-      // 메뉴가 바뀌면 이전 요청 무시
+    } else if (!selectedBox) {
       aiRequestRef.current += 1;
       setAiMenuAnswer("");
       setAiLoading(false);
@@ -658,28 +650,27 @@ function VisionOCR() {
                     </div>
                   </div>
                 </div>
-                {selectedBox && (
-                  <div>
-                    <div className="relative z-10">
-                      <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-cyan-100 shadow-sm">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-2xl font-bold text-slate-900">
-                            {selectedBox.text}
+                <div>
+                  <div className="relative z-10">
+                    <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-cyan-100 shadow-sm">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-2xl font-bold text-slate-900">
+                          {selectedBox.text}
+                        </span>
+                        {pronunciation && (
+                          <span className="text-base text-slate-600 font-medium">
+                            {pronunciation}
                           </span>
-                          {pronunciation && (
-                            <span className="text-base text-slate-600 font-medium">
-                              {pronunciation}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
-                    <div className="h-6"></div>
                   </div>
-                )}
+                  <div className="h-6"></div>
+                </div>
+
                 <div className="space-y-6">
                   {aiLoading ? (
-                    <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
+                    <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg mb-6">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
                           <Zap className="w-5 h-5 text-white animate-pulse" />
@@ -704,7 +695,7 @@ function VisionOCR() {
                     </div>
                   ) : (
                     aiMenuAnswer && (
-                      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg">
+                      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50 shadow-lg mb-6">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
                             <Zap className="w-5 h-5 text-white" />
@@ -728,38 +719,46 @@ function VisionOCR() {
                     )
                   )}
                 </div>
-                {matched?.foodAll && (
+                {(matched?.foodAll || matched?.foodEN) && (
                   <div className="p-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/50 rounded-3xl shadow-xl shadow-emerald-200/25 mb-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-emerald-200/20 to-teal-200/20 rounded-full -translate-y-14 translate-x-14"></div>
-                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-cyan-200/20 to-blue-200/20 rounded-full translate-y-10 -translate-x-10"></div>
-
-                    <div className="relative z-10">
-                      <div className="bg-white rounded-xl shadow-md p-6 w-full mb-6">
-                        <div className="mb-2 text-xs text-slate-400 font-medium">
-                          출처: 한식진흥원, “한식메뉴 외국어표기 길라잡이 800선”
+                    {matched?.foodAll && (
+                      <div className="relative z-10">
+                        <div className="bg-white rounded-xl shadow-md p-6 w-full mb-6">
+                          <div className="mb-2 text-xs text-slate-400 font-medium">
+                            출처: 한식진흥원, “한식메뉴 외국어표기 길라잡이
+                            800선”
+                          </div>
+                          <table className="w-full text-left">
+                            <tbody>
+                              <tr className="border-b">
+                                <td className="py-3 px-2 text-slate-600 font-semibold w-1/3">
+                                  메뉴명
+                                </td>
+                                <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
+                                  {
+                                    matched?.foodAll?.[
+                                      foodLangMap[ocrLang].name
+                                    ]
+                                  }
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="py-3 px-2 text-slate-600 font-semibold">
+                                  설명
+                                </td>
+                                <td className="py-3 px-2 text-slate-800 font-medium">
+                                  {
+                                    matched?.foodAll?.[
+                                      foodLangMap[ocrLang].desc
+                                    ]
+                                  }
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
                         </div>
-                        <table className="w-full text-left">
-                          <tbody>
-                            <tr className="border-b">
-                              <td className="py-3 px-2 text-slate-600 font-semibold w-1/3">
-                                메뉴명
-                              </td>
-                              <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
-                                {matched?.foodAll?.[foodLangMap[ocrLang].name]}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="py-3 px-2 text-slate-600 font-semibold">
-                                설명
-                              </td>
-                              <td className="py-3 px-2 text-slate-800 font-medium">
-                                {matched?.foodAll?.[foodLangMap[ocrLang].desc]}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
                       </div>
-                    </div>
+                    )}
                     {matched?.foodEN && (
                       <div className="bg-white rounded-xl shadow-md p-6 w-full mt-6">
                         <div className="mb-2 text-xs text-slate-400 font-medium">
@@ -815,6 +814,7 @@ function VisionOCR() {
                     )}
                   </div>
                 )}
+
                 {matched?.menuInfo && (
                   <div className="bg-white rounded-xl shadow-md p-6 w-full mx-auto">
                     <div className="mb-2 text-xs text-slate-400 font-medium">
