@@ -118,7 +118,6 @@ export default function DocentMantine() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const [csvData, setCsvData] = useState([]);
-  const [selectedLang, setSelectedLang] = useState("ko");
   const [translatedDesc, setTranslatedDesc] = useState("");
 
   // 챗봇 관련 상태
@@ -127,7 +126,7 @@ export default function DocentMantine() {
   const [chatAnswer, setChatAnswer] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
 
-  const ui = UI[selectedLang] || UI.ko;
+  const ui = UI.ko;
 
   const watchId = useRef(null);
   const poisRef = useRef([]);
@@ -172,36 +171,7 @@ export default function DocentMantine() {
   // Translation caches for name/address
   const [nameTr, setNameTr] = useState({});
   const [addrTr, setAddrTr] = useState({});
-  useEffect(() => {
-    (async () => {
-      if (!csvPois.length) return;
-      if (selectedLang === "ko") {
-        setNameTr({});
-        setAddrTr({});
-        return;
-      }
-      const names = csvPois.map((c) => c.name_ko);
-      const addrs = csvPois.map((c) => c.address_ko);
-      try {
-        const [nOut, aOut] = await Promise.all([
-          translateText(names, selectedLang),
-          translateText(addrs, selectedLang),
-        ]);
-        const nMap = {},
-          aMap = {};
-        csvPois.forEach((c, i) => {
-          nMap[c.id] = nOut[i] || c.name_ko;
-          aMap[c.id] = aOut[i] || c.address_ko;
-        });
-        setNameTr(nMap);
-        setAddrTr(aMap);
-      } catch (e) {
-        setNameTr({});
-        setAddrTr({});
-      }
-    })();
-  }, [csvPois, selectedLang]);
-
+  
   // Effective POIs with translated fields
   const listData = useMemo(() => {
     if (!csvPois.length)
@@ -214,13 +184,12 @@ export default function DocentMantine() {
       }));
     return csvPois.map((c) => ({
       id: c.id,
-      name: selectedLang === "ko" ? c.name_ko : nameTr[c.id] || c.name_ko,
-      address:
-        selectedLang === "ko" ? c.address_ko : addrTr[c.id] || c.address_ko,
+      name: c.name_ko,
+      address: c.address_ko,
       description: c.description_ko,
       location: c.location,
     }));
-  }, [csvPois, pois, selectedLang, nameTr, addrTr]);
+  }, [csvPois, pois]);
 
   // Load POIs (fallback) if CSV empty
   useEffect(() => {
@@ -268,18 +237,9 @@ export default function DocentMantine() {
         setTranslatedDesc("");
         return;
       }
-      if (selectedLang === "ko") {
-        setTranslatedDesc(text);
-        return;
-      }
-      try {
-        const out = await translateText(text, selectedLang);
-        setTranslatedDesc(out);
-      } catch {
-        setTranslatedDesc(text);
-      }
+      setTranslatedDesc(text);
     })();
-  }, [selectedPOI, selectedLang]);
+  }, [selectedPOI]);
 
   // Auto play TTS
   useEffect(() => {
@@ -287,13 +247,13 @@ export default function DocentMantine() {
       if (isDocentActive && selectedPOI && translatedDesc) {
         setIsPlaying(true);
         try {
-          await speakText(translatedDesc, selectedLang);
+          await speakText(translatedDesc, "ko");
         } finally {
           setIsPlaying(false);
         }
       }
     })();
-  }, [isDocentActive, selectedPOI, translatedDesc, selectedLang]);
+  }, [isDocentActive, selectedPOI, translatedDesc]);
 
   const nearbyCsvCards = useMemo(() => {
     if (!userLocation || !csvData.length) return [];
@@ -482,16 +442,6 @@ export default function DocentMantine() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <select
-              value={selectedLang}
-              onChange={(e) => setSelectedLang(e.target.value)}
-              className="border rounded-md px-2 py-1 text-sm"
-            >
-              <option value="ko">{t("lang.ko")}</option>
-              <option value="en">{t("lang.en")}</option>
-              <option value="ja">{t("lang.ja")}</option>
-              <option value="zh">{t("lang.zh")}</option>
-            </select>
             <div className="flex items-center gap-2">
               <Switch
                 checked={isDocentActive}
@@ -545,7 +495,7 @@ export default function DocentMantine() {
                 : null
             }
             userLocation={userLocation}
-            onPlayTTS={() => speakText(translatedDesc, selectedLang)}
+            onPlayTTS={() => speakText(translatedDesc, "ko")}
             isDocentActive={isDocentActive}
           />
         </div>

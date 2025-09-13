@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { translateText, translateToKorean } from "../integrations/translator";
 import { getOpenAIMenuAnswer } from "../integrations/openai";
+import { useLanguage } from "../hooks/useLanguage";
 import {
   FileImage,
   Loader2,
@@ -18,6 +19,7 @@ import { convert as romanize } from "hangul-romanization";
 
 function VisionOCR() {
   const { t } = useTranslation();
+  const { isTranslating, selectedLanguage } = useLanguage();
   // merged_annotations_merged.json => 성분,알러지
   const [menuData, setMenuData] = useState([]);
   // 한국국제교류재단.csv => 영문 설명
@@ -90,6 +92,22 @@ function VisionOCR() {
       .then((res) => res.json())
       .then((data) => setFoodAllData(data));
   }, []);
+
+  // 전체 페이지 언어가 변경될 때 내부 언어 버튼도 자동 변경
+  useEffect(() => {
+    // 전체 페이지 언어와 내부 언어 버튼 매핑
+    const languageMapping = {
+      "ko": "ko",
+      "en": "en", 
+      "ja": "ja",
+      "zh": "zh-Hans"
+    };
+    
+    const mappedLanguage = languageMapping[selectedLanguage];
+    if (mappedLanguage && mappedLanguage !== ocrLang) {
+      setOcrLang(mappedLanguage);
+    }
+  }, [selectedLanguage]);
 
   // 이미지 파일 업로드
   const handleFileChange = (e) => {
@@ -416,7 +434,8 @@ function VisionOCR() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-12 text-center">
+        {/* 정적 콘텐츠 - i18n으로 관리 */}
+        <div className="mb-12 text-center" data-static="true">
           <div className="inline-flex items-center gap-4 mb-6">
             <div className="relative">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/25">
@@ -447,7 +466,8 @@ function VisionOCR() {
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300">
+            {/* 정적 콘텐츠 - 업로드 섹션 */}
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300" data-static="true">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <Upload className="w-6 h-6 text-white" />
@@ -467,8 +487,29 @@ function VisionOCR() {
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
-                    className="block w-full text-sm text-slate-600 file:mr-4 file:py-4 file:px-8 file:rounded-2xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-blue-50 file:to-indigo-50 file:text-blue-700 hover:file:from-blue-100 hover:file:to-indigo-100 file:transition-all file:duration-300 file:shadow-lg hover:file:shadow-xl file:cursor-pointer cursor-pointer"
+                    id="file-upload"
+                    className="hidden"
                   />
+                  <label
+                    htmlFor="file-upload"
+                    className="block w-full text-sm text-slate-600 py-4 px-8 rounded-2xl border-2 border-dashed border-slate-300 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 cursor-pointer text-center"
+                  >
+                    {imageFile ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <FileImage className="w-5 h-5 text-green-600" />
+                        <span className="text-green-700 font-semibold">
+                          {imageFile.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2">
+                        <Upload className="w-5 h-5 text-slate-500" />
+                        <span className="text-slate-600 font-semibold">
+                          {t("vision.file.select")}
+                        </span>
+                      </div>
+                    )}
+                  </label>
                 </div>
 
                 <button
@@ -613,8 +654,22 @@ function VisionOCR() {
           <div className="space-y-6">
             {/* 바운딩 박스 클릭 시 안내/정보 조건부 렌더링 */}
             {selectedBox ? (
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 animate-fadeIn hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300">
-                {/* ...기존 정보 렌더링 영역... */}
+              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 animate-fadeIn hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300" data-translate="no" translate="no">
+                {isTranslating ? (
+                  <div className="text-center py-20">
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg">
+                      <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-800 mb-4">
+                      {t("vision.translating")}
+                    </h3>
+                    <p className="text-slate-500 leading-relaxed max-w-sm mx-auto">
+                      {t("vision.translating")}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* ...기존 정보 렌더링 영역... */}
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/25">
@@ -622,10 +677,10 @@ function VisionOCR() {
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-slate-800">
-                        메뉴 정보
+                        {t("vision.panel.menu_info")}
                       </h3>
                       <p className="text-slate-500 text-sm">
-                        AI가 분석한 상세 정보
+                        {t("vision.panel.ai_detail")}
                       </p>
                     </div>
                   </div>
@@ -676,14 +731,14 @@ function VisionOCR() {
                           <Zap className="w-5 h-5 text-white animate-pulse" />
                         </div>
                         <h5 className="font-bold text-blue-800 text-lg">
-                          AI가 답변을 생성하고 있습니다...
+                          {t("vision.ai.generating")}
                         </h5>
                       </div>
                       <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm">
                         <div className="flex items-center gap-2 mb-3">
                           <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
                           <span className="text-blue-700 font-medium text-sm">
-                            분석 중
+                            {t("vision.status.processing")}
                           </span>
                         </div>
                         <div className="space-y-2">
@@ -701,7 +756,7 @@ function VisionOCR() {
                             <Zap className="w-5 h-5 text-white" />
                           </div>
                           <h5 className="font-bold text-blue-800 text-lg">
-                            AI 분석 결과
+                            {t("vision.ai.result")}
                           </h5>
                         </div>
                         <div className="p-4 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm">
@@ -711,8 +766,8 @@ function VisionOCR() {
                         </div>
                         <div className="mt-4 p-3 bg-blue-100/50 rounded-xl border border-blue-200/30">
                           <p className="text-blue-700 text-sm font-medium flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4" />이 정보는 AI가
-                            생성한 참고용 답변입니다
+                            <AlertCircle className="w-4 h-4" />
+                            {t("vision.ai.disclaimer")}
                           </p>
                         </div>
                       </div>
@@ -725,14 +780,13 @@ function VisionOCR() {
                       <div className="relative z-10">
                         <div className="bg-white rounded-xl shadow-md p-6 w-full mb-6">
                           <div className="mb-2 text-xs text-slate-400 font-medium">
-                            출처: 한식진흥원, “한식메뉴 외국어표기 길라잡이
-                            800선”
+                            {t("vision.source.guide")}
                           </div>
                           <table className="w-full text-left">
                             <tbody>
                               <tr className="border-b">
                                 <td className="py-3 px-2 text-slate-600 font-semibold w-1/3">
-                                  메뉴명
+                                  {t("vision.field.name")}
                                 </td>
                                 <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
                                   {
@@ -744,7 +798,7 @@ function VisionOCR() {
                               </tr>
                               <tr>
                                 <td className="py-3 px-2 text-slate-600 font-semibold">
-                                  설명
+                                  {t("vision.field.desc")}
                                 </td>
                                 <td className="py-3 px-2 text-slate-800 font-medium">
                                   {
@@ -768,7 +822,7 @@ function VisionOCR() {
                           <tbody>
                             <tr className="border-b">
                               <td className="py-3 px-2 text-slate-600 font-semibold w-1/3">
-                                음식명
+                                {t("vision.field.name")}
                               </td>
                               <td className="py-3 px-2 text-slate-900 font-bold text-lg w-2/3">
                                 {ocrLang === "ko" &&
@@ -777,7 +831,7 @@ function VisionOCR() {
                                 {ocrLang === "ja" &&
                                   (translationLoading ? (
                                     <span className="text-blue-500 animate-pulse">
-                                      번역 중...
+                                      {t("vision.translating")}
                                     </span>
                                   ) : (
                                     nameCache.ja
@@ -785,7 +839,7 @@ function VisionOCR() {
                                 {ocrLang === "zh-Hans" &&
                                   (translationLoading ? (
                                     <span className="text-blue-500 animate-pulse">
-                                      번역 중...
+                                      {t("vision.translating")}
                                     </span>
                                   ) : (
                                     nameCache["zh-Hans"]
@@ -882,27 +936,40 @@ function VisionOCR() {
                     </table>
                   </div>
                 )}
+                  </>
+                )}
               </div>
             ) : (
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 animate-fadeIn hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300">
-                <div className="text-center py-20">
-                  <div className="w-24 h-24 bg-gradient-to-br from-slate-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg">
-                    <FileImage className="w-12 h-12 text-slate-400" />
+              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-white/50 p-8 animate-fadeIn hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-300" data-translate="no" translate="no">
+                {isTranslating ? (
+                  <div className="text-center py-20">
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg">
+                      <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-800 mb-4">
+                      {t("vision.translating")}
+                    </h3>
+                    <p className="text-slate-500 leading-relaxed max-w-sm mx-auto">
+                      {t("vision.translating")}
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-800 mb-4">
-                    메뉴를 선택해주세요
-                  </h3>
-                  <p className="text-slate-500 leading-relaxed max-w-sm mx-auto">
-                    이미지에서 메뉴 바운딩 박스를 클릭하면
-                    <br />
-                    <span className="font-semibold text-slate-600">
-                      AI가 분석한 상세한 메뉴 정보
-                    </span>
-                    가
-                    <br />
-                    이곳에 표시됩니다
-                  </p>
-                </div>
+                ) : (
+                  <div className="text-center py-20">
+                    <div className="w-24 h-24 bg-gradient-to-br from-slate-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg">
+                      <FileImage className="w-12 h-12 text-slate-400" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-800 mb-4">
+                      {t("vision.helper.select_menu")}
+                    </h3>
+                    <p className="text-slate-500 leading-relaxed max-w-sm mx-auto">
+                      {t("vision.helper.click_bbox")}
+                      <br />
+                      <span className="font-semibold text-slate-600">
+                        {t("vision.helper.detail_here")}
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

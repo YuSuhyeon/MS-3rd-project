@@ -133,29 +133,112 @@ export async function translateToKorean(input) {
   return input;
 }
 
+// 전역 walk 함수 정의
+function walk(node, elements) {
+  if (!node) return;
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = (node.textContent || "").trim();
+    if (text) {
+      let parent = node.parentElement;
+      let shouldSkip = false;
+      while (parent) {
+        if (
+          parent.getAttribute &&
+          (parent.getAttribute("data-i18n-ignore") === "true" ||
+           parent.getAttribute("data-translate") === "no" ||
+           parent.getAttribute("translate") === "no")
+        ) {
+          shouldSkip = true;
+          break;
+        }
+        // 메뉴 정보 영역에서 번역 제외할 클래스들
+        if (
+          parent.classList.contains("menu-info-language-selector") ||
+          parent.classList.contains("menu-info-data") ||
+          parent.classList.contains("menu-info-table")
+        ) {
+          shouldSkip = true;
+          break;
+        }
+        // 정적 콘텐츠는 번역 제외
+        if (parent.getAttribute && parent.getAttribute("data-static") === "true") {
+          shouldSkip = true;
+          break;
+        }
+        // 정적 텍스트들은 번역 허용 (menu-info-title, menu-info-subtitle, menu-info-header-text)
+        if (
+          parent.classList.contains("menu-info-title") ||
+          parent.classList.contains("menu-info-subtitle") ||
+          parent.classList.contains("menu-info-header-text")
+        ) {
+          // 이 텍스트들은 번역 허용
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      if (!shouldSkip) {
+        elements.push({ node, type: "text", value: text });
+      }
+    }
+  } else if (node.nodeType === Node.ELEMENT_NODE) {
+    if (
+      node.getAttribute &&
+      (node.getAttribute("data-i18n-ignore") === "true" ||
+       node.getAttribute("data-translate") === "no" ||
+       node.getAttribute("translate") === "no")
+    )
+      return;
+    // 메뉴 정보 영역에서 번역 제외할 클래스들
+    if (
+      node.classList.contains("menu-info-language-selector") ||
+      node.classList.contains("menu-info-data") ||
+      node.classList.contains("menu-info-table")
+    )
+      return;
+    // 정적 콘텐츠는 번역 제외
+    if (node.getAttribute && node.getAttribute("data-static") === "true")
+      return;
+    if (node.childNodes.length === 0) {
+      const text = (node.textContent || "").trim();
+      if (text) elements.push({ node, type: "element", value: text });
+    }
+    node.childNodes.forEach(child => walk(child, elements));
+  }
+}
+
 export async function translatePageContent(targetLanguage = "ko", roots) {
   // 한국어는 번역하지 않음 (i18n으로 처리)
   if (targetLanguage === "ko") {
     // 원문 복원만 수행
-    const rootList = Array.isArray(roots) && roots.length ? roots : [document.body];
+    const rootList =
+      Array.isArray(roots) && roots.length ? roots : [document.body];
     const elements = [];
-    function walk(node) {
+    function walkKorean(node) {
       if (!node) return;
       if (node.nodeType === Node.TEXT_NODE) {
         const text = (node.textContent || "").trim();
         if (text) elements.push({ node, type: "text", value: text });
       } else if (node.nodeType === Node.ELEMENT_NODE) {
-        if (node.getAttribute && node.getAttribute("data-i18n-ignore") === "true")
+        if (
+          node.getAttribute &&
+          (node.getAttribute("data-i18n-ignore") === "true" ||
+            node.getAttribute("data-translate") === "no" ||
+            node.getAttribute("translate") === "no" ||
+            node.classList.contains("menu-info-header") ||
+            node.classList.contains("menu-info-language-selector") ||
+            node.classList.contains("menu-info-data") ||
+            node.classList.contains("menu-info-table"))
+        )
           return;
         if (node.childNodes.length === 0) {
           const text = (node.textContent || "").trim();
           if (text) elements.push({ node, type: "element", value: text });
         }
-        node.childNodes.forEach(walk);
+        node.childNodes.forEach(child => walkKorean(child));
       }
     }
-    rootList.forEach(walk);
-    
+    rootList.forEach(walkKorean);
+
     elements.forEach((item) => {
       const el = item.type === "text" ? item.node.parentElement : item.node;
       if (!el || !el.getAttribute) return;
@@ -172,22 +255,7 @@ export async function translatePageContent(targetLanguage = "ko", roots) {
   const rootList =
     Array.isArray(roots) && roots.length ? roots : [document.body];
   const elements = [];
-  function walk(node) {
-    if (!node) return;
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = (node.textContent || "").trim();
-      if (text) elements.push({ node, type: "text", value: text });
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      if (node.getAttribute && node.getAttribute("data-i18n-ignore") === "true")
-        return;
-      if (node.childNodes.length === 0) {
-        const text = (node.textContent || "").trim();
-        if (text) elements.push({ node, type: "element", value: text });
-      }
-      node.childNodes.forEach(walk);
-    }
-  }
-  rootList.forEach(walk);
+  rootList.forEach(root => walk(root, elements));
 
   // 번역할 텍스트만 추출
   const texts = elements.map((item) => item.value);
@@ -219,7 +287,7 @@ let pendingRoots = null;
 function scheduleTranslate(lang, roots) {
   // 한국어는 번역하지 않음 (i18n으로 처리)
   if (lang === "ko") return;
-  
+
   if (!pendingRoots) pendingRoots = new Set();
   if (Array.isArray(roots)) roots.forEach((n) => pendingRoots.add(n));
   if (debounceTimer) clearTimeout(debounceTimer);
@@ -275,4 +343,85 @@ export function stopAutoTranslate() {
 export function setObserverLanguage(lang) {
   observerLanguage = lang;
   scheduleTranslate(observerLanguage);
+}
+
+// 동적 콘텐츠만 번역하는 함수 (하이브리드 방식용)
+export async function translateDynamicContent(targetLanguage) {
+  if (targetLanguage === "ko") {
+    // 한국어로 복원
+    return translateToKorean();
+  }
+
+  // 동적 콘텐츠만 찾기
+  const dynamicElements = document.querySelectorAll('[data-dynamic="true"]');
+  
+  if (dynamicElements.length === 0) {
+    console.log("No dynamic content found to translate");
+    return;
+  }
+
+  const elements = [];
+  
+  // 동적 콘텐츠 요소들을 순회
+  dynamicElements.forEach(element => {
+    walk(element, elements);
+  });
+
+  if (elements.length === 0) {
+    console.log("No translatable text found in dynamic content");
+    return;
+  }
+
+  // 텍스트를 그룹으로 나누어 배치 번역
+  const textGroups = [];
+  let currentGroup = [];
+  let currentLength = 0;
+
+  for (const element of elements) {
+    const text = element.value;
+    if (currentLength + text.length > 5000) { // 5000자 제한
+      if (currentGroup.length > 0) {
+        textGroups.push(currentGroup);
+        currentGroup = [];
+        currentLength = 0;
+      }
+    }
+    currentGroup.push(element);
+    currentLength += text.length;
+  }
+
+  if (currentGroup.length > 0) {
+    textGroups.push(currentGroup);
+  }
+
+  // 각 그룹별로 번역 실행
+  for (const group of textGroups) {
+    const texts = group.map(el => el.value);
+    const translatedTexts = await translateText(texts.join("\n"), targetLanguage);
+    const translatedArray = translatedTexts.split("\n");
+
+    // 번역된 텍스트를 원래 위치에 적용
+    for (let i = 0; i < group.length; i++) {
+      const element = group[i];
+      const translatedText = translatedArray[i] || group[i].value;
+
+      if (element.type === "text") {
+        element.node.textContent = translatedText;
+      } else {
+        element.node.textContent = translatedText;
+      }
+    }
+  }
+
+  console.log(`Translated ${elements.length} dynamic content elements to ${targetLanguage}`);
+}
+
+// 정적 콘텐츠는 번역하지 않도록 하는 함수
+export function markStaticContent() {
+  // 정적 콘텐츠에 번역 제외 속성 추가
+  const staticElements = document.querySelectorAll('[data-static="true"]');
+  staticElements.forEach(element => {
+    element.setAttribute('data-translate', 'no');
+    element.setAttribute('translate', 'no');
+  });
 }
