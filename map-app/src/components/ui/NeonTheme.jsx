@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 
 // 1. 메인 배경
-export const KPopBackground = ({ children, className = "" }) => (
+export const BackgroundEffect = ({ children, className = "" }) => (
   <div
     className={`min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 text-white ${className}`}
   >
@@ -278,26 +278,26 @@ export const NeonLoader = ({ size = "md" }) => {
 };
 
 // 7. 스크롤바
-export const KPopScrollbarStyles = () => (
+export const NeonScrollbarStyles = () => (
   <style jsx global>{`
-    .kpop-scrollbar::-webkit-scrollbar {
+    .neon-scrollbar::-webkit-scrollbar {
       width: 4px;
       height: 4px;
     }
-    .kpop-scrollbar::-webkit-scrollbar-track {
+    .neon-scrollbar::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.2);
       border-radius: 2px;
     }
-    .kpop-scrollbar::-webkit-scrollbar-thumb {
+    .neon-scrollbar::-webkit-scrollbar-thumb {
       background: linear-gradient(to bottom, #a855f7, #ec4899);
       border-radius: 2px;
     }
-    .kpop-scrollbar::-webkit-scrollbar-thumb:hover {
+    .neon-scrollbar::-webkit-scrollbar-thumb:hover {
       background: linear-gradient(to bottom, #9333ea, #db2777);
     }
 
     /* Firefox */
-    .kpop-scrollbar {
+    .neon-scrollbar {
       scrollbar-width: thin;
       scrollbar-color: #a855f7 rgba(0, 0, 0, 0.2);
     }

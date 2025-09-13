@@ -25,41 +25,10 @@ import {
   Camera,
   Film,
   Globe,
+  BookOpen, // SurvivalKit에서 사용하기 위해 추가
 } from "lucide-react";
 
 import SpotifyPlaylistGenerator from "components/community/SpotifyPlaylistGenerator";
-
-// Mock 데이터
-const mocksurvival = [
-  {
-    id: 1,
-    title: "Squid Game 촬영지 투어",
-    location: "강남역, 홍대, 명동",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvgS_upvUlNBu-lYY0zA_pjG8TvxnAgX2sEA&s",
-    price: "₩35,000",
-    category: "location",
-    kpopGroup: "NewJeans",
-    description: "오징어게임에 등장한 서울의 핫플레이스들을 직접 방문해보세요!",
-    tags: ["뮤비촬영지", "서울", "squid game"],
-    rating: 4.8,
-    reviews: 247,
-  },
-  {
-    id: 2,
-    title: "IVE 'XOXZ' 아크릴 스탠드",
-    location: "온라인 배송",
-    image:
-      "https://www.chosun.com/resizer/v2/WEX5U35HPIURB6TVS47V45FXRM.jpg?auth=bf6b1a51face01ab138fbf0ffee75db210edf897483487b15fb05f6f1fd8f41b&width=616",
-    price: "₩15,000",
-    category: "survival",
-    kpopGroup: "IVE",
-    description: "고화질 홀로그램 효과가 적용된 프리미엄 아크릴 스탠드",
-    tags: ["굿즈", "아크릴", "컬렉션"],
-    rating: 4.9,
-    reviews: 156,
-  },
-];
 
 const mockPosts = [
   {
@@ -125,114 +94,6 @@ const mockPosts = [
     isBookmarked: true,
   },
 ];
-
-//survival 카드 컴포넌트
-const SurvivalCard = ({ item }) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group"
-    >
-      <div className="relative overflow-hidden">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-        <div className="absolute top-3 right-3 flex gap-2">
-          <button
-            onClick={() => setIsBookmarked(!isBookmarked)}
-            className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
-              isBookmarked
-                ? "bg-yellow-500 text-white"
-                : "bg-white/80 text-gray-700 hover:bg-white"
-            }`}
-          >
-            <Bookmark className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="absolute top-3 left-3">
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
-              item.category === "location"
-                ? "bg-purple-500/90 text-white"
-                : item.category === "survivals"
-                ? "bg-pink-500/90 text-white"
-                : "bg-blue-500/90 text-white"
-            }`}
-          >
-            {item.category === "location"
-              ? "📍 촬영지"
-              : item.category === "survival"
-              ? "🛍️ 굿즈"
-              : "🎭 체험"}
-          </span>
-        </div>
-      </div>
-
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm font-medium text-purple-600">
-            {item.kpopGroup}
-          </span>
-          <div className="flex items-center gap-1 text-sm text-gray-500">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            {item.rating}
-            <span>({item.reviews})</span>
-          </div>
-        </div>
-
-        <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
-          {item.title}
-        </h3>
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-          {item.description}
-        </p>
-
-        <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
-          <MapPin className="w-4 h-4" />
-          {item.location}
-        </div>
-
-        <div className="flex flex-wrap gap-1 mb-4">
-          {item.tags.slice(0, 3).map((tag, index) => (
-            <span
-              key={index}
-              className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-purple-600">
-            {item.price}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsLiked(!isLiked)}
-              className={`p-2 rounded-lg transition-colors ${
-                isLiked
-                  ? "bg-red-50 text-red-500"
-                  : "hover:bg-gray-50 text-gray-400"
-              }`}
-            >
-              <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
-            </button>
-            <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-colors text-sm font-medium">
-              자세히 보기
-            </button>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 // 플레이리스트 카드 컴포넌트
 const PlaylistCard = ({ playlist }) => {
@@ -443,25 +304,212 @@ const SocialPost = ({ post }) => {
   );
 };
 
+// Survival Kit Component
+function SurvivalKit() {
+  const [activeSection, setActiveSection] = useState("translate");
+  const [translateText, setTranslateText] = useState("");
+  const [translatedText, setTranslatedText] = useState("");
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleTranslate = async () => {
+    if (!translateText.trim()) return;
+
+    setIsTranslating(true);
+    // Simulate translation
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const translations = {
+      안녕하세요: "Hello / こんにちは / 你好",
+      감사합니다: "Thank you / ありがとうございます / 谢谢",
+      "화장실이 어디에 있나요?":
+        "Where is the bathroom? / トイレはどこですか？ / 洗手间在哪里？",
+      "얼마예요?": "How much is it? / いくらですか？ / 多少钱？",
+      도와주세요: "Help me / 助けてください / 请帮助我",
+    };
+
+    setTranslatedText(
+      translations[translateText] || "Translation not available"
+    );
+    setIsTranslating(false);
+  };
+
+  const quickPhrases = [
+    { korean: "안녕하세요", english: "Hello", category: "인사" },
+    { korean: "감사합니다", english: "Thank you", category: "인사" },
+    { korean: "죄송합니다", english: "Sorry", category: "인사" },
+    {
+      korean: "화장실이 어디에 있나요?",
+      english: "Where is the bathroom?",
+      category: "필수",
+    },
+    { korean: "얼마예요?", english: "How much is it?", category: "쇼핑" },
+    { korean: "메뉴 주세요", english: "Menu please", category: "음식" },
+    { korean: "도와주세요", english: "Help me", category: "응급" },
+    { korean: "길을 잃었어요", english: "I'm lost", category: "응급" },
+  ];
+
+  const cultureGuide = [
+    {
+      title: "인사 예절",
+      content:
+        "한국에서는 나이가 많은 사람에게 먼저 인사하고, 고개를 숙여 인사합니다.",
+      icon: "🙇‍♀️",
+    },
+    {
+      title: "식사 예절",
+      content:
+        "어른이 먼저 수저를 들고, 밥그릇을 들고 먹지 않습니다. 술은 양손으로 받습니다.",
+      icon: "🍽️",
+    },
+    {
+      title: "대중교통",
+      content: "지하철에서는 노약자석을 양보하고, 큰 소리로 통화하지 않습니다.",
+      icon: "🚇",
+    },
+    {
+      title: "팁 문화",
+      content: "한국은 팁 문화가 없습니다. 서비스 요금이 이미 포함되어 있어요.",
+      icon: "💰",
+    },
+    {
+      title: "신발 벗기",
+      content: "한국 가정이나 일부 식당에서는 신발을 벗고 들어갑니다.",
+      icon: "👟",
+    },
+    {
+      title: "선물 예절",
+      content:
+        "선물을 받을 때는 양손으로 받고, 바로 뜯지 않는 것이 예의입니다.",
+      icon: "🎁",
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Section Navigation */}
+      <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm">
+        {[
+          { id: "translate", label: "빠른 통역", icon: Globe },
+          { id: "culture", label: "한국 문화 가이드", icon: BookOpen },
+        ].map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveSection(id)}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${
+              activeSection === id
+                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {activeSection === "translate" && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Translator */}
+          <Card className="p-6">
+            <h3 className="font-bold text-lg mb-4">실시간 번역기</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  한국어 입력
+                </label>
+                <textarea
+                  value={translateText}
+                  onChange={(e) => setTranslateText(e.target.value)}
+                  placeholder="번역할 텍스트를 입력하세요..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  rows={3}
+                />
+              </div>
+              <Button
+                onClick={handleTranslate}
+                disabled={!translateText.trim() || isTranslating}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                {isTranslating ? "번역중..." : "번역하기"}
+              </Button>
+              {translatedText && (
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    번역 결과
+                  </label>
+                  <p className="text-gray-900">{translatedText}</p>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Quick Phrases */}
+          <Card className="p-6">
+            <h3 className="font-bold text-lg mb-4">자주 쓰는 표현</h3>
+            <div className="space-y-3">
+              {quickPhrases.map((phrase, index) => (
+                <div
+                  key={index}
+                  className="p-3 border border-gray-200 rounded-lg hover:bg-purple-50 cursor-pointer transition-colors"
+                  onClick={() => setTranslateText(phrase.korean)}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-medium text-gray-900">
+                      {phrase.korean}
+                    </span>
+                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                      {phrase.category}
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-600">
+                    {phrase.english}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {activeSection === "culture" && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cultureGuide.map((guide, index) => (
+            <Card key={index} className="p-6">
+              <div className="text-center mb-4">
+                <div className="text-4xl mb-2">{guide.icon}</div>
+                <h3 className="font-bold text-lg text-gray-900">
+                  {guide.title}
+                </h3>
+              </div>
+              <p className="text-gray-600 text-center">{guide.content}</p>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // 메인 컴포넌트
-//export default function KpopTravelPlatform() {
 export default function CommunityMain() {
   const tabs = [
-    { id: "survival", label: "survival kit ", icon: ShoppingBag },
+    { id: "survival", label: "survival kit", icon: ShoppingBag },
     { id: "playlists", label: "playlists", icon: Music },
     { id: "social", label: "social", icon: Users },
   ];
 
   const [activeTab, setActiveTab] = useState(() => {
     // 초기 로드 시 URL 파라미터 확인
-    const urlParams = new URLSearchParams(window.location.search);
-    const tabParam = urlParams.get("tab");
-    if (tabParam && ["survival", "playlists", "social"].includes(tabParam)) {
-      return tabParam;
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get("tab");
+      if (tabParam && ["survival", "playlists", "social"].includes(tabParam)) {
+        return tabParam;
+      }
     }
     return "survival";
   });
-  console.log("activateTab:", activeTab);
+
   // URL 파라미터 확인하여 탭 설정
   useEffect(() => {
     const handlePopState = () => {
@@ -481,26 +529,25 @@ export default function CommunityMain() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
 
+  // 탭 클릭 핸들러
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    // URL 업데이트 (페이지 리로드 없이)
+    const url = new URL(window.location);
+    url.searchParams.set("tab", tabId);
+    window.history.pushState({}, "", url);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "survival":
-        return (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <AnimatePresence>
-              {mocksurvival.map((item) => (
-                <SurvivalCard key={item.id} item={item} />
-              ))}
-            </AnimatePresence>
-          </div>
-        );
-
+        return <SurvivalKit />; // SurvivalKit 컴포넌트를 렌더링하도록 수정
       case "playlists":
         return (
           <div>
             <SpotifyPlaylistGenerator />{" "}
           </div>
         );
-
       case "social":
         return (
           <div className="max-w-2xl mx-auto space-y-6">
@@ -511,7 +558,6 @@ export default function CommunityMain() {
             </AnimatePresence>
           </div>
         );
-
       default:
         return null;
     }
@@ -520,41 +566,6 @@ export default function CommunityMain() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       {/* 헤더 */}
-      {/* <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                  <Music className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    Community
-                  </h1>
-                  <p className="text-xs text-gray-500">한류와 함께하는 여행</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="검색..."
-                  className="pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-colors w-64"
-                />
-              </div>
-              <button className="p-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-colors">
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div> */}
 
       {/* 탭 네비게이션 */}
       <div className="bg-white/60 backdrop-blur-sm border-b border-gray-200">
@@ -565,7 +576,7 @@ export default function CommunityMain() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)} // 수정된 핸들러 사용
                   className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors relative ${
                     activeTab === tab.id
                       ? "text-purple-600"
@@ -586,36 +597,6 @@ export default function CommunityMain() {
           </div>
         </div>
       </div>
-
-      {/* 필터 (굿즈 탭)
-      {activeTab === "goods" && (
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Filter className="w-4 h-4 text-gray-400" />
-            <div className="flex gap-2">
-              {["all", "location", "goods", "experience"].map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setFilterCategory(category)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    filterCategory === category
-                      ? "bg-purple-600 text-white"
-                      : "bg-white text-gray-600 hover:bg-purple-50"
-                  }`}
-                >
-                  {category === "all"
-                    ? "전체"
-                    : category === "location"
-                    ? "촬영지"
-                    : category === "goods"
-                    ? "굿즈"
-                    : "체험"}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )} */}
 
       {/* 메인 콘텐츠 */}
       <div className="max-w-7xl mx-auto px-6 py-8">{renderContent()}</div>
