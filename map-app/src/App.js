@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "./components/Layout";
+import "./styles/layout.css";
+
 import Home from "./pages/Home";
 import ResultDashboard from "./pages/ResultDashboard";
 import PersonaAnalysis from "./pages/PersonaAnalysis";
@@ -13,8 +15,7 @@ import DocentVision from "./pages/DocentVision";
 import CommunityMain from "./pages/CommunityMain";
 import Tour from "./pages/Tour";
 import TourDetail from "./pages/TourDetail";
-
-import "./styles/layout.css";
+import PopularPlaces from "./pages/PopularPlaces";
 
 function AppRoutes() {
   return (
@@ -40,6 +41,10 @@ function AppRoutes() {
               <Route path="/vision" element={<DocentVision />} />
               <Route path="/tour" element={<Tour />} />
               <Route path="/tour/:id" element={<TourDetail />} />
+              <Route
+                path="/popular-places/:areaName"
+                element={<PopularPlaces />}
+              />
               {/* 위 경로들과 일치하지 않으면 "/persona"로 리다이렉트합니다. */}
               <Route path="*" element={<Navigate to="/persona" replace />} />
             </Routes>
