@@ -9,13 +9,23 @@ export function createPageUrl(name) {
     case "DocentMantine":
       return "/docent";
     case "DocentVision":
-      return "/vision";      
+      return "/vision";
+    case "VisionOCR":
+      return "/visionocr";
+    case "DocentVision":
+      return "/vision";
     case "ItineraryPlanner":
       return "/itinerary";
     case "ItineraryView":
       return "/itinerary";
     case "CommunityMain":
       return "/community";
+    case "VisionOCR":
+      return "/visionocr";
+    case "Tour":
+      return "/tour";
+    case "TourDetail":
+      return "/tour/:id";
     default:
       return "/";
   }
