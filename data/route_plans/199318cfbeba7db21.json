@@ -1,0 +1,22 @@
+{
+  "name": "route-plan",
+  "days": [
+    {
+      "id": "day-1",
+      "title": "1일차",
+      "startLocation": "",
+      "startCoords": null,
+      "endLocation": "",
+      "endCoords": null,
+      "waypoints": [],
+      "priority": "RECOMMEND",
+      "startTime": "09:00",
+      "stays": [],
+      "timeline": [],
+      "summary": null,
+      "lastRoutes": null
+    }
+  ],
+  "id": "199318cfbeba7db21",
+  "updated_at": 1757472947
+}

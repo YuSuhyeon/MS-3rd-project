@@ -1,0 +1,22 @@
+{
+  "name": "route-plan",
+  "days": [
+    {
+      "id": "day-1",
+      "title": "Day 1",
+      "startLocation": "",
+      "startCoords": null,
+      "endLocation": "",
+      "endCoords": null,
+      "waypoints": [],
+      "priority": "RECOMMEND",
+      "startTime": "09:00",
+      "stays": [],
+      "timeline": [],
+      "summary": null,
+      "lastRoutes": null
+    }
+  ],
+  "id": "199373eb9b4c5bed7",
+  "updated_at": 1757568481
+}
