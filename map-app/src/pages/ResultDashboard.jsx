@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react"; // useCallback 추가
 import { TravelProfile } from "Entities/TravelProfile";
 import { Button } from "components/ui/button";
 import { Card, CardContent } from "components/ui/card";
@@ -10,11 +10,19 @@ import {
   LayoutGrid,
   ArrowUp,
   ChevronRight,
+  CalendarDays,
+  Wallet,
+  Repeat,
+  Sparkles,
+  HelpCircle,
+  RotateCcw,
 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "utils";
 import CoursePreviewModal from "components/result/CoursePreviewModal";
+import AnalysisSummaryPanel from "components/result/AnalysisSummaryPanel";
 
 // --- Helper Functions ---
 const CODE_MAP = {
@@ -45,10 +53,10 @@ function humanizeCode(kind, value) {
   if (table[value]) return table[value];
   if (kind === "considered") {
     const KO = {
-      food: "음식",
+      food: "미식",
       shopping: "쇼핑",
       nature: "자연 경관",
-      relaxation: "휴양/웰니스",
+      relaxation: "휴양/커뮤니티",
       heritage: "문화유산",
       tradition: "전통문화체험",
       museum: "박물관/미술관",
@@ -69,7 +77,6 @@ function humanizeCode(kind, value) {
   return value;
 }
 
-// --- Animation Variants ---
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -82,8 +89,74 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
 };
 
-// --- Child Components ---
-const Section = ({ children, className = "" }) => (
+const LegacyAnalysisSummaryPanel = ({ profile }) => {
+  if (!profile) return null;
+
+  const summaryItems = [
+    {
+      icon: <Repeat size={18} />,
+      label: "방문 횟수",
+      value: humanizeCode("rvit", profile.rvit),
+    },
+    {
+      icon: <CalendarDays size={18} />,
+      label: "체류 기간",
+      value: humanizeCode("stay", profile.stay),
+    },
+    {
+      icon: <Wallet size={18} />,
+      label: "여행 예산",
+      value: humanizeCode("budget", profile.budget),
+    },
+    {
+      icon: <HelpCircle size={18} />,
+      label: "방문 목적",
+      value: humanizeCode("q1", profile.q1),
+    },
+    {
+      icon: <Sparkles size={18} />,
+      label: "고려 활동",
+      value: (profile.considered || [])
+        .map((c) => humanizeCode("considered", c))
+        .join(", "),
+    },
+  ];
+
+  const SummaryItem = ({ icon, label, value }) => (
+    <motion.div variants={itemVariants} className="flex items-start gap-3">
+      <div className="mt-1 flex-shrink-0 text-indigo-400">{icon}</div>
+      <div>
+        <div className="text-xs text-slate-400">{label}</div>
+        <div className="text-sm font-semibold text-slate-100">
+          {value || "-"}
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  return (
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ staggerChildren: 0.1 }}
+      className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 space-y-5 h-full"
+    >
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5"
+      >
+        {summaryItems.map((item, index) =>
+          item.value && item.value !== "-" ? (
+            <SummaryItem key={index} {...item} />
+          ) : null
+        )}
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const Section = ({ title, description, children, className = "" }) => (
   <motion.section
     className={className}
     initial="hidden"
@@ -91,8 +164,28 @@ const Section = ({ children, className = "" }) => (
     viewport={{ once: true, amount: 0.2 }}
     variants={containerVariants}
   >
+    {title && (
+      <motion.div variants={itemVariants} className="mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+          {title}
+        </h2>
+        {description && (
+          <p className="text-slate-400 mt-2 text-sm">{description}</p>
+        )}
+      </motion.div>
+    )}
     {children}
   </motion.section>
+);
+
+const Divider = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    whileInView={{ opacity: 1 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.5, delay: 0.2 }}
+    className="h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent my-12 md:my-16"
+  />
 );
 
 const CourseSkeleton = () => (
@@ -189,21 +282,79 @@ export default function ResultDashboard() {
   const [courseQuery, setCourseQuery] = useState("");
   const [viewMode, setViewMode] = useState("cards");
   const [previewCourse, setPreviewCourse] = useState(null);
+  const [spots, setSpots] = useState([]);
+  const [allSpots, setAllSpots] = useState([]);
+  const [loadingSpots, setLoadingSpots] = useState(false);
+
+  // 스팟 데이터를 가져오는 함수
+  const fetchSpots = useCallback(async () => {
+    const ptype = profile?.analysis_result?.persona_type;
+    if (!ptype) return;
+    setLoadingSpots(true);
+    try {
+      const r = await fetch("/api/persona/route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          persona_type: ptype,
+          maxStops: 24, // 충분히 많은 후보군을 요청
+          preferDiversity: true,
+        }),
+      });
+      const j = await r.json();
+      const arr = Array.isArray(j.items) ? j.items : [];
+      setAllSpots(arr);
+      reshuffleSpots(arr); // 가져온 데이터로 바로 셔플
+    } catch (e) {
+      console.warn("spots load failed", e);
+      setAllSpots([]);
+      setSpots([]);
+    } finally {
+      setLoadingSpots(false);
+    }
+  }, [profile?.analysis_result?.persona_type]);
+
+  // 기존 스팟 목록에서 다시 섞는 함수
+  const reshuffleSpots = (sourceArray) => {
+    const spotsToShuffle = sourceArray || allSpots;
+    if (!spotsToShuffle || spotsToShuffle.length === 0) return;
+    const shuffled = spotsToShuffle
+      .map((x) => ({ x, w: Math.random() }))
+      .sort((a, b) => a.w - b.w)
+      .map((o) => o.x)
+      .slice(0, 6);
+    setSpots(shuffled);
+  };
+
+  // 새로운 스팟 목록을 서버에서 다시 가져오는 함수
+  const refetchSpots = () => {
+    fetchSpots();
+  };
 
   useEffect(() => {
+    // PocketBase 또는 세션 스토리지 등에서 분석 결과를 가져오는 로직으로 대체될 수 있음
+    // 현재는 TravelProfile.list가 분석 결과를 포함한 프로필을 가져온다고 가정함.
     (async () => {
       try {
         const profiles = await TravelProfile.list("-created_date", 100);
         if (profiles.length > 0) {
           const withAnalysis = profiles.find((p) => p && p.analysis_result);
-          setProfile(withAnalysis);
+          setProfile(withAnalysis || profiles[0]);
         }
       } catch (e) {
         console.error("프로필 로드 실패", e);
+        // 분석 결과가 없을 때를 대비하여 null로 설정
+        setProfile(null);
       }
       setLoading(false);
     })();
   }, []);
+
+  useEffect(() => {
+    if (profile?.analysis_result?.persona_type) {
+      fetchSpots();
+    }
+  }, [profile?.analysis_result?.persona_type, fetchSpots]);
 
   useEffect(() => {
     (async () => {
@@ -316,169 +467,206 @@ export default function ResultDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 p-4 md:p-8 font-sans">
-      <div className="max-w-6xl mx-auto space-y-16">
+      <div className="max-w-6xl mx-auto">
         <Section>
-          <div className="relative overflow-hidden rounded-3xl border border-slate-700 bg-slate-800/30">
-            <img
-              src="/assets/landing/hero.png"
-              alt="Travel background"
-              className="absolute inset-0 w-full h-full object-cover opacity-20"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900/50 to-transparent" />
-            <div className="relative p-6 md:p-8">
-              <motion.div variants={itemVariants}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center shadow-lg">
-                    <Star className="w-6 h-6 text-white" />
+          <div className="relative overflow-hidden rounded-3xl p-1 bg-gradient-to-br from-indigo-500/30 via-slate-800/10 to-fuchsia-500/30">
+            <div className="relative rounded-[22px] bg-slate-900/80 backdrop-blur-sm">
+              <img
+                src="/assets/landing/hero.png"
+                alt="Travel background"
+                className="absolute inset-0 w-full h-full object-cover opacity-20"
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900/50 to-transparent" />
+              <div className="relative p-6 md:p-8">
+                <motion.div variants={itemVariants}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center shadow-lg">
+                      <Star className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="uppercase tracking-widest text-xs text-slate-400">
+                      Your AI Travel Persona
+                    </span>
                   </div>
-                  <span className="uppercase tracking-widest text-xs text-slate-400">
-                    Your AI Travel Persona
+                </motion.div>
+                <motion.h1
+                  variants={itemVariants}
+                  className="text-3xl md:text-5xl font-extrabold text-white leading-tight"
+                >
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                    {analysis.persona_type || "분석 중..."}
                   </span>
-                </div>
-              </motion.div>
-              <motion.h1
-                variants={itemVariants}
-                className="text-3xl md:text-5xl font-extrabold text-white leading-tight"
-              >
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                  {analysis.persona_type}
-                </span>
-              </motion.h1>
-              <motion.p
-                variants={itemVariants}
-                className="mt-3 text-sm md:text-base text-slate-300 max-w-2xl"
-              >
-                {analysis.persona_description}
-              </motion.p>
+                </motion.h1>
+                <motion.p
+                  variants={itemVariants}
+                  className="mt-3 text-sm md:text-base text-slate-300 max-w-2xl"
+                >
+                  {analysis.persona_description}
+                </motion.p>
+              </div>
             </div>
           </div>
         </Section>
 
-        {Array.isArray(analysis.recommended_destinations) &&
-          analysis.recommended_destinations.length > 0 && (
-            <Section>
-              <motion.div variants={itemVariants} className="mb-6">
-                <h2 className="text-2xl md:text-3xl font-bold text-white">
-                  페르소나 맞춤 추천 스팟
-                </h2>
-                <p className="text-slate-400 mt-1 text-sm">
-                  분석 결과 기반으로 꼭 가봐야 할 장소를 골라드렸어요.
-                </p>
-              </motion.div>
-              <motion.div
-                variants={containerVariants}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {analysis.recommended_destinations.map((d, i) => (
-                  <motion.div
-                    key={`${d.name}-${i}`}
-                    variants={itemVariants}
-                    className="rounded-2xl border border-slate-700 bg-slate-800/50 p-4 shadow"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-indigo-500/20 border border-indigo-500/30 grid place-items-center text-indigo-300 font-bold flex-shrink-0">
-                        {i + 1}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div
-                          className="font-semibold text-slate-100 truncate"
-                          title={d.name}
-                        >
-                          {d.name}
-                        </div>
-                        {d.description && (
-                          <div
-                            className="text-sm text-slate-400 mt-1 line-clamp-2"
-                            title={d.description}
-                          >
-                            {d.description}
-                          </div>
-                        )}
-                        {Array.isArray(d.activities) &&
-                          d.activities.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {d.activities.slice(0, 4).map((a, j) => (
-                                <span
-                                  key={j}
-                                  className="text-[11px] px-2 py-0.5 rounded-full bg-slate-700/60 border border-slate-600 text-slate-300"
-                                >
-                                  {a}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </Section>
-          )}
+        <Divider />
 
-        <div className="sticky top-4 z-30">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="rounded-2xl border border-slate-700 bg-slate-800/70 backdrop-blur-lg shadow-2xl p-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-center"
-          >
-            <div className="relative order-1 md:order-2 col-span-1">
-              <SearchIcon className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-              <input
-                value={courseQuery}
-                onChange={(e) => setCourseQuery(e.target.value)}
-                placeholder="코스 또는 장소 검색..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-900/80 text-white placeholder-slate-500"
-              />
-            </div>
-            <div className="flex items-center gap-1 order-2 md:order-1 justify-center md:justify-start bg-slate-700/50 p-1 rounded-lg">
-              {["cards", "list"].map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`relative flex-1 px-3 py-1 text-sm font-semibold rounded-md transition-colors ${
-                    viewMode === mode
-                      ? "text-white"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  {viewMode === mode && (
-                    <motion.div
-                      layoutId="viewModeIndicator"
-                      className="absolute inset-0 bg-slate-600 rounded-md"
-                    />
-                  )}
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    {mode === "cards" ? (
-                      <LayoutGrid size={16} />
-                    ) : (
-                      <List size={16} />
-                    )}
-                    {mode === "cards" ? "카드뷰" : "리스트뷰"}
-                  </span>
-                </button>
+        <Section title="나의 여행 페르소나">
+          <AnalysisSummaryPanel
+            profile={{
+              ...profile,
+              ...(profile?.analysis_result?.inputs || {}),
+              q1:
+                profile?.analysis_result?.inputs?.q1_purpose ??
+                profile?.analysis_result?.inputs?.q1,
+            }}
+          />
+        </Section>
+
+        <Divider />
+
+        <Section
+          title="맞춤 추천 스팟"
+          description="페르소나에 맞는 서울의 장소들을 랜덤으로 골라 보여드립니다."
+        >
+          <div className="flex items-center justify-end mb-3 gap-2">
+            <button
+              type="button"
+              onClick={refetchSpots}
+              disabled={loadingSpots}
+              className="p-2 rounded-md border border-slate-600 text-slate-200 hover:bg-slate-700 disabled:opacity-50 transition-colors"
+              aria-label="다시 가져오기"
+              title="다시 가져오기"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => reshuffleSpots()}
+              disabled={loadingSpots}
+              className="p-2 rounded-md border border-slate-600 text-slate-200 hover:bg-slate-700 disabled:opacity-50 transition-colors"
+              aria-label="재셔플"
+              title="재셔플"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
+          {loadingSpots ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-24 rounded-xl bg-slate-800/50 border border-slate-700 animate-pulse"
+                />
               ))}
             </div>
-            <div className="text-right text-sm text-slate-400 order-3 hidden md:block">
-              {!loadingCourses
-                ? `총 ${filteredCourses.length}건`
-                : "불러오는 중…"}
+          ) : spots.length > 0 ? (
+            <motion.div
+              layout
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.15 }}
+              variants={containerVariants}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              {spots.map((s, idx) => (
+                <motion.div
+                  key={`${s.id || s.name}-${idx}`}
+                  variants={itemVariants}
+                  className="rounded-xl border border-slate-700 bg-slate-800/50 p-4 shadow"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 grid place-items-center text-indigo-300 flex-shrink-0">
+                      <MapPin size={16} />
+                    </div>
+                    <div className="min-w-0">
+                      <div
+                        className="font-semibold text-slate-100 truncate"
+                        title={s.name}
+                      >
+                        {s.name}
+                      </div>
+                      {s.addr && (
+                        <div
+                          className="text-xs text-slate-400 truncate mt-1"
+                          title={s.addr}
+                        >
+                          {s.addr}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <div className="text-center py-10 rounded-2xl bg-slate-800/50 border border-slate-700">
+              <p className="text-slate-400">추천 스팟을 불러오지 못했습니다.</p>
             </div>
-          </motion.div>
-        </div>
+          )}
+        </Section>
 
-        <Section>
-          <motion.div
-            variants={itemVariants}
-            className="flex items-baseline justify-between mb-6"
-          >
-            <h2 className="text-2xl md:text-3xl font-bold text-white">
+        <Divider />
+        <Section
+          title={
+            <>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400">
                 {analysis.persona_type}
               </span>{" "}
               맞춤 코스
-            </h2>
-          </motion.div>
+            </>
+          }
+        >
+          <div className="sticky top-4 z-30 mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="rounded-2xl border border-slate-700 bg-slate-800/70 backdrop-blur-lg shadow-2xl p-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-center"
+            >
+              <div className="relative order-1 md:order-2 col-span-1">
+                <SearchIcon className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  value={courseQuery}
+                  onChange={(e) => setCourseQuery(e.target.value)}
+                  placeholder="코스 또는 장소 검색..."
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-900/80 text-white placeholder-slate-500"
+                />
+              </div>
+              <div className="flex items-center gap-1 order-2 md:order-1 justify-center md:justify-start bg-slate-700/50 p-1 rounded-lg">
+                {["cards", "list"].map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    className={`relative flex-1 px-3 py-1 text-sm font-semibold rounded-md transition-colors ${
+                      viewMode === mode
+                        ? "text-white"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {viewMode === mode && (
+                      <motion.div
+                        layoutId="viewModeIndicator"
+                        className="absolute inset-0 bg-slate-600 rounded-md"
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {mode === "cards" ? (
+                        <LayoutGrid size={16} />
+                      ) : (
+                        <List size={16} />
+                      )}
+                      {mode === "cards" ? "카드형" : "리스트형"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <div className="text-right text-sm text-slate-400 order-3 hidden md:block">
+                {!loadingCourses
+                  ? `총 ${filteredCourses.length}개`
+                  : "불러오는 중..."}
+              </div>
+            </motion.div>
+          </div>
+
           {loadingCourses ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <CourseSkeleton />

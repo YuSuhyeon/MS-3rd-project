@@ -6,19 +6,23 @@ export function ensureKakaoMaps(appkey) {
   }
   if (window.__kakaoMapsLoading) return window.__kakaoMapsLoading;
   const key = appkey || process.env.REACT_APP_KAKAO_API_KEY || window.REACT_APP_KAKAO_API_KEY;
-  const src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false&libraries=services`;
+  if (!key) return Promise.reject(new Error("Kakao API key missing (REACT_APP_KAKAO_API_KEY)"));
+  const src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(key)}&autoload=false&libraries=services`;
   window.__kakaoMapsLoading = new Promise((resolve, reject) => {
     const exist = document.querySelector('script[src^="https://dapi.kakao.com/v2/maps/sdk.js"]');
     if (exist) {
-      exist.addEventListener("load", () => window.kakao?.maps?.load?.(resolve));
-      exist.addEventListener("error", reject);
-      return;
+      // If script exists but Kakao not available yet, re-inject to avoid stale/error state
+      try { if (exist.parentNode) exist.parentNode.removeChild(exist); } catch {}
     }
     const script = document.createElement("script");
     script.src = src;
     script.async = true;
     script.onload = () => window.kakao.maps.load(resolve);
-    script.onerror = (e) => reject(e);
+    script.onerror = (e) => {
+      // Allow future retries
+      try { delete window.__kakaoMapsLoading; } catch {}
+      reject(e);
+    };
     document.head.appendChild(script);
   });
   return window.__kakaoMapsLoading;
@@ -123,4 +127,3 @@ export function drawCircle({
   circle.setMap(map);
   return circle;
 }
-

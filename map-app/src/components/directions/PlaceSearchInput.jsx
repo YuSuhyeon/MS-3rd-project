@@ -16,6 +16,12 @@ export default function PlaceSearchInput({
   const containerRef = useRef(null);
   const [ready, setReady] = useState(false);
   const lastQueryRef = useRef("");
+  // Support uncontrolled usage when onChange is not provided
+  const isControlled = typeof onChange === 'function';
+  const [innerValue, setInnerValue] = useState(value || "");
+  useEffect(() => {
+    if (!isControlled) setInnerValue(value || "");
+  }, [value, isControlled]);
 
   // Kakao SDK 로딩 보장
   useEffect(() => {
@@ -84,12 +90,19 @@ export default function PlaceSearchInput({
 
   const onInputChange = (e) => {
     const q = e.target.value;
-    onChange && onChange(q);
+    if (isControlled) {
+      onChange && onChange(q);
+    } else {
+      setInnerValue(q);
+    }
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => search(q), 250);
   };
 
   const handleSelect = (item) => {
+    if (!isControlled) {
+      setInnerValue(item?.name || "");
+    }
     onSelect && onSelect(item);
     setOpen(false);
   };
@@ -114,9 +127,9 @@ export default function PlaceSearchInput({
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       <input
-        value={value}
+        value={isControlled ? value : innerValue}
         onChange={onInputChange}
-        onFocus={() => value && value.length >= 1 && search(value)}
+        onFocus={() => { const v = isControlled ? value : innerValue; if (v && v.length >= 1) search(v); }}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
         className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -154,4 +167,3 @@ export default function PlaceSearchInput({
     </div>
   );
 }
-
