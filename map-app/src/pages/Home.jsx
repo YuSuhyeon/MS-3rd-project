@@ -266,8 +266,16 @@ const KPopTravelHome = () => {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
-      {/* Animated Background */}
+      {/* Animated Background (Video + overlays) */}
       <div className="fixed inset-0 z-0">
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          src="/assets/landing/hero.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-pink-900/20" />
 
         {/* Floating Elements */}

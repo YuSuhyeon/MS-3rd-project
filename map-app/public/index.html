@@ -5,6 +5,8 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
+    <!-- OAuth 팝업에서 window.closed 접근 문제를 방지 -->
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
     <meta
       name="description"
       content="Web site created using create-react-app"
@@ -15,6 +17,14 @@
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!-- Inject client-side readable app keys (replaced at build/dev by CRA) -->
+    <meta name="tmap-app-key" content="%REACT_APP_TMAP_APP_KEY%" />
+    <script>
+      window.REACT_APP_KAKAO_API_KEY = "%REACT_APP_KAKAO_API_KEY%";
+      window.REACT_APP_TMAP_APP_KEY = "%REACT_APP_TMAP_APP_KEY%";
+    </script>
+    <!-- T Map JS SDK: document.write를 사용하는 특성상 정적 로드가 필요합니다. -->
+    <script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=j3vim2ipsE9LKIEjhBk2m9blQreeJAuqd3nWNRs9"></script>
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.

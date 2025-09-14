@@ -4,16 +4,12 @@ export function createPageUrl(name) {
       return "/persona";
     case "ResultDashboard":
       return "/result";
-    case "DirectionsMantine":
+    case "DirectionsMantineImproved":
       return "/directions";
+    case "DirectionsMantine":
+      return "/directions2";
     case "DocentMantine":
       return "/docent";
-    case "DocentVision":
-      return "/vision";
-    case "VisionOCR":
-      return "/visionocr";
-    case "DocentVision":
-      return "/vision";
     case "ItineraryPlanner":
       return "/itinerary";
     case "ItineraryView":
@@ -22,10 +18,6 @@ export function createPageUrl(name) {
       return "/community";
     case "VisionOCR":
       return "/visionocr";
-    case "Tour":
-      return "/tour";
-    case "TourDetail":
-      return "/tour/:id";
     default:
       return "/";
   }

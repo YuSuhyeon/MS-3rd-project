@@ -30,6 +30,15 @@ def create_app():
     from .api.routes import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
 
+    # Add COOP header to allow third-party OAuth popups to close without console errors
+    @app.after_request
+    def add_security_headers(response):
+      try:
+        response.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
+      except Exception:
+        pass
+      return response
+
     if os.path.isdir(react_build):
         @app.route('/', defaults={'path': ''})
         @app.route('/<path:path>')
@@ -40,4 +49,3 @@ def create_app():
             return send_from_directory(react_build, 'index.html')
 
     return app
-

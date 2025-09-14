@@ -1,3 +1,29 @@
+// Kakao Maps SDK 로더 (중복 로딩 방지)
+export function ensureKakaoMaps(appkey) {
+  if (typeof window === "undefined") return Promise.reject(new Error("no-window"));
+  if (window.kakao && window.kakao.maps) {
+    return new Promise((resolve) => window.kakao.maps.load(resolve));
+  }
+  if (window.__kakaoMapsLoading) return window.__kakaoMapsLoading;
+  const key = appkey || process.env.REACT_APP_KAKAO_API_KEY || window.REACT_APP_KAKAO_API_KEY;
+  const src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false&libraries=services`;
+  window.__kakaoMapsLoading = new Promise((resolve, reject) => {
+    const exist = document.querySelector('script[src^="https://dapi.kakao.com/v2/maps/sdk.js"]');
+    if (exist) {
+      exist.addEventListener("load", () => window.kakao?.maps?.load?.(resolve));
+      exist.addEventListener("error", reject);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.onload = () => window.kakao.maps.load(resolve);
+    script.onerror = (e) => reject(e);
+    document.head.appendChild(script);
+  });
+  return window.__kakaoMapsLoading;
+}
+
 // Kakao 지도 생성 함수
 export function createKakaoMap({
   containerId,
@@ -6,17 +32,12 @@ export function createKakaoMap({
   level = 2,
   onMapReady,
 }) {
-  const loadScript = () => {
-    if (window.kakao?.maps) {
-      window.kakao.maps.load(initMap);
-    } else {
-      const script = document.createElement("script");
-      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&autoload=false&libraries=services`;
-      script.async = true;
-      script.onload = () => window.kakao.maps.load(initMap);
-      document.head.appendChild(script);
-    }
-  };
+  const loadScript = () =>
+    ensureKakaoMaps(KAKAO_JS_KEY)
+      .then(initMap)
+      .catch((e) => {
+        console.error("Failed to load Kakao Maps SDK", e);
+      });
 
   function initMap() {
     const container = document.getElementById(containerId);
@@ -102,3 +123,4 @@ export function drawCircle({
   circle.setMap(map);
   return circle;
 }
+

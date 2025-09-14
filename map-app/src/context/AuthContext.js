@@ -14,6 +14,8 @@ export const AuthProvider = ({ children }) => {
 
   // useGoogleLogin이 반환하는 로그인 함수를 'googleLogin' 상수에 할당
   const googleLogin = useGoogleLogin({
+    ux_mode: "redirect",
+    redirect_uri: window.location.origin,
     onSuccess: async (tokenResponse) => {
       try {
         // [수정] access_token을 Authorization 헤더에 담아 API 요청

@@ -2,7 +2,7 @@
   "questions": [
     {
       "id": "rvit",
-      "title": "한국 방문이 몇 번째인가요? (RVIT)",
+      "title": "한국 방문은 몇 번째인가요? (RVIT)",
       "type": "single",
       "options": [
         { "value": "v1", "label": "1회", "description": "첫 방문" },
@@ -16,31 +16,31 @@
       "title": "이번 방문의 주된 목적은 무엇인가요? (Q1)",
       "type": "single",
       "options": [
-        { "value": "leisure", "label": "관광/여가/개별여행", "description": "관광·휴양/여행" },
+        { "value": "leisure", "label": "관광/개별여행", "description": "관광·휴식 여행" },
         { "value": "friends", "label": "친구/친척 방문", "description": "지인·친지 방문" }
       ]
     },
     {
       "id": "r19hap",
-      "title": "전체 체류 기간은 얼마인가요? (R19HAP)",
+      "title": "전체 체류 기간은 얼마나 되나요? (R19HAP)",
       "type": "single",
       "options": [
-        { "value": "h1", "label": "2~3일" },
-        { "value": "h2", "label": "4~7일" },
-        { "value": "h3", "label": "8~15일" },
-        { "value": "h4", "label": "16~30일" },
-        { "value": "h5", "label": "31일 이상" }
+        { "value": "h1", "label": "1~3일" },
+        { "value": "h2", "label": "4~6일" },
+        { "value": "h3", "label": "7~13일" },
+        { "value": "h4", "label": "14~29일" },
+        { "value": "h5", "label": "30일 이상" }
       ]
     },
     {
       "id": "cost",
-      "title": "1인 기준 총 경비는 어느 정도인가요?",
+      "title": "1인 기준 예산 범위는 어느정도인가요?",
       "type": "single",
       "options": [
         { "value": "c1", "label": "$1,000 미만" },
-        { "value": "c2", "label": "$1,000~$2,000" },
-        { "value": "c3", "label": "$2,000~$3,000" },
-        { "value": "c4", "label": "$3,000~$5,000" },
+        { "value": "c2", "label": "$1,000 ~ $2,000" },
+        { "value": "c3", "label": "$2,000 ~ $3,000" },
+        { "value": "c4", "label": "$3,000 ~ $5,000" },
         { "value": "c5", "label": "$5,000 이상" }
       ]
     },
@@ -55,11 +55,11 @@
         { "value": "nature", "label": "자연 경관", "description": "자연/전망" },
         { "value": "relaxation", "label": "휴양/휴식", "description": "스파/휴식" },
         { "value": "heritage", "label": "유적지", "description": "문화유산/유적지" },
-        { "value": "tradition", "label": "전통문화체험", "description": "한복/예절 등" },
+        { "value": "tradition", "label": "전통문화체험", "description": "한복/전통체험" },
         { "value": "museum", "label": "박물관/미술관", "description": "문화/전시" },
         { "value": "kpop", "label": "K-POP/한류", "description": "공연/촬영지" },
         { "value": "arts", "label": "공연관람", "description": "연극/뮤지컬/콘서트" },
-        { "value": "festival", "label": "지역 축제", "description": "로컬 페스티벌" },
+        { "value": "festival", "label": "지역축제", "description": "로컬 페스티벌" },
         { "value": "nightlife", "label": "나이트라이프", "description": "야간 즐길거리" },
         { "value": "themepark", "label": "테마파크", "description": "체험/어트랙션" },
         { "value": "beauty", "label": "뷰티/미용", "description": "케어/시술" },

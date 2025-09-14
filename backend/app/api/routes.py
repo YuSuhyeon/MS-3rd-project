@@ -19,6 +19,16 @@ PUBLIC_DIR = os.path.join(REPO_ROOT, 'map-app', 'public')
 SEOUL_DATA_DIR = os.path.join(PUBLIC_DIR, 'seoul_data')
 ROUTE_PLANS_DIR = os.path.join(REPO_ROOT, 'backend', 'data', 'route_plans')
 
+# Global mapping for k6 persona labels (0..5)
+k6_id2label = {
+    0: '알뜰 필수코스 정복자',
+    1: '플렉스 장기 체류객',
+    2: '관계 중심 체류객',
+    3: '실속파 쇼핑 원정대',
+    4: '문화유산 탐험가',
+    5: '미니멀 K-컬처 팬',
+}
+
 def _ensure_dir(path: str):
     try:
         os.makedirs(path, exist_ok=True)
@@ -343,27 +353,30 @@ def _naver_headers():
 
 
 def _naver_parse_route(j):
+    """Try to normalize Naver route JSON (walking/transit) into {summary, path}.
+    Prefers keys that contain a path array.
+    """
     try:
         route = j.get('route') or {}
         if not route:
             return None
-        # pick best available route list (prefer walking when present)
+        prefer = ['trawalk', 'traoptimal', 'trafast']
         keys = list(route.keys())
-        key = 'trawalk' if 'trawalk' in keys else ('traoptimal' if 'traoptimal' in keys else (keys[0] if keys else None))
-        if not key:
-            return None
-        arr = route.get(key) or []
-        if not arr:
-            return None
-        r0 = arr[0]
-        summ = (r0.get('summary') or {})
-        distance = int(summ.get('distance') or 0)
-        duration = int(summ.get('duration') or 0)
-        path = r0.get('path') or []  # [[x,y], ...]
-        return {
-            'summary': { 'distance': distance, 'duration': duration },
-            'path': path,
-        }
+        # Try preferred keys first, then any key that yields a path
+        for k in prefer + [k for k in keys if k not in prefer]:
+            arr = route.get(k)
+            if isinstance(arr, list) and arr:
+                r0 = arr[0]
+                path = r0.get('path') or []
+                if path:
+                    summ = (r0.get('summary') or {})
+                    distance = int(summ.get('distance') or 0)
+                    duration = int(summ.get('duration') or 0)
+                    return {
+                        'summary': { 'distance': distance, 'duration': duration },
+                        'path': path,
+                    }
+        return None
     except Exception:
         return None
 
@@ -474,6 +487,123 @@ def naver_transit_route():
         return jsonify({ 'error': 'naver_transit_failed', 'detail': str(e) }), 500
 
 
+# ---------- TMAP-compatible endpoints (proxy/adapter) ----------
+
+def _sections_path_to_kakao_roads(sections: list):
+    """Convert sections with 'path': [[x,y], ...] into Kakao-like 'roads' format."""
+    out = []
+    for sec in sections or []:
+        try:
+            path = sec.get('path') or []
+            vertexes = []
+            for pt in path:
+                # pt = [x, y]
+                if isinstance(pt, (list, tuple)) and len(pt) >= 2:
+                    vertexes.extend([float(pt[0]), float(pt[1])])
+            out.append({
+                'summary': sec.get('summary') or { 'distance': 0, 'duration': 0 },
+                'roads': [{ 'vertexes': vertexes }],
+            })
+        except Exception:
+            out.append({ 'summary': { 'distance': 0, 'duration': 0 }, 'roads': [] })
+    return out
+
+
+@api_bp.route('/tmap/route', methods=['POST'])
+def tmap_route():
+    """Adapter endpoint for TMAP 'CAR' and 'PEDESTRIAN'.
+    - CAR: proxy to Kakao waypoints (keeps Kakao roads/vertexes shape)
+    - PEDESTRIAN: use Naver walking and adapt to Kakao-like roads structure
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        mode = str(body.get('mode') or 'CAR').upper()
+
+        if mode == 'PEDESTRIAN':
+            # Build sections via Naver walking (leg-by-leg)
+            origin = body.get('origin') or {}
+            destination = body.get('destination') or {}
+            wps = body.get('waypoints') or []
+            stops = [origin] + wps + [destination]
+            # Validate
+            for s in stops:
+                if 'x' not in s or 'y' not in s:
+                    return jsonify({ 'error': 'invalid_coordinates' }), 400
+            sections = []
+            total_dist = 0
+            total_dur = 0
+            for i in range(len(stops)-1):
+                sx = float(stops[i]['x']); sy = float(stops[i]['y'])
+                gx = float(stops[i+1]['x']); gy = float(stops[i+1]['y'])
+                leg, err = _naver_leg('walking', (sx, sy), (gx, gy))
+                if leg:
+                    sections.append({ 'summary': leg['summary'], 'path': leg['path'] })
+                    total_dist += leg['summary']['distance']
+                    total_dur += leg['summary']['duration']
+                else:
+                    # fallback straight line
+                    km = _haversine(sy, sx, gy, gx)
+                    dist = int(km*1000)
+                    dur = int((km/4.5)*3600)
+                    sections.append({ 'summary': { 'distance': dist, 'duration': dur }, 'path': [[sx,sy],[gx,gy]] })
+                    total_dist += dist; total_dur += dur
+            kakao_like_sections = _sections_path_to_kakao_roads(sections)
+            return jsonify({ 'routes': [{ 'summary': { 'distance': total_dist, 'duration': total_dur }, 'sections': kakao_like_sections }] })
+
+        # Default: treat as CAR via Kakao
+        key = os.getenv('KAKAO_REST_API_KEY') or os.getenv('REACT_APP_KAKAO_API_KEY')
+        if not key:
+            return jsonify({ 'result_code': 'NO_API_KEY', 'result_msg': 'Kakao REST API key is missing' }), 400
+        url = 'https://apis-navi.kakaomobility.com/v1/waypoints/directions'
+        r = requests.post(url, headers={
+            'Authorization': f'KakaoAK {key}',
+            'Content-Type': 'application/json',
+        }, data=_json.dumps(body), timeout=15)
+        try:
+            data = r.json()
+        except Exception:
+            data = { 'error': 'invalid_json' }
+        return jsonify(data), r.status_code
+    except Exception as e:
+        return jsonify({ 'error': 'tmap_route_failed', 'detail': str(e) }), 500
+
+
+@api_bp.route('/tmap/transit', methods=['POST'])
+def tmap_transit():
+    """Adapter endpoint for TMAP 'TRANSIT' using Naver transit, adapted to Kakao-like roads."""
+    try:
+        body = request.get_json(silent=True) or {}
+        origin = body.get('origin') or {}
+        destination = body.get('destination') or {}
+        wps = body.get('waypoints') or []
+        stops = [origin] + wps + [destination]
+        for s in stops:
+            if 'x' not in s or 'y' not in s:
+                return jsonify({ 'error': 'invalid_coordinates' }), 400
+        sections = []
+        total_dist = 0
+        total_dur = 0
+        for i in range(len(stops)-1):
+            sx = float(stops[i]['x']); sy = float(stops[i]['y'])
+            gx = float(stops[i+1]['x']); gy = float(stops[i+1]['y'])
+            leg, err = _naver_leg('transit', (sx, sy), (gx, gy))
+            if leg:
+                sections.append({ 'summary': leg['summary'], 'path': leg['path'] })
+                total_dist += leg['summary']['distance']
+                total_dur += leg['summary']['duration']
+            else:
+                # fallback approx
+                km = _haversine(sy, sx, gy, gx)
+                dist = int(km*1000)
+                dur = int((km/25)*3600 + 300)
+                sections.append({ 'summary': { 'distance': dist, 'duration': dur }, 'path': [[sx,sy],[gx,gy]] })
+                total_dist += dist; total_dur += dur
+        kakao_like_sections = _sections_path_to_kakao_roads(sections)
+        return jsonify({ 'routes': [{ 'summary': { 'distance': total_dist, 'duration': total_dur }, 'sections': kakao_like_sections }] })
+    except Exception as e:
+        return jsonify({ 'error': 'tmap_transit_failed', 'detail': str(e) }), 500
+
+
 # ---------- Persona courses (UTF-8/UTF-8-SIG first, CP949 fallback) ----------
 @api_bp.route('/persona/courses', methods=['GET'])
 def persona_courses():
@@ -526,6 +656,36 @@ def persona_courses():
             })
 
         pid_q = request.args.get('pid')
+        # Accept persona type label from frontend and map to id when provided
+        ptype_q = request.args.get('ptype')
+        if (pid_q is None or pid_q == '') and ptype_q is not None:
+            try:
+                pmap = {
+                    '문화 체험가': 0,
+                    '미식가': 1,
+                    '자연 힐링형': 2,
+                    '액티브 모험가': 3,
+                    '럭셔리 트래블러': 4,
+                }
+                mapped = pmap.get(str(ptype_q))
+                if mapped is not None:
+                    pid_q = str(mapped)
+            except Exception:
+                pass
+        # Fallback mapping for k6 persona labels (0..5)
+        if (pid_q is None or pid_q == '') and ptype_q is not None:
+            _label = str(ptype_q).strip()
+            _k6_map = {
+                '알뜰 필수코스 정복자': 0,
+                '플렉스 장기 체류객': 1,
+                '관계 중심 체류객': 2,
+                '실속파 쇼핑 원정대': 3,
+                '문화유산 탐험가': 4,
+                '미니멀 K-컬처 팬': 5,
+            }
+            _m2 = _k6_map.get(_label)
+            if _m2 is not None:
+                pid_q = str(_m2)
         if pid_q is not None and pid_q != '':
             try:
                 pid_v = int(pid_q)
@@ -538,6 +698,15 @@ def persona_courses():
             for it in items:
                 key = f"{it['personaId']}__{it['courseCode']}"
                 grouped.setdefault(key, []).append(it)
+            # k6 labels for 6 clusters
+            k6_id2label = {
+                0: '알뜰 필수코스 정복자',
+                1: '플렉스 장기 체류객',
+                2: '관계 중심 체류객',
+                3: '실속파 쇼핑 원정대',
+                4: '문화유산 탐험가',
+                5: '미니멀 K-컬처 팬',
+            }
             out = []
             for key, stops in grouped.items():
                 stops_sorted = sorted(stops, key=lambda x: x['order'])
@@ -549,12 +718,101 @@ def persona_courses():
                     'title': title,
                     'stops': [ { 'name': s['name'], 'lat': s['lat'], 'lng': s['lng'] } for s in stops_sorted ]
                 })
-        return jsonify({ 'items': out })
+        return jsonify({ 'items': locals().get('out', items) })
+    except Exception as e:
+        return jsonify({ 'error': 'courses_failed', 'detail': str(e) }), 500
+
+
+# A clean alternative endpoint that matches persona labels robustly
+@api_bp.route('/persona/courses2', methods=['GET'])
+def persona_courses2():
+    try:
+        course_dir = os.path.join(PUBLIC_DIR, 'course_data')
+        csv_path = os.path.join(course_dir, 'routes_all_simplified.csv')
+        if not os.path.exists(csv_path):
+            return jsonify({ 'items': [] })
+
+        rows = []
+        for enc in ('utf-8-sig', 'utf-8', 'cp949'):
+            try:
+                with open(csv_path, 'r', encoding=enc, newline='') as f:
+                    rdr = csv.reader(f)
+                    rows = [r for r in rdr if r]
+                    if rows:
+                        break
+            except Exception:
+                continue
+
+        items = []
+        for r in rows:
+            if len(r) < 7:
+                continue
+            try:
+                pid = int(str(r[0]).strip())
+                course_no = int(str(r[1]).strip())
+                code = str(r[2]).strip()
+                order = int(str(r[3]).strip())
+                name = str(r[4]).strip()
+                lat = float(str(r[5]).strip())
+                lng = float(str(r[6]).strip())
+            except Exception:
+                continue
+            items.append({ 'personaId': pid, 'courseNo': course_no, 'courseCode': code, 'order': order, 'name': name, 'lat': lat, 'lng': lng })
+
+        pid_q = request.args.get('pid')
+        ptype_q = request.args.get('ptype')
+        if (pid_q is None or pid_q == '') and ptype_q is not None:
+            pmap = { '문화 체험가': 0, '미식가': 1, '자연 힐링형': 2, '액티브 모험가': 3, '럭셔리 트래블러': 4 }
+            mapped = pmap.get(str(ptype_q))
+            if mapped is not None:
+                pid_q = str(mapped)
+        # Fallback mapping for k6 persona labels (0..5)
+        if (pid_q is None or pid_q == '') and ptype_q is not None:
+            _label = str(ptype_q).strip()
+            _k6_map = {
+                '알뜰 필수코스 정복자': 0,
+                '플렉스 장기 체류객': 1,
+                '관계 중심 체류객': 2,
+                '실속파 쇼핑 원정대': 3,
+                '문화유산 탐험가': 4,
+                '미니멀 K-컬처 팬': 5,
+            }
+            _m2 = _k6_map.get(_label)
+            if _m2 is not None:
+                pid_q = str(_m2)
+        if pid_q is not None and pid_q != '':
+            try:
+                pid_v = int(pid_q)
+                items = [x for x in items if x['personaId'] == pid_v]
+            except Exception:
+                pass
+
+        if request.args.get('grouped') in ('1','true','yes'):
+            grouped = {}
+            for it in items:
+                key = f"{it['personaId']}__{it['courseCode']}"
+                grouped.setdefault(key, []).append(it)
+            id2label = { 0:'문화 체험가', 1:'미식가', 2:'자연 힐링형', 3:'액티브 모험가', 4:'럭셔리 트래블러' }
+            out = []
+            for key, stops in grouped.items():
+                stops_sorted = sorted(stops, key=lambda x: x['order'])
+                if not stops_sorted:
+                    continue
+                pid_v = stops_sorted[0]['personaId']
+                title = f"{stops_sorted[0]['name']} -> {stops_sorted[-1]['name']}"
+                out.append({
+                    'key': key,
+                    'code': key.split('__')[1] if '__' in key else '',
+                    'personaId': pid_v,
+                    'personaType': (id2label.get(pid_v) or k6_id2label.get(pid_v)),
+                    'title': title,
+                    'stops': [ { 'name': s['name'], 'lat': s['lat'], 'lng': s['lng'] } for s in stops_sorted ]
+                })
+            return jsonify({ 'items': out })
 
         return jsonify({ 'items': items })
     except Exception as e:
         return jsonify({ 'error': 'courses_failed', 'detail': str(e) }), 500
-
 
 # ---------- Route plan save/load (share) ----------
 @api_bp.route('/route-plans', methods=['POST'])
