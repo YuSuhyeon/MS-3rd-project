@@ -1,0 +1,104 @@
+{
+  "name": "TravelProfile",
+  "type": "object",
+  "properties": {
+    "travel_style": {
+      "type": "string",
+      "enum": [
+        "adventurous",
+        "relaxed",
+        "cultural",
+        "luxury",
+        "budget"
+      ],
+      "description": "여행 스타일"
+    },
+    "group_size": {
+      "type": "string",
+      "enum": [
+        "solo",
+        "couple",
+        "family",
+        "group"
+      ],
+      "description": "여행 규모"
+    },
+    "budget_range": {
+      "type": "string",
+      "enum": [
+        "budget",
+        "moderate",
+        "luxury",
+        "unlimited"
+      ],
+      "description": "예산 범위"
+    },
+    "preferred_activities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "nature",
+          "culture",
+          "food",
+          "shopping",
+          "adventure",
+          "relaxation",
+          "nightlife",
+          "photography"
+        ]
+      },
+      "maxItems": 3,
+      "description": "관심 활동 (최대 3개)"
+    },
+    "accommodation_type": {
+      "type": "string",
+      "enum": [
+        "hotel",
+        "guesthouse",
+        "resort",
+        "camping",
+        "homestay"
+      ],
+      "description": "선호 숙박 유형"
+    },
+    "analysis_result": {
+      "type": "object",
+      "properties": {
+        "persona_type": {
+          "type": "string"
+        },
+        "persona_description": {
+          "type": "string"
+        },
+        "analysis_reason": {
+          "type": "string"
+        },
+        "recommended_destinations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "image_url": {
+                "type": "string"
+              },
+              "activities": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": []
+}

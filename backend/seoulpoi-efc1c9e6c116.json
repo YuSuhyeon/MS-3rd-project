@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "seoulpoi",
+  "private_key_id": "efc1c9e6c1167c0620c3cc7f72abeb9c4e39f052",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCrqYhizysU2r6W\nBsz2w8PCN3hLF8vGegl/jRjOozK0SnSoyAbZYefH95Jkk3iT0M2TrrfdVslU0MZc\nAnQKPOwKxeGO5VOa8GRdT/DLniDaomLuA3v662PAAZhshRoSXmSHXPunj/d6ah/F\nGB50emT8CJE6tPPIu8v9FCm2B9P0fl2s+ZCJWUkV9PewOl6joy52YwaCfmsafIDF\n6e/lzpro+NAwA8NzHXxyh2YnruxZxF2EKeHuOYeAsob4wJXvowhFTZhOA6ll/bRJ\nD5ME1dm+jIQcIqQ36+I+DU6Aa7ziyvv00TEYOBnrWc8gd6tF3ArlekxoPUd87Xfa\n1g6jJz4jAgMBAAECggEATFcLkS2ichbJdPy3P/JVZ1S1yWdetvhkqvW7l4GaNfV6\npei2qwvQQOyHjPTMRagxFEE6AVPsGyzxWc+5fSgUrMHNinfP03Ken6TCaDr9T12x\n8zlXdIIkDSpod7JFou+Zc11ViPIMU8NIN6V/PbuEl1TUCTCZzaY+lGDYH9yhVPP1\ns8V6O2Gn9MRogshchCoHsnHUga4YSDYlxznn2ekuDkMiLl9EvceEsPtjzSf2LXam\nhfekl6kvIOiM4OedWHQscu93IrW6VO/2hwx7hwXBJfB5ls1cwym9rlmMusNi4hT5\nJA6QezzOnd+l0FAbmLXQVHQnH72RA7s8M0K3QHGRIQKBgQDseNCl53kqLwP5s6DP\nWJyf13LCaw4kWtiPrbM7h0ZmLnqGFX9AJQ80oG4CqHF8STEBqX3HnfhJxFjRm3nv\ndt9Dz8sfPEbWDxYXm/+EmXFSm70B6kDG79YAzWnmmyGa3NbToOO9gbTmGFQZLvTH\nAIHbGDXKPbT+CIUEZiOTkiG7kQKBgQC51pg5H9oQ2DL9e//RCwFkvrRV376uAbdW\nEX84yx/P95dB7io5fs2IMRpE2JSsmRoHtcMIMutbNoH5g0mQc1K0dEfb4A7xlacV\nRpMlwxYbFP0HmUi3Vx5idCZVobT/hFNcm6PW81X1hAmIy7LDcqwjU6CMJTQSPysC\nhRaXrGo8cwKBgC4tkaE0SKcCM2aJu3eCOGPGcPSib0qOKwgzxXJ0gjzmCqswe38N\nPaDrS1BdkHvS1y0Z6iQXJytQmn+kOvWWYxcc9u+Ml9CpdYj6v7UnOcgF/azoD+pJ\nX6Mcefe8h510TsdY/eA9+hOM4K9iSg6qfLFKUwbBchzBkShAweXJfajhAoGBAI4j\ncn6OvC2SDz4OL5XmAwTZT/k2jxNsQJvV+iaoRga86rYEwcsED5QRanQp610wJNas\n0SVePOGhCTycjBGuAx3+qk+kSgnBWvBM8JM7aZcBMJ81QIbqXVUUXZW1f0jIHzJ/\n4Iqxx5dnjBtTIcGX3c2PUwaeFfu20OC2hpcvynm9AoGAIgZrfK6wQj2K42o943dS\ncqxtq41fLjJBmrkfoqlIEgTHJYL6VcFnUMGAkxR63FV2sc2M7JUn/NIIEwOdRzNa\ny1wgPX8XknGEWDODakVNOF2GCj75FWbtct3UCgTFnYwuKMgqjt3DQWy4kSfUFl1l\nK4uZx00iKp+pUSVpj+vlVHE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "visionland@seoulpoi.iam.gserviceaccount.com",
+  "client_id": "109101944786704350899",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/visionland%40seoulpoi.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
