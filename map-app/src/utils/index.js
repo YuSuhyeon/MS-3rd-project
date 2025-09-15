@@ -12,6 +12,8 @@ export function createPageUrl(name) {
       return "/vision";
     case "VisionOCR":
       return "/visionocr";
+    case "DocentVision":
+      return "/vision";
     case "ItineraryPlanner":
       return "/itinerary";
     case "ItineraryView":
