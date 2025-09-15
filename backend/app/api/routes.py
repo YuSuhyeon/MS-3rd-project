@@ -600,36 +600,44 @@ def ocr_image():
     model_version = 'latest'
     language = 'en'
 
+    # 환경 변수 확인
+    if not AZURE_VISION_ENDPOINT or not AZURE_VISION_KEY:
+        return jsonify({'error': 'Azure Vision API credentials not configured'}), 500
+
     if 'image_file' in request.files:
         image_file = request.files['image_file']
-        vision_url = f"{AZURE_VISION_ENDPOINT}/computervision/imageanalysis:analyze?features={features}&model-version={model_version}&language={language}&api-version={api_version}"
-        headers = {
-            'Ocp-Apim-Subscription-Key': AZURE_VISION_KEY,
-            'Content-Type': 'application/octet-stream'
-        }
-        response = requests.post(
-            vision_url,
-            headers=headers,
-            data=image_file.read()
-        )
-        return jsonify(response.json())
+        
+        # 파일이 실제로 선택되었는지 확인
+        if not image_file or image_file.filename == '':
+            return jsonify({'error': 'No image file provided'}), 400
+            
+        try:
+            vision_url = f"{AZURE_VISION_ENDPOINT}/computervision/imageanalysis:analyze?features={features}&model-version={model_version}&language={language}&api-version={api_version}"
+            headers = {
+                'Ocp-Apim-Subscription-Key': AZURE_VISION_KEY,
+                'Content-Type': 'application/octet-stream'
+            }
+            
+            # 파일 데이터 읽기
+            image_data = image_file.read()
+            if not image_data:
+                return jsonify({'error': 'Empty image file'}), 400
+                
+            response = requests.post(
+                vision_url,
+                headers=headers,
+                data=image_data
+            )
+            
+            if response.status_code == 200:
+                return jsonify(response.json())
+            else:
+                return jsonify({'error': f'Azure Vision API error: {response.status_code}', 'detail': response.text}), response.status_code
+                
+        except Exception as e:
+            return jsonify({'error': f'OCR processing failed: {str(e)}'}), 500
 
-    # data = request.get_json()
-    # image_url = data.get('image_url') if data else None
-    # if image_url:
-    #     vision_url = f"{AZURE_VISION_ENDPOINT}/computervision/imageanalysis:analyze?features={features}&model-version={model_version}&language={language}&api-version={api_version}"
-    #     headers = {
-    #         'Ocp-Apim-Subscription-Key': AZURE_VISION_KEY,
-    #         'Content-Type': 'application/json'
-    #     }
-    #     response = requests.post(
-    #         vision_url,
-    #         headers=headers,
-    #         json={'url': image_url}
-    #     )
-    #     return jsonify(response.json())
-
-    return jsonify({'error': 'No image_file or image_url provided'}), 400
+    return jsonify({'error': 'No image_file provided'}), 400
 
 # ---------- 커뮤니티 - 음악플레이리스트 ----------
 spotify_service = community_service.SpotifyService()

@@ -103,7 +103,7 @@ function VisionOCR() {
 
   // 모바일 최적화된 파일 업로드 핸들러 [8][11]
   const handleFileChange = (e) => {
-    const file = e.target.files;
+    const file = e.target.files[0]; // FileList에서 첫 번째 파일을 선택
     setImageFile(file);
     setError(null);
     setResult(null);
@@ -148,6 +148,11 @@ function VisionOCR() {
         body: formData,
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       console.log("OCR API 응답:", data);
       setResult(data);
@@ -156,7 +161,8 @@ function VisionOCR() {
         setMobileStep("result");
       }
     } catch (err) {
-      setError("분석 요청 중 오류가 발생했습니다.");
+      console.error("OCR 분석 오류:", err);
+      setError(err.message || "분석 요청 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }

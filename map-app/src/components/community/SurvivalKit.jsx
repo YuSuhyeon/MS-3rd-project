@@ -3,6 +3,7 @@ import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Globe, BookOpen, Camera } from "lucide-react";
 import VisionOCR from "../../pages/VisionOCR";
+import QuickTranslator from "./QuickTranslator";
 import {
   NeonCard,
   NeonButton,
@@ -12,46 +13,6 @@ import {
 } from "../ui/NeonTheme";
 export default function SurvivalKit() {
   const [activeSection, setActiveSection] = useState("menu");
-  const [translateText, setTranslateText] = useState("");
-  const [translatedText, setTranslatedText] = useState("");
-  const [isTranslating, setIsTranslating] = useState(false);
-
-  const handleTranslate = async () => {
-    if (!translateText.trim()) return;
-
-    setIsTranslating(true);
-    // Simulate translation
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const translations = {
-      안녕하세요: "Hello / こんにちは / 你好",
-      감사합니다: "Thank you / ありがとうございます / 谢谢",
-      "화장실이 어디에 있나요?":
-        "Where is the bathroom? / トイレはどこですか？ / 洗手间在哪里？",
-      "얼마예요?": "How much is it? / いくらですか？ / 多少钱？",
-      도와주세요: "Help me / 助けてください / 请帮助我",
-    };
-
-    setTranslatedText(
-      translations[translateText] || "Translation not available"
-    );
-    setIsTranslating(false);
-  };
-
-  const quickPhrases = [
-    { korean: "안녕하세요", english: "Hello", category: "인사" },
-    { korean: "감사합니다", english: "Thank you", category: "인사" },
-    { korean: "죄송합니다", english: "Sorry", category: "인사" },
-    {
-      korean: "화장실이 어디에 있나요?",
-      english: "Where is the bathroom?",
-      category: "필수",
-    },
-    { korean: "얼마예요?", english: "How much is it?", category: "쇼핑" },
-    { korean: "메뉴 주세요", english: "Menu please", category: "음식" },
-    { korean: "도와주세요", english: "Help me", category: "응급" },
-    { korean: "길을 잃었어요", english: "I'm lost", category: "응급" },
-  ];
 
   const cultureGuide = [
     {
@@ -135,79 +96,8 @@ export default function SurvivalKit() {
         </NeonCard>
       )}
 
-      {/* 빠른 통역 - 순수 div 사용 (가장 확실함) */}
-      {activeSection === "translate" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
-          <NeonCard title="🌐 실시간 번역기" variant="success" className="p-6">
-            <div className="space-y-4">
-              <div>
-                <GradientText
-                  variant="secondary"
-                  size="sm"
-                  className="block mb-2"
-                >
-                  한국어 입력
-                </GradientText>
-                <textarea
-                  value={translateText}
-                  onChange={(e) => setTranslateText(e.target.value)}
-                  placeholder="번역할 텍스트를 입력하세요..."
-                  className="w-full p-3 bg-black/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  rows={3}
-                />
-              </div>
-
-              <NeonButton
-                variant="success"
-                size="lg"
-                onClick={handleTranslate}
-                disabled={!translateText.trim() || isTranslating}
-                className="w-full"
-              >
-                {isTranslating ? "번역중..." : "✨ 번역하기"}
-              </NeonButton>
-
-              {translatedText && (
-                <NeonCard variant="primary" className="mt-4">
-                  <GradientText
-                    variant="primary"
-                    size="sm"
-                    className="block mb-2"
-                  >
-                    번역 결과
-                  </GradientText>
-                  <p className="text-gray-100">{translatedText}</p>
-                </NeonCard>
-              )}
-            </div>
-          </NeonCard>
-
-          <NeonCard title="⚡ 자주 쓰는 표현" variant="warning" className="p-6">
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {quickPhrases.map((phrase, index) => (
-                <NeonCard
-                  key={index}
-                  variant="default"
-                  className="p-3 cursor-pointer hover:scale-105 transition-transform"
-                  onClick={() => setTranslateText(phrase.korean)}
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="font-medium text-white">
-                      {phrase.korean}
-                    </span>
-                    <span className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-1 rounded-full">
-                      {phrase.category}
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-300">
-                    {phrase.english}
-                  </span>
-                </NeonCard>
-              ))}
-            </div>
-          </NeonCard>
-        </div>
-      )}
+      {/* 빠른 통역 */}
+      {activeSection === "translate" && <QuickTranslator />}
 
       {/* 문화 가이드  */}
       {activeSection === "culture" && (
