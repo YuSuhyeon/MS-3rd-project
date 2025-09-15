@@ -26,10 +26,13 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import BrandLogo from "components/BrandLogo";
+import LanguageButtons from "components/ui/LanguageButtons";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const KPopTravelHome = () => {
+  const { t } = useTranslation("common");
   const [currentSection, setCurrentSection] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -74,25 +77,25 @@ const KPopTravelHome = () => {
   const places = [
     {
       id: "place1",
-      name: "명동",
+      name: t("place1"),
       icon: "🛍️",
       areaName: "명동 관광특구",
     },
     {
       id: "place2",
-      name: "광화문",
+      name: t("place2"),
       icon: "🏛️",
       areaName: "광화문·덕수궁",
     },
     {
       id: "place3",
-      name: "이태원",
+      name: t("place3"),
       icon: "🌍",
       areaName: "이태원 관광특구",
     },
     {
       id: "place4",
-      name: "잠실",
+      name: t("place4"),
       icon: "🎡",
       areaName: "잠실 관광특구",
     },
@@ -229,26 +232,26 @@ const KPopTravelHome = () => {
   const features = [
     {
       icon: <Sparkles className="w-6 h-6" />,
-      title: "AI 페르소나 분석",
-      description: "5가지 질문으로 당신만의 여행 스타일 발견",
+      title: t("features.title1"),
+      description: t("features.desc1"),
       gradient: "from-purple-500 to-pink-500",
     },
     {
       icon: <Map className="w-6 h-6" />,
-      title: "맞춤 코스 추천",
-      description: "AI가 실시간으로 생성하는 완벽한 여행 루트",
+      title: t("features.title2"),
+      description: t("features.desc2"),
       gradient: "from-blue-500 to-purple-500",
     },
     {
       icon: <Music className="w-6 h-6" />,
-      title: "K-Pop 플레이리스트",
-      description: "여행지별 분위기에 맞는 나만의 K-Pop 음악",
+      title: t("features.title3"),
+      description: t("features.desc3"),
       gradient: "from-pink-500 to-red-500",
     },
     {
       icon: <Camera className="w-6 h-6" />,
-      title: "AI 도슨트",
-      description: "RAG 기반 챗봇으로 현지 문화 깊이 체험",
+      title: t("features.title4"),
+      description: t("features.desc4"),
       gradient: "from-indigo-500 to-blue-500",
     },
   ];
@@ -256,12 +259,24 @@ const KPopTravelHome = () => {
   const stats = [
     {
       number: "10K+",
-      label: "맞춤 여행 생성",
+      label: t("stats.label1"),
       icon: <Globe className="w-5 h-5" />,
     },
-    { number: "98%", label: "만족도", icon: <Heart className="w-5 h-5" /> },
-    { number: "24/7", label: "AI 지원", icon: <Clock className="w-5 h-5" /> },
-    { number: "5★", label: "평균 평점", icon: <Star className="w-5 h-5" /> },
+    {
+      number: "98%",
+      label: t("stats.label2"),
+      icon: <Heart className="w-5 h-5" />,
+    },
+    {
+      number: "24/7",
+      label: t("stats.label3"),
+      icon: <Clock className="w-5 h-5" />,
+    },
+    {
+      number: "5★",
+      label: t("stats.label4"),
+      icon: <Star className="w-5 h-5" />,
+    },
   ];
 
   return (
@@ -331,7 +346,7 @@ const KPopTravelHome = () => {
                   TravelK
                 </h1>
                 <p className="text-xs text-gray-400 whitespace-nowrap">
-                  AI 맞춤형 여행 플래너
+                  {t("main.badge")}
                 </p>
               </div>
             </motion.div>
@@ -345,7 +360,7 @@ const KPopTravelHome = () => {
                 }}
                 className="text-gray-300 hover:text-white transition-colors"
               >
-                기능
+                {t("nav.features")}
               </button>
               <button
                 onClick={() => {
@@ -355,7 +370,7 @@ const KPopTravelHome = () => {
                 }}
                 className="text-gray-300 hover:text-white transition-colors"
               >
-                사용법
+                {t("nav.howto")}
               </button>
               <button
                 onClick={() => {
@@ -367,40 +382,44 @@ const KPopTravelHome = () => {
                 }}
                 className="text-gray-300 hover:text-white transition-colors"
               >
-                커뮤니티
+                {t("nav.community")}
               </button>
             </div>
 
             {/* Login/Profile section */}
             {profile ? (
               <div className="flex items-center gap-4">
+                <LanguageButtons />
                 <img
                   src={profile.picture || "https://via.placeholder.com/40"}
                   alt="profile"
                   className="w-8 h-8 rounded-full"
                 />
                 <span className="text-white/90 font-semibold hidden sm:block">
-                  {profile.name}님 환영합니다!
+                  {t("login.welcome", { name: profile.name })}
                 </span>
                 <button
                   onClick={logout}
                   className="px-4 py-2 rounded-xl font-semibold text-white/90 border border-white/30 hover:bg-white/10 transition-colors"
                 >
-                  로그아웃
+                  {t("login.logout")}
                 </button>
               </div>
             ) : (
-              <motion.button
-                onClick={() => setShowLoginModal(true)}
-                className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 font-semibold text-white shadow-lg"
-                whileHover={{
-                  scale: 1.05,
-                  boxShadow: "0 20px 25px -5px rgba(147, 51, 234, 0.3)",
-                }}
-                whileTap={{ scale: 0.95 }}
-              >
-                로그인
-              </motion.button>
+              <div className="flex items-center gap-3">
+                <LanguageButtons />
+                <motion.button
+                  onClick={() => setShowLoginModal(true)}
+                  className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 font-semibold text-white shadow-lg"
+                  whileHover={{
+                    scale: 1.05,
+                    boxShadow: "0 20px 25px -5px rgba(147, 51, 234, 0.3)",
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {t("login.login")}
+                </motion.button>
+              </div>
             )}
           </div>
         </div>
@@ -424,9 +443,7 @@ const KPopTravelHome = () => {
               transition={{ type: "spring", stiffness: 200, delay: 0.5 }}
             >
               <Sparkles className="w-4 h-4 text-purple-400" />
-              <span className="text-purple-300 text-sm">
-                AI 기반 맞춤형 여행 플래너
-              </span>
+              <span className="text-purple-300 text-sm">{t("main.badge")}</span>
             </motion.div>
 
             <motion.h1
@@ -450,11 +467,11 @@ const KPopTravelHome = () => {
                 animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                 transition={{ duration: 3, repeat: Infinity }}
               >
-                K-여행
+                {t("main.title.k_travel")}
               </motion.span>
-              을
+              {t("main.title.connector")}
               <br />
-              AI가 만들어드려요
+              {t("main.title.ai_creates")}
             </motion.h1>
 
             <motion.p
@@ -463,9 +480,7 @@ const KPopTravelHome = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1 }}
             >
-              5가지 질문으로 여행 스타일을 분석하고, K-Pop과 함께하는 완벽한
-              코스를 추천받으세요. 복잡한 계획은 AI에게, 당신은 설렘만
-              준비하세요.
+              {t("main.subtitle")}
             </motion.p>
 
             <motion.div
@@ -484,7 +499,7 @@ const KPopTravelHome = () => {
                 onClick={handleStartClick}
               >
                 <Wand2 className="w-5 h-5" />
-                {profile ? "페르소나 분석 시작" : "시작하기"}
+                {profile ? t("main.start.persona") : t("main.start.start")}
                 <ChevronRight className="w-5 h-5" />
               </motion.button>
             </motion.div>
@@ -528,7 +543,7 @@ const KPopTravelHome = () => {
                 <Music className="w-4 h-4 text-white" />
               </div>
               <div>
-                <div className="text-sm font-semibold">Now Playing</div>
+                <div className="text-sm font-semibold">{t("now.playing")}</div>
                 <div className="text-xs text-gray-300">BTS - Spring Day</div>
               </div>
             </div>
@@ -545,8 +560,12 @@ const KPopTravelHome = () => {
             <div className="flex items-center gap-3">
               <MapPin className="w-5 h-5 text-pink-400" />
               <div>
-                <div className="text-sm font-semibold">추천 스팟</div>
-                <div className="text-xs text-gray-300">홍대 K-Pop 스퀘어</div>
+                <div className="text-sm font-semibold">
+                  {t("main.recommend.spot")}
+                </div>
+                <div className="text-xs text-gray-300">
+                  {t("main.recommend.spot.name")}
+                </div>
               </div>
             </div>
           </div>
@@ -564,13 +583,13 @@ const KPopTravelHome = () => {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              AI가 만드는{" "}
+              {t("main.title.ai_action")}{" "}
               <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                특별한 경험
+                {t("main.title.experience")}
               </span>
             </h2>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-              혁신적인 AI 기술로 당신만의 완벽한 한국 여행을 설계합니다
+              {t("main.subtitle.ai_action")}
             </p>
           </motion.div>
 
@@ -609,7 +628,9 @@ const KPopTravelHome = () => {
                     className="mt-4 text-purple-400 flex items-center gap-2 cursor-pointer"
                     whileHover={{ x: 5 }}
                   >
-                    <span className="text-sm font-medium">자세히 보기</span>
+                    <span className="text-sm font-medium">
+                      {t("main.more.view")}
+                    </span>
                     <ChevronRight className="w-4 h-4" />
                   </motion.div>
                 </div>
@@ -633,9 +654,9 @@ const KPopTravelHome = () => {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              간단한 3단계로{" "}
+              {t("steps.title")}{" "}
               <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                완성
+                {t("steps.completion")}
               </span>
             </h2>
           </motion.div>
@@ -644,22 +665,22 @@ const KPopTravelHome = () => {
             {[
               {
                 //  step: "01",
-                title: "페르소나 분석",
-                description: "5가지 질문으로 여행 스타일 분석",
+                title: t("steps.step1.title"),
+                description: t("steps.step1.description"),
                 icon: <Sparkles className="w-8 h-8" />,
                 gradient: "from-purple-500 to-blue-500",
               },
               {
                 // step: "02",
-                title: "AI 맞춤 추천",
-                description: "분석 결과 기반 완벽한 코스 생성",
+                title: t("steps.step2.title"),
+                description: t("steps.step2.description"),
                 icon: <Wand2 className="w-8 h-8" />,
                 gradient: "from-blue-500 to-pink-500",
               },
               {
                 // step: "03",
-                title: "자유로운 편집",
-                description: "드래그 & 드롭으로 나만의 플랜 완성",
+                title: t("steps.step3.title"),
+                description: t("steps.step3.description"),
                 icon: <Edit3 className="w-8 h-8" />,
                 gradient: "from-pink-500 to-purple-500",
               },
@@ -714,16 +735,17 @@ const KPopTravelHome = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10" />
 
             <h2 className="text-3xl md:text-5xl font-bold mb-6 relative z-10">
-              실시간 인기{" "}
+              {t("popular.title")}{" "}
               <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                여행지
+                {t("popular.highlight")}
               </span>
-              를<br />
-              만나보세요
+              {t("popular.action.join")}
+              <br />
+              {t("popular.action")}
             </h2>
 
             <p className="text-gray-300 text-lg mb-10 relative z-10 max-w-2xl mx-auto">
-              다른 여행자들이 선택한 인기 코스를 확인해보세요
+              {t("popular.description")}
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 relative z-10">
@@ -763,32 +785,30 @@ const KPopTravelHome = () => {
                 <h1 className="font-bold text-2xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                   TravelK
                 </h1>
-                <p className="text-sm text-gray-400">AI 여행 플래너</p>
+                <p className="text-sm text-gray-400">{t("main.badge")}</p>
               </div>
             </motion.div>
           </div>
 
-          <p className="text-gray-400 mb-8">
-            AI와 함께하는 완벽한 한국 여행을 경험해보세요
-          </p>
+          <p className="text-gray-400 mb-8">{t("footer.slogan")}</p>
 
           <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-400">
             <a href="#" className="hover:text-white transition-colors">
-              개인정보처리방침
+              {t("footer.privacy_policy")}
             </a>
             <a href="#" className="hover:text-white transition-colors">
-              이용약관
+              {t("footer.terms_of_service")}
             </a>
             <a href="#" className="hover:text-white transition-colors">
-              고객센터
+              {t("footer.customer_center")}
             </a>
             <a href="#" className="hover:text-white transition-colors">
-              파트너십
+              {t("footer.partnership")}
             </a>
           </div>
 
           <div className="mt-8 pt-8 border-t border-white/10 text-gray-500 text-sm">
-            © 2024 TravelK. All rights reserved.
+            {t("footer.copyright")}
           </div>
         </div>
       </footer>
@@ -843,11 +863,9 @@ const KPopTravelHome = () => {
                   </div>
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">
-                  TravelK에 오신 것을 환영합니다
+                  {t("modal.welcome")}
                 </h2>
-                <p className="text-gray-300">
-                  AI 맞춤 여행 플래너를 시작하려면 로그인하세요
-                </p>
+                <p className="text-gray-300">{t("modal.instruction")}</p>
               </div>
 
               <div className="space-y-4">
@@ -880,7 +898,7 @@ const KPopTravelHome = () => {
                       d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.089,5.571l6.19,5.238C44.591,35.021,48,29.412,48,24C48,22.659,47.862,21.35,47.611,20.083z"
                     />
                   </svg>
-                  Google로 계속하기
+                  {t("modal.continue_google")}
                 </motion.button>
                 <motion.button
                   onClick={() => login("microsoft")}
@@ -899,21 +917,21 @@ const KPopTravelHome = () => {
                     <path fill="#05a6f0" d="M1 12h10v10H1z" />
                     <path fill="#ffba08" d="M12 12h10v10H12z" />
                   </svg>
-                  Microsoft로 계속하기
+                  {t("modal.continue_microsoft")}
                 </motion.button>
               </div>
 
               <div className="mt-6 text-center">
                 <p className="text-gray-400 text-sm">
-                  계속 진행하시면{" "}
+                  {t("modal.disclaimer.prefix")}{" "}
                   <a href="#" className="text-purple-400 hover:text-purple-300">
-                    이용약관
+                    {t("modal.disclaimer.terms")}
                   </a>
-                  과{" "}
+                  {t("modal.disclaimer.and")}{" "}
                   <a href="#" className="text-purple-400 hover:text-purple-300">
-                    개인정보처리방침
+                    {t("modal.disclaimer.privacy")}
                   </a>
-                  에 동의하는 것으로 간주됩니다.
+                  {t("modal.disclaimer.suffix")}
                 </p>
               </div>
             </motion.div>

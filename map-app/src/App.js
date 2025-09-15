@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "./components/Layout";
+import { LanguageProvider } from "./context/LanguageContext";
+import "./i18n"; // i18n 초기화
 import "./styles/layout.css";
 
 import Home from "./pages/Home";
@@ -57,8 +59,10 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <LanguageProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </LanguageProvider>
   );
 }
