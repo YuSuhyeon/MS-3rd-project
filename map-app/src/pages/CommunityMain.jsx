@@ -37,7 +37,7 @@ import {
 import SpotifyPlaylistGenerator from "components/community/SpotifyPlaylistGenerator";
 import SurvivalKit from "components/community/SurvivalKit";
 
-// 모바일 감지 훅 [4][6]
+// 모바일 감지 훅
 const useMediaQuery = (query) => {
   const [matches, setMatches] = useState(false);
 
@@ -54,7 +54,7 @@ const useMediaQuery = (query) => {
   return matches;
 };
 
-// 플레이리스트 카드 컴포넌트 - 모바일 최적화
+// playlist 카드 컴포넌트
 const PlaylistCard = ({ playlist }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -165,7 +165,7 @@ const PlaylistCard = ({ playlist }) => {
   );
 };
 
-// 소셜 포스트 컴포넌트 - 모바일 최적화
+// social 카드 섹션
 const SocialPost = ({ post }) => {
   const [isLiked, setIsLiked] = useState(post.isLiked);
   const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked);

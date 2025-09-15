@@ -97,7 +97,7 @@ export default function SurvivalKit() {
           {[
             {
               id: "menu",
-              label: "메뉴 인식기",
+              label: "Vision OCR",
               icon: <Camera />,
               variant: "primary",
             },
@@ -128,23 +128,16 @@ export default function SurvivalKit() {
         </div>
       </NeonCard>
 
-      {/* 메뉴 인식기 섹션 - 네온 카드로 래핑 */}
+      {/* Vision OCR  */}
       {activeSection === "menu" && (
-        <NeonCard
-          title="🔍 스마트 메뉴 인식기"
-          variant="primary"
-          className="p-6"
-        >
-          <GradientText variant="secondary" size="sm" className="mb-4">
-            메뉴 사진을 업로드하면 AI가 텍스트를 인식해드려요
-          </GradientText>
+        <NeonCard>
           <VisionOCR />
         </NeonCard>
       )}
 
-      {/* 번역 섹션 - 네온 카드들 */}
+      {/* 빠른 통역 - 순수 div 사용 (가장 확실함) */}
       {activeSection === "translate" && (
-        <ResponsiveGrid className="grid-cols-1 lg:grid-cols-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
           <NeonCard title="🌐 실시간 번역기" variant="success" className="p-6">
             <div className="space-y-4">
               <div>
@@ -189,9 +182,8 @@ export default function SurvivalKit() {
             </div>
           </NeonCard>
 
-          {/* 자주 쓰는 표현 네온 카드 */}
           <NeonCard title="⚡ 자주 쓰는 표현" variant="warning" className="p-6">
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
               {quickPhrases.map((phrase, index) => (
                 <NeonCard
                   key={index}
@@ -214,10 +206,10 @@ export default function SurvivalKit() {
               ))}
             </div>
           </NeonCard>
-        </ResponsiveGrid>
+        </div>
       )}
 
-      {/* 문화 가이드 섹션 - 네온 그리드 */}
+      {/* 문화 가이드  */}
       {activeSection === "culture" && (
         <ResponsiveGrid>
           {cultureGuide.map((guide, index) => (
