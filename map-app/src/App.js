@@ -10,7 +10,7 @@ import PersonaAnalysis from "./pages/PersonaAnalysis";
 import ItineraryView from "./pages/ItineraryView";
 import DocentMantine from "./pages/DocentMantine";
 import DirectionsMyro from "./pages/DirectionsMyro";
-import VisionOCR from "./pages/VisionOCR";
+import VisionOCR from "./pages/VisionOCR.jsx.bak.0915";
 import DocentVision from "./pages/DocentVision";
 import CommunityMain from "./pages/CommunityMain";
 import Tour from "./pages/Tour";

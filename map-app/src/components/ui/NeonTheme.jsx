@@ -285,7 +285,7 @@ export const NeonScrollbarStyles = () => (
       height: 4px;
     }
     .neon-scrollbar::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(109, 109, 109, 0.2);
       border-radius: 2px;
     }
     .neon-scrollbar::-webkit-scrollbar-thumb {
@@ -299,7 +299,7 @@ export const NeonScrollbarStyles = () => (
     /* Firefox */
     .neon-scrollbar {
       scrollbar-width: thin;
-      scrollbar-color: #a855f7 rgba(0, 0, 0, 0.2);
+      scrollbar-color: #a855f7 rgba(109, 109, 109, 0.2);
     }
   `}</style>
 );

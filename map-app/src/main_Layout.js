@@ -1,7 +1,15 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { MapPin, Home, Route, Compass, Sparkles, Calendar, Camera } from "lucide-react";
+import {
+  MapPin,
+  Home,
+  Route,
+  Compass,
+  Sparkles,
+  Calendar,
+  Camera,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -47,16 +55,6 @@ const navigationItems = [
     title: "커뮤니티",
     url: createPageUrl("CommunityMain"),
     icon: Compass,
-  },
-  {
-    title: "Vision OCR",
-    url: createPageUrl("VisionOCR"),
-    icon: Compass,
-  },
-  {
-    title: "AI 사진인식",
-    url: createPageUrl("DocentVision"),
-    icon: Camera,
   },
 ];
 

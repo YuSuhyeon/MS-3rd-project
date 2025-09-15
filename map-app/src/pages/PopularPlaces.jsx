@@ -143,6 +143,7 @@ const HeroSection = ({ placeData, areaName }) => {
 
 const PopularPlaces = () => {
   const { areaName } = useParams();
+  const decodedAreaName = decodeURIComponent(areaName || "");
   const [placeData, setPlaceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -151,7 +152,7 @@ const PopularPlaces = () => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-      const decodedAreaName = decodeURIComponent(areaName);
+      //const decodedAreaName = decodeURIComponent(areaName);
       const url = `https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/CityDataDetailAPI?areaName=${decodedAreaName}`;
 
       try {

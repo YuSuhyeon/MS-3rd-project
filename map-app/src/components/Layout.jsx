@@ -23,13 +23,96 @@ const navigationItems = [
   { title: "Persona Analysis", url: "/persona" },
   { title: "Result Dashboard", url: "/result" },
   { title: "Itinerary Planner", url: "/itinerary" },
-  { title: "Edit Route", url: "/directions" },
   { title: "AI Docent", url: "/docent" },
   { title: "Community", url: "/community" },
-  { title: "Vision OCR", url: "/visionocr", exact: true },
-  { title: "AI Vision", url: "/vision", exact: true },
 ];
-//환율,닐씨 정보 API 호출 함수(function에서가져오는중)
+
+// 배너 컴포넌트
+const BannerWidget = () => {
+  const banners = [
+    {
+      id: 1,
+      image: "../../img/seoul_kdh_policies.jpg",
+      title: "배너타이틀",
+      subtitle: "배너 테스트",
+    },
+    {
+      id: 2,
+      image: "../../img/seoul_kdh_policies_1.jpg",
+      title: "배너타이틀1",
+      subtitle: "배너 테스트1",
+    },
+    {
+      id: 3,
+      image: "../../img/seoul_kdh_policies_2.jpg",
+      title: "배너타이틀2",
+      subtitle: "배너 테스트3",
+    },
+    {
+      id: 4,
+      image: "../../img/seoul_kdh_policies_3.jpg",
+      title: "배너타이틀3",
+      subtitle: "배너 테스트3",
+    },
+  ];
+
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsVisible(false);
+      setTimeout(() => {
+        setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+        setIsVisible(true);
+      }, 200); // 페이드 아웃 시간
+    }, 2000); // 2초마다 변경
+
+    return () => clearInterval(interval);
+  }, [banners.length]);
+
+  const currentBanner = banners[currentBannerIndex];
+
+  return (
+    <div className="px-4 pb-4">
+      <div
+        className={`relative overflow-hidden rounded-xl h-32 transition-opacity duration-300 ${
+          isVisible ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        {/* 배경 이미지 */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${currentBanner.image})` }}
+        />
+
+        {/* 텍스트 콘텐츠 */}
+        <div className="relative h-full flex flex-col justify-end p-4 text-white">
+          <h3 className="font-bold text-sm leading-tight mb-1 drop-shadow-lg">
+            {currentBanner.title}
+          </h3>
+          <p className="text-xs opacity-90 leading-tight drop-shadow-md">
+            {currentBanner.subtitle}
+          </p>
+        </div>
+
+        {/* indicator */}
+        <div className="absolute bottom-2 right-2 flex gap-1">
+          {banners.map((_, index) => (
+            <div
+              key={index}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                index === currentBannerIndex ? "bg-white" : "bg-white/50"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 환율, 날씨 정보 API 호출 함수
 const callExchangeRateAPI = async () => {
   const functionUrl =
     "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/ExchangeRateAPI?";
@@ -61,7 +144,8 @@ const callWeatherAPI = async () => {
     return null;
   }
 };
-/// 숫자 깜빡이는 효과
+
+// 숫자 깜빡이는 효과
 const FlickerNumber = ({ value, formatter = (val) => val }) => {
   const [displayValue, setDisplayValue] = useState(formatter(value));
   const animationRef = useRef();
@@ -78,7 +162,7 @@ const FlickerNumber = ({ value, formatter = (val) => val }) => {
 
     let animationCounter = 0;
     const totalSteps = 10;
-    const duration = 100; //100ms로 깜박임
+    const duration = 100;
 
     animationRef.current = setInterval(() => {
       if (animationCounter >= totalSteps) {
@@ -116,7 +200,7 @@ const LiveInfoWidget = ({ isCollapsed, onToggle }) => {
 
   useEffect(() => {
     fetchAllData();
-    const interval = setInterval(fetchAllData, 30 * 1000); //30초 마다 자동 업데이트
+    const interval = setInterval(fetchAllData, 30 * 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -301,6 +385,7 @@ export default function Layout({ children }) {
             </div>
           </Link>
         </div>
+
         <div className="p-3 flex-1 overflow-y-auto">
           <div className="text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">
             Menu
@@ -324,7 +409,14 @@ export default function Layout({ children }) {
               );
             })}
           </nav>
+
+          {/* 배너 위젯  */}
+          <div className="mt-6">
+            <BannerWidget />
+          </div>
         </div>
+
+        {/* 실시간 환율,날씨 정보 */}
         <div className="mt-auto">
           <LiveInfoWidget
             isCollapsed={isLiveInfoCollapsed}
@@ -379,6 +471,7 @@ export default function Layout({ children }) {
           </div>
         </div>
       </aside>
+
       {menuOpen && (
         <button
           className="fixed inset-0 z-40 bg-black/30 md:hidden"
@@ -386,6 +479,7 @@ export default function Layout({ children }) {
           onClick={() => setMenuOpen(false)}
         />
       )}
+
       <main className="flex-1 flex flex-col">
         <header className="bg-white/80 backdrop-blur-md border-b border-white/20 px-6 py-4 md:hidden sticky top-0 z-50">
           <div className="flex items-center gap-4">
