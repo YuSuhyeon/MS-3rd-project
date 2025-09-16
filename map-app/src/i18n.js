@@ -107,6 +107,8 @@ const resources = {
       itinerary_planner: "여행 일정 계획",
       ai_docent: "AI 도슨트",
       community: "커뮤니티",
+      tour: "여행상품",
+      survival: "살아남기",
       menu: "메뉴",
       personalized_travel_planning: "맞춤형 여행 계획",
       live_info: "실시간 정보",

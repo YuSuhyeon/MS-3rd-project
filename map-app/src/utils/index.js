@@ -24,6 +24,8 @@ export function createPageUrl(name) {
       return "/tour";
     case "TourDetail":
       return "/tour/:id";
+    case "CommunitySocial":
+      return "/social";
     default:
       return "/";
   }

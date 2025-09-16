@@ -165,192 +165,6 @@ const PlaylistCard = ({ playlist }) => {
   );
 };
 
-// social 카드 섹션
-const SocialPost = ({ post }) => {
-  const [isLiked, setIsLiked] = useState(post.isLiked);
-  const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked);
-  const [showComments, setShowComments] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 ${
-        isMobile ? "mx-4 p-4" : "p-6"
-      }`}
-    >
-      {/* 사용자 정보 */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <img
-            src={post.user.avatar}
-            alt={post.user.name}
-            className={`rounded-full object-cover ${
-              isMobile ? "w-8 h-8" : "w-12 h-12"
-            }`}
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <span
-                className={`font-semibold text-gray-900 ${
-                  isMobile ? "text-sm" : "text-base"
-                }`}
-              >
-                {post.user.name}
-              </span>
-              {post.user.verified && (
-                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-              )}
-            </div>
-            <div
-              className={`flex items-center gap-2 text-gray-500 ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-            >
-              <span>{post.timestamp}</span>
-              {post.location && !isMobile && (
-                <>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {post.location}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={() => setIsBookmarked(!isBookmarked)}
-          className={`p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] ${
-            isBookmarked
-              ? "bg-yellow-50 text-yellow-600"
-              : "hover:bg-gray-50 text-gray-400"
-          }`}
-        >
-          <Bookmark
-            className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`}
-          />
-        </button>
-      </div>
-
-      {/* 포스트 내용 */}
-      <p
-        className={`text-gray-800 mb-4 leading-relaxed ${
-          isMobile ? "text-sm" : "text-base"
-        }`}
-      >
-        {post.content}
-      </p>
-
-      {/* 이미지 */}
-      {post.images && post.images.length > 0 && (
-        <div
-          className={`mb-4 rounded-xl overflow-hidden ${
-            post.images.length === 1
-              ? ""
-              : isMobile
-              ? "grid grid-cols-1 gap-2"
-              : "grid grid-cols-2 gap-2"
-          }`}
-        >
-          {post.images
-            .slice(0, isMobile ? 1 : post.images.length)
-            .map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Post image ${index + 1}`}
-                className={`w-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer ${
-                  isMobile ? "h-32" : "h-48"
-                }`}
-              />
-            ))}
-          {isMobile && post.images.length > 1 && (
-            <div className="text-xs text-gray-500 mt-1">
-              +{post.images.length - 1}장 더 보기
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 태그 */}
-      {post.tags && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {post.tags
-            .slice(0, isMobile ? 3 : post.tags.length)
-            .map((tag, index) => (
-              <span
-                key={index}
-                className={`px-3 py-1 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors cursor-pointer ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
-              >
-                #{tag}
-              </span>
-            ))}
-          {isMobile && post.tags.length > 3 && (
-            <span className="text-xs text-gray-500">
-              +{post.tags.length - 3}개 더
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* 액션 버튼들 */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className={`flex items-center ${isMobile ? "gap-4" : "gap-6"}`}>
-          <button
-            onClick={() => setIsLiked(!isLiked)}
-            className={`flex items-center gap-2 transition-colors min-h-[44px] px-2 ${
-              isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
-            }`}
-          >
-            <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
-            <span
-              className={`font-medium ${isMobile ? "text-sm" : "text-base"}`}
-            >
-              {isMobile
-                ? post.likes > 999
-                  ? "999+"
-                  : post.likes
-                : post.likes?.toLocaleString() || 0}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors min-h-[44px] px-2"
-          >
-            <MessageCircle className="w-5 h-5" />
-            <span
-              className={`font-medium ${isMobile ? "text-sm" : "text-base"}`}
-            >
-              {post.comments || 0}
-            </span>
-          </button>
-
-          <button className="flex items-center gap-2 text-gray-500 hover:text-green-500 transition-colors min-h-[44px] px-2">
-            <Share2 className="w-5 h-5" />
-            {!isMobile && (
-              <span className="font-medium">{post.shares || 0}</span>
-            )}
-          </button>
-        </div>
-
-        {!isMobile && (
-          <button className="text-sm text-gray-400 hover:text-gray-600 transition-colors min-h-[44px] px-2">
-            <Eye className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
 // 메인 컴포넌트
 export default function CommunityMain() {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -369,7 +183,6 @@ export default function CommunityMain() {
       icon: <Music />,
       variant: "success",
     },
-    { id: "social", label: "social", icon: <Users />, variant: "warning" },
   ];
 
   const [activeTab, setActiveTab] = useState("survival");
@@ -378,7 +191,7 @@ export default function CommunityMain() {
     const handlePopState = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const tabParam = urlParams.get("tab");
-      if (tabParam && ["survival", "playlists", "social"].includes(tabParam)) {
+      if (tabParam && ["survival", "playlists"].includes(tabParam)) {
         setActiveTab(tabParam);
       } else {
         setActiveTab("survival");
@@ -399,7 +212,7 @@ export default function CommunityMain() {
     window.history.pushState({}, "", url);
   };
 
-  // 네온 테마 모바일 헤더 [1]
+  // 네온 테마 모바일 헤더
   const NeonMobileHeader = () => (
     <div className="sticky top-0 bg-black/80 backdrop-blur-sm border-b border-purple-500/30 z-40 px-4 py-3">
       <div className="flex items-center justify-between">
@@ -418,7 +231,6 @@ export default function CommunityMain() {
     </div>
   );
 
-  // 네온 테마 사이드 드로어 [1]
   const NeonSideDrawer = () => (
     <AnimatePresence>
       {isSideMenuOpen && (
@@ -489,18 +301,7 @@ export default function CommunityMain() {
             <SpotifyPlaylistGenerator />
           </div>
         );
-      case "social":
-        return (
-          <NeonCard
-            title="소셜 피드 준비 중"
-            variant="primary"
-            className="text-center p-8"
-          >
-            <GradientText variant="secondary" size="lg">
-              곧 멋진 소셜 기능이 추가될 예정입니다!
-            </GradientText>
-          </NeonCard>
-        );
+
       default:
         return null;
     }

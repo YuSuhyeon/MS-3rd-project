@@ -28,240 +28,363 @@ import {
   RefreshCw,
   AlertTriangle,
 } from "lucide-react";
-
 // 목업 데이터 임포트
 import { tourProducts, partnershipData } from "../utils/mockTourData";
+// 웰컴 팝업
+{
+  /*
+const WelcomePopup = ({ isOpen, onClose }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-lg rounded-3xl p-8 max-w-md w-full mx-4 relative shadow-2xl border border-purple-500/30"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700/50 transition-colors group"
+            >
+              <X className="w-6 h-6 text-gray-400 group-hover:text-white" />
+            </button>
 
-// API call functions
-const callExchangeRateAPI = async () => {
-  const functionUrl =
-    "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/ExchangeRateAPI";
-  try {
-    const response = await fetch(functionUrl, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    console.error("ExchangeRateAPI call error:", error);
-    return null;
-  }
-};
+            <div className="text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/25"
+              >
+                <Sparkles className="w-10 h-10 text-white" />
+              </motion.div>
 
-const callWeatherAPI = async () => {
-  const functionUrl =
-    "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/WeatherAPI";
-  try {
-    const response = await fetch(functionUrl, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    console.error("WeatherAPI call error:", error);
-    return null;
-  }
-};
+              <motion.img
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                src="https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400"
+                alt="K-Pop Tour"
+                className="w-full h-32 object-cover rounded-2xl mb-6 border border-purple-500/30"
+              />
 
-// Live Info Bar Component
-const LiveInfoBar = () => {
-  const [exchangeData, setExchangeData] = useState(null);
-  const [weatherData, setWeatherData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4"
+              >
+                Welcome to Your K-Pop Adventure!
+              </motion.h2>
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-gray-300 mb-6 leading-relaxed"
+              >
+                You're about to explore the magical world of K-Pop! Get ready
+                for exclusive experiences and amazing photo opportunities.
+              </motion.p>
 
-    const [exchangeResult, weatherResult] = await Promise.allSettled([
-      callExchangeRateAPI(),
-      callWeatherAPI(),
-    ]);
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="flex items-center justify-center gap-6 mb-6 text-sm text-gray-400"
+              >
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-400" />
+                  <span>24+ joined today</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-400" />
+                  <span>4.8★ rating</span>
+                </div>
+              </motion.div>
 
-    if (exchangeResult.status === "fulfilled" && exchangeResult.value) {
-      setExchangeData(exchangeResult.value);
-    } else {
-      console.error("Failed to fetch exchange rate:", exchangeResult.reason);
-      setExchangeData(null); // Clear old data on failure
-    }
-
-    if (weatherResult.status === "fulfilled" && weatherResult.value) {
-      setWeatherData(weatherResult.value);
-    } else {
-      console.error("Failed to fetch weather:", weatherResult.reason);
-      setWeatherData(null); // Clear old data on failure
-    }
-
-    if (
-      exchangeResult.status === "rejected" ||
-      weatherResult.status === "rejected"
-    ) {
-      setError("Could not load some live data. Please try again.");
-    }
-
-    setLastUpdated(new Date());
-    setLoading(false);
-  };
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.7 }}
+              >
+                <NeonButton onClick={onClose} className="w-full py-4">
+                  Start the Journey
+                </NeonButton>
+              </motion.div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}; */
+}
+// NeonTheme 컴포넌트들
+const BackgroundEffect = ({ children, className = "" }) => {
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 5 * 60 * 1000); // 5 minutes
-    return () => clearInterval(interval);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    let animationId;
+    let time = 0;
+    let mouseX = 0;
+    let mouseY = 0;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    const handleMouseMove = (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    };
+
+    const drawWaves = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const waves = [
+        {
+          amplitude: 40,
+          frequency: 0.005,
+          speed: 0.01,
+          color: "rgba(168, 85, 247, 0.1)", // purple
+          yOffset: canvas.height * 0.3,
+        },
+        {
+          amplitude: 60,
+          frequency: 0.003,
+          speed: 0.008,
+          color: "rgba(236, 72, 153, 0.08)", // pink
+          yOffset: canvas.height * 0.5,
+        },
+        {
+          amplitude: 30,
+          frequency: 0.007,
+          speed: 0.012,
+          color: "rgba(59, 130, 246, 0.06)", // blue
+          yOffset: canvas.height * 0.7,
+        },
+      ];
+
+      waves.forEach((wave, index) => {
+        ctx.beginPath();
+        ctx.fillStyle = wave.color;
+
+        const mouseInfluence = Math.sin(mouseX * 0.001) * 20;
+        const mouseVertical = (mouseY / canvas.height - 0.5) * 100;
+
+        ctx.moveTo(0, canvas.height);
+
+        for (let x = 0; x <= canvas.width; x += 5) {
+          const y =
+            wave.yOffset +
+            Math.sin(x * wave.frequency + time * wave.speed) * wave.amplitude +
+            Math.sin(x * 0.01 + time * 0.005) * 15 +
+            mouseInfluence * Math.sin(x * 0.002) +
+            mouseVertical * 0.1;
+
+          ctx.lineTo(x, y);
+        }
+
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      time += 1;
+      animationId = requestAnimationFrame(drawWaves);
+    };
+
+    resizeCanvas();
+    drawWaves();
+
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, []);
 
-  const getWeatherIcon = (condition) => {
-    if (!condition) return <Sun className="w-5 h-5 text-yellow-500" />;
-    const lowerCaseCondition = condition.toLowerCase();
-    if (
-      lowerCaseCondition.includes("sunny") ||
-      lowerCaseCondition.includes("clear")
-    )
-      return <Sun className="w-5 h-5 text-yellow-500" />;
-    if (
-      lowerCaseCondition.includes("cloud") ||
-      lowerCaseCondition.includes("overcast")
-    )
-      return <Cloud className="w-5 h-5 text-gray-500" />;
-    if (lowerCaseCondition.includes("rain"))
-      return <CloudRain className="w-5 h-5 text-blue-500" />;
-    if (lowerCaseCondition.includes("snow"))
-      return <Snowflake className="w-5 h-5 text-blue-200" />;
-    return <Sun className="w-5 h-5 text-yellow-500" />;
+  return (
+    <div
+      className={`relative min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 text-white overflow-hidden ${className}`}
+    >
+      {/* 물결 캔버스 */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 pointer-events-none opacity-60"
+        style={{ zIndex: 1 }}
+      />
+
+      {/* 별 배경 효과 */}
+      <div
+        className="fixed inset-0 opacity-30 pointer-events-none"
+        style={{ zIndex: 2 }}
+      >
+        {[...Array(50)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              opacity: [0, 1, 0],
+              scale: [0, 1, 0],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 추가 파티클 효과 */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 2 }}>
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={`particle-${i}`}
+            className="absolute w-2 h-2 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              background: `linear-gradient(45deg, 
+                rgba(168, 85, 247, 0.6), 
+                rgba(236, 72, 153, 0.4)
+              )`,
+              filter: "blur(1px)",
+            }}
+            animate={{
+              y: [-20, -100],
+              opacity: [0, 1, 0],
+              scale: [0.5, 1.2, 0.5],
+            }}
+            transition={{
+              duration: 4 + Math.random() * 3,
+              repeat: Infinity,
+              delay: Math.random() * 4,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 콘텐츠 */}
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+};
+
+const NeonCard = ({
+  children,
+  delay = 0.2,
+  className = "",
+  variant = "default",
+  ...props
+}) => {
+  const variants = {
+    default:
+      "border-purple-500/30 hover:border-pink-500/50 hover:shadow-pink-500/20",
+    primary:
+      "border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20",
+    success:
+      "border-green-500/30 hover:border-emerald-500/50 hover:shadow-emerald-500/20",
+    warning:
+      "border-yellow-500/30 hover:border-orange-500/50 hover:shadow-orange-500/20",
+    danger:
+      "border-red-500/30 hover:border-rose-500/50 hover:shadow-rose-500/20",
   };
-
-  if (loading && !exchangeData && !weatherData) {
-    // Show initial loading only
-    return (
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-center gap-2">
-            <RefreshCw className="w-4 h-4 animate-spin" />
-            <span className="text-sm">Loading Live Info...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Simplified display for partial or full errors after initial load
-  if (error && (!exchangeData || !weatherData)) {
-    return (
-      <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white p-4">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              <span className="text-sm">{error}</span>
-            </div>
-            <button
-              onClick={fetchData}
-              className="flex items-center gap-1 px-3 py-1 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
-            >
-              <RefreshCw className="w-3 h-3" />
-              <span className="text-xs">Retry</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const usdRate = exchangeData?.exchangeRates?.USD?.dealRate;
-  const weatherSummary = weatherData?.summary;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white p-4 shadow-lg"
+      className={`relative bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg
+                  border ${variants[variant]} rounded-2xl p-6 shadow-2xl
+                  hover:shadow-2xl transition-all duration-300 ${className}`}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+      whileHover={{ y: -5, scale: 1.02 }}
+      {...props}
     >
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Exchange Rate Info */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-300" />
-              <div className="text-sm">
-                <span className="font-semibold">USD/KRW: </span>
-                {usdRate ? (
-                  <span className="text-green-200">
-                    {usdRate.toLocaleString(undefined, {
-                      minimumFractionDigits: 1,
-                      maximumFractionDigits: 1,
-                    })}
-                  </span>
-                ) : (
-                  <span className="text-gray-300">N/A</span>
-                )}
-              </div>
-            </div>
-          </div>
+      {/* 네온 글로우 효과 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-2xl blur-xl" />
 
-          {/* Weather Info */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              {getWeatherIcon(weatherSummary?.weather)}
-              <div className="text-sm">
-                <span className="font-semibold">Seoul: </span>
-                {weatherSummary?.temperature ? (
-                  <span className="text-blue-200">
-                    {weatherSummary.temperature}
-                  </span>
-                ) : (
-                  <span className="text-gray-300">N/A</span>
-                )}
-              </div>
-            </div>
-
-            {weatherSummary?.humidity && (
-              <div className="flex items-center gap-1 text-xs">
-                <Droplets className="w-3 h-3 text-blue-300" />
-                <span className="text-blue-200">{weatherSummary.humidity}</span>
-              </div>
-            )}
-            {weatherSummary?.windSpeed && (
-              <div className="flex items-center gap-1 text-xs">
-                <Wind className="w-3 h-3 text-gray-300" />
-                <span className="text-gray-200">
-                  {weatherSummary.windSpeed}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Refresh and Update Time */}
-          <div className="flex items-center gap-2">
-            {lastUpdated && (
-              <span className="text-xs text-white/70">
-                Updated:{" "}
-                {lastUpdated.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            )}
-            <button
-              onClick={fetchData}
-              disabled={loading}
-              className="p-1 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
-            </button>
-          </div>
-        </div>
-      </div>
+      <div className="relative z-10">{children}</div>
     </motion.div>
   );
 };
 
-// TourCard 컴포넌트
+const NeonButton = ({
+  children,
+  onClick,
+  variant = "primary",
+  size = "md",
+  disabled = false,
+  className = "",
+}) => {
+  const variants = {
+    primary:
+      "from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-purple-500/25",
+    secondary:
+      "from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 shadow-gray-500/25",
+    success:
+      "from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-green-500/25",
+    warning:
+      "from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-yellow-500/25",
+    danger:
+      "from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 shadow-red-500/25",
+  };
+
+  const sizes = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-base",
+    lg: "px-6 py-3 text-lg",
+    xl: "px-8 py-4 text-xl",
+  };
+
+  return (
+    <motion.button
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        bg-gradient-to-r ${variants[variant]}
+        ${sizes[size]}
+        font-semibold text-white rounded-xl
+        shadow-lg hover:shadow-xl
+        transform transition-all duration-200
+        disabled:opacity-50 disabled:cursor-not-allowed
+        ${className}
+      `}
+      whileHover={!disabled ? { scale: 1.05 } : {}}
+      whileTap={!disabled ? { scale: 0.95 } : {}}
+    >
+      {children}
+    </motion.button>
+  );
+};
+
+// TourCard 컴포넌트 (네온 테마 적용)
 const TourCard = ({ item, onDetailClick }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -310,7 +433,7 @@ const TourCard = ({ item, onDetailClick }) => {
       exit={{ opacity: 0, y: -30 }}
       whileHover={{ y: -5 }}
       transition={{ duration: 0.3 }}
-      className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl group"
+      className="bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-purple-500/30 overflow-hidden hover:shadow-pink-500/20 hover:shadow-2xl hover:border-pink-500/50 group transition-all duration-300"
     >
       <div className="relative overflow-hidden">
         <img
@@ -319,11 +442,11 @@ const TourCard = ({ item, onDetailClick }) => {
           className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
         <div className="absolute top-4 left-4">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${categoryInfo.gradient} backdrop-blur-sm`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${categoryInfo.gradient} backdrop-blur-sm border border-white/20 shadow-lg`}
           >
             {categoryInfo.emoji} {categoryInfo.label}
           </span>
@@ -335,10 +458,10 @@ const TourCard = ({ item, onDetailClick }) => {
               e.stopPropagation();
               setIsBookmarked(!isBookmarked);
             }}
-            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${
+            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 border ${
               isBookmarked
-                ? "bg-yellow-500 text-white shadow-lg"
-                : "bg-white/20 text-white hover:bg-white/30"
+                ? "bg-yellow-500 text-white shadow-lg border-yellow-400/50 shadow-yellow-500/25"
+                : "bg-white/10 text-white hover:bg-white/20 border-white/20"
             }`}
           >
             <Bookmark className="w-4 h-4" />
@@ -347,10 +470,10 @@ const TourCard = ({ item, onDetailClick }) => {
 
         <div className="absolute bottom-4 left-4 right-4">
           <div className="flex items-center justify-between">
-            <span className="px-3 py-1 bg-white/20 text-white text-xs rounded-full backdrop-blur-sm font-medium">
+            <span className="px-3 py-1 bg-purple-600/80 text-white text-xs rounded-full backdrop-blur-sm font-medium border border-purple-500/50 shadow-lg">
               {item.partnership}
             </span>
-            <div className="flex items-center gap-1 text-white text-sm">
+            <div className="flex items-center gap-1 text-white text-sm bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               <span className="font-semibold">{item.rating}</span>
             </div>
@@ -360,42 +483,42 @@ const TourCard = ({ item, onDetailClick }) => {
 
       <div className="p-6">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
             {item.kpopGroup}
           </span>
           <span className="text-gray-400">•</span>
-          <span className="text-sm text-gray-500">리뷰 {item.reviews}개</span>
+          <span className="text-sm text-gray-400">리뷰 {item.reviews}개</span>
         </div>
 
-        <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
+        <h3 className="font-bold text-white text-lg mb-2 line-clamp-2">
           {item.title}
         </h3>
 
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+        <p className="text-gray-300 text-sm mb-4 line-clamp-2">
           {item.description}
         </p>
 
         {item.location && (
-          <div className="flex items-center gap-2 text-gray-500 mb-4">
+          <div className="flex items-center gap-2 text-gray-400 mb-4">
             <MapPin className="w-4 h-4" />
             <span className="text-sm">{item.location}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100">
+        <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-2xl border border-purple-500/30 backdrop-blur-sm">
           <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">ROI</div>
-            <div className="text-sm font-bold text-green-600">{item.roi}</div>
+            <div className="text-xs text-gray-400 mb-1">ROI</div>
+            <div className="text-sm font-bold text-green-400">{item.roi}</div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">신규고객</div>
-            <div className="text-sm font-bold text-blue-600">
+            <div className="text-xs text-gray-400 mb-1">신규고객</div>
+            <div className="text-sm font-bold text-blue-400">
               {item.newCustomers}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">브랜드가치</div>
-            <div className="text-sm font-bold text-purple-600">
+            <div className="text-xs text-gray-400 mb-1">브랜드가치</div>
+            <div className="text-sm font-bold text-purple-400">
               {item.brandValue}
             </div>
           </div>
@@ -405,7 +528,7 @@ const TourCard = ({ item, onDetailClick }) => {
           {item.tags?.slice(0, 3).map((tag, index) => (
             <span
               key={index}
-              className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full hover:bg-gray-200 transition-colors"
+              className="px-2 py-1 bg-gray-800/50 text-gray-300 text-xs rounded-full hover:bg-gray-700/50 transition-colors border border-gray-600/50"
             >
               #{tag}
             </span>
@@ -413,7 +536,7 @@ const TourCard = ({ item, onDetailClick }) => {
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <span className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
             {item.price}
           </span>
           <div className="flex items-center gap-2">
@@ -422,21 +545,22 @@ const TourCard = ({ item, onDetailClick }) => {
                 e.stopPropagation();
                 setIsLiked(!isLiked);
               }}
-              className={`p-2 rounded-xl transition-all duration-200 ${
+              className={`p-2 rounded-xl transition-all duration-200 border ${
                 isLiked
-                  ? "bg-red-50 text-red-500 shadow-md"
-                  : "hover:bg-gray-50 text-gray-400"
+                  ? "bg-red-500/20 text-red-400 shadow-md border-red-500/50"
+                  : "hover:bg-gray-800/50 text-gray-400 border-gray-600/50"
               }`}
             >
               <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
             </button>
-            <button
+            <NeonButton
               onClick={() => onDetailClick(item)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 text-sm font-semibold shadow-lg hover:shadow-xl"
+              size="sm"
+              className="inline-flex items-center gap-2"
             >
               <Eye className="w-4 h-4" />
               자세히 보기
-            </button>
+            </NeonButton>
           </div>
         </div>
       </div>
@@ -444,25 +568,19 @@ const TourCard = ({ item, onDetailClick }) => {
   );
 };
 
-// PartnershipSection 컴포넌트
+// PartnershipSection 컴포넌트 (네온 테마 적용)
 const PartnershipSection = () => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.6 }}
-      className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8 mb-8"
-    >
+    <NeonCard className="mb-8">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+        <div className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/25">
           <Building2 className="w-7 h-7 text-white" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
             기업 제휴 파트너
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             신뢰할 수 있는 파트너사와의 전략적 협업
           </p>
         </div>
@@ -476,32 +594,34 @@ const PartnershipSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.1 }}
-            className="p-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 group"
+            className="p-6 bg-gradient-to-br from-gray-800/50 to-gray-900/80 rounded-2xl border border-gray-600/30 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300 group backdrop-blur-sm"
           >
             <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white shadow-md flex items-center justify-center group-hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-800 shadow-md flex items-center justify-center group-hover:shadow-lg group-hover:shadow-purple-500/20 transition-shadow border border-gray-600/50">
                 <img
                   src={partner.logo || "/placeholder.svg"}
                   alt={partner.name}
                   className="h-10 w-auto"
                 />
               </div>
-              <h3 className="font-bold text-gray-900 mb-1">{partner.name}</h3>
-              <p className="text-sm text-gray-500 mb-3">{partner.category}</p>
+              <h3 className="font-bold text-white mb-1">{partner.name}</h3>
+              <p className="text-sm text-gray-400 mb-3">{partner.category}</p>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">상품</span>
-                  <span className="font-semibold">{partner.products}개</span>
+                  <span className="text-gray-300">상품</span>
+                  <span className="font-semibold text-purple-300">
+                    {partner.products}개
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">매출</span>
-                  <span className="font-bold text-purple-600">
+                  <span className="text-gray-300">매출</span>
+                  <span className="font-bold text-purple-400">
                     {partner.revenue}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">성장률</span>
-                  <span className="font-bold text-green-600">
+                  <span className="text-gray-300">성장률</span>
+                  <span className="font-bold text-green-400">
                     {partner.growth}
                   </span>
                 </div>
@@ -510,96 +630,7 @@ const PartnershipSection = () => {
           </motion.div>
         ))}
       </div>
-    </motion.div>
-  );
-};
-
-// BusinessMetrics 컴포넌트
-const BusinessMetrics = () => {
-  const metrics = [
-    {
-      icon: TrendingUp,
-      label: "총 매출 증가율",
-      value: "+285%",
-      description: "전년 대비 매출 성장",
-      gradient: "from-green-500 to-emerald-500",
-    },
-    {
-      icon: Users,
-      label: "신규 고객 유입",
-      value: "7,394명",
-      description: "월평균 신규 가입자",
-      gradient: "from-blue-500 to-cyan-500",
-    },
-    {
-      icon: Award,
-      label: "브랜드 인지도",
-      value: "+42%",
-      description: "브랜드 가치 상승률",
-      gradient: "from-purple-500 to-pink-500",
-    },
-    {
-      icon: DollarSign,
-      label: "평균 ROI",
-      value: "298%",
-      description: "마케팅 투자 대비 수익",
-      gradient: "from-orange-500 to-red-500",
-    },
-  ];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.6 }}
-      className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8 mb-8"
-    >
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-          <TrendingUp className="w-7 h-7 text-white" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">
-            비즈니스 성과
-          </h2>
-          <p className="text-gray-600">데이터 기반 마케팅 효과 분석</p>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric, index) => {
-          const Icon = metric.icon;
-          return (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="p-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300"
-            >
-              <div
-                className={`w-12 h-12 bg-gradient-to-r ${metric.gradient} rounded-xl flex items-center justify-center mb-4 shadow-lg`}
-              >
-                <Icon className="w-6 h-6 text-white" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-gray-900 text-sm">
-                  {metric.label}
-                </h3>
-                <div
-                  className={`text-3xl font-bold bg-gradient-to-r ${metric.gradient} bg-clip-text text-transparent`}
-                >
-                  {metric.value}
-                </div>
-                <p className="text-xs text-gray-500">{metric.description}</p>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </motion.div>
+    </NeonCard>
   );
 };
 
@@ -623,21 +654,9 @@ export default function Tour() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
-      {/* 실시간 정보 바 */}
-      <LiveInfoBar />
-
+    <BackgroundEffect>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(1200px 600px at 80% 10%, rgba(124,58,237,0.18), transparent 60%), " +
-              "radial-gradient(900px 500px at 0% 100%, rgba(236,72,153,0.12), transparent 60%)",
-          }}
-        />
-
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -646,16 +665,16 @@ export default function Tour() {
             className="text-center mb-12"
           >
             <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-2xl">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-purple-500/30">
                 <ShoppingBag className="w-8 h-8 text-white" />
               </div>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-4">
+            <h1 className="text-4xl md:text-6xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4">
               K-lover 투어
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-600 mb-8">
+            <p className="text-lg md:text-xl text-gray-300 mb-8">
               한류와 함께하는 특별한 여행 경험을 만나보세요
             </p>
 
@@ -668,7 +687,7 @@ export default function Tour() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="상품 검색..."
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-white/20 bg-white/80 backdrop-blur-sm focus:border-purple-500 focus:ring-4 focus:ring-purple-200 outline-none transition-all text-gray-900 placeholder-gray-500"
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white placeholder-gray-400 shadow-lg"
                 />
               </div>
               <div className="relative">
@@ -676,7 +695,7 @@ export default function Tour() {
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="pl-12 pr-8 py-4 rounded-2xl border border-white/20 bg-white/80 backdrop-blur-sm focus:border-purple-500 focus:ring-4 focus:ring-purple-200 outline-none transition-all text-gray-900 appearance-none cursor-pointer"
+                  className="pl-12 pr-8 py-4 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white appearance-none cursor-pointer shadow-lg"
                 >
                   <option value="all">전체 카테고리</option>
                   <option value="location">촬영지</option>
@@ -693,22 +712,16 @@ export default function Tour() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Tour Products Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6 }}
-          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8 mb-8"
-        >
+        <NeonCard className="mb-8">
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-14 h-14 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/25">
               <Package className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
                 인기 투어 상품
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-300">
                 검증된 파트너사와 함께하는 프리미엄 상품
               </p>
             </div>
@@ -733,25 +746,22 @@ export default function Tour() {
               animate={{ opacity: 1 }}
               className="text-center py-16 mb-8"
             >
-              <div className="w-20 h-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-600/50">
                 <ShoppingBag className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 검색 결과가 없습니다
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-300">
                 다른 검색어나 필터를 시도해보세요.
               </p>
             </motion.div>
           )}
-        </motion.div>
+        </NeonCard>
 
         {/* Partnership Section */}
         <PartnershipSection />
-
-        {/* Business Metrics Section */}
-        <BusinessMetrics />
       </div>
-    </div>
+    </BackgroundEffect>
   );
 }

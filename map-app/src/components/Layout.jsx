@@ -29,7 +29,9 @@ const getNavigationItems = (t) => [
   { title: t("result_dashboard"), url: "/result" },
   { title: t("itinerary_planner"), url: "/itinerary" },
   { title: t("ai_docent"), url: "/docent" },
-  { title: t("community"), url: "/community" },
+  { title: t("community"), url: "/social" }, //community main 에서 social로 이동
+  { title: t("tour"), url: "/tour" },
+  { title: t("survival"), url: "/community" },
 ];
 
 // 배너 컴포넌트

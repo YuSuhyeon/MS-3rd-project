@@ -28,110 +28,98 @@ import {
   Sparkles,
 } from "lucide-react";
 
+// NeonTheme 컴포넌트들을 import
+import {
+  BackgroundEffect,
+  NeonCard,
+  NeonButton,
+  GradientText,
+} from "../components/ui/NeonTheme";
+
 import { tourDetailData } from "../utils/mockTourData";
 
-// 팝업 컴포넌트
-const WelcomePopup = ({ isOpen, onClose }) => {
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: 50 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: 50 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 relative shadow-2xl border border-purple-100"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors group"
-            >
-              <X className="w-6 h-6 text-gray-400 group-hover:text-gray-600" />
-            </button>
-
-            <div className="text-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring" }}
-                className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
-              >
-                <Sparkles className="w-10 h-10 text-white" />
-              </motion.div>
-
-              <motion.img
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                src="/img/seoul_trip_hunters.jpg"
-                alt="K-Pop Demon Hunters"
-                className="w-full h-32 object-cover rounded-2xl mb-6 border border-purple-100"
-              />
-
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="text-2xl font-bold text-gray-900 mb-4"
-              >
-                Welcome to Your K-Pop Adventure!
-              </motion.h2>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-gray-600 mb-6 leading-relaxed"
-              >
-                You're about to explore the magical world of K-Pop Demon
-                Hunters! Get ready for exclusive experiences and amazing photo
-                opportunities.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="flex items-center justify-center gap-6 mb-6 text-sm text-gray-500"
-              >
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-blue-500" />
-                  <span>24+ joined today</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-yellow-500" />
-                  <span>4.8★ rating</span>
-                </div>
-              </motion.div>
-
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.7 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={onClose}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
-              >
-                Start the Journey
-              </motion.button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-
+//discount 홍보 팝업 컴포넌트
 const OfferPopup = ({ isOpen, onClose }) => {
+  const [timeLeft, setTimeLeft] = useState({ minutes: 10, seconds: 0 });
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentSecond = now.getSeconds();
+
+      // 10:00부터 시작해서 현재까지 경과된 총 초
+      let elapsedSeconds = 0;
+      if (currentHour >= 10) {
+        elapsedSeconds =
+          (currentHour - 10) * 3600 + currentMinute * 60 + currentSecond;
+      }
+
+      // 전체 기간 (10:00 ~ 23:59:59 = 14시간 = 50400초)
+      const totalSeconds = 14 * 60 * 60;
+
+      // 남은 시간 계산 (최대 10분으로 제한)
+      const maxTimerSeconds = 10 * 60; // 10분
+      const remainingSeconds = Math.max(
+        0,
+        maxTimerSeconds - (elapsedSeconds % maxTimerSeconds)
+      );
+
+      // 진행률 계산 (10분 주기로 리셋)
+      const cycleProgress =
+        ((elapsedSeconds % maxTimerSeconds) / maxTimerSeconds) * 100;
+
+      return {
+        minutes: Math.floor(remainingSeconds / 60),
+        seconds: remainingSeconds % 60,
+        progress: cycleProgress,
+      };
+    };
+
+    // 초기값 설정
+    const initial = calculateTimeLeft();
+    setTimeLeft({ minutes: initial.minutes, seconds: initial.seconds });
+    setProgress(initial.progress);
+
+    // 매초마다 업데이트
+    const interval = setInterval(() => {
+      const timeData = calculateTimeLeft();
+      setTimeLeft({ minutes: timeData.minutes, seconds: timeData.seconds });
+      setProgress(timeData.progress);
+
+      // 시간이 끝나면 팝업 자동 닫기 (sessionStorage 저장 안함)
+      if (timeData.minutes === 0 && timeData.seconds === 0) {
+        onClose();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, onClose]);
+
+  // 프로그레스에 따른 색상 계산
+  const getProgressColor = (progress) => {
+    if (progress < 30) return "from-red-500 to-red-600";
+    if (progress < 60) return "from-red-500 to-orange-500";
+    if (progress < 90) return "from-orange-500 to-yellow-500";
+    return "from-yellow-500 to-green-500";
+  };
+
+  // 일반 팝업 닫기 (sessionStorage 저장 안함)
+  const handleClose = () => {
+    onClose();
+  };
+
+  // "오늘 하루 안보기" 버튼 클릭 시 (sessionStorage 저장함)
+  const handleDoNotShowToday = () => {
+    const today = new Date().toDateString();
+    sessionStorage.setItem("hide-offer-today", today);
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -139,21 +127,21 @@ const OfferPopup = ({ isOpen, onClose }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+          onClick={handleClose}
         >
           <motion.div
             initial={{ scale: 0.8, opacity: 0, rotateY: -90 }}
             animate={{ scale: 1, opacity: 1, rotateY: 0 }}
             exit={{ scale: 0.8, opacity: 0, rotateY: 90 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600 rounded-3xl p-1 max-w-sm w-full mx-4 relative shadow-2xl"
+            className="bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600 rounded-3xl p-1 max-w-sm w-full mx-4 relative shadow-2xl z-[70]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-white rounded-3xl p-6 relative">
+            <div className="bg-gradient-to-br from-gray-900/95 to-black/95 rounded-3xl p-6 relative">
               <button
-                onClick={onClose}
-                className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                onClick={handleClose}
+                className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-700/50 transition-colors"
               >
                 <X className="w-5 h-5 text-gray-400" />
               </button>
@@ -169,59 +157,97 @@ const OfferPopup = ({ isOpen, onClose }) => {
                     repeat: Infinity,
                     repeatDelay: 3,
                   }}
-                  className="w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4"
+                  className="w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
                 >
                   <Gift className="w-8 h-8 text-white" />
                 </motion.div>
 
+                {/* 실시간 카운트다운 타이머 */}
+                <div className="mb-4">
+                  <div className="text-xs text-gray-400 mb-2">
+                    OFFER EXPIRES IN
+                  </div>
+                  <motion.div
+                    key={`${timeLeft.minutes}-${timeLeft.seconds}`}
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="font-mono text-4xl font-bold text-white bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent mb-2"
+                    style={{ fontFamily: "Courier New, monospace" }}
+                  >
+                    {String(timeLeft.minutes).padStart(2, "0")}:
+                    {String(timeLeft.seconds).padStart(2, "0")}
+                  </motion.div>
+
+                  {/* 동적 프로그레스 바 */}
+                  <div className="relative h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
+                    <motion.div
+                      className={`h-full bg-gradient-to-r ${getProgressColor(
+                        progress
+                      )} rounded-full shadow-lg`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                  </div>
+                </div>
+
                 <img
-                  src="/img/tour_mock_01.jpg"
+                  src="../img/photoism_kdh_frame.jpg"
                   alt="Special Offer"
-                  className="w-full h-24 object-cover rounded-xl mb-4 border border-orange-200"
+                  className="w-full h-24 object-cover rounded-xl mb-4 border border-orange-500/30"
                 />
 
-                <h2 className="text-xl font-bold text-gray-900 mb-2">
-                  Flash Sale Alert!
+                <h2 className="text-xl font-bold text-white mb-2">
+                  Sale Alert!
                 </h2>
 
-                <p className="text-gray-600 mb-4 text-sm">
+                <p className="text-gray-300 mb-4 text-sm">
                   Limited time offer - Book now and save big!
                 </p>
 
-                <div className="bg-gradient-to-r from-orange-100 to-pink-100 rounded-2xl p-4 mb-4 border border-orange-200">
-                  <div className="text-2xl font-bold text-orange-600 mb-1">
-                    <span className="text-lg line-through text-gray-400">
+                <div className="bg-gradient-to-r from-orange-900/50 to-pink-900/50 rounded-2xl p-4 mb-4 border border-orange-500/30">
+                  <div className="text-2xl font-bold text-orange-400 mb-1">
+                    <span className="text-lg line-through text-gray-500">
                       ₩45,000
                     </span>
-                    {" → "}₩35,000
+                    {" → "}₩25,000
                   </div>
-                  <div className="text-sm text-gray-600 mb-2">
-                    Save ₩10,000 + Free Bonuses
+                  <div className="text-sm text-gray-300 mb-2">
+                    Save 50 pounds per person!
                   </div>
-                  <div className="text-xs text-orange-600 font-medium">
-                    Netflix Photo Cards + AR Photo Session
+                  <div className="text-xs text-orange-400 font-medium">
+                    Get your own K-Pop Photo Cards
                   </div>
                 </div>
 
                 <div className="flex gap-2">
                   <button
-                    onClick={onClose}
-                    className="flex-1 bg-gray-100 text-gray-600 py-3 px-4 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    onClick={handleDoNotShowToday}
+                    className="flex-1 bg-gray-800/50 text-gray-300 py-3 px-4 rounded-xl text-sm font-medium hover:bg-gray-700/50 transition-colors border border-gray-600/50"
                   >
-                    Not Now
+                    Do not show today
                   </button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white py-3 px-4 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-shadow"
+                  <NeonButton
+                    variant="warning"
+                    className="flex-1 py-3 px-4 text-sm"
                   >
                     Grab Deal
-                  </motion.button>
+                  </NeonButton>
                 </div>
 
-                <div className="mt-3 text-xs text-gray-500">
-                  Offer expires in 10 minutes
-                </div>
+                {/* 텍스트 강조 */}
+                <motion.div
+                  className="mt-3 text-xs"
+                  animate={{
+                    color: ["#ef4444", "#f97316", "#eab308", "#ef4444"],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🔥 Only {timeLeft.minutes}:
+                  {String(timeLeft.seconds).padStart(2, "0")} left!
+                </motion.div>
               </div>
             </div>
           </motion.div>
@@ -230,16 +256,16 @@ const OfferPopup = ({ isOpen, onClose }) => {
     </AnimatePresence>
   );
 };
-
+// 탭 버튼
 const TabButton = ({ active, onClick, children }) => (
   <motion.button
     onClick={onClick}
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
-    className={`px-6 py-3 font-semibold rounded-2xl transition-all duration-200 ${
+    className={`px-6 py-3 font-semibold rounded-2xl transition-all duration-200 border ${
       active
-        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
-        : "text-gray-600 hover:text-purple-600 hover:bg-purple-50 bg-white/50"
+        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg border-purple-500/50"
+        : "text-gray-300 hover:text-purple-300 hover:bg-gray-800/50 bg-gray-900/50 border-gray-600/30"
     }`}
   >
     {children}
@@ -251,56 +277,26 @@ export default function TourDetail({ tourId = 1, onBack }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
-
-  // 팝업 상태 관리
-  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showOfferPopup, setShowOfferPopup] = useState(false);
-
-  const tourData = tourDetailData[tourId];
 
   // 팝업 로직
   useEffect(() => {
-    // 페이지 로드 후 1.5초 뒤에 웰컴 팝업 표시
-    const welcomeTimer = setTimeout(() => {
-      const hasVisited = localStorage.getItem("tour-visited-" + tourId);
-      if (!hasVisited) {
-        setShowWelcomePopup(true);
-        localStorage.setItem("tour-visited-" + tourId, "true");
-      }
-    }, 1500);
+    // 오늘 하루 팝업을 보지 않겠다는 설정이 있는지 확인
+    const today = new Date().toDateString();
+    const hideToday = sessionStorage.getItem("hide-offer-today");
 
-    return () => clearTimeout(welcomeTimer);
+    if (hideToday !== today) {
+      // 오늘 처음이거나 다른 날이면 팝업 표시
+      setShowOfferPopup(true);
+    }
   }, [tourId]);
 
-  // 웰컴 팝업이 닫힌 후 8초 뒤에 오퍼 팝업 표시
-  useEffect(() => {
-    if (!showWelcomePopup) {
-      const offerTimer = setTimeout(() => {
-        const offerDismissed = localStorage.getItem(
-          "offer-dismissed-" + tourId
-        );
-        const today = new Date().toDateString();
-        if (offerDismissed !== today) {
-          setShowOfferPopup(true);
-        }
-      }, 8000);
-
-      return () => clearTimeout(offerTimer);
-    }
-  }, [showWelcomePopup, tourId]);
-
-  const closeWelcomePopup = () => {
-    setShowWelcomePopup(false);
-  };
-
+  // 팝업 닫기 함수
   const closeOfferPopup = () => {
     setShowOfferPopup(false);
-    // 오늘 하루 동안 오퍼 팝업 표시 안함
-    const today = new Date().toDateString();
-    localStorage.setItem("offer-dismissed-" + tourId, today);
   };
 
-  // 뒤로가기 처리 함수
+  // 뒤로가기
   const handleBack = () => {
     if (onBack && typeof onBack === "function") {
       onBack();
@@ -313,23 +309,29 @@ export default function TourDetail({ tourId = 1, onBack }) {
     }
   };
 
+  const tourData = tourDetailData[tourId];
+
   if (!tourData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20"
-        >
-          <AlertCircle className="w-20 h-20 text-gray-400 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            투어를 찾을 수 없습니다
-          </h2>
-          <p className="text-gray-600">
-            요청하신 투어 정보가 존재하지 않습니다.
-          </p>
-        </motion.div>
-      </div>
+      <BackgroundEffect>
+        <div className="min-h-screen flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
+          >
+            <NeonCard className="p-12">
+              <AlertCircle className="w-20 h-20 text-gray-400 mx-auto mb-6" />
+              <h2 className="text-2xl font-bold text-white mb-4">
+                투어를 찾을 수 없습니다
+              </h2>
+              <p className="text-gray-300">
+                요청하신 투어 정보가 존재하지 않습니다.
+              </p>
+            </NeonCard>
+          </motion.div>
+        </div>
+      </BackgroundEffect>
     );
   }
 
@@ -343,12 +345,14 @@ export default function TourDetail({ tourId = 1, onBack }) {
             transition={{ duration: 0.3 }}
             className="space-y-8"
           >
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+            <NeonCard>
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
                   <Clock className="w-5 h-5 text-white" />
                 </div>
-                투어 일정
+                <GradientText variant="secondary" size="2xl">
+                  투어 일정
+                </GradientText>
               </h3>
               <div className="space-y-6">
                 {tourData.itinerary.map((item, index) => {
@@ -359,21 +363,25 @@ export default function TourDetail({ tourId = 1, onBack }) {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex gap-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:shadow-md transition-shadow"
+                      className="flex gap-6 p-6 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-2xl border border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300"
                     >
                       <div className="flex flex-col items-center flex-shrink-0">
                         <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg mb-2">
                           <Icon className="w-6 h-6 text-white" />
                         </div>
-                        <div className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        <GradientText
+                          variant="primary"
+                          size="lg"
+                          className="font-bold"
+                        >
                           {item.time}
-                        </div>
+                        </GradientText>
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-bold text-gray-900 mb-2 text-lg">
+                        <h4 className="font-bold text-white mb-2 text-lg">
                           {item.location}
                         </h4>
-                        <p className="text-gray-600 leading-relaxed">
+                        <p className="text-gray-300 leading-relaxed">
                           {item.description}
                         </p>
                       </div>
@@ -381,14 +389,16 @@ export default function TourDetail({ tourId = 1, onBack }) {
                   );
                 })}
               </div>
-            </div>
+            </NeonCard>
 
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+            <NeonCard variant="success">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-white" />
                 </div>
-                포함 사항
+                <GradientText variant="success" size="2xl">
+                  포함 사항
+                </GradientText>
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -398,10 +408,10 @@ export default function TourDetail({ tourId = 1, onBack }) {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100"
+                      className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-xl border border-green-500/30"
                     >
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span className="font-medium text-gray-900">{item}</span>
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                      <span className="font-medium text-white">{item}</span>
                     </motion.div>
                   ))}
                 </div>
@@ -412,19 +422,18 @@ export default function TourDetail({ tourId = 1, onBack }) {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100"
+                      className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-xl border border-green-500/30"
                     >
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span className="font-medium text-gray-900">{item}</span>
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                      <span className="font-medium text-white">{item}</span>
                     </motion.div>
                   ))}
                 </div>
               </div>
-            </div>
+            </NeonCard>
           </motion.div>
         );
-
-      case "partnership":
+      case "detail":
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -432,263 +441,114 @@ export default function TourDetail({ tourId = 1, onBack }) {
             transition={{ duration: 0.3 }}
             className="space-y-8"
           >
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-white" />
+            <NeonCard>
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-white" />
                 </div>
-                제휴 파트너 혜택
+                <GradientText variant="secondary" size="2xl">
+                  투어 세부 사항 및 정보
+                </GradientText>
               </h3>
               <div className="space-y-6">
-                {tourData.partnershipBenefits.map((benefit, index) => {
-                  const Icon = benefit.icon;
+                {tourData.itinerary.map((item, index) => {
+                  const Icon = item.icon;
                   return (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex gap-6 p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300"
+                      className="flex gap-6 p-6 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-2xl border border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300"
                     >
-                      <div
-                        className={`w-16 h-16 bg-gradient-to-r ${benefit.gradient} rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0`}
-                      >
-                        <Icon className="w-8 h-8 text-white" />
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg mb-2">
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <GradientText
+                          variant="primary"
+                          size="lg"
+                          className="font-bold"
+                        >
+                          {item.time}
+                        </GradientText>
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-bold text-gray-900 text-lg mb-2">
-                          {benefit.title}
+                        <h4 className="font-bold text-white mb-2 text-lg">
+                          {item.location}
                         </h4>
-                        <p className="text-gray-600 mb-3">
-                          {benefit.description}
+                        <p className="text-gray-300 leading-relaxed">
+                          {item.description}
                         </p>
-                        <div
-                          className={`text-lg font-bold bg-gradient-to-r ${benefit.gradient} bg-clip-text text-transparent`}
-                        >
-                          {benefit.value}
-                        </div>
                       </div>
                     </motion.div>
                   );
                 })}
               </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                파트너십 성과
-              </h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100"
-                >
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <TrendingUp className="w-8 h-8 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
-                    {tourData.businessMetrics.roi}
-                  </div>
-                  <div className="text-gray-600 font-medium">
-                    투자 대비 수익률
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-center p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl border border-blue-100"
-                >
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <Users className="w-8 h-8 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
-                    {tourData.businessMetrics.newCustomers}
-                  </div>
-                  <div className="text-gray-600 font-medium">
-                    신규 고객 유입
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100"
-                >
-                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <Award className="w-8 h-8 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                    {tourData.businessMetrics.brandValue}
-                  </div>
-                  <div className="text-gray-600 font-medium">
-                    브랜드 가치 상승
-                  </div>
-                </motion.div>
-              </div>
-            </div>
+            </NeonCard>
           </motion.div>
         );
-
-      case "analytics":
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-8"
-          >
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-white" />
-                </div>
-                마케팅 성과 분석
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                {tourData.marketingInsights.map((insight, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="p-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-bold text-gray-900">
-                        {insight.metric}
-                      </h4>
-                      <span className="text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
-                        {insight.growth}
-                      </span>
-                    </div>
-                    <div
-                      className={`text-3xl font-bold bg-gradient-to-r ${insight.gradient} bg-clip-text text-transparent mb-2`}
-                    >
-                      {insight.value}
-                    </div>
-                    <p className="text-gray-600">{insight.description}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                  <Target className="w-5 h-5 text-white" />
-                </div>
-                핵심 성과 지표 (KPI)
-              </h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100"
-                >
-                  <BarChart3 className="w-8 h-8 text-purple-600 mb-4" />
-                  <div className="text-2xl font-bold text-gray-900 mb-2">
-                    {tourData.businessMetrics.conversionRate}
-                  </div>
-                  <div className="text-gray-600 font-medium">전환율</div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl border border-blue-100"
-                >
-                  <Target className="w-8 h-8 text-blue-600 mb-4" />
-                  <div className="text-2xl font-bold text-gray-900 mb-2">
-                    {tourData.businessMetrics.socialMentions}
-                  </div>
-                  <div className="text-gray-600 font-medium">
-                    소셜 미디어 언급
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100"
-                >
-                  <Zap className="w-8 h-8 text-green-600 mb-4" />
-                  <div className="text-2xl font-bold text-gray-900 mb-2">
-                    {tourData.businessMetrics.mediaValue}
-                  </div>
-                  <div className="text-gray-600 font-medium">
-                    미디어 노출 가치
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-        );
-
       case "reviews":
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20"
           >
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                <Star className="w-5 h-5 text-white" />
+            <NeonCard variant="warning">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                  <Star className="w-5 h-5 text-white" />
+                </div>
+                <GradientText variant="warning" size="2xl">
+                  고객 리뷰
+                </GradientText>
+              </h3>
+              <div className="space-y-6">
+                {tourData.reviews.map((review, index) => (
+                  <motion.div
+                    key={review.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-6 bg-gradient-to-r from-gray-800/50 to-gray-900/80 rounded-2xl border border-gray-600/30 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div
+                        className={`w-12 h-12 bg-gradient-to-r ${review.gradient} rounded-full flex items-center justify-center text-white font-bold shadow-lg`}
+                      >
+                        {review.avatar}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div className="font-bold text-white">
+                            {review.name}
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            {review.date}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 mt-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < review.rating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-500"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-200 leading-relaxed">
+                      {review.content}
+                    </p>
+                  </motion.div>
+                ))}
               </div>
-              고객 리뷰
-            </h3>
-            <div className="space-y-6">
-              {tourData.reviews.map((review, index) => (
-                <motion.div
-                  key={review.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div
-                      className={`w-12 h-12 bg-gradient-to-r ${review.gradient} rounded-full flex items-center justify-center text-white font-bold shadow-lg`}
-                    >
-                      {review.avatar}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <div className="font-bold text-gray-900">
-                          {review.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {review.date}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 mt-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < review.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 leading-relaxed">
-                    {review.content}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
+            </NeonCard>
           </motion.div>
         );
 
@@ -698,20 +558,17 @@ export default function TourDetail({ tourId = 1, onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
-      {/* 팝업들 */}
-      <WelcomePopup isOpen={showWelcomePopup} onClose={closeWelcomePopup} />
+    <BackgroundEffect>
       <OfferPopup isOpen={showOfferPopup} onClose={closeOfferPopup} />
-
-      <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-50">
+      <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <motion.button
             onClick={handleBack}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-3 text-gray-600 hover:text-purple-600 transition-colors group"
+            className="flex items-center gap-3 text-gray-300 hover:text-purple-300 transition-colors group"
           >
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl flex items-center justify-center group-hover:from-purple-200 group-hover:to-pink-200 transition-colors">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-xl flex items-center justify-center group-hover:from-purple-600/40 group-hover:to-pink-600/40 transition-all duration-300 border border-purple-500/30">
               <ArrowLeft className="w-5 h-5" />
             </div>
             <span className="font-semibold">투어 목록으로 돌아가기</span>
@@ -726,91 +583,87 @@ export default function TourDetail({ tourId = 1, onBack }) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl border border-white/20"
             >
-              <div className="relative">
-                <img
-                  src={tourData.images[selectedImage]}
-                  alt={tourData.title}
-                  className="w-full h-96 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <motion.button
-                    onClick={() => setIsBookmarked(!isBookmarked)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className={`p-3 rounded-full backdrop-blur-sm transition-all duration-200 ${
-                      isBookmarked
-                        ? "bg-yellow-500 text-white shadow-lg"
-                        : "bg-white/20 text-white hover:bg-white/30"
-                    }`}
-                  >
-                    <Bookmark className="w-5 h-5" />
-                  </motion.button>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex gap-3 overflow-x-auto">
-                  {tourData.images.map((image, index) => (
+              <NeonCard className="overflow-hidden">
+                <div className="relative">
+                  <img
+                    src={tourData.images[selectedImage]}
+                    alt={tourData.title}
+                    className="w-full h-96 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute top-4 right-4 flex gap-2">
                     <motion.button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-3 transition-all duration-200 ${
-                        selectedImage === index
-                          ? "border-purple-500 shadow-lg scale-105"
-                          : "border-gray-200 hover:border-purple-300"
+                      onClick={() => setIsBookmarked(!isBookmarked)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`p-3 rounded-full backdrop-blur-sm transition-all duration-200 border ${
+                        isBookmarked
+                          ? "bg-yellow-500 text-white shadow-lg border-yellow-400/50"
+                          : "bg-gray-900/50 text-white hover:bg-gray-800/60 border-gray-600/50"
                       }`}
                     >
-                      <img
-                        src={image}
-                        alt={`View ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
+                      <Bookmark className="w-5 h-5" />
                     </motion.button>
-                  ))}
+                  </div>
                 </div>
-              </div>
+                <div className="p-6">
+                  <div className="flex gap-3 overflow-x-auto">
+                    {tourData.images.map((image, index) => (
+                      <motion.button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-3 transition-all duration-200 ${
+                          selectedImage === index
+                            ? "border-purple-500 shadow-lg shadow-purple-500/25 scale-105"
+                            : "border-gray-600/50 hover:border-purple-400/50"
+                        }`}
+                      >
+                        <img
+                          src={image}
+                          alt={`View ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              </NeonCard>
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20"
             >
-              <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
-                <TabButton
-                  active={activeTab === "overview"}
-                  onClick={() => setActiveTab("overview")}
-                >
-                  상품 개요
-                </TabButton>
-                <TabButton
-                  active={activeTab === "partnership"}
-                  onClick={() => setActiveTab("partnership")}
-                >
-                  기업 제휴
-                </TabButton>
-                <TabButton
-                  active={activeTab === "analytics"}
-                  onClick={() => setActiveTab("analytics")}
-                >
-                  성과 분석
-                </TabButton>
-                <TabButton
-                  active={activeTab === "reviews"}
-                  onClick={() => setActiveTab("reviews")}
-                >
-                  고객 리뷰
-                </TabButton>
-              </div>
+              <NeonCard className="p-8">
+                <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
+                  <TabButton
+                    active={activeTab === "overview"}
+                    onClick={() => setActiveTab("overview")}
+                  >
+                    상품 일정
+                  </TabButton>
+                  <TabButton
+                    active={activeTab === "detail"}
+                    onClick={() => setActiveTab("detail")}
+                  >
+                    상품 상세 사항
+                  </TabButton>
+                  <TabButton
+                    active={activeTab === "reviews"}
+                    onClick={() => setActiveTab("reviews")}
+                  >
+                    고객 리뷰
+                  </TabButton>
+                </div>
 
-              <AnimatePresence mode="wait">
-                {renderTabContent()}
-              </AnimatePresence>
+                <AnimatePresence mode="wait">
+                  {renderTabContent()}
+                </AnimatePresence>
+              </NeonCard>
             </motion.div>
           </div>
 
@@ -819,131 +672,138 @@ export default function TourDetail({ tourId = 1, onBack }) {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20 sticky top-24"
+              className="sticky top-24"
             >
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-sm rounded-full font-semibold border border-purple-200">
-                    {tourData.partnership.primary} ×{" "}
-                    {tourData.partnership.secondary}
-                  </span>
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-3 leading-tight">
-                  {tourData.title}
-                </h1>
-                <p className="text-gray-600 leading-relaxed">
-                  {tourData.subtitle}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5 text-gray-400" />
-                <span className="text-gray-600 font-medium">
-                  {tourData.location}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <span className="font-bold text-lg">{tourData.rating}</span>
-                  <span className="text-gray-500">
-                    ({tourData.reviewCount}개 리뷰)
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
-                  <Clock className="w-5 h-5 text-purple-600" />
-                  <span className="font-medium text-gray-900">
-                    {tourData.duration}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
-                  <Users className="w-5 h-5 text-purple-600" />
-                  <span className="font-medium text-gray-900">
-                    {tourData.groupSize}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
-                  <Calendar className="w-5 h-5 text-purple-600" />
-                  <span className="font-medium text-gray-900">
-                    {tourData.language}
-                  </span>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-200 pt-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                        {tourData.price}
-                      </span>
-                      <span className="text-xl text-gray-400 line-through">
-                        {tourData.originalPrice}
-                      </span>
-                    </div>
-                    <div className="text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
-                      {tourData.discount} 할인
-                    </div>
+              <NeonCard className="p-8">
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="px-3 py-1 bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 text-sm rounded-full font-semibold border border-purple-500/30">
+                      {tourData.partnership.primary} ×{" "}
+                      {tourData.partnership.secondary}
+                    </span>
                   </div>
-                  <motion.button
-                    onClick={() => setIsLiked(!isLiked)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className={`p-3 rounded-2xl transition-all duration-200 ${
-                      isLiked
-                        ? "bg-red-50 text-red-500 shadow-lg"
-                        : "hover:bg-gray-50 text-gray-400"
-                    }`}
-                  >
-                    <Heart
-                      className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`}
-                    />
-                  </motion.button>
+                  <h1 className="text-3xl font-bold text-white mb-3 leading-tight">
+                    {tourData.title}
+                  </h1>
+                  <p className="text-gray-300 leading-relaxed">
+                    {tourData.subtitle}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 mb-4">
+                  <MapPin className="w-5 h-5 text-gray-400" />
+                  <span className="text-gray-300 font-medium">
+                    {tourData.location}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    <span className="font-bold text-lg text-white">
+                      {tourData.rating}
+                    </span>
+                    <span className="text-gray-400">
+                      ({tourData.reviewCount}개 리뷰)
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-4 mb-8">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    지금 예약하기
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full border-2 border-gray-200 text-gray-700 py-4 rounded-2xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Share2 className="w-5 h-5" />
-                    공유하기
-                  </motion.button>
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl border border-purple-500/30">
+                    <Clock className="w-5 h-5 text-purple-400" />
+                    <span className="font-medium text-white">
+                      {tourData.duration}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl border border-purple-500/30">
+                    <Users className="w-5 h-5 text-purple-400" />
+                    <span className="font-medium text-white">
+                      {tourData.groupSize}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl border border-purple-500/30">
+                    <Calendar className="w-5 h-5 text-purple-400" />
+                    <span className="font-medium text-white">
+                      {tourData.language}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="pt-6 border-t border-gray-200">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-                      <Phone className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-600 font-medium">
-                        02-1234-5678
-                      </span>
+                <div className="border-t border-gray-600/50 pt-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <GradientText
+                          variant="primary"
+                          size="3xl"
+                          className="font-bold"
+                        >
+                          {tourData.price}
+                        </GradientText>
+                        <span className="text-xl text-gray-500 line-through">
+                          {tourData.originalPrice}
+                        </span>
+                      </div>
+                      <GradientText
+                        variant="success"
+                        size="sm"
+                        className="font-bold"
+                      >
+                        {tourData.discount} 할인
+                      </GradientText>
                     </div>
-                    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-                      <Mail className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-600 font-medium">
-                        tour@example.com
-                      </span>
+                    <motion.button
+                      onClick={() => setIsLiked(!isLiked)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`p-3 rounded-2xl transition-all duration-200 border ${
+                        isLiked
+                          ? "bg-red-500/20 text-red-400 shadow-lg border-red-500/50"
+                          : "hover:bg-gray-800/50 text-gray-400 border-gray-600/50"
+                      }`}
+                    >
+                      <Heart
+                        className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`}
+                      />
+                    </motion.button>
+                  </div>
+
+                  <div className="space-y-4 mb-8">
+                    <NeonButton className="w-full py-4 font-bold">
+                      지금 예약하기
+                    </NeonButton>
+                    <NeonButton
+                      variant="secondary"
+                      className="w-full py-4 font-semibold flex items-center justify-center gap-2"
+                    >
+                      <Share2 className="w-5 h-5" />
+                      공유하기
+                    </NeonButton>
+                  </div>
+
+                  <div className="pt-6 border-t border-gray-600/50">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-xl border border-gray-600/30">
+                        <Phone className="w-5 h-5 text-gray-400" />
+                        <span className="text-gray-300 font-medium">
+                          02-1234-5678
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-xl border border-gray-600/30">
+                        <Mail className="w-5 h-5 text-gray-400" />
+                        <span className="text-gray-300 font-medium">
+                          tour@example.com
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </NeonCard>
             </motion.div>
           </div>
         </div>
       </div>
-    </div>
+    </BackgroundEffect>
   );
 }

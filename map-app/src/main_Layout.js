@@ -55,7 +55,12 @@ const navigationItems = [
   },
   {
     title: "커뮤니티",
-    url: createPageUrl("CommunityMain"),
+    url: createPageUrl("CommunitySocial"), //게시판
+    icon: Compass,
+  },
+  {
+    title: "한국에서 살아남기",
+    url: createPageUrl("CommunityMain"), //서바이벌키드
     icon: Compass,
   },
 ];
