@@ -4,6 +4,7 @@ import { Button } from "components/ui/button";
 import PlaceSearchInput from "components/directions/PlaceSearchInput";
 import TMapContainer from "components/directions/TMapContainer";
 import { ensureTmap } from "integrations/tmapLoader";
+import { RoutePlan } from "Entities/RoutePlan";
 import {
   Plus,
   Search,
@@ -448,34 +449,109 @@ export default function DirectionsMantineImproved() {
   };
 
   const addDay = () => {
-    setDays((p) => [...p, makeEmptyDay(p.length)]);
-    setActiveDay(days.length);
+    setDays((prev) => {
+      const next = [...prev, makeEmptyDay(prev.length)];
+      setActiveDay(next.length - 1);
+      return next;
+    });
   };
+
   const removeDay = (idx) => {
     if (days.length <= 1) return;
-    setDays((p) =>
-      p
+    const target = days[idx];
+    const label = target?.title || `${idx + 1}일차`;
+    const shouldRemove =
+      typeof window === "undefined"
+        ? true
+        : window.confirm(`${label} 일정을 삭제하시겠어요?`);
+    if (!shouldRemove) return;
+
+    setDays((prev) => {
+      const filtered = prev
         .filter((_, i) => i !== idx)
-        .map((d, i) => ({ ...d, title: `${i + 1}일차` }))
-    );
-    setActiveDay((p) => Math.max(0, p - 1));
+        .map((d, i) => ({ ...d, title: `${i + 1}일차` }));
+      setActiveDay((prevActive) => {
+        if (filtered.length === 0) return 0;
+        if (prevActive > idx) return prevActive - 1;
+        if (prevActive === idx) return Math.max(0, Math.min(idx, filtered.length - 1));
+        return prevActive;
+      });
+      return filtered.length ? filtered : [makeEmptyDay(0)];
+    });
   };
+
   const duplicateDay = (idx) => {
-    setDays((p) => [
-      ...p,
-      {
-        ...p[idx],
+    setDays((prev) => {
+      const clone = {
+        ...prev[idx],
         id: `day-${Date.now()}`,
-        title: `${p.length + 1}일차`,
+        title: `${prev.length + 1}일차`,
         timeline: [],
         summary: null,
         lastRoutes: null,
-      },
-    ]);
-    setActiveDay(days.length);
+      };
+      const next = [...prev, clone];
+      setActiveDay(next.length - 1);
+      return next;
+    });
   };
+
   const saveToBackend = async () => {
-    /* ... (Same as before) ... */
+    try {
+      if (!days.some((d) => d.startLocation && d.endLocation)) {
+        window.alert("저장할 경로가 없습니다. 최소한 출발지와 도착지를 설정해주세요.");
+        return;
+      }
+      const defaultName = days
+        .map((d, idx) => {
+          const start = d.startLocation || `Day ${idx + 1}`;
+          const end = d.endLocation || "";
+          return `${idx + 1}일차 ${start}${end ? ` → ${end}` : ""}`;
+        })
+        .join(", ");
+      const nameInput = window.prompt(
+        "저장할 플랜 이름을 입력하세요.",
+        defaultName || "새 경로 플랜"
+      );
+      if (nameInput === null) return;
+      const trimmedName = nameInput.trim();
+      if (!trimmedName) {
+        window.alert("플랜 이름을 입력해주세요.");
+        return;
+      }
+
+      const normalizedDays = days.map((d) => ({
+        id: d.id,
+        title: d.title,
+        startLocation: d.startLocation,
+        startCoords: d.startCoords,
+        endLocation: d.endLocation,
+        endCoords: d.endCoords,
+        waypoints: (d.waypoints || []).map((w) => ({
+          name: w?.name || "",
+          lat: w?.lat,
+          lng: w?.lng,
+        })),
+        priority: d.priority,
+        startTime: d.startTime,
+        stays: Array.isArray(d.stays) ? [...d.stays] : [],
+        timeline: Array.isArray(d.timeline) ? [...d.timeline] : [],
+        summary: d.summary || null,
+      }));
+
+      await RoutePlan.save({
+        name: trimmedName,
+        days: normalizedDays,
+        mapProvider,
+        routeMode,
+        activeDay,
+      });
+
+      window.alert("경로 플랜이 저장되었습니다. 일정 플래너에서 관리할 수 있어요.");
+    } catch (error) {
+      console.error("Failed to save route plan", error);
+      window.alert("경로 플랜 저장 중 오류가 발생했습니다.");
+    }
   };
 
   const allStopsForReorder = useMemo(
@@ -577,20 +653,36 @@ export default function DirectionsMantineImproved() {
           </Button>
         </motion.div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {days.map((d, i) => (
-            <button
-              key={d.id}
-              onClick={() => setActiveDay(i)}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                activeDay === i
-                  ? "bg-indigo-600 text-white font-semibold"
-                  : "bg-slate-700/50 hover:bg-slate-700 text-slate-300"
-              }`}
-            >
-              {d.title}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+          {days.map((d, i) => {
+            const isActive = activeDay === i;
+            return (
+              <div key={d.id} className="relative group">
+                <button
+                  onClick={() => setActiveDay(i)}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-indigo-600 text-white font-semibold"
+                      : "bg-slate-700/50 hover:bg-slate-700 text-slate-300"
+                  }`}
+                >
+                  {d.title}
+                </button>
+                {days.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeDay(i)}
+                    className={`absolute -top-2 -right-2 rounded-full border border-slate-800 bg-slate-900/80 p-1 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-rose-300 hover:bg-slate-800 ${
+                      isActive ? "opacity-100" : ""
+                    }`}
+                    aria-label={`${d.title} 삭제`}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
           <Button
             onClick={addDay}
             size="icon"

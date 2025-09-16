@@ -1,63 +1,186 @@
-import React, { useState, createContext, useContext } from "react";
+/* global globalThis */
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 
-// Context 생성
 const AuthContext = createContext();
+const STORAGE_KEY = "travelk_auth_user";
 
-// Context를 사용하기 위한 커스텀 훅
-export const useAuth = () => {
-  return useContext(AuthContext);
+const readStoredUser = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.warn("Failed to read stored auth user:", error);
+    return null;
+  }
 };
 
+const writeStoredUser = (user) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (user) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    } else {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  } catch (error) {
+    console.warn("Failed to persist auth user:", error);
+  }
+};
+
+const decodeJwt = (token) => {
+  if (!token) return null;
+  try {
+    const base64 = token.split(".")[1];
+    if (!base64) return null;
+    const normalized = base64.replace(/-/g, "+").replace(/_/g, "/");
+    const padding =
+      normalized.length % 4 === 0
+        ? ""
+        : "=".repeat(4 - (normalized.length % 4));
+
+    const decodeBase64 = (input) => {
+      if (typeof window !== "undefined" && typeof window.atob === "function") {
+        return window.atob(input);
+      }
+      if (
+        typeof globalThis !== "undefined" &&
+        typeof globalThis.atob === "function"
+      ) {
+        return globalThis.atob(input);
+      }
+      return "";
+    };
+
+    const decoded = decodeBase64(normalized + padding);
+    const json = decodeURIComponent(
+      decoded
+        .split("")
+        .map((char) => "%" + ("00" + char.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(json);
+  } catch (error) {
+    console.error("Failed to decode Google credential:", error);
+    return null;
+  }
+};
+
+export const useAuth = () => useContext(AuthContext);
+
 export const AuthProvider = ({ children }) => {
-  const [profile, setProfile] = useState(null); // 사용자 프로필 상태
+  const [user, setUser] = useState(() => readStoredUser());
 
-  // useGoogleLogin이 반환하는 로그인 함수를 'googleLogin' 상수에 할당
-  const googleLogin = useGoogleLogin({
-    ux_mode: "redirect",
-    redirect_uri: window.location.origin,
-    onSuccess: async (tokenResponse) => {
+  const persistUser = useCallback((nextUser) => {
+    setUser(nextUser);
+    writeStoredUser(nextUser);
+  }, []);
+
+  const requestGoogleProfile = useCallback(async (accessToken) => {
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: "Bearer " + accessToken },
+    });
+    if (!res.ok) {
+      throw new Error("Failed to fetch Google user profile");
+    }
+    return res.json();
+  }, []);
+
+  const handleGoogleLoginError = useCallback((error) => {
+    console.error("Google login failed:", error);
+  }, []);
+
+  const handleGoogleLoginSuccess = useCallback(
+    async (response) => {
       try {
-        // [수정] access_token을 Authorization 헤더에 담아 API 요청
-        const res = await fetch(
-          "https://www.googleapis.com/oauth2/v3/userinfo",
-          {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-            },
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch user info");
+        if (response?.access_token) {
+          const profile = await requestGoogleProfile(response.access_token);
+          const normalized = {
+            id: profile.sub,
+            name: profile.name || profile.email || "Google User",
+            email: profile.email,
+            picture: profile.picture,
+            provider: "google",
+            accessToken: response.access_token,
+            tokenType: response.token_type,
+            expiresAt: response.expires_in
+              ? Date.now() + Number(response.expires_in) * 1000
+              : null,
+          };
+          persistUser(normalized);
+          return;
         }
-        const data = await res.json();
-        setProfile(data); // 프로필 정보 저장
+
+        if (response?.credential) {
+          const payload = decodeJwt(response.credential);
+          if (!payload) {
+            throw new Error("Unable to parse Google credential");
+          }
+          const normalized = {
+            id: payload.sub,
+            name: payload.name || payload.email || "Google User",
+            email: payload.email,
+            picture: payload.picture,
+            provider: "google",
+            idToken: response.credential,
+          };
+          persistUser(normalized);
+          return;
+        }
+
+        console.warn("Received unsupported Google login response", response);
       } catch (error) {
-        console.error("사용자 정보 요청 실패:", error);
+        console.error("Failed to process Google login response:", error);
+        handleGoogleLoginError(error);
       }
     },
-    onError: (error) => {
-      console.log("Login Failed:", error);
-    },
+    [persistUser, requestGoogleProfile, handleGoogleLoginError]
+  );
+
+  const googlePopupLogin = useGoogleLogin({
+    flow: "implicit",
+    ux_mode: "popup",
+    scope: "openid profile email",
+    onSuccess: handleGoogleLoginSuccess,
+    onError: handleGoogleLoginError,
   });
 
-  // [수정] login 함수가 'google' 문자열을 받을 경우, googleLogin 함수를 호출하도록 수정
-  const login = (provider) => {
-    if (provider === "google") {
-      googleLogin(); // 'googlelogin' 이 아니라 'googleLogin'
-    }
-    // 여기에 나중에 else if (provider === 'microsoft') { ... } 를 추가할 수 있습니다.
-  };
+  const login = useCallback(
+    (provider) => {
+      if (provider === "google") {
+        googlePopupLogin();
+      }
+    },
+    [googlePopupLogin]
+  );
 
-  const logout = () => {
-    // Google 로그아웃 관련 로직이 필요하다면 추가할 수 있습니다.
-    // 현재는 프로필 정보만 초기화합니다.
-    setProfile(null);
-  };
+  const logout = useCallback(() => {
+    persistUser(null);
+  }, [persistUser]);
 
-  // [수정] value 객체에 올바른 login 함수를 전달
-  const value = { profile, login, logout };
+  const contextValue = useMemo(
+    () => ({
+      user,
+      profile: user,
+      isAuthenticated: !!user,
+      login,
+      logout,
+      handleLoginSuccess: handleGoogleLoginSuccess,
+      handleLoginError: handleGoogleLoginError,
+      handleGoogleLoginSuccess,
+      handleGoogleLoginError,
+    }),
+    [user, login, logout, handleGoogleLoginSuccess, handleGoogleLoginError]
+  );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
 };
