@@ -5,6 +5,7 @@ import {
   translateText,
 } from "../../integrations/translator";
 import { speakText, stopTTS } from "../../integrations/tts";
+import { startSpeechRecognition, stopSTT } from "../../integrations/stt";
 import { NeonCard, NeonButton, GradientText } from "../ui/NeonTheme";
 
 // 커스텀 스크롤바 스타일
@@ -36,6 +37,8 @@ export default function QuickTranslator() {
   const [playingAudio, setPlayingAudio] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [isFocused, setIsFocused] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const isTranslatingRef = useRef(false);
   const translationCompleteRef = useRef(false);
   const lastInputTextRef = useRef("");
@@ -120,10 +123,11 @@ export default function QuickTranslator() {
     }
   };
 
-  // 컴포넌트 언마운트 시 TTS 정리
+  // 컴포넌트 언마운트 시 TTS 및 STT 정리
   useEffect(() => {
     return () => {
       stopTTS();
+      stopSTT();
     };
   }, []);
 
@@ -252,36 +256,143 @@ export default function QuickTranslator() {
     }
   };
 
+  // 음성 인식 시작
+  const handleStartListening = async () => {
+    if (isListening) return;
+    
+    // 기존 텍스트 초기화
+    setInputText("");
+    setTranslationResults(null);
+    setDetectedLanguage(null);
+    setIsDetecting(false);
+    setDetectionError("");
+    
+    // 언어 감지 재개
+    translationCompleteRef.current = false;
+    lastInputTextRef.current = "";
+    
+    setIsListening(true);
+    setIsProcessing(false);
+    
+    try {
+      await startSpeechRecognition(
+        (recognizedText) => {
+          // 음성 인식 성공 (중지 버튼을 눌렀을 때만 호출됨)
+          setInputText(recognizedText);
+          setIsListening(false);
+          setIsProcessing(false);
+        },
+        (error) => {
+          // 음성 인식 실패
+          setDetectionError(`음성 인식 오류: ${error}`);
+          setIsListening(false);
+          setIsProcessing(false);
+        }
+      );
+    } catch (error) {
+      setDetectionError(`음성 인식 오류: ${error.message}`);
+      setIsListening(false);
+      setIsProcessing(false);
+    }
+  };
+
+  // 음성 인식 중지
+  const handleStopListening = () => {
+    if (!isListening) return;
+    
+    // 즉시 처리 중 상태로 변경
+    setIsListening(false);
+    setIsProcessing(true);
+    
+    stopSTT();
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 overflow-x-hidden overflow-y-hidden">
       {/* 실시간 번역기 */}
       <NeonCard title="🌐 실시간 번역기" variant="success" className="p-6">
         <div className="space-y-4">
           <div>
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  // 즉시 번역 상태 설정하여 언어 감지 useEffect가 실행되지 않도록 함
-                  isTranslatingRef.current = true;
-                  translationCompleteRef.current = true; // 번역 완료 후 언어 감지 차단
-                  handleTranslate();
-                }
-              }}
-              placeholder="번역할 텍스트를 입력하세요... (언어가 자동으로 감지됩니다)"
-              className="w-full p-3 bg-black/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              rows={3}
-            />
+            {/* 입력란과 마이크 버튼 */}
+            <div className="flex gap-2">
+              {/* 마이크 버튼 */}
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={isListening ? handleStopListening : handleStartListening}
+                  disabled={isProcessing}
+                  className={`p-3 rounded-lg transition-all duration-200 ${
+                    isListening
+                      ? "bg-red-600 hover:bg-red-700 animate-pulse"
+                      : isProcessing
+                      ? "bg-yellow-600 hover:bg-yellow-700 animate-pulse"
+                      : "bg-purple-600 hover:bg-purple-700"
+                  } ${isProcessing ? "cursor-not-allowed" : ""}`}
+                  title={
+                    isListening 
+                      ? "음성 인식 중지" 
+                      : isProcessing 
+                      ? "음성 인식 처리 중..." 
+                      : "음성 인식 시작"
+                  }
+                >
+                  {isListening ? (
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zm4-1a1 1 0 00-1 1v4a1 1 0 102 0V7a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  ) : isProcessing ? (
+                    <svg className="w-5 h-5 text-white animate-spin" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+
+              {/* 텍스트 입력란 */}
+              <textarea
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    // 즉시 번역 상태 설정하여 언어 감지 useEffect가 실행되지 않도록 함
+                    isTranslatingRef.current = true;
+                    translationCompleteRef.current = true; // 번역 완료 후 언어 감지 차단
+                    handleTranslate();
+                  }
+                }}
+                placeholder="번역할 텍스트를 입력하세요... (언어가 자동으로 감지됩니다)"
+                className="flex-1 p-3 bg-black/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                rows={3}
+              />
+            </div>
 
             {/* 언어 감지 상태 표시 */}
             {isDetecting && (
               <div className="flex items-center gap-2 mt-2 text-sm text-blue-300">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                 언어를 감지하고 있습니다...
+              </div>
+            )}
+
+            {/* 음성 인식 상태 표시 */}
+            {isListening && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-red-300">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                음성을 듣고 있습니다... 말씀해주세요
+              </div>
+            )}
+
+            {/* 음성 인식 처리 중 상태 표시 */}
+            {isProcessing && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-yellow-300">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                음성을 텍스트로 변환하고 있습니다...
               </div>
             )}
 
@@ -294,11 +405,6 @@ export default function QuickTranslator() {
                     <strong>
                       {getLanguageName(detectedLanguage.language)}
                     </strong>
-                    {detectedLanguage.score && (
-                      <span className="text-xs ml-2">
-                        (신뢰도: {Math.round(detectedLanguage.score * 100)}%)
-                      </span>
-                    )}
                   </span>
                 </div>
               </div>
