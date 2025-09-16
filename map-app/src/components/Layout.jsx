@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import BrandLogo from "components/BrandLogo";
+import LanguageButtons from "components/ui/LanguageButtons";
 import { useAuth } from "context/AuthContext";
 import {
   LogOut,
@@ -360,12 +361,51 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/80 backdrop-blur-sm border-r border-white/20 flex flex-col transform transition-transform duration-200 ${
-          menuOpen ? "translate-x-0" : "-translate-x-full"
-        } md:static md:translate-x-0`}
-      >
+    <div className="min-h-screen w-full bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
+      {/* 상단 네비게이션 바 - 메인 홈페이지와 동일한 스타일 */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* 로고 및 제목 */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm font-bold">T</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-white">AI Travel Planner</h1>
+              </div>
+            </div>
+
+            {/* 우측 컨트롤 - 언어 선택 버튼 */}
+            <div className="flex items-center gap-3">
+              <LanguageButtons />
+              
+              {/* 모바일 햄버거 메뉴 버튼 */}
+              <button
+                className="md:hidden hover:bg-white/10 p-2 rounded-lg transition-colors duration-200"
+                aria-label="Menu"
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" className="text-white">
+                  <path
+                    d="M3 6h14M3 10h14M3 14h14"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex pt-16">
+        <aside
+          className={`fixed inset-y-0 left-0 z-40 w-72 bg-white/80 backdrop-blur-sm border-r border-white/20 flex flex-col transform transition-transform duration-200 ${
+            menuOpen ? "translate-x-0" : "-translate-x-full"
+          } md:static md:translate-x-0`}
+        >
         <div className="border-b border-gray-200/50 p-6">
           <Link
             to="/"
@@ -481,31 +521,13 @@ export default function Layout({ children }) {
       )}
 
       <main className="flex-1 flex flex-col">
-        <header className="bg-white/80 backdrop-blur-md border-b border-white/20 px-6 py-4 md:hidden sticky top-0 z-50">
-          <div className="flex items-center gap-4">
-            <button
-              className="hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200"
-              aria-label="Menu"
-              onClick={() => setMenuOpen((v) => !v)}
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20">
-                <path
-                  d="M3 6h14M3 10h14M3 14h14"
-                  stroke="#444"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-            <h1 className="text-xl font-semibold">AI Travel Planner</h1>
-          </div>
-        </header>
         <div className="flex-1 overflow-auto">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
             {children}
           </div>
         </div>
       </main>
+      </div>
     </div>
   );
 }

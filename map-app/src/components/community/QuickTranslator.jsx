@@ -148,7 +148,7 @@ export default function QuickTranslator() {
     if (isTranslating || isTranslatingRef.current) {
       return;
     }
-    
+
     if (!inputText.trim()) {
       setDetectedLanguage(null);
       setIsDetecting(false);
@@ -161,7 +161,10 @@ export default function QuickTranslator() {
     }
 
     // 번역 완료 후 텍스트가 변경되었으면 언어 감지 재개 및 이전 번역 결과 제거
-    if (translationCompleteRef.current && inputText !== lastInputTextRef.current) {
+    if (
+      translationCompleteRef.current &&
+      inputText !== lastInputTextRef.current
+    ) {
       translationCompleteRef.current = false;
       // setTranslationResults(null); // 이전 번역 결과 제거
     }
@@ -203,7 +206,7 @@ export default function QuickTranslator() {
       translationCompleteRef.current = true;
     }
     setIsTranslating(true);
-    
+
     setTranslationResults(null);
 
     try {
@@ -222,7 +225,7 @@ export default function QuickTranslator() {
             translateText(inputText, "ja"),
             translateText(inputText, "zh-Hans"),
           ]);
-          
+
           setTranslationResults({
             english,
             japanese,
@@ -239,7 +242,7 @@ export default function QuickTranslator() {
         }
         setIsTranslating(false);
         isTranslatingRef.current = false;
-        
+
         // 번역 완료 후 언어 감지 완전 차단
         translationCompleteRef.current = true;
       }
@@ -250,7 +253,7 @@ export default function QuickTranslator() {
       });
       setIsTranslating(false);
       isTranslatingRef.current = false;
-      
+
       // 에러 발생 시에도 언어 감지 완전 차단
       translationCompleteRef.current = true;
     }
@@ -259,21 +262,21 @@ export default function QuickTranslator() {
   // 음성 인식 시작
   const handleStartListening = async () => {
     if (isListening) return;
-    
+
     // 기존 텍스트 초기화
     setInputText("");
     setTranslationResults(null);
     setDetectedLanguage(null);
     setIsDetecting(false);
     setDetectionError("");
-    
+
     // 언어 감지 재개
     translationCompleteRef.current = false;
     lastInputTextRef.current = "";
-    
+
     setIsListening(true);
     setIsProcessing(false);
-    
+
     try {
       await startSpeechRecognition(
         (recognizedText) => {
@@ -299,11 +302,11 @@ export default function QuickTranslator() {
   // 음성 인식 중지
   const handleStopListening = () => {
     if (!isListening) return;
-    
+
     // 즉시 처리 중 상태로 변경
     setIsListening(false);
     setIsProcessing(true);
-    
+
     stopSTT();
   };
 
@@ -317,7 +320,9 @@ export default function QuickTranslator() {
             <div className="flex gap-3 items-center">
               {/* 마이크 버튼 */}
               <button
-                onClick={isListening ? handleStopListening : handleStartListening}
+                onClick={
+                  isListening ? handleStopListening : handleStartListening
+                }
                 disabled={isProcessing}
                 className={`relative p-3 rounded-full transition-all duration-300 transform hover:scale-105 flex-shrink-0 ${
                   isListening
@@ -327,36 +332,61 @@ export default function QuickTranslator() {
                     : "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
                 } ${isProcessing ? "cursor-not-allowed" : "cursor-pointer"}`}
                 title={
-                  isListening 
-                    ? "음성 인식 중지" 
-                    : isProcessing 
-                    ? "음성 인식 처리 중..." 
+                  isListening
+                    ? "음성 인식 중지"
+                    : isProcessing
+                    ? "음성 인식 처리 중..."
                     : "음성 인식 시작"
                 }
               >
                 {/* 버튼 내부 원형 효과 */}
-                <div className={`absolute inset-0 rounded-full ${
-                  isListening 
-                    ? "bg-red-400 opacity-30 animate-ping" 
-                    : isProcessing 
-                    ? "bg-yellow-400 opacity-30 animate-ping"
-                    : ""
-                }`}></div>
-                
+                <div
+                  className={`absolute inset-0 rounded-full ${
+                    isListening
+                      ? "bg-red-400 opacity-30 animate-ping"
+                      : isProcessing
+                      ? "bg-yellow-400 opacity-30 animate-ping"
+                      : ""
+                  }`}
+                ></div>
+
                 {/* 아이콘 */}
                 <div className="relative z-10">
                   {isListening ? (
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 6h12v12H6z"/>
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M6 6h12v12H6z" />
                     </svg>
                   ) : isProcessing ? (
-                    <svg className="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="w-5 h-5 text-white animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                   ) : (
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z" />
                     </svg>
                   )}
                 </div>
@@ -369,7 +399,7 @@ export default function QuickTranslator() {
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     // 즉시 번역 상태 설정하여 언어 감지 useEffect가 실행되지 않도록 함
                     isTranslatingRef.current = true;
@@ -378,10 +408,10 @@ export default function QuickTranslator() {
                   }
                 }}
                 placeholder={
-                  isListening 
-                    ? "음성을 듣고 있습니다... 말씀해주세요" 
-                    : isProcessing 
-                    ? "음성을 텍스트로 변환하고 있습니다..." 
+                  isListening
+                    ? "음성을 듣고 있습니다... 말씀해주세요"
+                    : isProcessing
+                    ? "음성을 텍스트로 변환하고 있습니다..."
                     : "번역할 텍스트를 입력하세요... (언어가 자동으로 감지됩니다)"
                 }
                 className="flex-1 p-3 bg-black/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
