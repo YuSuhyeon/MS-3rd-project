@@ -18,7 +18,8 @@ export default function SurvivalKit() {
   const [translateText, setTranslateText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
   const [isTranslating, setIsTranslating] = useState(false);
-
+  const [selectedGuide, setSelectedGuide] = useState(null);
+  const { t } = useTranslation();
   const handleTranslate = async () => {
     if (!translateText.trim()) return;
 

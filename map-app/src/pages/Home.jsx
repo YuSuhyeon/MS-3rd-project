@@ -353,8 +353,10 @@ const KPopTravelHome = () => {
                 </p>
               </div>
             </motion.div>
-
-            {/* Login/Profile section */}
+            <div className="flex items-center gap-4">
+              <LanguageButtons />
+            </div>
+            {/* Login/Profile section 
             {profile ? (
               <div className="flex items-center gap-4">
                 <LanguageButtons />
@@ -381,7 +383,7 @@ const KPopTravelHome = () => {
                   {t("login.login")}
                 </NeonButton>
               </div>
-            )}
+            )}*/}
           </div>
         </div>
       </motion.nav>
@@ -738,7 +740,7 @@ const KPopTravelHome = () => {
         </div>
       </footer>
 
-      {/* Login Modal */}
+      {/* Login Modal 
       <AnimatePresence>
         {showLoginModal && (
           <motion.div
@@ -862,7 +864,7 @@ const KPopTravelHome = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>*/}
     </BackgroundEffect>
   );
 };
