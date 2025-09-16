@@ -11,8 +11,11 @@ import {
   ResponsiveGrid,
   DataDisplay,
 } from "../ui/NeonTheme";
+import { useTranslation } from "react-i18next";
+
 export default function SurvivalKit() {
   const [activeSection, setActiveSection] = useState("menu");
+  const { t } = useTranslation("SurvivalKit");
 
   const cultureGuide = [
     {
@@ -58,19 +61,19 @@ export default function SurvivalKit() {
           {[
             {
               id: "menu",
-              label: "Vision OCR",
+              label: t("vision_ocr"),
               icon: <Camera />,
               variant: "primary",
             },
             {
               id: "translate",
-              label: "빠른 통역",
+              label: t("quick_translator"),
               icon: <Globe />,
               variant: "success",
             },
             {
               id: "culture",
-              label: "한국 문화 가이드",
+              label: t("culture_guide"),
               icon: <BookOpen />,
               variant: "warning",
             },

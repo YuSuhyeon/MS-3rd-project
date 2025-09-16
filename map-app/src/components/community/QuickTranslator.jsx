@@ -7,6 +7,7 @@ import {
 import { speakText, stopTTS } from "../../integrations/tts";
 import { startSpeechRecognition, stopSTT } from "../../integrations/stt";
 import { NeonCard, NeonButton, GradientText } from "../ui/NeonTheme";
+import { useTranslation } from "react-i18next";
 
 // 커스텀 스크롤바 스타일
 const scrollbarStyles = `
@@ -28,6 +29,7 @@ const scrollbarStyles = `
 `;
 
 export default function QuickTranslator() {
+  const { t, i18n } = useTranslation("QuickTranslator");
   const [inputText, setInputText] = useState("");
   const [translationResults, setTranslationResults] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -35,7 +37,7 @@ export default function QuickTranslator() {
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState("");
   const [playingAudio, setPlayingAudio] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [selectedCategory, setSelectedCategory] = useState(t("all"));
   const [isFocused, setIsFocused] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -45,45 +47,45 @@ export default function QuickTranslator() {
 
   // 자주 쓰는 표현 데이터
   const quickPhrases = [
-    { korean: "안녕하세요", english: "Hello", category: "인사" },
-    { korean: "감사합니다", english: "Thank you", category: "인사" },
-    { korean: "죄송합니다", english: "Sorry", category: "인사" },
+    { korean: "안녕하세요", english: "Hello", category: t("greeting") },
+    { korean: "감사합니다", english: "Thank you", category: t("greeting") },
+    { korean: "죄송합니다", english: "Sorry", category: t("greeting") },
     {
       korean: "화장실이 어디에 있나요?",
       english: "Where is the bathroom?",
-      category: "위치",
+      category: t("location"),
     },
-    { korean: "얼마예요?", english: "How much is it?", category: "가격" },
-    { korean: "도와주세요", english: "Help me", category: "도움" },
+    { korean: "얼마예요?", english: "How much is it?", category: t("price") },
+    { korean: "도와주세요", english: "Help me", category: t("help") },
     {
       korean: "지하철역이 어디에 있나요?",
       english: "Where is the subway station?",
-      category: "교통",
+      category: t("transport"),
     },
-    { korean: "맛있어요", english: "It's delicious", category: "음식" },
-    { korean: "도착했어요", english: "I've arrived", category: "상태" },
+    { korean: "맛있어요", english: "It's delicious", category: t("food") },
+    { korean: "도착했어요", english: "I've arrived", category: t("status") },
     {
       korean: "카드로 결제할 수 있나요?",
       english: "Can I pay by card?",
-      category: "결제",
+      category: t("payment"),
     },
     {
       korean: "영수증 주세요",
       english: "Please give me a receipt",
-      category: "결제",
+      category: t("payment"),
     },
     {
       korean: "메뉴 주세요",
       english: "Please give me the menu",
-      category: "음식",
+      category: t("food"),
     },
-    { korean: "물 주세요", english: "Please give me water", category: "음식" },
+    { korean: "물 주세요", english: "Please give me water", category: t("food") },
     {
       korean: "계산서 주세요",
       english: "Please give me the bill",
-      category: "결제",
+      category: t("payment"),
     },
-    { korean: "포장해주세요", english: "Please wrap it up", category: "음식" },
+    { korean: "포장해주세요", english: "Please wrap it up", category: t("food") },
   ];
 
   // 카테고리별 표현 그룹화
@@ -96,11 +98,11 @@ export default function QuickTranslator() {
   }, {});
 
   // 모든 카테고리 목록
-  const categories = ["전체", ...Object.keys(groupedPhrases)];
+  const categories = [t("all"), ...Object.keys(groupedPhrases)];
 
   // 선택된 카테고리에 따른 필터링된 표현
   const filteredPhrases =
-    selectedCategory === "전체"
+    selectedCategory === t("all")
       ? quickPhrases
       : groupedPhrases[selectedCategory] || [];
 
@@ -130,6 +132,11 @@ export default function QuickTranslator() {
       stopSTT();
     };
   }, []);
+
+  // 언어 변경 시 selectedCategory 업데이트
+  useEffect(() => {
+    setSelectedCategory(t("all"));
+  }, [i18n.language, t]);
 
   // 커스텀 스크롤바 스타일 주입
   useEffect(() => {
@@ -184,7 +191,7 @@ export default function QuickTranslator() {
         setDetectedLanguage(detection);
         lastInputTextRef.current = inputText; // 언어 감지 완료 후 텍스트 저장
       } catch (error) {
-        setDetectionError("언어 감지 중 오류가 발생했습니다.");
+        setDetectionError(t("language_detection_error"));
         console.error("Language detection error:", error);
       } finally {
         setIsDetecting(false);
@@ -213,7 +220,7 @@ export default function QuickTranslator() {
       // 언어가 감지되지 않은 경우
       if (!detectedLanguage) {
         setTranslationResults({
-          error: "⚠️ 언어를 감지할 수 없습니다. 텍스트를 다시 입력해주세요.",
+          error: t("language_detection_error"),
         });
         setIsTranslating(false);
         return;
@@ -287,13 +294,13 @@ export default function QuickTranslator() {
         },
         (error) => {
           // 음성 인식 실패
-          setDetectionError(`음성 인식 오류: ${error}`);
+          setDetectionError(`${t("speech_recognition_error")}: ${error}`);
           setIsListening(false);
           setIsProcessing(false);
         }
       );
     } catch (error) {
-      setDetectionError(`음성 인식 오류: ${error.message}`);
+      setDetectionError(`${t("speech_recognition_error")}: ${error.message}`);
       setIsListening(false);
       setIsProcessing(false);
     }
@@ -313,7 +320,7 @@ export default function QuickTranslator() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 overflow-x-hidden overflow-y-hidden">
       {/* 실시간 번역기 */}
-      <NeonCard title="🌐 실시간 번역기" variant="success" className="p-6">
+      <NeonCard title={`🌐 ${t("real_time_translator")}`} variant="success" className="p-6">
         <div className="space-y-4">
           <div>
             {/* 입력란과 마이크 버튼 */}
@@ -333,10 +340,10 @@ export default function QuickTranslator() {
                 } ${isProcessing ? "cursor-not-allowed" : "cursor-pointer"}`}
                 title={
                   isListening
-                    ? "음성 인식 중지"
+                    ? t("stop_listening")
                     : isProcessing
-                    ? "음성 인식 처리 중..."
-                    : "음성 인식 시작"
+                    ? t("processing_listening")
+                    : t("start_listening")
                 }
               >
                 {/* 버튼 내부 원형 효과 */}
@@ -409,10 +416,10 @@ export default function QuickTranslator() {
                 }}
                 placeholder={
                   isListening
-                    ? "음성을 듣고 있습니다... 말씀해주세요"
+                    ? t("listening")
                     : isProcessing
-                    ? "음성을 텍스트로 변환하고 있습니다..."
-                    : "번역할 텍스트를 입력하세요... (언어가 자동으로 감지됩니다)"
+                    ? t("processing_text_conversion")
+                    : t("input_text")
                 }
                 className="flex-1 p-3 bg-black/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 rows={3}
@@ -427,7 +434,7 @@ export default function QuickTranslator() {
                   <div className="w-1 h-1 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
                   <div className="w-1 h-1 bg-blue-300 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
                 </div>
-                <span className="text-gray-300 text-sm font-medium">언어를 감지하고 있습니다...</span>
+                <span className="text-gray-300 text-sm font-medium">{t("detecting_language")}</span>
               </div>
             )}
 
@@ -437,7 +444,7 @@ export default function QuickTranslator() {
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-gray-300 text-sm font-medium">
-                    감지된 언어: <span className="text-green-400 font-semibold">{getLanguageName(detectedLanguage.language)}</span>
+                    {t("detected_language")}: <span className="text-green-400 font-semibold">{getLanguageName(detectedLanguage.language)}</span>
                   </span>
                 </div>
               </div>
@@ -472,14 +479,14 @@ export default function QuickTranslator() {
               {isTranslating ? (
                 <>
                   <div className="w-4 h-4 border-2 border-gray-300 border-t-white rounded-full animate-spin"></div>
-                  <span>번역 중...</span>
+                  <span>{t("translating")}</span>
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>
-                  <span>번역하기</span>
+                  <span>{t("translate")}</span>
                 </>
               )}
             </div>
@@ -489,7 +496,7 @@ export default function QuickTranslator() {
             <div className="mt-4 p-4 bg-gray-800/50 border border-gray-600 rounded-lg">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-300 text-sm font-medium">번역 결과</span>
+                <span className="text-gray-300 text-sm font-medium">{t("translation_results")}</span>
               </div>
 
               {translationResults.error ? (
@@ -517,7 +524,7 @@ export default function QuickTranslator() {
                             ? "bg-blue-600 text-white"
                             : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                         }`}
-                        title="음성으로 듣기"
+                        title={t("listen_to_audio")}
                       >
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
@@ -544,7 +551,7 @@ export default function QuickTranslator() {
                             ? "bg-blue-600 text-white"
                             : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                         }`}
-                        title="음성으로 듣기"
+                        title={t("listen_to_audio")}
                       >
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
@@ -571,7 +578,7 @@ export default function QuickTranslator() {
                             ? "bg-blue-600 text-white"
                             : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                         }`}
-                        title="음성으로 듣기"
+                        title={t("listen_to_audio")}
                       >
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
@@ -599,7 +606,7 @@ export default function QuickTranslator() {
                           ? "bg-blue-600 text-white"
                           : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                       }`}
-                      title="음성으로 듣기"
+                      title={t("listen_to_audio")}
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
@@ -616,7 +623,7 @@ export default function QuickTranslator() {
 
       {/* 자주 쓰는 표현 */}
       <NeonCard
-        title="⚡ 자주 쓰는 표현"
+        title={`⚡ ${t("frequently_used_expressions")}`}
         variant="warning"
         className="p-6 overflow-x-hidden"
       >
@@ -693,7 +700,7 @@ export default function QuickTranslator() {
                     }}
                     className="text-xs bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1.5 rounded-full hover:from-green-700 hover:to-blue-700 transition-colors"
                   >
-                    사용하기
+                    {t("use")}
                   </button>
                 </div>
               </div>
