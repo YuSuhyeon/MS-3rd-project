@@ -14,6 +14,7 @@ export function stopTTS() {
   synthesizerRef = null;
 }
 
+
 export async function speakText(text, lang = 'ko') {
   stopTTS();
   if (!text) return;
@@ -36,3 +37,4 @@ export async function speakText(text, lang = 'ko') {
   u.lang = lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : lang === 'zh' ? 'zh-CN' : 'ko-KR';
   window.speechSynthesis.speak(u);
 }
+
