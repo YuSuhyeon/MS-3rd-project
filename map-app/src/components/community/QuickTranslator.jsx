@@ -9,34 +9,23 @@ import { startSpeechRecognition, stopSTT } from "../../integrations/stt";
 import { NeonCard, NeonButton, GradientText } from "../ui/NeonTheme";
 import { useTranslation } from "react-i18next";
 
-// 커스텀 스크롤바 스타일
-const scrollbarStyles = `
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: #374151;
-    border-radius: 4px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(45deg, #8b5cf6, #a855f7);
-    border-radius: 4px;
-    border: 1px solid #6b7280;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(45deg, #7c3aed, #9333ea);
-  }
-`;
-
 export default function QuickTranslator() {
   const { t, i18n } = useTranslation("QuickTranslator");
+
+  // TTS
+  const [playingAudio, setPlayingAudio] = useState(null);
+
+  // Detect
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [detectedLanguage, setDetectedLanguage] = useState(null);
+  const [detectionError, setDetectionError] = useState("");
+
+  // Input
   const [inputText, setInputText] = useState("");
+
   const [translationResults, setTranslationResults] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
-  const [detectedLanguage, setDetectedLanguage] = useState(null);
-  const [isDetecting, setIsDetecting] = useState(false);
-  const [detectionError, setDetectionError] = useState("");
-  const [playingAudio, setPlayingAudio] = useState(null);
+
   const [selectedCategory, setSelectedCategory] = useState(t("all"));
   const [isFocused, setIsFocused] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -79,13 +68,21 @@ export default function QuickTranslator() {
       english: "Please give me the menu",
       category: t("food"),
     },
-    { korean: "물 주세요", english: "Please give me water", category: t("food") },
+    {
+      korean: "물 주세요",
+      english: "Please give me water",
+      category: t("food"),
+    },
     {
       korean: "계산서 주세요",
       english: "Please give me the bill",
       category: t("payment"),
     },
-    { korean: "포장해주세요", english: "Please wrap it up", category: t("food") },
+    {
+      korean: "포장해주세요",
+      english: "Please wrap it up",
+      category: t("food"),
+    },
   ];
 
   // 카테고리별 표현 그룹화
@@ -106,10 +103,14 @@ export default function QuickTranslator() {
       ? quickPhrases
       : groupedPhrases[selectedCategory] || [];
 
-  // TTS 함수들
+  // 언어 변경 시 selectedCategory 업데이트
+  useEffect(() => {
+    setSelectedCategory(t("all"));
+  }, [i18n.language, t]);
+
+  // TTS
   const handleSpeak = async (text, language) => {
     if (playingAudio === `${language}-${text}`) {
-      // 같은 텍스트가 재생 중이면 중지
       stopTTS();
       setPlayingAudio(null);
       return;
@@ -125,7 +126,6 @@ export default function QuickTranslator() {
     }
   };
 
-  // 컴포넌트 언마운트 시 TTS 및 STT 정리
   useEffect(() => {
     return () => {
       stopTTS();
@@ -133,35 +133,19 @@ export default function QuickTranslator() {
     };
   }, []);
 
-  // 언어 변경 시 selectedCategory 업데이트
-  useEffect(() => {
-    setSelectedCategory(t("all"));
-  }, [i18n.language, t]);
-
-  // 커스텀 스크롤바 스타일 주입
-  useEffect(() => {
-    const styleElement = document.createElement("style");
-    styleElement.textContent = scrollbarStyles;
-    document.head.appendChild(styleElement);
-
-    return () => {
-      document.head.removeChild(styleElement);
-    };
-  }, []);
-
-  // 입력 텍스트가 변경될 때마다 언어 감지 (디바운스 적용)
+  // Detect
   useEffect(() => {
     // 번역 중이면 언어 감지 중단
     if (isTranslating || isTranslatingRef.current) {
       return;
     }
 
+    // 입력 창이 비어있으면, 모두 초기화.
     if (!inputText.trim()) {
       setDetectedLanguage(null);
       setIsDetecting(false);
       setDetectionError("");
       setTranslationResults(null);
-      // 텍스트가 비어있으면 언어 감지 재개
       translationCompleteRef.current = false;
       lastInputTextRef.current = "";
       return;
@@ -205,10 +189,6 @@ export default function QuickTranslator() {
   const handleTranslate = async () => {
     if (!inputText.trim()) return;
 
-    // 번역 상태 설정 (onClick/onKeyDown에서 이미 설정된 경우 중복 설정 방지)
-    if (!isTranslatingRef.current) {
-      isTranslatingRef.current = true;
-    }
     if (!translationCompleteRef.current) {
       translationCompleteRef.current = true;
     }
@@ -248,7 +228,6 @@ export default function QuickTranslator() {
           });
         }
         setIsTranslating(false);
-        isTranslatingRef.current = false;
 
         // 번역 완료 후 언어 감지 완전 차단
         translationCompleteRef.current = true;
@@ -259,7 +238,6 @@ export default function QuickTranslator() {
         error: "번역 중 오류가 발생했습니다.",
       });
       setIsTranslating(false);
-      isTranslatingRef.current = false;
 
       // 에러 발생 시에도 언어 감지 완전 차단
       translationCompleteRef.current = true;
@@ -320,7 +298,11 @@ export default function QuickTranslator() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 overflow-x-hidden overflow-y-hidden">
       {/* 실시간 번역기 */}
-      <NeonCard title={`🌐 ${t("real_time_translator")}`} variant="success" className="p-6">
+      <NeonCard
+        title={`🌐 ${t("real_time_translator")}`}
+        variant="success"
+        className="p-6"
+      >
         <div className="space-y-4">
           <div>
             {/* 입력란과 마이크 버튼 */}
@@ -409,7 +391,6 @@ export default function QuickTranslator() {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     // 즉시 번역 상태 설정하여 언어 감지 useEffect가 실행되지 않도록 함
-                    isTranslatingRef.current = true;
                     translationCompleteRef.current = true; // 번역 완료 후 언어 감지 차단
                     handleTranslate();
                   }
@@ -431,10 +412,18 @@ export default function QuickTranslator() {
               <div className="flex items-center gap-3 mt-3 px-3 py-2 bg-gray-800/30 border border-gray-600/30 rounded-lg">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <div className="w-1 h-1 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                  <div className="w-1 h-1 bg-blue-300 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                  <div
+                    className="w-1 h-1 bg-blue-400 rounded-full animate-pulse"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                  <div
+                    className="w-1 h-1 bg-blue-300 rounded-full animate-pulse"
+                    style={{ animationDelay: "0.4s" }}
+                  ></div>
                 </div>
-                <span className="text-gray-300 text-sm font-medium">{t("detecting_language")}</span>
+                <span className="text-gray-300 text-sm font-medium">
+                  {t("detecting_language")}
+                </span>
               </div>
             )}
 
@@ -444,7 +433,10 @@ export default function QuickTranslator() {
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-gray-300 text-sm font-medium">
-                    {t("detected_language")}: <span className="text-green-400 font-semibold">{getLanguageName(detectedLanguage.language)}</span>
+                    {t("detected_language")}:{" "}
+                    <span className="text-green-400 font-semibold">
+                      {getLanguageName(detectedLanguage.language)}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -455,7 +447,9 @@ export default function QuickTranslator() {
               <div className="mt-3 px-3 py-2 bg-gray-800/30 border border-red-500/30 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="text-red-300 text-sm font-medium">{detectionError}</span>
+                  <span className="text-red-300 text-sm font-medium">
+                    {detectionError}
+                  </span>
                 </div>
               </div>
             )}
@@ -464,7 +458,6 @@ export default function QuickTranslator() {
           <button
             onClick={() => {
               // 즉시 번역 상태 설정하여 언어 감지 useEffect가 실행되지 않도록 함
-              isTranslatingRef.current = true;
               translationCompleteRef.current = true; // 번역 완료 후 언어 감지 차단
               handleTranslate();
             }}
@@ -483,8 +476,18 @@ export default function QuickTranslator() {
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                    />
                   </svg>
                   <span>{t("translate")}</span>
                 </>
@@ -496,13 +499,17 @@ export default function QuickTranslator() {
             <div className="mt-4 p-4 bg-gray-800/50 border border-gray-600 rounded-lg">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-300 text-sm font-medium">{t("translation_results")}</span>
+                <span className="text-gray-300 text-sm font-medium">
+                  {t("translation_results")}
+                </span>
               </div>
 
               {translationResults.error ? (
                 <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="text-red-300 text-sm">{translationResults.error}</span>
+                  <span className="text-red-300 text-sm">
+                    {translationResults.error}
+                  </span>
                 </div>
               ) : translationResults.sourceLanguage === "ko" ? (
                 // 한국어 → 다국어 번역 결과
@@ -513,12 +520,16 @@ export default function QuickTranslator() {
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-2xl">🇺🇸</span>
                         <div>
-                          <span className="text-blue-300 text-sm font-semibold uppercase">English</span>
+                          <span className="text-blue-300 text-sm font-semibold uppercase">
+                            English
+                          </span>
                           <div className="w-full h-0.5 bg-blue-500/30 mt-1"></div>
                         </div>
                       </div>
                       <button
-                        onClick={() => handleSpeak(translationResults.english, "en")}
+                        onClick={() =>
+                          handleSpeak(translationResults.english, "en")
+                        }
                         className={`p-2 rounded-lg transition-colors ${
                           playingAudio === `en-${translationResults.english}`
                             ? "bg-blue-600 text-white"
@@ -526,12 +537,22 @@ export default function QuickTranslator() {
                         }`}
                         title={t("listen_to_audio")}
                       >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </button>
                     </div>
-                    <p className="text-white text-base leading-relaxed font-medium">{translationResults.english}</p>
+                    <p className="text-white text-base leading-relaxed font-medium">
+                      {translationResults.english}
+                    </p>
                   </div>
 
                   {/* 일본어 */}
@@ -540,12 +561,16 @@ export default function QuickTranslator() {
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-2xl">🇯🇵</span>
                         <div>
-                          <span className="text-red-300 text-sm font-semibold">日本語</span>
+                          <span className="text-red-300 text-sm font-semibold">
+                            日本語
+                          </span>
                           <div className="w-full h-0.5 bg-red-500/30 mt-1"></div>
                         </div>
                       </div>
                       <button
-                        onClick={() => handleSpeak(translationResults.japanese, "ja")}
+                        onClick={() =>
+                          handleSpeak(translationResults.japanese, "ja")
+                        }
                         className={`p-2 rounded-lg transition-colors ${
                           playingAudio === `ja-${translationResults.japanese}`
                             ? "bg-blue-600 text-white"
@@ -553,12 +578,22 @@ export default function QuickTranslator() {
                         }`}
                         title={t("listen_to_audio")}
                       >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </button>
                     </div>
-                    <p className="text-white text-base leading-relaxed font-medium">{translationResults.japanese}</p>
+                    <p className="text-white text-base leading-relaxed font-medium">
+                      {translationResults.japanese}
+                    </p>
                   </div>
 
                   {/* 중국어 */}
@@ -567,12 +602,16 @@ export default function QuickTranslator() {
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-2xl">🇨🇳</span>
                         <div>
-                          <span className="text-yellow-300 text-sm font-semibold">中文</span>
+                          <span className="text-yellow-300 text-sm font-semibold">
+                            中文
+                          </span>
                           <div className="w-full h-0.5 bg-yellow-500/30 mt-1"></div>
                         </div>
                       </div>
                       <button
-                        onClick={() => handleSpeak(translationResults.chinese, "zh")}
+                        onClick={() =>
+                          handleSpeak(translationResults.chinese, "zh")
+                        }
                         className={`p-2 rounded-lg transition-colors ${
                           playingAudio === `zh-${translationResults.chinese}`
                             ? "bg-blue-600 text-white"
@@ -580,12 +619,22 @@ export default function QuickTranslator() {
                         }`}
                         title={t("listen_to_audio")}
                       >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </button>
                     </div>
-                    <p className="text-white text-base leading-relaxed font-medium">{translationResults.chinese}</p>
+                    <p className="text-white text-base leading-relaxed font-medium">
+                      {translationResults.chinese}
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -595,12 +644,16 @@ export default function QuickTranslator() {
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-2xl">🇰🇷</span>
                       <div>
-                        <span className="text-green-300 text-sm font-semibold">한국어</span>
+                        <span className="text-green-300 text-sm font-semibold">
+                          한국어
+                        </span>
                         <div className="w-full h-0.5 bg-green-500/30 mt-1"></div>
                       </div>
                     </div>
                     <button
-                      onClick={() => handleSpeak(translationResults.korean, "ko")}
+                      onClick={() =>
+                        handleSpeak(translationResults.korean, "ko")
+                      }
                       className={`p-2 rounded-lg transition-colors ${
                         playingAudio === `ko-${translationResults.korean}`
                           ? "bg-blue-600 text-white"
@@ -608,12 +661,22 @@ export default function QuickTranslator() {
                       }`}
                       title={t("listen_to_audio")}
                     >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </button>
                   </div>
-                  <p className="text-white text-base leading-relaxed font-medium">{translationResults.korean}</p>
+                  <p className="text-white text-base leading-relaxed font-medium">
+                    {translationResults.korean}
+                  </p>
                 </div>
               )}
             </div>
