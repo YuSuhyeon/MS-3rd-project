@@ -314,42 +314,53 @@ export default function QuickTranslator() {
         <div className="space-y-4">
           <div>
             {/* 입력란과 마이크 버튼 */}
-            <div className="flex gap-2">
+            <div className="flex gap-3 items-center">
               {/* 마이크 버튼 */}
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={isListening ? handleStopListening : handleStartListening}
-                  disabled={isProcessing}
-                  className={`p-3 rounded-lg transition-all duration-200 ${
-                    isListening
-                      ? "bg-red-600 hover:bg-red-700 animate-pulse"
-                      : isProcessing
-                      ? "bg-yellow-600 hover:bg-yellow-700 animate-pulse"
-                      : "bg-purple-600 hover:bg-purple-700"
-                  } ${isProcessing ? "cursor-not-allowed" : ""}`}
-                  title={
-                    isListening 
-                      ? "음성 인식 중지" 
-                      : isProcessing 
-                      ? "음성 인식 처리 중..." 
-                      : "음성 인식 시작"
-                  }
-                >
+              <button
+                onClick={isListening ? handleStopListening : handleStartListening}
+                disabled={isProcessing}
+                className={`relative p-3 rounded-full transition-all duration-300 transform hover:scale-105 flex-shrink-0 ${
+                  isListening
+                    ? "bg-gradient-to-r from-red-500 to-red-600 shadow-lg shadow-red-500/50 animate-pulse"
+                    : isProcessing
+                    ? "bg-gradient-to-r from-yellow-500 to-yellow-600 shadow-lg shadow-yellow-500/50 animate-pulse"
+                    : "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
+                } ${isProcessing ? "cursor-not-allowed" : "cursor-pointer"}`}
+                title={
+                  isListening 
+                    ? "음성 인식 중지" 
+                    : isProcessing 
+                    ? "음성 인식 처리 중..." 
+                    : "음성 인식 시작"
+                }
+              >
+                {/* 버튼 내부 원형 효과 */}
+                <div className={`absolute inset-0 rounded-full ${
+                  isListening 
+                    ? "bg-red-400 opacity-30 animate-ping" 
+                    : isProcessing 
+                    ? "bg-yellow-400 opacity-30 animate-ping"
+                    : ""
+                }`}></div>
+                
+                {/* 아이콘 */}
+                <div className="relative z-10">
                   {isListening ? (
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zm4-1a1 1 0 00-1 1v4a1 1 0 102 0V7a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 6h12v12H6z"/>
                     </svg>
                   ) : isProcessing ? (
-                    <svg className="w-5 h-5 text-white animate-spin" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                    <svg className="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   ) : (
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
                     </svg>
                   )}
-                </button>
-              </div>
+                </div>
+              </button>
 
               {/* 텍스트 입력란 */}
               <textarea
@@ -366,33 +377,23 @@ export default function QuickTranslator() {
                     handleTranslate();
                   }
                 }}
-                placeholder="번역할 텍스트를 입력하세요... (언어가 자동으로 감지됩니다)"
+                placeholder={
+                  isListening 
+                    ? "음성을 듣고 있습니다... 말씀해주세요" 
+                    : isProcessing 
+                    ? "음성을 텍스트로 변환하고 있습니다..." 
+                    : "번역할 텍스트를 입력하세요... (언어가 자동으로 감지됩니다)"
+                }
                 className="flex-1 p-3 bg-black/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 rows={3}
               />
             </div>
 
             {/* 언어 감지 상태 표시 */}
-            {isDetecting && (
+            {isDetecting && !isListening && !isProcessing && (
               <div className="flex items-center gap-2 mt-2 text-sm text-blue-300">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                 언어를 감지하고 있습니다...
-              </div>
-            )}
-
-            {/* 음성 인식 상태 표시 */}
-            {isListening && (
-              <div className="flex items-center gap-2 mt-2 text-sm text-red-300">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                음성을 듣고 있습니다... 말씀해주세요
-              </div>
-            )}
-
-            {/* 음성 인식 처리 중 상태 표시 */}
-            {isProcessing && (
-              <div className="flex items-center gap-2 mt-2 text-sm text-yellow-300">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                음성을 텍스트로 변환하고 있습니다...
               </div>
             )}
 

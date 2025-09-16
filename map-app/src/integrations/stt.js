@@ -8,6 +8,28 @@ let finalTranscript = '';
 let currentOnResult = null;
 let currentOnError = null;
 
+// 상태 초기화 헬퍼 함수
+function resetState() {
+  currentOnResult = null;
+  currentOnError = null;
+}
+
+// 텍스트 초기화 헬퍼 함수
+function resetTranscript() {
+  finalTranscript = '';
+}
+
+// 결과 반환 헬퍼 함수
+function returnResult() {
+  if (finalTranscript && finalTranscript.trim() && currentOnResult) {
+    currentOnResult(finalTranscript.trim());
+  } else if (currentOnError) {
+    currentOnError("음성을 인식할 수 없습니다.");
+  }
+  resetState();
+  resetTranscript();
+}
+
 export function stopSTT() {
   try { 
     if (recognizerRef) {
@@ -17,45 +39,19 @@ export function stopSTT() {
           () => {
             recognizerRef.close();
             recognizerRef = null;
-            
-            // 결과 반환
-            if (finalTranscript && finalTranscript.trim() && currentOnResult) {
-              currentOnResult(finalTranscript.trim());
-            } else if (currentOnError) {
-              currentOnError("음성을 인식할 수 없습니다.");
-            }
-            
-            // 상태 초기화
-            finalTranscript = '';
-            currentOnResult = null;
-            currentOnError = null;
+            returnResult();
           },
           (error) => {
             recognizerRef.close();
             recognizerRef = null;
             currentOnError?.(`음성 인식 중지 오류: ${error}`);
-            
-            // 상태 초기화
-            finalTranscript = '';
-            currentOnResult = null;
-            currentOnError = null;
+            resetState();
           }
         );
       } else {
         // 브라우저 STT인 경우
         recognizerRef.stop();
-        
-        // 브라우저 STT인 경우 중지 시 결과 반환
-        if (finalTranscript && finalTranscript.trim() && currentOnResult) {
-          currentOnResult(finalTranscript.trim());
-        } else if (currentOnError) {
-          currentOnError("음성을 인식할 수 없습니다.");
-        }
-        
-        // 상태 초기화
-        finalTranscript = '';
-        currentOnResult = null;
-        currentOnError = null;
+        returnResult();
         recognizerRef = null;
       }
     }
@@ -66,10 +62,10 @@ export async function startSpeechRecognition(onResult, onError) {
   stopSTT();
   if (!onResult) return;
 
-  // 콜백 함수 저장
+  // 콜백 함수 저장 및 상태 초기화
   currentOnResult = onResult;
   currentOnError = onError;
-  finalTranscript = '';
+  resetTranscript();
 
   if (AZURE_SPEECH_KEY && AZURE_SPEECH_REGION) {
     const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_SPEECH_KEY, AZURE_SPEECH_REGION);
@@ -130,9 +126,6 @@ export async function startSpeechRecognition(onResult, onError) {
         interimTranscript += transcript;
       }
     }
-    
-    // 중간 결과는 무시하고 최종 결과만 처리
-    // 실제 결과는 중지 버튼을 눌렀을 때 처리됨
   };
   
   recognizerRef.onnomatch = () => {
@@ -144,6 +137,7 @@ export async function startSpeechRecognition(onResult, onError) {
   };
   
   recognizerRef.onend = () => {
+    // 자동 종료 시에는 아무것도 하지 않음 (중지 버튼으로만 완료)
     recognizerRef = null;
   };
   
