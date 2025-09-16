@@ -421,21 +421,23 @@ export default function QuickTranslator() {
 
             {/* 언어 감지 상태 표시 */}
             {isDetecting && !isListening && !isProcessing && (
-              <div className="flex items-center gap-2 mt-2 text-sm text-blue-300">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                언어를 감지하고 있습니다...
+              <div className="flex items-center gap-3 mt-3 px-3 py-2 bg-gray-800/30 border border-gray-600/30 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <div className="w-1 h-1 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-1 h-1 bg-blue-300 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                </div>
+                <span className="text-gray-300 text-sm font-medium">언어를 감지하고 있습니다...</span>
               </div>
             )}
 
             {/* 감지된 언어 표시 */}
             {detectedLanguage && !isDetecting && (
-              <div className="mt-2 p-2 bg-green-500/20 border border-green-500/30 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-green-300 text-sm">
-                    감지된 언어:{" "}
-                    <strong>
-                      {getLanguageName(detectedLanguage.language)}
-                    </strong>
+              <div className="mt-3 px-3 py-2 bg-gray-800/30 border border-gray-600/30 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-300 text-sm font-medium">
+                    감지된 언어: <span className="text-green-400 font-semibold">{getLanguageName(detectedLanguage.language)}</span>
                   </span>
                 </div>
               </div>
@@ -443,15 +445,16 @@ export default function QuickTranslator() {
 
             {/* 언어 감지 오류 표시 */}
             {detectionError && (
-              <div className="mt-2 p-2 bg-red-500/20 border border-red-500/30 rounded-lg">
-                <p className="text-red-300 text-sm">{detectionError}</p>
+              <div className="mt-3 px-3 py-2 bg-gray-800/30 border border-red-500/30 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span className="text-red-300 text-sm font-medium">{detectionError}</span>
+                </div>
               </div>
             )}
           </div>
 
-          <NeonButton
-            variant="success"
-            size="lg"
+          <button
             onClick={() => {
               // 즉시 번역 상태 설정하여 언어 감지 useEffect가 실행되지 않도록 함
               isTranslatingRef.current = true;
@@ -459,161 +462,154 @@ export default function QuickTranslator() {
               handleTranslate();
             }}
             disabled={!inputText.trim() || isTranslating || isDetecting}
-            className="w-full"
+            className={`w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 transform ${
+              !inputText.trim() || isTranslating || isDetecting
+                ? "bg-gray-600/30 text-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border border-blue-400/30 hover:border-blue-400/50 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+            }`}
           >
-            {isTranslating ? "번역중..." : "✨ 번역하기"}
-          </NeonButton>
+            <div className="flex items-center justify-center gap-2">
+              {isTranslating ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-gray-300 border-t-white rounded-full animate-spin"></div>
+                  <span>번역 중...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  <span>번역하기</span>
+                </>
+              )}
+            </div>
+          </button>
 
           {translationResults && (
-            <NeonCard variant="primary" className="mt-4">
-              <GradientText variant="primary" size="sm" className="block mb-4">
-                번역 결과
-              </GradientText>
+            <div className="mt-4 p-4 bg-gray-800/50 border border-gray-600 rounded-lg">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-gray-300 text-sm font-medium">번역 결과</span>
+              </div>
 
               {translationResults.error ? (
-                <p className="text-red-300">{translationResults.error}</p>
+                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span className="text-red-300 text-sm">{translationResults.error}</span>
+                </div>
               ) : translationResults.sourceLanguage === "ko" ? (
                 // 한국어 → 다국어 번역 결과
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">🇺🇸</span>
-                      <span className="text-sm text-gray-300">English</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">
-                        {translationResults.english}
-                      </span>
+                  {/* 영어 */}
+                  <div className="p-4 bg-gray-700/50 border-l-4 border-blue-500 rounded-lg hover:border-gray-500 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">🇺🇸</span>
+                        <div>
+                          <span className="text-blue-300 text-sm font-semibold uppercase">English</span>
+                          <div className="w-full h-0.5 bg-blue-500/30 mt-1"></div>
+                        </div>
+                      </div>
                       <button
-                        onClick={() =>
-                          handleSpeak(translationResults.english, "en")
-                        }
-                        className={`p-1.5 rounded-lg transition-colors ${
+                        onClick={() => handleSpeak(translationResults.english, "en")}
+                        className={`p-2 rounded-lg transition-colors ${
                           playingAudio === `en-${translationResults.english}`
-                            ? "bg-blue-800"
-                            : "bg-blue-600 hover:bg-blue-700"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                         }`}
+                        title="음성으로 듣기"
                       >
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                          />
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                       </button>
                     </div>
+                    <p className="text-white text-base leading-relaxed font-medium">{translationResults.english}</p>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">🇯🇵</span>
-                      <span className="text-sm text-gray-300">日本語</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">
-                        {translationResults.japanese}
-                      </span>
+                  {/* 일본어 */}
+                  <div className="p-4 bg-gray-700/50 border-l-4 border-red-500 rounded-lg hover:border-gray-500 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">🇯🇵</span>
+                        <div>
+                          <span className="text-red-300 text-sm font-semibold">日本語</span>
+                          <div className="w-full h-0.5 bg-red-500/30 mt-1"></div>
+                        </div>
+                      </div>
                       <button
-                        onClick={() =>
-                          handleSpeak(translationResults.japanese, "ja")
-                        }
-                        className={`p-1.5 rounded-lg transition-colors ${
+                        onClick={() => handleSpeak(translationResults.japanese, "ja")}
+                        className={`p-2 rounded-lg transition-colors ${
                           playingAudio === `ja-${translationResults.japanese}`
-                            ? "bg-red-800"
-                            : "bg-red-600 hover:bg-red-700"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                         }`}
+                        title="음성으로 듣기"
                       >
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                          />
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                       </button>
                     </div>
+                    <p className="text-white text-base leading-relaxed font-medium">{translationResults.japanese}</p>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">🇨🇳</span>
-                      <span className="text-sm text-gray-300">中文</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">
-                        {translationResults.chinese}
-                      </span>
+                  {/* 중국어 */}
+                  <div className="p-4 bg-gray-700/50 border-l-4 border-yellow-500 rounded-lg hover:border-gray-500 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">🇨🇳</span>
+                        <div>
+                          <span className="text-yellow-300 text-sm font-semibold">中文</span>
+                          <div className="w-full h-0.5 bg-yellow-500/30 mt-1"></div>
+                        </div>
+                      </div>
                       <button
-                        onClick={() =>
-                          handleSpeak(translationResults.chinese, "zh")
-                        }
-                        className={`p-1.5 rounded-lg transition-colors ${
+                        onClick={() => handleSpeak(translationResults.chinese, "zh")}
+                        className={`p-2 rounded-lg transition-colors ${
                           playingAudio === `zh-${translationResults.chinese}`
-                            ? "bg-yellow-800"
-                            : "bg-yellow-600 hover:bg-yellow-700"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                         }`}
+                        title="음성으로 듣기"
                       >
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                          />
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                       </button>
                     </div>
+                    <p className="text-white text-base leading-relaxed font-medium">{translationResults.chinese}</p>
                   </div>
                 </div>
               ) : (
                 // 외국어 → 한국어 번역 결과
-                <div className="flex items-center justify-between p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">🇰🇷</span>
-                    <span className="text-sm text-gray-300">한국어</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-medium">
-                      {translationResults.korean}
-                    </span>
+                <div className="p-4 bg-gray-700/50 border-l-4 border-green-500 rounded-lg hover:border-gray-500 transition-colors">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-2xl">🇰🇷</span>
+                      <div>
+                        <span className="text-green-300 text-sm font-semibold">한국어</span>
+                        <div className="w-full h-0.5 bg-green-500/30 mt-1"></div>
+                      </div>
+                    </div>
                     <button
-                      onClick={() =>
-                        handleSpeak(translationResults.korean, "ko")
-                      }
-                      className={`p-1.5 rounded-lg transition-colors ${
+                      onClick={() => handleSpeak(translationResults.korean, "ko")}
+                      className={`p-2 rounded-lg transition-colors ${
                         playingAudio === `ko-${translationResults.korean}`
-                          ? "bg-green-800"
-                          : "bg-green-600 hover:bg-green-700"
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                       }`}
+                      title="음성으로 듣기"
                     >
-                      <svg
-                        className="w-4 h-4 text-white"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 11-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </button>
                   </div>
+                  <p className="text-white text-base leading-relaxed font-medium">{translationResults.korean}</p>
                 </div>
               )}
-            </NeonCard>
+            </div>
           )}
         </div>
       </NeonCard>
