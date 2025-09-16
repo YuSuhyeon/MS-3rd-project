@@ -16,7 +16,9 @@ export const AuthProvider = ({ children }) => {
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        // [수정] access_token을 Authorization 헤더에 담아 API 요청
+        console.log("🔑 Google 로그인 성공:", tokenResponse);
+
+        // 1. Google에서 사용자 정보 가져오기
         const res = await fetch(
           "https://www.googleapis.com/oauth2/v3/userinfo",
           {
@@ -29,32 +31,76 @@ export const AuthProvider = ({ children }) => {
         if (!res.ok) {
           throw new Error("Failed to fetch user info");
         }
-        const data = await res.json();
-        setProfile(data); // 프로필 정보 저장
+
+        const googleUserData = await res.json();
+        console.log("👤 Google 사용자 정보:", googleUserData);
+
+        // 2. 백엔드 콜백 API 호출 (중요!)
+        const backendResponse = await fetch("/api/auth/google/callback", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // 세션 쿠키 포함
+          body: JSON.stringify({
+            token: tokenResponse.access_token, // access_token 전달
+            user_info: googleUserData, // 사용자 정보도 함께 전달
+          }),
+        });
+
+        const backendData = await backendResponse.json();
+        console.log("🏠 백엔드 응답:", backendData);
+
+        if (backendData.success) {
+          // 3. AuthContext 상태 업데이트
+          setProfile(backendData.user);
+
+          // 4. 로컬 스토리지에도 저장 (선택사항)
+          localStorage.setItem("user", JSON.stringify(backendData.user));
+
+          console.log("✅ 로그인 완료:", backendData.user);
+        } else {
+          console.error("❌ 백엔드 로그인 실패:", backendData.error);
+          throw new Error(backendData.error || "백엔드 로그인 처리 실패");
+        }
       } catch (error) {
-        console.error("사용자 정보 요청 실패:", error);
+        console.error("로그인 처리 실패:", error);
+        alert("로그인에 실패했습니다: " + error.message);
       }
     },
     onError: (error) => {
-      console.log("Login Failed:", error);
+      console.log("Google Login Failed:", error);
+      alert("Google 로그인에 실패했습니다.");
     },
   });
 
-  // [수정] login 함수가 'google' 문자열을 받을 경우, googleLogin 함수를 호출하도록 수정
+  // login 함수는 그대로 유지
   const login = (provider) => {
     if (provider === "google") {
-      googleLogin(); // 'googlelogin' 이 아니라 'googleLogin'
+      googleLogin();
     }
     // 여기에 나중에 else if (provider === 'microsoft') { ... } 를 추가할 수 있습니다.
   };
 
   const logout = () => {
-    // Google 로그아웃 관련 로직이 필요하다면 추가할 수 있습니다.
-    // 현재는 프로필 정보만 초기화합니다.
-    setProfile(null);
+    // 세션도 클리어
+    fetch("/api/logout", {
+      method: "POST",
+      credentials: "include",
+    })
+      .then(() => {
+        setProfile(null);
+        localStorage.removeItem("user");
+        console.log("로그아웃 완료");
+      })
+      .catch((error) => {
+        console.error("로그아웃 오류:", error);
+        // 에러가 나도 프론트엔드 상태는 초기화
+        setProfile(null);
+        localStorage.removeItem("user");
+      });
   };
 
-  // [수정] value 객체에 올바른 login 함수를 전달
   const value = { profile, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

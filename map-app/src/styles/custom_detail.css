@@ -1,0 +1,11 @@
+/**마이크로 소프트 로그인 버튼 css*/
+.microsoft-login-btn {
+  background-color: #00a4ef !important;
+  color: white !important;
+  border: none !important;
+  transition: background-color 0.2s ease;
+}
+
+.microsoft-login-btn:hover {
+  background-color: #0078d4 !important;
+}

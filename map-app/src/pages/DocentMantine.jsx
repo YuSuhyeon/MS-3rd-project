@@ -591,7 +591,7 @@ export default function DocentMantine() {
     stopTTS();
     setIsPlaying(false);
   };
-
+  //azure function 사용
   const callTourismAPI = async (userQuery) => {
     const functionUrl =
       "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/tourismqnaapi?code=BcqZANgpmolF-eQNAkdB4BgrhINolY8tLktSFVRHhaGhAzFu3b1_Tw==";

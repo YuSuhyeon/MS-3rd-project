@@ -29,3 +29,6 @@ xgboost
 
 # Spotify API
 spotipy
+
+# Database
+mysql-connector-python==8.0.33

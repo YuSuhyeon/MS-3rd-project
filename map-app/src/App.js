@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "./components/Layout";
+import { AuthProvider } from "./context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import "./i18n"; // i18n 초기화
 import "./styles/layout.css";
@@ -18,6 +19,7 @@ import CommunityMain from "./pages/CommunityMain";
 import Tour from "./pages/Tour";
 import TourDetail from "./pages/TourDetail";
 import PopularPlaces from "./pages/PopularPlaces";
+import CommunitySocial from "./pages/CommunitySocial";
 
 function AppRoutes() {
   return (
@@ -39,6 +41,7 @@ function AppRoutes() {
               {/* community 경로를 Layout 안으로 이동 */}
               <Route path="/community" element={<CommunityMain />} />
               <Route path="/community/*" element={<CommunityMain />} />
+              <Route path="/social" element={<CommunitySocial />} />{" "}
               <Route path="/visionocr" element={<VisionOCR />} />
               <Route path="/vision" element={<DocentVision />} />
               <Route path="/tour" element={<Tour />} />
@@ -59,10 +62,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </LanguageProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
