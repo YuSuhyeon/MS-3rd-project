@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import BrandLogo from "components/BrandLogo";
+import LanguageButtons from "components/ui/LanguageButtons";
 import { useAuth } from "context/AuthContext";
+import { useTranslation } from "react-i18next";
 import {
   LogOut,
   LogIn,
@@ -21,12 +23,12 @@ import {
   X,
 } from "lucide-react";
 
-const navigationItems = [
-  { title: "Persona Analysis", url: "/persona" },
-  { title: "Result Dashboard", url: "/result" },
-  { title: "Itinerary Planner", url: "/itinerary" },
-  { title: "AI Docent", url: "/docent" },
-  { title: "Community", url: "/community" },
+const getNavigationItems = (t) => [
+  { title: t("persona_analysis"), url: "/persona" },
+  { title: t("result_dashboard"), url: "/result" },
+  { title: t("itinerary_planner"), url: "/itinerary" },
+  { title: t("ai_docent"), url: "/docent" },
+  { title: t("community"), url: "/community" },
 ];
 
 // 배너 컴포넌트 (기존과 동일)
@@ -178,8 +180,8 @@ const FlickerNumber = ({ value, formatter = (val) => val }) => {
   return <span className="font-mono text-gray-800">{displayValue}</span>;
 };
 
-// LiveInfoWidget 컴포넌트 (기존과 동일)
-const LiveInfoWidget = ({ isCollapsed, onToggle }) => {
+// Live Info 위젯
+const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
   const [exchangeData, setExchangeData] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -233,22 +235,22 @@ const LiveInfoWidget = ({ isCollapsed, onToggle }) => {
     <div className="border-t border-purple-500/20 bg-gradient-to-r from-purple-900/20 to-pink-900/20">
       <div className="w-full px-4 py-3 flex items-center justify-between">
         <button onClick={onToggle} className="flex items-center gap-2">
-          <DollarSign className="w-4 h-4 text-purple-400" />
-          <span className="text-sm font-medium text-purple-300">Live Info</span>
+          <DollarSign className="w-4 h-4 text-blue-600" />
+          <span className="text-sm font-medium text-gray-700">{t("live_info")}</span>
         </button>
         <div className="flex items-center gap-1">
           <button
             onClick={fetchAllData}
             disabled={loading}
-            className="p-1.5 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors disabled:opacity-50"
-            title="Refresh Data"
+            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-200/60 hover:text-gray-800 transition-colors disabled:opacity-50"
+            title={t("refresh_data")}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
           <button
             onClick={onToggle}
-            className="p-1.5 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
-            title={isCollapsed ? "Expand" : "Collapse"}
+            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-200/60 hover:text-gray-800 transition-colors"
+            title={isCollapsed ? t("expand") : t("collapse")}
           >
             {isCollapsed ? (
               <ChevronDown className="w-4 h-4" />
@@ -262,8 +264,8 @@ const LiveInfoWidget = ({ isCollapsed, onToggle }) => {
       {!isCollapsed && (
         <div className="px-4 pb-4 space-y-4">
           <div>
-            <div className="text-xs font-medium text-purple-300 mb-2">
-              Exchange Rate ({exchangeData?.baseCurrency || "KRW"})
+            <div className="text-xs font-medium text-gray-600 mb-2">
+              {t("exchange_rate_krw")}
             </div>
             {cleanedExchangeRates ? (
               <div className="space-y-2">
@@ -292,15 +294,15 @@ const LiveInfoWidget = ({ isCollapsed, onToggle }) => {
             )}
           </div>
           <div>
-            <div className="text-xs font-medium text-purple-300 mb-2">
-              Seoul Weather
+            <div className="text-xs font-medium text-gray-600 mb-2">
+              {t("seoul_weather")}
             </div>
             {weatherData?.summary ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1">
                     {getWeatherIcon(weatherData.summary.weather)}
-                    <span className="text-purple-200">Temp</span>
+                    <span className="text-gray-700">{t("temp")}</span>
                   </div>
                   <FlickerNumber
                     value={parseFloat(weatherData.summary.temperature)}
@@ -309,8 +311,8 @@ const LiveInfoWidget = ({ isCollapsed, onToggle }) => {
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1">
-                    <Droplets className="w-3 h-3 text-blue-400" />
-                    <span className="text-purple-200">Humidity</span>
+                    <Droplets className="w-3 h-3 text-blue-500" />
+                    <span className="text-gray-700">{t("humidity")}</span>
                   </div>
                   <FlickerNumber
                     value={parseFloat(weatherData.summary.humidity)}
@@ -319,8 +321,8 @@ const LiveInfoWidget = ({ isCollapsed, onToggle }) => {
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1">
-                    <Wind className="w-3 h-3 text-gray-400" />
-                    <span className="text-purple-200">Wind</span>
+                    <Wind className="w-3 h-3 text-gray-500" />
+                    <span className="text-gray-700">{t("wind")}</span>
                   </div>
                   <FlickerNumber
                     value={parseFloat(weatherData.summary.windSpeed)}
@@ -343,8 +345,11 @@ const LiveInfoWidget = ({ isCollapsed, onToggle }) => {
 export default function Layout({ children }) {
   const location = useLocation();
   const { profile, login, logout } = useAuth();
+  const { t } = useTranslation("Navigation");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLiveInfoCollapsed, setIsLiveInfoCollapsed] = useState(false);
+  
+  const navigationItems = getNavigationItems(t);
   const [isMobile, setIsMobile] = useState(false);
 
   // 모바일 감지
@@ -408,6 +413,70 @@ export default function Layout({ children }) {
   };
 
   return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
+      {/* 상단 네비게이션 바 - 메인 홈페이지와 동일한 스타일 */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* 로고 및 제목 */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm font-bold">T</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-white">AI Travel Planner</h1>
+              </div>
+            </div>
+
+            {/* 우측 컨트롤 - 언어 선택 버튼 */}
+            <div className="flex items-center gap-3">
+              <LanguageButtons />
+              
+              {/* 모바일 햄버거 메뉴 버튼 */}
+              <button
+                className="md:hidden hover:bg-white/10 p-2 rounded-lg transition-colors duration-200"
+                aria-label="Menu"
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" className="text-white">
+                  <path
+                    d="M3 6h14M3 10h14M3 14h14"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex pt-16">
+        <aside
+          className={`fixed inset-y-0 left-0 z-40 w-72 bg-white/80 backdrop-blur-sm border-r border-white/20 flex flex-col transform transition-transform duration-200 ${
+            menuOpen ? "translate-x-0" : "-translate-x-full"
+          } md:static md:translate-x-0`}
+        >
+        <div className="border-b border-gray-200/50 p-6">
+          <Link
+            to="/"
+            className="flex items-center gap-3 hover:opacity-95 transition-opacity"
+            onClick={() => setMenuOpen(false)}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+              <BrandLogo size={40} />
+            </div>
+            <div>
+              <h2 className="font-bold text-gray-900 text-lg">
+                AI Travel Planner
+              </h2>
+              <p className="text-xs text-gray-500">
+                {t("personalized_travel_planning")}
+              </p>
+            </div>
+          </Link>
+        </div>
     <>
       <style jsx>{`
         .layout-container {
@@ -641,129 +710,108 @@ export default function Layout({ children }) {
             </div>
           </div>
 
-          <div className="p-3 flex-1 overflow-y-auto">
-            <div className="text-xs font-medium text-purple-400 uppercase tracking-wider px-3 py-2">
-              Menu
-            </div>
-            <nav className="px-2">
-              {navigationItems.map((item, index) => {
-                const active = isActive(item.url, item.exact);
-                return (
-                  <motion.div
-                    key={item.title}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{
-                      opacity: menuOpen ? 1 : 0,
-                      x: menuOpen ? 0 : -20,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      delay: menuOpen ? index * 0.1 : 0,
-                    }}
-                  >
-                    <Link
-                      to={item.url}
-                      onClick={closeMenu}
-                      className={`neon-menu-item flex items-center gap-3 px-4 py-3 rounded-xl mb-1 text-white ${
-                        active ? "active" : ""
-                      }`}
-                    >
-                      <span className="font-medium">{item.title}</span>
-                      <div className="neon-border" />
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </nav>
+        <div className="p-3 flex-1 overflow-y-auto">
+          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">
+            {t("menu")}
+          </div>
+          <nav className="px-2">
+            {navigationItems.map((item) => {
+              const active = isActive(item.url, item.exact);
+              return (
+                <Link
+                  key={item.title}
+                  to={item.url}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 mb-1 hover:bg-pink-50 hover:text-pink-700 ${
+                    active
+                      ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                      : ""
+                  }`}
+                >
+                  <span className="font-medium">{item.title}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
             <div className="mt-6">
               <BannerWidget />
             </div>
           </div>
 
-          <div className="mt-auto">
-            <LiveInfoWidget
-              isCollapsed={isLiveInfoCollapsed}
-              onToggle={toggleLiveInfo}
-            />
-            <div className="border-t border-purple-500/20 p-6">
-              {profile ? (
-                <motion.div
-                  className="flex items-center gap-3"
-                  whileHover={{ scale: 1.02 }}
+        {/* 실시간 환율,날씨 정보 */}
+        <div className="mt-auto">
+          <LiveInfoWidget
+            isCollapsed={isLiveInfoCollapsed}
+            onToggle={toggleLiveInfo}
+            t={t}
+          />
+          <div className="border-t border-gray-200/50 p-6">
+            {profile ? (
+              <div className="flex items-center gap-3">
+                <img
+                  src={profile.picture}
+                  alt={profile.name}
+                  className="w-8 h-8 rounded-full"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">
+                    {profile.name}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {profile.email}
+                  </p>
+                </div>
+                <button
+                  onClick={logout}
+                  title={t("log_out")}
+                  className="p-2 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
                 >
-                  <img
-                    src={profile.picture}
-                    alt={profile.name}
-                    className="w-8 h-8 rounded-full border-2 border-purple-400"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm truncate">
-                      {profile.name}
-                    </p>
-                    <p className="text-xs neon-text-secondary truncate">
-                      {profile.email}
-                    </p>
-                  </div>
-                  <button
-                    onClick={logout}
-                    title="Log Out"
-                    className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
-                  >
-                    <LogOut size={18} />
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  className="flex items-center gap-3"
-                  whileHover={{ scale: 1.02 }}
+                  <LogOut size={18} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  <span className="text-gray-500 font-medium text-sm">?</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">
+                    {t("welcome_traveler")}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {t("plan_your_trip_with_ai")}
+                  </p>
+                </div>
+                <button
+                  onClick={() => login()}
+                  title={t("log_in")}
+                  className="p-2 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">?</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm truncate">
-                      Welcome, Traveler!
-                    </p>
-                    <p className="text-xs neon-text-secondary truncate">
-                      Plan your trip with AI
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => login()}
-                    title="Log In"
-                    className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
-                  >
-                    <LogIn size={18} />
-                  </button>
-                </motion.div>
-              )}
-            </div>
+                  <LogIn size={18} />
+                </button>
+              </div>
+            )}
           </div>
-        </motion.aside>
+        </div>
+      </aside>
 
-        {/* 메인 콘텐츠 */}
-        <motion.main
-          className="flex-1 flex flex-col"
-          animate={{
-            marginLeft: !isMobile && menuOpen ? "288px" : "0px",
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 40,
-          }}
-        >
-          <div className="flex-1 overflow-auto">
-            <div
-              className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6"
-              style={{ paddingTop: "80px" }}
-            >
-              {children}
-            </div>
+      {menuOpen && (
+        <button
+          className="fixed inset-0 z-40 bg-black/30 md:hidden"
+          aria-label="Close sidebar"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      <main className="flex-1 flex flex-col">
+        <div className="flex-1 overflow-auto">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+            {children}
           </div>
-        </motion.main>
+        </div>
+      </main>
       </div>
-    </>
+    </div>
   );
 }
