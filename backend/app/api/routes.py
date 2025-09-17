@@ -1,13 +1,14 @@
-from flask import Blueprint, jsonify, redirect, request, session
-
-
-from ..services import persona_service , community_service , community_social
 import os
+from flask import Blueprint, jsonify, redirect, request, session
+from flask_cors import cross_origin 
+from pathlib import Path
+from ..services import persona_service , community_service , community_social
 import csv
 import math
 import time
 import json as _json
 import requests
+import tempfile
 import jwt
 from functools import wraps
 
@@ -590,6 +591,181 @@ def load_route_plan(plan_id: str):
         return jsonify(data)
     except Exception as e:
         return jsonify({ 'error': 'load_failed', 'detail': str(e) }), 500
+#-----------------------------------------------
+# ---------- YOLO DETECT (file upload) ----------
+_YOLO_MODEL = None
+# best.pt 경로 찾음 
+def get_model_path():    
+    # 1. 현재 파일(routes.py) 기준으로 프로젝트 루트 찾기
+    current_file = Path(__file__).resolve()  # /path/to/backend/app/api/routes.py
+    backend_root = current_file.parent.parent.parent  # /path/to/backend/
+    model_path = backend_root / "models" / "best.pt"
+    
+    print(f"계산된 모델 경로: {model_path}")
+    print(f"파일 존재: {model_path.exists()}")
+    
+    if model_path.exists():
+        return str(model_path)
+    
+    # 2. 환경변수 확인 (팀원별로 설정 가능)
+    env_path = os.getenv("YOLO_MODEL_PATH")
+    if env_path and os.path.exists(env_path):
+        return env_path
+    
+    # 3. 기본 모델로 폴백
+    return "yolov8n.pt"
+
+@api_bp.route("/detect", methods=["POST", "OPTIONS"])
+def detect():
+    try:
+        print("=== 🚀 YOLO Detection 요청 받음 ===")
+        
+        if request.method == "OPTIONS":
+            return ("", 204)
+
+        # 파일 필수 확인
+        if "file" not in request.files:
+            return jsonify({"error": "missing_file"}), 400
+
+        # 파라미터 파싱
+        conf = float(request.form.get("conf", 0.25))
+        imgsz = int(request.form.get("imgsz", 640))
+        device = os.getenv("YOLO_DEVICE", "cpu")       
+
+
+        # 모델 로딩 (한 번만 로딩)
+        model_path = get_model_path()
+        
+        global _YOLO_MODEL
+        if _YOLO_MODEL is None:         
+            from ultralytics import YOLO
+            _YOLO_MODEL = YOLO(model_path)
+            print("✅ YOLO 모델 로딩 완료")
+
+        # 업로드된 파일 처리
+        f = request.files["file"]
+        print(f"업로드된 파일: {f.filename}")
+        
+        # 임시 파일로 저장 (YOLO가 파일 경로 필요)
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+            f.save(tmp.name)
+            tmp_path = tmp.name
+            print(f" 임시 파일 저장: {tmp_path}")
+
+        try:
+            # YOLO 추론 실행
+            print(" YOLO 추론 시작...")
+            preds = _YOLO_MODEL.predict(
+                source=tmp_path, 
+                conf=conf, 
+                imgsz=imgsz, 
+                device=device, 
+                verbose=False
+            )
+            print(f" 완료: {len(preds)}개 결과")
+        
+        finally:
+            # 임시 파일 정리
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+                print("🗑️  임시 파일 삭제")
+
+        # 결과 처리 및 JSON 변환
+        detections = []
+        if preds and len(preds) > 0:
+            result = preds[0]  # 첫 번째 결과 사용
+            
+            # boxes와 names 추출
+            if hasattr(result, 'boxes') and result.boxes is not None:
+                names = result.names  # 클래스 인덱스 -> 이름 매핑
+                boxes = result.boxes
+                
+                # 각 탐지된 객체 정보 추출
+                if len(boxes) > 0:
+                    cls_list = boxes.cls.tolist() if hasattr(boxes, "cls") else []
+                    conf_list = boxes.conf.tolist() if hasattr(boxes, "conf") else []
+                    
+                    for i in range(len(cls_list)):
+                        cls_idx = int(cls_list[i])
+                        confidence = float(conf_list[i]) if i < len(conf_list) else 0.0
+                        
+                        # 클래스 이름 가져오기
+                        if isinstance(names, dict):
+                            class_name = names.get(cls_idx, f"class_{cls_idx}")
+                        else:
+                            class_name = str(cls_idx)
+                        
+                        detections.append({
+                            "name": class_name,
+                            "cls": cls_idx,
+                            "conf": confidence,
+                        })
+                        
+                        print(f"🎯 탐지: {class_name} (신뢰도: {confidence:.3f})")
+
+        print(f"📊 최종 탐지된 객체 수: {len(detections)}")
+        
+        # 성공 응답
+        return jsonify({
+            "success": True,
+            "detections": detections,
+            "total_count": len(detections)
+        })
+
+    except ImportError as e:
+        print(f"❌ Import 오류: {e}")
+        return jsonify({
+            "error": "ultralytics_not_installed",
+            "message": "YOLO 라이브러리가 설치되지 않았습니다.",
+            "detail": str(e)
+        }), 500
+        
+    except FileNotFoundError as e:
+        print(f"❌ 파일 오류: {e}")
+        return jsonify({
+            "error": "model_file_not_found", 
+            "message": "YOLO 모델 파일을 찾을 수 없습니다.",
+            "detail": str(e)
+        }), 500
+        
+    except Exception as e:
+        print(f"❌ 일반 오류: {e}")
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"📋 상세 오류:\n{error_details}")
+        
+        return jsonify({
+            "error": "yolo_processing_failed",
+            "message": "이미지 처리 중 오류가 발생했습니다.", 
+            "detail": str(e)
+        }), 500
+
+
+
+
+# ---------- POI INFO (names -> info) ----------
+@api_bp.route("/poi-info", methods=["POST", "OPTIONS"])
+@cross_origin(
+    origins=["http://localhost:5000","http://127.0.0.1:5000","http://localhost:3000","http://127.0.0.1:3000"],
+    methods=["POST","OPTIONS"],
+    allow_headers=["Content-Type"],
+    max_age=600,
+)
+def poi_info():
+    if request.method == "OPTIONS":
+        return ("", 204)
+    payload = request.get_json(silent=True) or {}
+    names = payload.get("names", [])
+    # 고정 정보 DB
+    DB = {
+        "63스퀘어":      {"name":"63스퀘어","address":"서울 영등포구 63로 50","open_hours_text":"10:00–22:00(시설별 상이)","ticket_price_text":"전시/전망대 유료","phone":"02-789-5663","website":"https://www.63.co.kr","description":"한강변 랜드마크. 아쿠아리움/전시/전망대가 유명."},
+        "경복궁":        {"name":"경복궁","address":"서울 종로구 사직로 161","open_hours_text":"09:00–18:00(요일·계절별 상이, 화요일 휴궁)","ticket_price_text":"유료, 한복 착용 무료","phone":"02-3700-3900","website":"https://www.royalpalace.go.kr","description":"조선의 정궁. 근정전, 경회루 등 볼거리 풍부."},
+        "남산서울타워":  {"name":"남산서울타워","address":"서울 용산구 남산공원길 105","open_hours_text":"10:00–23:00(변동 가능)","ticket_price_text":"전망대 유료","phone":"02-3455-9277","website":"https://www.seoultower.co.kr","description":"서울 전경을 볼 수 있는 대표 전망 명소."},
+        "롯데월드타워":  {"name":"롯데월드타워","address":"서울 송파구 올림픽로 300","open_hours_text":"시설별 상이","ticket_price_text":"SEOUL SKY 유료","phone":"1661-2000","website":"https://www.lwt.co.kr","description":"123층 초고층 타워. 전망대·쇼핑·호텔 집합."},
+    }
+    items = [DB[n] for n in names if n in DB]
+    return jsonify({"items": items})
+
 
 #----------- Azure Computer Vision OCR API -----------
 AZURE_VISION_ENDPOINT = os.getenv('AZURE_VISION_ENDPOINT')

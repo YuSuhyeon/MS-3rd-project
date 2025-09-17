@@ -11,6 +11,8 @@ import {
   Camera,
   Bot,
   User,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "components/ui/card";
@@ -18,11 +20,24 @@ import { translateText } from "integrations/translator";
 import { speakText, stopTTS } from "integrations/tts";
 import Papa from "papaparse";
 
+// NeonTheme 컴포넌트들을 import
+import {
+  BackgroundEffect,
+  NeonCard,
+  NeonButton,
+  GradientText,
+  NeonScrollbarStyles,
+} from "../components/ui/NeonTheme";
+
 import POIList from "components/docent/POIList";
 import LocationMap from "components/docent/LocationMap";
 import POIDetails from "components/docent/POIDetails";
 
-// ★★★ useIsMobile 훅을 직접 구현
+// ========= YOLO / Azure Function (환경변수)
+const YOLO_API = process.env.REACT_APP_YOLO_API || "/api";
+const AZURE_FUNC_BASE = process.env.REACT_APP_AZURE_FUNC_BASE || "/api";
+
+// ★★★ useIsMobile 훅
 const useIsMobile = (breakpoint = 768) => {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -45,7 +60,7 @@ const useIsMobile = (breakpoint = 768) => {
   return isMobile;
 };
 
-// 다국어 UI 텍스트
+// ========= 다국어 UI
 const UI = {
   ko: {
     title: "AI 도슨트",
@@ -74,6 +89,14 @@ const UI = {
     voiceRecStop: "음성 녹음을 중지합니다.",
     errorReply:
       "죄송합니다. 답변을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    filePick: "파일",
+    categories: {
+      all: "전체",
+      museum: "미술관&박물관",
+      palace: "고궁",
+      landmark: "랜드마크",
+      historic: "역사적 장소",
+    },
   },
   en: {
     title: "AI Docent",
@@ -103,6 +126,14 @@ const UI = {
     voiceRecStop: "Stopping voice recording.",
     errorReply:
       "Sorry, an error occurred while generating a response. Please try again later.",
+    filePick: "File",
+    categories: {
+      all: "All",
+      museum: "Museum",
+      palace: "Palace",
+      landmark: "Landmark",
+      historic: "Historic",
+    },
   },
   ja: {
     title: "AI ドーセント",
@@ -125,13 +156,21 @@ const UI = {
     },
     chatbotPlaceholder: "ご質問をどうぞ...",
     chatbotInitialMessage:
-      "こんにちは！私はあなたのAIトラベルドーセントです。場所や旅行情報について何でも聞いてください。写真を送っていただければ、その場所について詳しく説明します！",
+      "こんにちは！私はあなたのAI旅行ドーセントです。場所や旅行情報について何でも尋ねてください。写真を送ってください。その場所について詳しく説明します！",
     imageQueryText: "この場所について教えてください",
     voiceRecStart: "音声録音を開始します...",
     voiceRecResult: "音声認識結果:",
     voiceRecStop: "音声録音を停止します。",
     errorReply:
       "申し訳ありませんが、応答の生成中にエラーが発生しました。後でもう一度お試しください。",
+    filePick: "ファイル",
+    categories: {
+      all: "すべて",
+      museum: "美術館＆博物館",
+      palace: "古宮",
+      landmark: "ランドマーク",
+      historic: "歴史的な場所",
+    },
   },
   zh: {
     title: "AI 讲解",
@@ -160,9 +199,36 @@ const UI = {
     voiceRecResult: "语音识别结果：",
     voiceRecStop: "停止录音。",
     errorReply: "抱歉，生成回复时出错。请稍后再试。",
+    filePick: "文件",
+    categories: {
+      all: "全部",
+      museum: "美术馆&博物馆",
+      palace: "故宫",
+      landmark: "地标",
+      historic: "历史遗址",
+    },
   },
 };
-
+// ── 라벨 정규화/허용 목록
+const TAG_ALIASES = {
+  "63스퀘어": "63스퀘어",
+  "63빌딩": "63스퀘어",
+  63: "63스퀘어",
+  남산타워: "남산서울타워",
+  남산서울타워: "남산서울타워",
+  N서울타워: "남산서울타워",
+  롯데타워: "롯데월드타워",
+  롯데월드타워: "롯데월드타워",
+  LWT: "롯데월드타워",
+  경복궁: "경복궁",
+};
+const ALLOWED_POIS = new Set([
+  "63스퀘어",
+  "경복궁",
+  "남산서울타워",
+  "롯데월드타워",
+]);
+const prettyPct = (p = 0) => (p * 100).toFixed(1) + "%";
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -178,9 +244,9 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 // #################################################################
-// ## 고정형 챗봇 컴포넌트 (모바일/데스크톱 공용)
+// ## 고정형 챗봇 (모바일/데스크톱 공용)
 // #################################################################
-const FixedChatbot = ({ callApi, ui, isMobile }) => {
+const FixedChatbot = ({ callApi, ui, isMobile, selectedLang = "ko" }) => {
   const [messages, setMessages] = useState([
     {
       id: "initial",
@@ -192,14 +258,68 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
   const [inputMessage, setInputMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef(null); // 갤러리/파일
+  const cameraInputRef = useRef(null); // 카메라(촬영)
+
+  useEffect(() => {
+    // 언어가 바뀌면 초기 메시지만 새 언어로
+    setMessages([
+      {
+        id: "initial",
+        type: "ai",
+        content: ui.chatbotInitialMessage,
+        timestamp: new Date(),
+      },
+    ]);
+    setInputMessage("");
+  }, [ui.chatbotInitialMessage]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isProcessing]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   useEffect(scrollToBottom, [messages, isProcessing]);
 
+  // YOLO / Azure Function 헬퍼
+  const normalizeLabel = (raw) => {
+    if (!raw) return null;
+    const canon = TAG_ALIASES[raw] || String(raw);
+    return ALLOWED_POIS.has(canon) ? canon : null;
+  };
+
+  const callYOLO = async (file) => {
+    const fd = new FormData();
+    fd.append("file", file, file.name);
+    fd.append("conf", "0.2");
+    fd.append("imgsz", "640");
+    const resp = await fetch(`${YOLO_API}/detect`, {
+      method: "POST",
+      body: fd,
+    });
+    if (!resp.ok) throw new Error(`YOLO HTTP ${resp.status}`);
+    const js = await resp.json();
+    const dets = (js?.detections || [])
+      .map((d) => ({ label: String(d.name ?? d.cls ?? ""), conf: d.conf ?? 0 }))
+      .sort((a, b) => (b.conf || 0) - (a.conf || 0));
+    return dets;
+  };
+
+  // const fetchPOIInfos = async (names) => {
+  //   const resp = await fetch(`${AZURE_FUNC_BASE}/poi-info`, {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({ names, lang: "ko" }),
+  //   });
+  //   if (!resp.ok) throw new Error(`Azure Function HTTP ${resp.status}`);
+  //   const js = await resp.json();
+  //   return js?.items || [];
+  // };
+  // 기존 텍스트 질문 처리
   const handleSendMessage = async (content, attachments) => {
     if (!content.trim() && !attachments) return;
 
@@ -215,7 +335,17 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
     setIsProcessing(true);
 
     try {
-      const result = await callApi(content);
+      // ko ↔ selectedLang 자동 변환
+      const toKo = async (t) =>
+        selectedLang === "ko" ? t : await translateText(t, "ko");
+      const fromKo = async (t) =>
+        selectedLang === "ko" ? t : await translateText(t, selectedLang);
+
+      const koQuery = await toKo(content || "");
+      const koResult = await callApi(koQuery);
+      const result = await fromKo(koResult); //0917진희님 파일 통합때 이걸로 살림
+
+      // const result = await callApi(content);  0917 주영 주석처리
       const aiMessage = {
         id: (Date.now() + 1).toString(),
         type: "ai",
@@ -224,13 +354,15 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
       };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
-      const errorMessage = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        content: ui.errorReply,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          type: "ai",
+          content: ui.errorReply,
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setIsProcessing(false);
     }
@@ -238,6 +370,7 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
 
   const handleTextSend = () => handleSendMessage(inputMessage);
 
+  // 음성 토글(샘플)
   const handleVoiceRecording = () => {
     setIsRecording(!isRecording);
     if (!isRecording) {
@@ -249,25 +382,249 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
     }
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      handleSendMessage(ui.imageQueryText, [
-        { type: "image", url: imageUrl, caption: file.name },
+  // 파일/카메라 입력 공통 처리 (YOLO + Azure Function)
+  // const processImage = async (file) => {
+  //   if (!file) return;
+  //   const imageUrl = URL.createObjectURL(file);
+
+  //   // 1) 사용자 말풍선 (이미지)
+  //   setMessages((prev) => [
+  //     ...prev,
+  //     {
+  //       id: String(Date.now()),
+  //       type: "user",
+  //       content: ui.imageQueryText,
+  //       attachments: [{ type: "image", url: imageUrl, caption: file.name }],
+  //       timestamp: new Date(),
+  //     },
+  //   ]);
+  //   setIsProcessing(true);
+
+  //   try {
+  //     // 2) YOLO 감지
+  //     const dets = await callYOLO(file);
+  //     if (!dets.length) {
+  //       setMessages((prev) => [
+  //         ...prev,
+  //         {
+  //           id: String(Date.now() + 1),
+  //           type: "ai",
+  //           content: "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?",
+  //           timestamp: new Date(),
+  //         },
+  //       ]);
+  //       return;
+  //     }
+
+  //     // 3) 허용 라벨 정규화/필터
+  //     const allowed = dets
+  //       .map((d) => ({ ...d, canon: normalizeLabel(d.label) }))
+  //       .filter((d) => !!d.canon);
+
+  //     if (!allowed.length) {
+  //       const tops = dets
+  //         .slice(0, 3)
+  //         .map((d) => `${d.label}(${prettyPct(d.conf)})`)
+  //         .join(", ");
+  //       setMessages((prev) => [
+  //         ...prev,
+  //         {
+  //           id: String(Date.now() + 2),
+  //           type: "ai",
+  //           content: `아직은 63스퀘어/경복궁/남산서울타워/롯데월드타워만 지원해요.\n감지: ${tops}`,
+  //           timestamp: new Date(),
+  //         },
+  //       ]);
+  //       return;
+  //     }
+
+  //     // 4) Azure Function 상세 정보 조회
+  //     const uniqueNames = Array.from(
+  //       new Set(allowed.map((d) => d.canon))
+  //     ).slice(0, 3);
+  //     const infos = await fetchPOIInfos(uniqueNames);
+
+  //     if (!infos.length) {
+  //       setMessages((prev) => [
+  //         ...prev,
+  //         {
+  //           id: String(Date.now() + 3),
+  //           type: "ai",
+  //           content: `인식: ${uniqueNames.join(
+  //             ", "
+  //           )} — 상세 정보를 가져오지 못했어요.`,
+  //           timestamp: new Date(),
+  //         },
+  //       ]);
+  //       return;
+  //     }
+
+  //     // 5) 말풍선 출력
+  //     const infoTextBlocks = infos.map((info) => {
+  //       const lines = [
+  //         `**${info.name || ""}**`,
+  //         info.address ? `• 주소: ${info.address}` : null,
+  //         info.phone ? `• 전화: ${info.phone}` : null,
+  //         info.open_hours_text ? `• 운영시간: ${info.open_hours_text}` : null,
+  //         info.ticket_price_text ? `• 입장료: ${info.ticket_price_text}` : null,
+  //         info.website ? `• 웹사이트: ${info.website}` : null,
+  //         info.description ? `\n${info.description}` : null,
+  //       ]
+  //         .filter(Boolean)
+  //         .join("\n");
+  //       return lines;
+  //     });
+
+  //     setMessages((prev) => [
+  //       ...prev,
+  //       ...infoTextBlocks.map((txt, i) => ({
+  //         id: String(Date.now() + 4 + i),
+  //         type: "ai",
+  //         content: txt,
+  //         timestamp: new Date(),
+  //       })),
+  //     ]);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setMessages((prev) => [
+  //       ...prev,
+  //       {
+  //         id: String(Date.now() + 999),
+  //         type: "ai",
+  //         content: `오류가 발생했어요: ${String(err?.message || err)}`,
+  //         timestamp: new Date(),
+  //       },
+  //     ]);
+  //   } finally {
+  //     setIsProcessing(false);
+  //     setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
+  //   }
+  // };
+  // 파일/카메라 입력 공통 처리 (YOLO + RAG Azure Function)
+  const processImage = async (file) => {
+    if (!file) return;
+    const imageUrl = URL.createObjectURL(file);
+    setExpanded(true); // 업로드하면 자동 확대
+
+    // 1) 사용자 말풍선 (이미지)
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: String(Date.now()),
+        type: "user",
+        content: ui.imageQueryText,
+        attachments: [{ type: "image", url: imageUrl, caption: file.name }],
+        timestamp: new Date(),
+      },
+    ]);
+    setIsProcessing(true);
+
+    try {
+      // 2) YOLO 감지
+      const dets = await callYOLO(file);
+
+      if (!dets.length) {
+        // 탐지 결과 없을 때 일반적인 이미지 질문
+        const fallbackQuery =
+          "이 이미지의 장소에 대해 알려주세요. 관광 정보를 제공해 주세요.";
+        const ragResponse = await callApi(fallbackQuery);
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: String(Date.now() + 1),
+            type: "ai",
+            content: "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?",
+            timestamp: new Date(),
+          },
+        ]);
+        return;
+      }
+
+      // 3) 허용 라벨 정규화/필터
+      const allowed = dets
+        .map((d) => ({ ...d, canon: normalizeLabel(d.label) }))
+        .filter((d) => !!d.canon);
+
+      if (!allowed.length) {
+        const tops = dets
+          .slice(0, 3)
+          .map((d) => `${d.label}(${prettyPct(d.conf)})`)
+          .join(", ");
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: String(Date.now() + 2),
+            type: "ai",
+            content: `지원 라벨만 제공 중입니다.\n감지: ${tops}`,
+            timestamp: new Date(),
+          },
+        ]);
+        return;
+      }
+
+      // 4) 탐지된 장소들로 RAG 쿼리 생성  - 챗봇 통합
+      const uniqueNames = Array.from(
+        new Set(allowed.map((d) => d.canon))
+      ).slice(0, 3);
+      const confidenceInfo = allowed
+        .slice(0, 3)
+        .map((d) => `${d.canon}(${prettyPct(d.conf)})`)
+        .join(", ");
+      //const infos = await fetchPOIInfos(uniqueNames);
+
+      // 5) callTourismAPI로 RAG+GPT 모델에 쿼리 전달
+      const ragQuery = `${uniqueNames.join(", ")}`;
+
+      const ragResponse = await callApi(ragQuery); // callTourismAPI 사용
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: String(Date.now() + 3),
+          type: "ai",
+          content: ragResponse,
+          timestamp: new Date(),
+        },
       ]);
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: String(Date.now() + 999),
+          type: "ai",
+          content: `오류가 발생했어요: ${String(err?.message || err)}`,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsProcessing(false);
+      setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
     }
   };
 
-  // 모바일과 데스크톱에 따라 높이 조정
-  const chatHeight = isMobile ? "h-[280px]" : "h-[350px]";
+  const handleImageFromGallery = (event) => {
+    const f = event.target.files?.[0];
+    if (f) processImage(f);
+    event.target.value = "";
+  };
+
+  const handleImageFromCamera = (event) => {
+    const f = event.target.files?.[0];
+    if (f) processImage(f);
+    event.target.value = "";
+  };
+
+  const chatHeight = isMobile ? "h-[280px]" : "h-full";
 
   return (
-    <div className="w-full bg-white border-t border-gray-200 flex-shrink-0">
-      <Card
-        className={`flex flex-col ${chatHeight} shadow-none border-none rounded-none`}
+    <div className="h-full w-full bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-lg border-t border-purple-500/30">
+      <div
+        className={`flex flex-col ${chatHeight}  p-4 transition-all duration-300`}
       >
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* 메시지 영역 */}
+        <div className="flex-1 overflow-y-auto neon-scrollbar space-y-4">
           <AnimatePresence>
             {messages.map((message) => (
               <motion.div
@@ -278,16 +635,17 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
                   message.type === "user" ? "justify-end" : "justify-start"
                 }`}
               >
+                {/* 메시지 내용 그대로 */}
                 {message.type === "ai" && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/25">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
                     message.type === "user"
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                      : "bg-gray-100"
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25"
+                      : "bg-gradient-to-r from-gray-800/80 to-gray-900/90 text-white border border-gray-600/30"
                   }`}
                 >
                   {message.attachments?.map((attachment, index) => (
@@ -296,7 +654,7 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
                         <img
                           src={attachment.url}
                           alt={attachment.caption}
-                          className="rounded-lg max-w-full h-auto"
+                          className="rounded-lg max-w-full h-auto border border-purple-500/30"
                         />
                       )}
                     </div>
@@ -306,7 +664,7 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
                   </div>
                 </div>
                 {message.type === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/25">
                     <User className="w-4 h-4 text-white" />
                   </div>
                 )}
@@ -319,10 +677,10 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
               animate={{ opacity: 1, y: 0 }}
               className="flex justify-start items-end gap-2"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-lg">
                 <Bot className="w-4 h-4 text-white" />
               </div>
-              <div className="bg-gray-100 rounded-2xl px-4 py-3">
+              <div className="bg-gradient-to-r from-gray-800/80 to-gray-900/90 rounded-2xl px-4 py-3 border border-gray-600/30">
                 <div className="flex items-center gap-1.5">
                   {[0, 1, 2].map((i) => (
                     <motion.div
@@ -333,33 +691,65 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
                         repeat: Infinity,
                         delay: i * 0.2,
                       }}
-                      className="w-2 h-2 rounded-full bg-gray-400"
+                      className="w-2 h-2 rounded-full bg-purple-400"
                     />
                   ))}
                 </div>
               </div>
             </motion.div>
           )}
-          <div ref={messagesEndRef} />
         </div>
-        <div className="border-t border-gray-200 p-3">
+
+        {/* 입력 영역 */}
+        <div className="border-t border-purple-500/30 pt-3 mt-3">
           <div className="flex items-center gap-2">
+            {/* 파일 업로드 (갤러리) */}
             <input
               type="file"
               ref={fileInputRef}
-              onChange={handleImageUpload}
+              onChange={handleImageFromGallery}
               accept="image/*"
               className="hidden"
             />
-            <Button
+            {/* 카메라(촬영) */}
+
+            <input
+              type="file"
+              ref={cameraInputRef}
+              onChange={handleImageFromCamera}
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+            />
+
+            <NeonButton
+              size="icon"
+              variant="ghost"
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={isProcessing}
+              className="p-2"
+              title="카메라(촬영)"
+            >
+              <Camera className="w-5 h-5" />
+            </NeonButton>
+
+            <NeonButton
               size="icon"
               variant="ghost"
               onClick={() => fileInputRef.current?.click()}
               disabled={isProcessing}
+              title="파일에서 선택"
+              className="p-2"
             >
-              <Camera className="w-5 h-5" />
-            </Button>
-            <Button
+              <img
+                src={`${process.env.PUBLIC_URL}/img/Upload.png`}
+                alt="업로드"
+                className="w-5 h-5 object-contain filter brightness-0 invert"
+              />
+            </NeonButton>
+
+            {/* 음성 */}
+            <NeonButton
               size="icon"
               variant="ghost"
               onClick={handleVoiceRecording}
@@ -371,7 +761,8 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
               ) : (
                 <Mic className="w-5 h-5" />
               )}
-            </Button>
+            </NeonButton>
+            {/* 텍스트 */}
             <div className="flex-1 relative">
               <input
                 type="text"
@@ -379,28 +770,50 @@ const FixedChatbot = ({ callApi, ui, isMobile }) => {
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleTextSend()}
                 placeholder={ui.chatbotPlaceholder}
-                className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                className="w-full px-4 py-2 border border-purple-500/30 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-sm bg-gray-800/50 text-white placeholder-gray-400 backdrop-blur-sm"
                 disabled={isProcessing}
               />
             </div>
-            <Button
+            {/* 확대/축소 */}
+            <NeonButton
+              size="icon"
+              variant="outline"
+              onClick={() => setExpanded((v) => !v)}
+              title={expanded ? "작게" : "크게"}
+            >
+              {expanded ? (
+                <Minimize2 className="w-5 h-5" />
+              ) : (
+                <Maximize2 className="w-5 h-5" />
+              )}
+            </NeonButton>
+            {/* 전송 */}
+            <NeonButton
               size="icon"
               onClick={handleTextSend}
               disabled={!inputMessage.trim() || isProcessing}
-              className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+              className="rounded-full p-2"
             >
               <Send className="w-5 h-5" />
-            </Button>
+            </NeonButton>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
-
 // #################################################################
-// ## 메인 DocentMantine 컴포넌트
+// ## 메인 DocentMantine
 // #################################################################
+const CATEGORY_OPTIONS = ["all", "museum", "palace", "landmark", "historic"];
+const guessCategoryKey = (raw) => {
+  const s = (raw || "").toString().toLowerCase();
+  if (/museum|미술|박물|gallery/.test(s)) return "museum";
+  if (/palace|궁|고궁/.test(s)) return "palace";
+  if (/landmark|tower|타워|랜드마크/.test(s)) return "landmark";
+  if (/historic|역사|유적|heritage/.test(s)) return "historic";
+  return "landmark";
+};
 export default function DocentMantine() {
   const [pois, setPOIs] = useState([]);
   const [selectedPOI, setSelectedPOI] = useState(null);
@@ -410,10 +823,10 @@ export default function DocentMantine() {
   const [csvData, setCsvData] = useState([]);
   const [selectedLang, setSelectedLang] = useState("ko");
   const [translatedDesc, setTranslatedDesc] = useState("");
+  const [category, setCategory] = useState("all");
 
   const ui = UI[selectedLang] || UI.ko;
   const isMobile = useIsMobile();
-
   const watchId = useRef(null);
   const poisRef = useRef([]);
 
@@ -421,6 +834,7 @@ export default function DocentMantine() {
     poisRef.current = pois;
   }, [pois]);
 
+  // CSV 로드
   useEffect(() => {
     fetch(process.env.PUBLIC_URL + "/final_visit_seoul.csv")
       .then((res) => res.text())
@@ -434,24 +848,36 @@ export default function DocentMantine() {
       .catch((e) => console.error("CSV load error", e));
   }, []);
 
-  const csvPois = useMemo(() => {
-    return (csvData || [])
-      .map((row) => {
-        const lat = parseFloat(row.lat);
-        const lng = parseFloat(row.lon);
-        if (isNaN(lat) || isNaN(lng)) return null;
-        return {
-          id: row.poi_id || `${row.name_ko}-${lat}-${lng}`,
-          name_ko: row.name_ko || "장소",
-          address_ko: row.address_ko || "",
-          description_ko: row.rag_seed_text_ko || "",
-          location: { lat, lng },
-          _raw: row,
-        };
-      })
-      .filter(Boolean);
-  }, [csvData]);
+  // CSV → 내부 POI
+  const csvPois = useMemo(
+    () =>
+      (csvData || [])
+        .map((row) => {
+          const lat = parseFloat(row.lat);
+          const lng = parseFloat(row.lon);
+          if (isNaN(lat) || isNaN(lng)) return null;
+          const catRaw =
+            row.category ||
+            row.category_ko ||
+            row.category_en ||
+            row.cat ||
+            row.tag ||
+            row.name_ko;
+          return {
+            id: row.poi_id || `${row.name_ko}-${lat}-${lng}`,
+            name_ko: row.name_ko || "장소",
+            address_ko: row.address_ko || "",
+            description_ko: row.rag_seed_text_ko || "",
+            category: guessCategoryKey(catRaw),
+            location: { lat, lng },
+            _raw: row,
+          };
+        })
+        .filter(Boolean),
+    [csvData]
+  );
 
+  // 정적 텍스트 번역 캐시
   const [nameTr, setNameTr] = useState({});
   const [addrTr, setAddrTr] = useState({});
   useEffect(() => {
@@ -482,15 +908,17 @@ export default function DocentMantine() {
       }
     })();
   }, [csvPois, selectedLang]);
-
+  // 리스트 데이터(번역 반영)
   const listData = useMemo(() => {
-    if (!csvPois.length) return (pois || []).map((p) => ({ ...p }));
+    if (!csvPois.length)
+      return (pois || []).map((p) => ({ ...p, category: "landmark" }));
     return csvPois.map((c) => ({
       id: c.id,
       name: selectedLang === "ko" ? c.name_ko : nameTr[c.id] || c.name_ko,
       address:
         selectedLang === "ko" ? c.address_ko : addrTr[c.id] || c.address_ko,
       description: c.description_ko,
+      category: c.category,
       location: c.location,
     }));
   }, [csvPois, pois, selectedLang, nameTr, addrTr]);
@@ -506,27 +934,27 @@ export default function DocentMantine() {
       }
     })();
   }, [csvPois.length]);
-
+  // 카테고리 필터
+  const filteredList = useMemo(() => {
+    if (category === "all") return listData;
+    return listData.filter((p) => p.category === category);
+  }, [listData, category]);
+  // 위치 추적
   useEffect(() => {
-    if (navigator.geolocation) {
-      watchId.current = navigator.geolocation.watchPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (err) => {
-          console.error("위치 추적 오류:", err);
-        },
-        { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 }
-      );
-    }
-    return () => {
-      if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
-    };
+    if (!navigator.geolocation) return;
+    watchId.current = navigator.geolocation.watchPosition(
+      (pos) =>
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        }),
+      (err) => console.warn(err),
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 }
+    );
+    return () =>
+      watchId.current && navigator.geolocation.clearWatch(watchId.current);
   }, []);
-
+  // 상세설명 번역
   useEffect(() => {
     (async () => {
       if (!selectedPOI || !selectedPOI.description) {
@@ -560,7 +988,7 @@ export default function DocentMantine() {
     })();
   }, [isDocentActive, selectedPOI, translatedDesc, selectedLang]);
 
-  const VISIBLE_LIMIT = 10;
+  const VISIBLE_LIMIT = 3; // 10에서 3으로 변경
   const limitedListData = useMemo(
     () => listData.slice(0, VISIBLE_LIMIT),
     [listData]
@@ -591,7 +1019,8 @@ export default function DocentMantine() {
     stopTTS();
     setIsPlaying(false);
   };
-  //azure function 사용
+
+  // 챗봇 function 불러옴
   const callTourismAPI = async (userQuery) => {
     const functionUrl =
       "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/tourismqnaapi?code=BcqZANgpmolF-eQNAkdB4BgrhINolY8tLktSFVRHhaGhAzFu3b1_Tw==";
@@ -610,36 +1039,175 @@ export default function DocentMantine() {
       throw error;
     }
   };
+  // 카테고리 버튼 – pill
+  const CategoryBar = ({ ui, category, setCategory }) => (
+    <div className="bg-gray-900/80 backdrop-blur-lg border-b border-purple-500/30 px-4 py-3">
+      <div className="flex flex-wrap gap-2">
+        {CATEGORY_OPTIONS.map((key) => (
+          <NeonButton
+            key={key}
+            size="sm"
+            variant={category === key ? "primary" : "outline"}
+            onClick={() => setCategory(key)}
+            className={`rounded-full px-4 py-2 text-sm transition-all duration-300 ${
+              category === key
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
+                : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"
+            }`}
+          >
+            {ui?.categories?.[key] || key}
+          </NeonButton>
+        ))}
+      </div>
+    </div>
+  );
 
   // =========================
-  // 모바일 레이아웃
+  // 모바일
   // =========================
   if (isMobile) {
     return (
-      <div className="h-screen bg-gray-50 flex flex-col">
-        {/* 헤더 */}
-        <div className="bg-white border-b border-gray-200 px-4 py-3 shadow-sm flex-shrink-0">
+      <BackgroundEffect>
+        <NeonScrollbarStyles />
+        <div className="h-screen flex flex-col">
+          {/* 헤더 */}
+          <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-4 py-3 shadow-lg flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/25">
+                  <Navigation className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <GradientText
+                    variant="secondary"
+                    size="lg"
+                    className="font-bold"
+                  >
+                    {ui.title}
+                  </GradientText>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedLang}
+                  onChange={(e) => setSelectedLang(e.target.value)}
+                  className="border border-purple-500/30 rounded-md px-2 py-1 text-xs bg-gray-800/50 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="ko">한국어</option>
+                  <option value="en">Eng</option>
+                  <option value="ja">日本語</option>
+                  <option value="zh">中文</option>
+                </select>
+                <div className="flex items-center gap-1.5">
+                  <Switch
+                    checked={isDocentActive}
+                    onCheckedChange={(v) => {
+                      if (!v) stopAllTTS();
+                      setIsDocentActive(v);
+                    }}
+                    className="data-[state=checked]:from-indigo-500 data-[state=checked]:to-purple-500 data-[state=checked]:bg-gradient-to-r"
+                  />
+                  <label className="text-sm font-medium text-gray-300">
+                    {ui.aiDocent}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 카테고리 바를 헤더 밖으로 이동 */}
+          <CategoryBar ui={ui} category={category} setCategory={setCategory} />
+
+          {/* 콘텐츠 영역 */}
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* 지도 */}
+            <div className="h-1/3 flex-shrink-0 border border-purple-500/20 rounded-lg m-2 overflow-hidden">
+              <LocationMap
+                userLocation={userLocation}
+                pois={mapPoisMobile}
+                selectedPOI={selectedPOI}
+                onSelectPOI={setSelectedPOI}
+                showSelectedPopup
+              />
+            </div>
+
+            {/* 목록/상세정보 (스크롤) */}
+            <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
+              <NeonCard className="m-2 h-full">
+                {selectedPOI ? (
+                  <POIDetails
+                    poi={{ ...selectedPOI, description: translatedDesc }}
+                    userLocation={userLocation}
+                    onPlayTTS={() => speakText(translatedDesc, selectedLang)}
+                    isDocentActive={isDocentActive}
+                  />
+                ) : (
+                  <POIList
+                    pois={limitedListData}
+                    maxRows={4}
+                    selectedPOI={selectedPOI}
+                    nearbyPOIs={[]}
+                    userLocation={userLocation}
+                    onSelectPOI={setSelectedPOI}
+                    isDocentActive={isDocentActive}
+                    isPlaying={isPlaying}
+                  />
+                )}
+              </NeonCard>
+            </div>
+
+            {/* 하단 고정 챗봇 */}
+            <FixedChatbot
+              callApi={callTourismAPI}
+              ui={ui}
+              isMobile
+              selectedLang={selectedLang}
+            />
+          </div>
+        </div>
+      </BackgroundEffect>
+    );
+  }
+
+  // =========================
+  // 데스크톱
+  // =========================
+
+  return (
+    <BackgroundEffect>
+      <NeonScrollbarStyles />
+      <div className="h-screen flex flex-col">
+        {/* 헤더 - 기존과 동일 */}
+        <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-6 py-4 shadow-lg">
+          {/* 헤더 내용 그대로 */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/25">
                 <Navigation className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-900">{ui.title}</h1>
+                <GradientText
+                  variant="secondary"
+                  size="xl"
+                  className="font-bold"
+                >
+                  {ui.title}
+                </GradientText>
+                <p className="text-xs text-gray-400">{ui.subtitle}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <select
                 value={selectedLang}
                 onChange={(e) => setSelectedLang(e.target.value)}
-                className="border rounded-md px-2 py-1 text-xs"
+                className="border border-purple-500/30 rounded-md px-2 py-1 text-sm bg-gray-800/50 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="ko">한국어</option>
-                <option value="en">Eng</option>
+                <option value="en">English</option>
                 <option value="ja">日本語</option>
-                <option value="zh">中文</option>
+                <option value="zh">中文(简体)</option>
               </select>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <Switch
                   checked={isDocentActive}
                   onCheckedChange={(v) => {
@@ -647,146 +1215,109 @@ export default function DocentMantine() {
                     setIsDocentActive(v);
                   }}
                 />
-                <label className="text-sm font-medium">{ui.aiDocent}</label>
+                <span className="data-[state=checked]:from-indigo-500 data-[state=checked]:to-purple-500 data-[state=checked]:bg-gradient-to-r">
+                  {ui.aiDocent}
+                </span>
+              </div>
+              {isPlaying && (
+                <NeonButton
+                  variant="outline"
+                  size="sm"
+                  onClick={stopAllTTS}
+                  className="flex items-center gap-1"
+                >
+                  <VolumeX className="w-4 h-4 mr-1" />
+                  {ui.stopVoice}
+                </NeonButton>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* 카테고리 바  */}
+        <CategoryBar ui={ui} category={category} setCategory={setCategory} />
+        {/* 메인 콘텐츠 - 수직으로 60%/40% 분할 */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* 상단 영역 (60%) - POI리스트 + 지도 + 상세정보 */}
+          <div className="h-[60%] flex min-h-0">
+            {/* 왼쪽 POI 리스트 */}
+            <div className="w-80 flex-shrink-0">
+              <NeonCard className="h-full overflow-hidden">
+                <div className="p-4 h-full flex flex-col">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    관광지 목록
+                  </h3>
+                  <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
+                    <POIList
+                      pois={filteredList}
+                      maxRows={6}
+                      selectedPOI={selectedPOI}
+                      nearbyPOIs={[]}
+                      userLocation={userLocation}
+                      onSelectPOI={setSelectedPOI}
+                      isDocentActive={isDocentActive}
+                      isPlaying={isPlaying}
+                    />
+                  </div>
+                </div>
+              </NeonCard>
+            </div>
+
+            {/* 중앙 지도 */}
+            <div className="w-1/2 relative min-w-0 min-h-0 m-3">
+              <div className="absolute inset-0 rounded-2xl overflow-hidden border border-purple-500/20">
+                <LocationMap
+                  userLocation={userLocation}
+                  pois={filteredList}
+                  selectedPOI={selectedPOI}
+                  onSelectPOI={setSelectedPOI}
+                  showSelectedPopup
+                />
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* 콘텐츠 영역 */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* 지도 */}
-          <div className="h-1/3 flex-shrink-0">
-            <LocationMap
-              userLocation={userLocation}
-              pois={mapPoisMobile}
-              selectedPOI={selectedPOI}
-              onSelectPOI={setSelectedPOI}
-              showSelectedPopup
-            />
-          </div>
+            {/* 오른쪽 상세정보  */}
+            <div className="w-80 flex-shrink-0">
+              <NeonCard className="h-full">
+                <div className="p-4 h-full">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    상세 정보
+                  </h3>
 
-          {/* 목록/상세정보 (스크롤) */}
-          <div className="flex-1 min-h-0 overflow-y-auto bg-white">
-            {selectedPOI ? (
-              <POIDetails
-                poi={{ ...selectedPOI, description: translatedDesc }}
-                userLocation={userLocation}
-                onPlayTTS={() => speakText(translatedDesc, selectedLang)}
-                isDocentActive={isDocentActive}
-              />
-            ) : (
-              <POIList
-                pois={limitedListData}
-                selectedPOI={selectedPOI}
-                nearbyPOIs={limitedNearby}
-                userLocation={userLocation}
-                onSelectPOI={(poi) => setSelectedPOI(poi)}
-                isDocentActive={isDocentActive}
-                isPlaying={isPlaying}
-              />
-            )}
-          </div>
-
-          {/* 하단 고정 챗봇 */}
-          <FixedChatbot callApi={callTourismAPI} ui={ui} isMobile={true} />
-        </div>
-      </div>
-    );
-  }
-
-  // =========================
-  // 데스크톱 레이아웃
-  // =========================
-  return (
-    <div className="h-screen bg-gray-50 flex flex-col">
-      <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Navigation className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">{ui.title}</h1>
-              <p className="text-xs text-gray-500">{ui.subtitle}</p>
+                  {/* 강제 높이 제한으로 스크롤 보장 */}
+                  <div
+                    className="overflow-y-auto neon-scrollbar"
+                    style={{
+                      height: "calc(100% - 2.5rem)", // 헤더 높이만큼 빼기
+                      maxHeight: "500px", // 최대 높이 제한
+                    }}
+                  >
+                    <POIDetails
+                      poi={
+                        selectedPOI
+                          ? { ...selectedPOI, description: translatedDesc }
+                          : null
+                      }
+                      userLocation={userLocation}
+                      onPlayTTS={() => speakText(translatedDesc, selectedLang)}
+                      isDocentActive={isDocentActive}
+                    />
+                  </div>
+                </div>
+              </NeonCard>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <select
-              value={selectedLang}
-              onChange={(e) => setSelectedLang(e.target.value)}
-              className="border rounded-md px-2 py-1 text-sm"
-            >
-              <option value="ko">한국어</option>
-              <option value="en">English</option>
-              <option value="ja">日本語</option>
-              <option value="zh">中文(简体)</option>
-            </select>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={isDocentActive}
-                onCheckedChange={(v) => {
-                  if (!v) stopAllTTS();
-                  setIsDocentActive(v);
-                }}
-              />
-              <span className="text-sm font-medium">{ui.aiDocent}</span>
-            </div>
-            {isPlaying && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={stopAllTTS}
-                className="text-red-600 hover:text-red-700"
-              >
-                <VolumeX className="w-4 h-4 mr-1" />
-                {ui.stopVoice}
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* 메인 콘텐츠 */}
-      <div className="flex flex-1 min-h-0">
-        <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
-          <POIList
-            pois={listData}
-            selectedPOI={selectedPOI}
-            nearbyPOIs={nearbyCsvCards}
-            userLocation={userLocation}
-            onSelectPOI={(poi) => setSelectedPOI(poi)}
-            isDocentActive={isDocentActive}
-            isPlaying={isPlaying}
-          />
-        </div>
-        <div className="flex-1 relative min-w-0 min-h-0">
-          <div className="absolute inset-0">
-            <LocationMap
-              userLocation={userLocation}
-              pois={mapPoisDesktop}
-              selectedPOI={selectedPOI}
-              onSelectPOI={setSelectedPOI}
-              showSelectedPopup
+          {/* 하단 챗봇 영역 (40%) */}
+          <div className="h-[40%] flex-shrink-0">
+            <FixedChatbot
+              callApi={callTourismAPI}
+              ui={ui}
+              isMobile={false}
+              selectedLang={selectedLang}
             />
           </div>
         </div>
-        <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
-          <POIDetails
-            poi={
-              selectedPOI
-                ? { ...selectedPOI, description: translatedDesc }
-                : null
-            }
-            userLocation={userLocation}
-            onPlayTTS={() => speakText(translatedDesc, selectedLang)}
-            isDocentActive={isDocentActive}
-          />
-        </div>
       </div>
-
-      {/* 하단 고정 챗봇 (데스크톱용) */}
-      <FixedChatbot callApi={callTourismAPI} ui={ui} isMobile={false} />
-    </div>
+    </BackgroundEffect>
   );
 }
