@@ -596,7 +596,7 @@ def load_route_plan(plan_id: str):
 _YOLO_MODEL = None
 # best.pt 경로 찾음 
 def get_model_path():    
-    # 1. 현재 파일(routes.py) 기준으로 프로젝트 루트 찾기
+    #  현재 파일(routes.py) 기준으로 프로젝트 루트 찾기
     current_file = Path(__file__).resolve()  # /path/to/backend/app/api/routes.py
     backend_root = current_file.parent.parent.parent  # /path/to/backend/
     model_path = backend_root / "models" / "best.pt"
@@ -607,23 +607,19 @@ def get_model_path():
     if model_path.exists():
         return str(model_path)
     
-    # 2. 환경변수 확인 (팀원별로 설정 가능)
+    # 환경변수 확인 
     env_path = os.getenv("YOLO_MODEL_PATH")
     if env_path and os.path.exists(env_path):
         return env_path
     
-    # 3. 기본 모델로 폴백
+    # 기본 모델로 폴백
     return "yolov8n.pt"
-
+# ---------- YOLO DETECT  ----------
 @api_bp.route("/detect", methods=["POST", "OPTIONS"])
 def detect():
-    try:
-        print("=== 🚀 YOLO Detection 요청 받음 ===")
-        
+    try:        
         if request.method == "OPTIONS":
             return ("", 204)
-
-        # 파일 필수 확인
         if "file" not in request.files:
             return jsonify({"error": "missing_file"}), 400
 
@@ -631,8 +627,6 @@ def detect():
         conf = float(request.form.get("conf", 0.25))
         imgsz = int(request.form.get("imgsz", 640))
         device = os.getenv("YOLO_DEVICE", "cpu")       
-
-
         # 모델 로딩 (한 번만 로딩)
         model_path = get_model_path()
         
@@ -640,8 +634,6 @@ def detect():
         if _YOLO_MODEL is None:         
             from ultralytics import YOLO
             _YOLO_MODEL = YOLO(model_path)
-            print("✅ YOLO 모델 로딩 완료")
-
         # 업로드된 파일 처리
         f = request.files["file"]
         print(f"업로드된 파일: {f.filename}")
@@ -654,7 +646,6 @@ def detect():
 
         try:
             # YOLO 추론 실행
-            print(" YOLO 추론 시작...")
             preds = _YOLO_MODEL.predict(
                 source=tmp_path, 
                 conf=conf, 
@@ -662,13 +653,12 @@ def detect():
                 device=device, 
                 verbose=False
             )
-            print(f" 완료: {len(preds)}개 결과")
+            print(f" YOLO 추론 완료: {len(preds)}개 결과")
         
         finally:
             # 임시 파일 정리
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
-                print("🗑️  임시 파일 삭제")
 
         # 결과 처리 및 JSON 변환
         detections = []
@@ -699,11 +689,9 @@ def detect():
                             "name": class_name,
                             "cls": cls_idx,
                             "conf": confidence,
-                        })
-                        
-                        print(f"🎯 탐지: {class_name} (신뢰도: {confidence:.3f})")
+                        })                        
 
-        print(f"📊 최종 탐지된 객체 수: {len(detections)}")
+        print(f" 최종 탐지된 객체 수: {len(detections)}")
         
         # 성공 응답
         return jsonify({
@@ -713,7 +701,6 @@ def detect():
         })
 
     except ImportError as e:
-        print(f"❌ Import 오류: {e}")
         return jsonify({
             "error": "ultralytics_not_installed",
             "message": "YOLO 라이브러리가 설치되지 않았습니다.",
@@ -721,7 +708,6 @@ def detect():
         }), 500
         
     except FileNotFoundError as e:
-        print(f"❌ 파일 오류: {e}")
         return jsonify({
             "error": "model_file_not_found", 
             "message": "YOLO 모델 파일을 찾을 수 없습니다.",
@@ -729,18 +715,15 @@ def detect():
         }), 500
         
     except Exception as e:
-        print(f"❌ 일반 오류: {e}")
         import traceback
         error_details = traceback.format_exc()
-        print(f"📋 상세 오류:\n{error_details}")
+        print(f"오류:\n{error_details}")
         
         return jsonify({
             "error": "yolo_processing_failed",
             "message": "이미지 처리 중 오류가 발생했습니다.", 
             "detail": str(e)
         }), 500
-
-
 
 
 # ---------- POI INFO (names -> info) ----------
@@ -880,62 +863,50 @@ def spotify_logout():
 
 
 # =================================================================
-
 #Social - DB 
 board_service  = community_social.BoardService()
 
 # =================================================================
 # JWT 토큰 검증 함수들
-# =================================================================
+#====================================================================
 
+
+#    Authorization 헤더에서 JWT 토큰을 파싱하고 사용자 ID를 반환
 def get_user_from_token(auth_header):
-    """
-    Authorization 헤더에서 JWT 토큰을 파싱하고 사용자 ID를 반환합니다.
-    """
+
     try:
-        # 1. Authorization 헤더 확인
+        #Authorization 헤더 확인
         if not auth_header or not auth_header.startswith('Bearer '):
-            print("❌ Authorization 헤더가 없거나 Bearer 형식이 아님")
             # 토큰이 없으면 세션에서 시도
             session_user_id = session.get('user_id')
-            print(f"🔄 세션에서 user_id 가져오기: {session_user_id}")
             return session_user_id
         
-        # 2. 토큰 추출
-        token = auth_header.split(' ')[1]
-        print(f"🔑 추출된 토큰: {token[:20]}...")
-        
-        # 3. Google 토큰인지 확인 (긴 토큰)
-        if len(token) > 500:  # Google JWT는 보통 매우 길다
-            print("📱 Google 토큰으로 추정됨")
+        # 토큰 추출
+        token = auth_header.split(' ')[1]        
+        # Google 토큰인지 확인 
+        if len(token) > 500:  
+            print(" Google 토큰으로 추정됨")
             user_id = verify_google_token(token)
             if user_id:
-                print(f"✅ Google 토큰 검증 성공: user_id={user_id}")
+                print(f"Google 토큰 검증 성공: user_id={user_id}")
                 return user_id
         
-        # 4. 자체 발급 토큰 검증
-        print("🏠 자체 토큰으로 추정됨")
+        # 자체 발급 토큰 검증
+        print("자체 토큰으로 추정됨")
         user_id = verify_custom_token(token)
         if user_id:
-            print(f"✅ 자체 토큰 검증 성공: user_id={user_id}")
+            print(f"자체 토큰 검증 성공: user_id={user_id}")
             return user_id
         
-        # 5. 토큰 검증 실패시 세션으로 폴백
-        print("❌ 토큰 검증 실패, 세션으로 폴백")
+        # 토큰 검증 실패시 세션으로 폴백    
         session_user_id = session.get('user_id')
-        print(f"🔄 세션에서 user_id 가져오기: {session_user_id}")
         return session_user_id
         
     except Exception as e:
-        print(f"❌ 토큰 파싱 오류: {e}")
         session_user_id = session.get('user_id')
-        print(f"🔄 오류 발생, 세션으로 폴백: {session_user_id}")
         return session_user_id
-
+    
 def verify_google_token(token):
-    """
-    Google OAuth JWT 토큰을 검증합니다.
-    """
     try:
         # Google의 공개 키로 토큰 검증
         google_keys_url = "https://www.googleapis.com/oauth2/v3/certs"
@@ -977,9 +948,6 @@ def verify_google_token(token):
     return None
 
 def verify_custom_token(token):
-    """
-    자체 발급한 JWT 토큰을 검증합니다.
-    """
     try:
         # 환경변수에서 비밀키 가져오기
         secret_key = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-this')
@@ -1013,10 +981,6 @@ def verify_custom_token(token):
     return None
 
 def create_custom_token(user_id, email=None):
-    """
-    사용자를 위한 자체 JWT 토큰을 생성합니다.
-    로그인 성공시 호출하여 프론트엔드에 전달합니다.
-    """
     try:
         secret_key = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-this')
         
@@ -1034,17 +998,132 @@ def create_custom_token(user_id, email=None):
     except Exception as e:
         print(f"토큰 생성 중 오류: {e}")
         return None
-
-
-
+# ========================Social Board 게시판 social 기분 CRUD=====================================
+#
 # =================================================================
-# 댓글 목록 조회 API
+#  Create 
+
+# 게시글 작성 --------------------------------
+@api_bp.route('/boards', methods=['POST'])
+def create_board():
+    try:       
+        try:
+            data = request.get_json()
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': '잘못된 데이터 형식입니다'
+            }), 400
+        
+        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
+        auth_header = request.headers.get('Authorization')        
+        current_user_id = get_user_from_token(auth_header)      
+          
+        if not current_user_id:
+            return jsonify({
+                'success': False,
+                'error': '로그인이 필요합니다'
+            }), 401        
+
+        title = data.get('title', '').strip()
+        content = data.get('content', '').strip()
+        tags = data.get('tags', '').strip()
+   
+        if not title:
+            return jsonify({
+                'success': False,
+                'error': '제목은 필수입니다'
+            }), 400
+            
+        if not content:
+            return jsonify({
+                'success': False,
+                'error': '내용은 필수입니다'
+            }), 400
+        
+        # BoardService의 create_post 메서드 호출
+        result = board_service.create_post(
+            user_id=current_user_id,
+            title=title,
+            content=content,
+            images=None
+        )
+                
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'board_id': result['board_id'],
+                'message': result['message']
+            }), 201
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error']
+            }), 500
+            
+    except Exception as e:
+
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# 댓글 작성 --------------------------------
+@api_bp.route('/boards/<int:board_id>/comments', methods=['POST'])
+def create_comment(board_id):
+
+    try:
+        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
+        
+        if not current_user_id:
+            return jsonify({
+                'success': False,
+                'error': '로그인이 필요합니다'
+            }), 401
+        
+        data = request.get_json()
+        content = data.get('content')
+        
+        if not content:
+            return jsonify({
+                'success': False,
+                'error': '댓글 내용이 필요합니다'
+            }), 400
+        
+        result = board_service.create_comment(board_id, current_user_id, content)
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'comment_id': result['comment_id'],
+                'comment': result.get('comment'),  # 새로 생성된 댓글 정보
+                'message': result['message']
+            }), 201
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error']
+            }), 500
+            
+    except Exception as e:
+        print(f"Error in POST /boards/{board_id}/comments: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+        
+        
+        
 # =================================================================
+#  Read 
+
+#댓글 목록------------------
 @api_bp.route('/boards/<int:board_id>/comments', methods=['GET'])
 def get_comments(board_id):
-    """
-    특정 게시글의 댓글 목록을 조회합니다.
-    """
     try:
         result = board_service.get_comments(board_id)
         
@@ -1068,108 +1147,62 @@ def get_comments(board_id):
 
 
 # =================================================================
-# 게시글 작성 API
-# =================================================================
-@api_bp.route('/boards', methods=['POST'])
-def create_board():
-    """
-    새로운 게시글을 작성합니다.
-    """
+# Update
+
+
+# 게시글 수정------------------
+@api_bp.route('/boards/<int:board_id>', methods=['PUT'])
+def update_board(board_id):
     try:
-        # 🔍 디버깅용 로깅 추가
-        print(f"📊 현재 세션: {dict(session)}")
-        print("=" * 50)
-        print("POST /boards 요청 받음")
-        print(f"📋 받은 헤더: {dict(request.headers)}")
-        print(f"📋 Content-Type: {request.content_type}")
-        print(f"🍪 받은 쿠키: {request.cookies}")
-        
-        # 요청 데이터 먼저 확인
-        try:
-            data = request.get_json()
-            print(f"📄 받은 데이터: {data}")
-        except Exception as e:
-            print(f"❌ JSON 파싱 오류: {e}")
-            return jsonify({
-                'success': False,
-                'error': '잘못된 데이터 형식입니다'
-            }), 400
-        
-        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
-        auth_header = request.headers.get('Authorization')
-        print(f"🔑 Authorization 헤더: {auth_header}")
-        
-        current_user_id = get_user_from_token(auth_header)
-        print(f"👤 최종 사용자 ID: {current_user_id}")
+        current_user_id = session.get('user_id')
         
         if not current_user_id:
-            print("❌ 인증 실패: 사용자 ID를 가져올 수 없음")
             return jsonify({
                 'success': False,
                 'error': '로그인이 필요합니다'
             }), 401
         
-        # 나머지 로직은 동일...
+        data = request.get_json()
         title = data.get('title', '').strip()
         content = data.get('content', '').strip()
-        tags = data.get('tags', '').strip()
         
-        print(f"📝 파싱된 데이터: title='{title}', content='{content}', tags='{tags}'")
-        
-        if not title:
+        if not title or not content:
             return jsonify({
                 'success': False,
-                'error': '제목은 필수입니다'
-            }), 400
-            
-        if not content:
-            return jsonify({
-                'success': False,
-                'error': '내용은 필수입니다'
+                'error': '제목과 내용은 필수입니다'
             }), 400
         
-        # BoardService의 create_post 메서드 호출
-        print(f"🚀 BoardService.create_post 호출 중...")
-        result = board_service.create_post(
-            user_id=current_user_id,
-            title=title,
-            content=content,
-            images=None
-        )
-        
-        print(f"📊 BoardService 결과: {result}")
+        result = board_service.update_post(board_id, current_user_id, title, content)
         
         if result['success']:
             return jsonify({
                 'success': True,
-                'board_id': result['board_id'],
+                'post': result.get('post'),
                 'message': result['message']
-            }), 201
+            })
         else:
+            status_code = 403 if '권한이 없습니다' in result['error'] else 500
             return jsonify({
                 'success': False,
                 'error': result['error']
-            }), 500
+            }), status_code
             
     except Exception as e:
-        print(f"❌ Error in POST /boards: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Error in PUT /boards/{board_id}: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
-# =================================================================
-# 댓글 작성 API
-# =================================================================
-@api_bp.route('/boards/<int:board_id>/comments', methods=['POST'])
-def create_comment(board_id):
-    """
-    특정 게시글에 댓글을 작성합니다.
-    """
+
+
+# 댓글 수정------------------
+
+@api_bp.route('/comments/<int:comment_id>', methods=['PUT'])
+def update_comment(comment_id):
     try:
-        # 현재 로그인된 사용자 ID
-        current_user_id = session.get('user_id', 1)
+        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
         
         if not current_user_id:
             return jsonify({
@@ -1186,39 +1219,77 @@ def create_comment(board_id):
                 'error': '댓글 내용이 필요합니다'
             }), 400
         
-        result = board_service.create_comment(board_id, current_user_id, content)
+        result = board_service.update_comment(comment_id, current_user_id, content)
         
         if result['success']:
             return jsonify({
                 'success': True,
-                'comment_id': result['comment_id'],
+                'comment': result.get('comment'),  # 수정된 댓글 정보
                 'message': result['message']
-            }), 201
+            })
         else:
+            status_code = 403 if '권한이 없습니다' in result['error'] else 500
             return jsonify({
                 'success': False,
                 'error': result['error']
-            }), 500
+            }), status_code
             
     except Exception as e:
-        print(f"Error in POST /boards/{board_id}/comments: {e}")
+        print(f"Error in PUT /comments/{comment_id}: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+        
+# =================================================================
+# Delete ( 실제로 DB에서 지우는게 아니라 delete한 날짜로 관리하는 소프트 삭제 방법)
+
+# 댓글 삭제 API ----------------------------------------------------   
+@api_bp.route('/comments/<int:comment_id>', methods=['DELETE'])
+def delete_comment(comment_id):
+
+    try:
+        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
+        
+        if not current_user_id:
+            return jsonify({
+                'success': False,
+                'error': '로그인이 필요합니다'
+            }), 401
+        
+        result = board_service.delete_comment(comment_id, current_user_id)
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'message': result['message']
+            })
+        else:
+            status_code = 403 if '권한이 없습니다' in result['error'] else 500
+            return jsonify({
+                'success': False,
+                'error': result['error']
+            }), status_code
+            
+    except Exception as e:
+        print(f"Error in DELETE /comments/{comment_id}: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
 
-
-# =================================================================
-# 게시글 삭제 API
-# =================================================================
+# 게시글 삭제 API  ----------------------------------------------------
 @api_bp.route('/boards/<int:board_id>', methods=['DELETE'])
 def delete_board(board_id):
     """
     게시글을 삭제합니다. (소프트 삭제)
     """
     try:
-        # 현재 로그인된 사용자 ID
-        current_user_id = session.get('user_id', 1)
+        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
         
         if not current_user_id:
             return jsonify({
@@ -1234,10 +1305,11 @@ def delete_board(board_id):
                 'message': result['message']
             })
         else:
+            status_code = 403 if '권한이 없습니다' in result['error'] else 500
             return jsonify({
                 'success': False,
                 'error': result['error']
-            }), 400 if '권한이 없습니다' in result['error'] else 500
+            }), status_code
             
     except Exception as e:
         print(f"Error in DELETE /boards/{board_id}: {e}")
@@ -1247,18 +1319,15 @@ def delete_board(board_id):
         }), 500
 
 
-
 # =================================================================
-# 좋아요 토글 API
+# Likes  기능
 # =================================================================
 @api_bp.route('/boards/<int:board_id>/like', methods=['POST'])
 def toggle_like(board_id):
-    """
-    게시글 좋아요를 토글합니다. (좋아요 추가/취소)
-    """
     try:
-        # 현재 로그인된 사용자 ID
-        current_user_id = session.get('user_id', 1)
+        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
         
         if not current_user_id:
             return jsonify({
@@ -1272,7 +1341,8 @@ def toggle_like(board_id):
             return jsonify({
                 'success': True,
                 'likes_count': result['likes_count'],
-                'is_liked': result['is_liked']
+                'is_liked': result['is_liked'],
+                'message': result.get('message', '')
             })
         else:
             return jsonify({
@@ -1287,14 +1357,8 @@ def toggle_like(board_id):
             'error': str(e)
         }), 500
 
-# =================================================================
-# 좋아요 취소 API (DELETE 방식)
-# =================================================================
 @api_bp.route('/boards/<int:board_id>/like', methods=['DELETE'])
 def remove_like(board_id):
-    """
-    게시글 좋아요를 취소합니다.
-    """
     try:
         # 현재 로그인된 사용자 ID
         current_user_id = session.get('user_id', 1)
@@ -1325,220 +1389,12 @@ def remove_like(board_id):
             'success': False,
             'error': str(e)
         }), 500
-# =================================================================
-# Google 로그인 콜백 API
-# =================================================================
-@api_bp.route('/auth/google/callback', methods=['POST'])
-def google_callback():
-    """
-    Google OAuth 로그인 콜백을 처리합니다.
-    사용자 정보를 DB에 저장하고 세션을 설정합니다.
-    """
-    try:
-        data = request.get_json()
-        access_token = data.get('token')  # access_token
-        user_info = data.get('user_info')  # 프론트엔드에서 이미 가져온 사용자 정보
-        
-        print(f"🔍 Google 콜백 요청 받음")
-        print(f"📄 받은 데이터: {data}")
-        
-        if not access_token:
-            return jsonify({
-                'success': False,
-                'error': 'Google 토큰이 필요합니다'
-            }), 400
-        
-        # 사용자 정보 추출
-        if user_info:
-            # 프론트엔드에서 이미 사용자 정보를 가져온 경우
-            google_id = user_info.get('sub')
-            email = user_info.get('email')
-            name = user_info.get('name')
-            profile_image = user_info.get('picture')
+         
             
-            print(f"👤 프론트엔드에서 받은 사용자 정보 사용")
-            
-        else:
-            # 백엔드에서 직접 Google API 호출
-            print(f"🔍 백엔드에서 Google API 호출...")
-            try:
-                google_api_url = f"https://www.googleapis.com/oauth2/v3/userinfo"
-                headers = {'Authorization': f'Bearer {access_token}'}
-                response = requests.get(google_api_url, headers=headers, timeout=10)
-                
-                if response.status_code != 200:
-                    print(f"❌ Google API 응답 오류: {response.status_code}")
-                    return jsonify({
-                        'success': False,
-                        'error': 'Google 사용자 정보 확인 실패'
-                    }), 400
-                
-                google_user = response.json()
-                print(f"👤 Google API 응답: {google_user}")
-                
-                google_id = google_user.get('sub')
-                email = google_user.get('email')
-                name = google_user.get('name')
-                profile_image = google_user.get('picture')
-                
-            except Exception as e:
-                print(f"❌ Google API 호출 오류: {e}")
-                return jsonify({
-                    'success': False,
-                    'error': 'Google 사용자 정보 확인 실패'
-                }), 500
-        
-        if not google_id or not email:
-            return jsonify({
-                'success': False,
-                'error': 'Google 사용자 정보가 불완전합니다'
-            }), 400
-        
-        # 2. DB에서 기존 사용자 확인 또는 생성
-        print(f"🔍 DB에서 사용자 확인: google_id={google_id}")
-        user_result = board_service.get_user_by_social('google', google_id)
-        
-        if user_result['success']:
-            # 기존 사용자
-            user = user_result['user']
-            user_id = user['id']
-            print(f"✅ 기존 사용자 로그인: user_id={user_id}")
-            
-        else:
-            # 신규 사용자 - DB에 저장
-            print(f"🆕 신규 사용자 생성 중...")
-            create_result = board_service.create_or_update_user(
-                provider='google',
-                social_id=google_id,
-                email=email,
-                name=name,
-                profile_image=profile_image
-            )
-            
-            if create_result['success']:
-                user_id = create_result['user_id']
-                print(f"✅ 신규 사용자 생성 완료: user_id={user_id}")
-            else:
-                print(f"❌ 사용자 생성 실패: {create_result['error']}")
-                return jsonify({
-                    'success': False,
-                    'error': '사용자 생성에 실패했습니다'
-                }), 500
-        
-        # 3. 세션 설정
-        session.clear()  # 기존 세션 초기화
-        session['user_id'] = user_id
-        session['provider'] = 'google'
-        session['social_id'] = google_id
-        session['email'] = email
-        session['name'] = name
-        session.permanent = True
-        
-        print(f"✅ 세션 설정 완료: {dict(session)}")
-        
-        # 4. 응답 데이터 준비
-        user_data = {
-            'id': user_id,
-            'name': name,
-            'email': email,
-            'profile_image': profile_image,
-            'provider': 'google'
-        }
-        
-        return jsonify({
-            'success': True,
-            'message': '로그인 성공',
-            'user': user_data,
-            'session_user_id': session.get('user_id')  # 디버깅용
-        })
-        
-    except Exception as e:
-        print(f"❌ Google 로그인 콜백 오류: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': '로그인 처리 중 오류가 발생했습니다'
-        }), 500
 
 # =================================================================
-# 현재 사용자 정보 조회 API
+# 인기 태그 
 # =================================================================
-@api_bp.route('/user/profile', methods=['GET'])
-def get_current_user():
-    """
-    현재 로그인된 사용자의 프로필을 조회합니다.
-    """
-    try:
-        # 세션에서 사용자 정보 확인
-        user_id = session.get('user_id')
-        
-        print(f"🔍 세션 확인: user_id={user_id}")
-        print(f"🔍 전체 세션: {dict(session)}")
-        
-        if not user_id:
-            return jsonify({
-                'success': False,
-                'is_logged_in': False,
-                'error': '로그인이 필요합니다'
-            }), 401
-        
-        # DB에서 사용자 정보 가져오기
-        result = board_service.get_user_by_id(user_id)
-        
-        if result['success']:
-            user = result['user']
-            return jsonify({
-                'success': True,
-                'is_logged_in': True,
-                'user': {
-                    'id': user['id'],
-                    'name': user['name'],
-                    'email': user['email'],
-                    'profile_image': user['profile_image'],
-                    'provider': user['provider']
-                }
-            })
-        else:
-            # 사용자 정보가 없으면 세션 클리어
-            session.clear()
-            return jsonify({
-                'success': False,
-                'is_logged_in': False,
-                'error': '사용자 정보를 찾을 수 없습니다'
-            }), 404
-            
-    except Exception as e:
-        print(f"Error in /user/profile: {e}")
-        return jsonify({
-            'success': False,
-            'is_logged_in': False,
-            'error': str(e)
-        }), 500
-
-
-# =================================================================
-# 로그아웃 API
-# =================================================================
-@api_bp.route('/logout', methods=['POST'])
-def logout():
-    """
-    사용자를 로그아웃시킵니다.
-    """
-    try:
-        session.clear()
-        return jsonify({
-            'success': True,
-            'message': '로그아웃되었습니다'
-        })
-    except Exception as e:
-        print(f"Error in /logout: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-        
-
 @api_bp.route('/boards/trending/tags', methods=['GET'])
 def get_trending_tags():
     try:
@@ -1550,7 +1406,9 @@ def get_trending_tags():
     except Exception as e:
         print(f"Error in /boards/trending/tags: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
+# =================================================================
+# 인기 게시글 
+# =================================================================
 @api_bp.route('/boards/trending/posts', methods=['GET'])
 def get_trending_posts():
     try:
@@ -1563,33 +1421,10 @@ def get_trending_posts():
         print(f"Error in /boards/trending/posts: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@api_bp.route('/boards/<int:board_id>', methods=['GET'])
-def get_board_detail(board_id):
-    """
-    특정 게시글의 상세 정보를 조회합니다.
-    """
-    try:
-        result = board_service.get_post_detail(board_id)
-        
-        if result['success']:
-            return jsonify({
-                'success': True,
-                'post': result['post'],
-                'comments': result['comments']
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': result['error']
-            }), 404 if '찾을 수 없습니다' in result['error'] else 500
-            
-    except Exception as e:
-        print(f"Error in /boards/{board_id}: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-        
+
+# =================================================================
+# 게시글 검색 : 게시글 검색 
+# =================================================================
         
 @api_bp.route('/boards/search', methods=['GET'])
 def search_boards():
@@ -1630,20 +1465,46 @@ def search_boards():
             'success': False,
             'error': str(e)
         }), 500
+# =================================================================
+# 게시글 상세 조회 : 특정 게시글의 상세 정보와  현재 사용자의 권한 정보 조회
+# =================================================================
+@api_bp.route('/boards/<int:board_id>', methods=['GET'])
+def get_board_detail(board_id):
+    try:
+        # 현재 사용자 ID 가져오기 (로그인하지 않은 경우 None)
+        #auth_header = request.headers.get('Authorization')
+        #current_user_id = get_user_from_token(auth_header)
+        current_user_id = session.get('user_id')        
+        result = board_service.get_post_detail(board_id, current_user_id)
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'post': result['post'],
+                'comments': result['comments'],
+                'user_permissions': result.get('user_permissions', {})  # 사용자 권한 정보
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error']
+            }), 404 if '찾을 수 없습니다' in result['error'] else 500
+            
+    except Exception as e:
+        print(f"Error in /boards/{board_id}: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
         
 # =================================================================
-# 사용자별 게시글 조회 API
+# 사용자별 게시글 조회 :  특정 사용자의 게시글 목록을 조회
 # =================================================================
 @api_bp.route('/users/<int:user_id>/boards', methods=['GET'])
-def get_user_boards(user_id):  # ✅ 함수명 변경 & user_id 파라미터 추가
-    """
-    특정 사용자의 게시글 목록을 조회합니다.
-    """
+def get_user_boards(user_id):  
     try:
         page = int(request.args.get('page', 1))
-        limit = int(request.args.get('limit', 10))
-        
-        # ✅ 이 함수는 특정 사용자의 게시글만 조회
+        limit = int(request.args.get('limit', 10))        
         result = board_service.get_user_posts(user_id, page=page, limit=limit)
         
         if result['success']:
@@ -1672,13 +1533,10 @@ def get_user_boards(user_id):  # ✅ 함수명 변경 & user_id 파라미터 추
 
 
 # =================================================================
-# 게시글 목록 조회 API (검색 포함)
+# 게시글 목록 조회  (검색 포함)
 # =================================================================
 @api_bp.route('/boards', methods=['GET'])
-def get_boards():  # ✅ 이 함수명은 유지
-    """
-    전체 게시글 목록을 조회합니다. 검색 기능 포함.
-    """
+def get_boards():   
     try:
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 10))
@@ -1722,6 +1580,199 @@ def get_boards():  # ✅ 이 함수명은 유지
         print(f"Error in /boards: {e}")
         import traceback
         traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# =================================================================
+# Google 로그인 콜백 :  사용자 정보를 DB에 저장하고 세션을 설정
+# =================================================================
+@api_bp.route('/auth/google/callback', methods=['POST'])
+def google_callback():
+    try:
+        data = request.get_json()
+        access_token = data.get('token')  # access_token
+        user_info = data.get('user_info')  # 프론트엔드에서 이미 가져온 사용자 정보
+        
+        if not access_token:
+            return jsonify({
+                'success': False,
+                'error': 'Google 토큰이 필요합니다'
+            }), 400
+        
+        # 사용자 정보 추출
+        if user_info:
+            # 프론트엔드에서 사용자 정보를 가져온 경우
+            google_id = user_info.get('sub')
+            email = user_info.get('email')
+            name = user_info.get('name')
+            profile_image = user_info.get('picture')                        
+        else:
+            print(f"🔍 백엔드에서 Google API 호출...")
+            try:
+                google_api_url = f"https://www.googleapis.com/oauth2/v3/userinfo"
+                headers = {'Authorization': f'Bearer {access_token}'}
+                response = requests.get(google_api_url, headers=headers, timeout=10)
+                
+                if response.status_code != 200:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Google 사용자 정보 확인 실패'
+                    }), 400
+                
+                google_user = response.json()                
+                google_id = google_user.get('sub')
+                email = google_user.get('email')
+                name = google_user.get('name')
+                profile_image = google_user.get('picture')
+                
+            except Exception as e:
+
+                return jsonify({
+                    'success': False,
+                    'error': 'Google 사용자 정보 확인 실패'
+                }), 500
+        
+        if not google_id or not email:
+            return jsonify({
+                'success': False,
+                'error': 'Google 사용자 정보가 불완전합니다'
+            }), 400
+        
+        # DB에서 기존 사용자 확인 또는 생성
+        print(f"DB에서 사용자 확인: google_id={google_id}")
+        user_result = board_service.get_user_by_social('google', google_id)
+        
+        if user_result['success']:
+
+            user = user_result['user']
+            user_id = user['id']
+            print(f"기존 사용자 로그인: user_id={user_id}")
+            
+        else:
+            # 신규 사용자 - DB에 저장
+            create_result = board_service.create_or_update_user(
+                provider='google',
+                social_id=google_id,
+                email=email,
+                name=name,
+                profile_image=profile_image
+            )
+            
+            if create_result['success']:
+                user_id = create_result['user_id']
+
+            else:
+
+                return jsonify({
+                    'success': False,
+                    'error': '사용자 생성에 실패했습니다'
+                }), 500
+        
+        # 3. 세션 설정
+        session.clear()  # 기존 세션 초기화
+        session['user_id'] = user_id
+        session['provider'] = 'google'
+        session['social_id'] = google_id
+        session['email'] = email
+        session['name'] = name
+        session.permanent = True       
+
+        
+        # 4. 응답 데이터 준비
+        user_data = {
+            'id': user_id,
+            'name': name,
+            'email': email,
+            'profile_image': profile_image,
+            'provider': 'google'
+        }
+        
+        return jsonify({
+            'success': True,
+            'message': '로그인 성공',
+            'user': user_data,
+            'session_user_id': session.get('user_id')  # 디버깅용
+        })
+        
+    except Exception as e:
+   
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': '로그인 처리 중 오류가 발생했습니다'
+        }), 500
+
+# =================================================================
+# 현재 사용자의 프로필 정보 조회 API
+# =================================================================
+@api_bp.route('/user/profile', methods=['GET'])
+def get_current_user():
+
+    try:
+        # 세션에서 사용자 정보 확인
+        user_id = session.get('user_id')
+        
+        if not user_id:
+            return jsonify({
+                'success': False,
+                'is_logged_in': False,
+                'error': '로그인이 필요합니다'
+            }), 401
+        
+        # DB에서 사용자 정보 가져오기
+        result = board_service.get_user_by_id(user_id)
+        
+        if result['success']:
+            user = result['user']
+            return jsonify({
+                'success': True,
+                'is_logged_in': True,
+                'user': {
+                    'id': user['id'],
+                    'name': user['name'],
+                    'email': user['email'],
+                    'profile_image': user['profile_image'],
+                    'provider': user['provider']
+                }
+            })
+        else:
+            # 사용자 정보가 없으면 세션 클리어
+            session.clear()
+            return jsonify({
+                'success': False,
+                'is_logged_in': False,
+                'error': '사용자 정보를 찾을 수 없습니다'
+            }), 404
+            
+    except Exception as e:
+        print(f"Error in /user/profile: {e}")
+        return jsonify({
+            'success': False,
+            'is_logged_in': False,
+            'error': str(e)
+        }), 500
+
+        
+# =================================================================
+# 로그아웃 API
+# =================================================================
+@api_bp.route('/logout', methods=['POST'])
+def logout():
+    """
+    사용자를 로그아웃시킵니다.
+    """
+    try:
+        session.clear()
+        return jsonify({
+            'success': True,
+            'message': '로그아웃되었습니다'
+        })
+    except Exception as e:
+        print(f"Error in /logout: {e}")
         return jsonify({
             'success': False,
             'error': str(e)

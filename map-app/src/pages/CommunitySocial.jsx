@@ -48,16 +48,13 @@ const useMediaQuery = (query) => {
 
 const API_BASE_URL = "/api";
 
-// API 함수들 (컴포넌트 외부에 정의)
 const fetchPosts = async (page = 1, limit = 10, searchParams = {}) => {
   console.log("🚀 API 호출 시도:", `${API_BASE_URL}/boards`);
 
   try {
-    const token = localStorage.getItem("accessToken");
+    // 토큰 관련 코드 제거
     const headers = { "Content-Type": "application/json" };
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+    // if (token) { headers.Authorization = `Bearer ${token}`; } 제거
 
     const params = new URLSearchParams({
       page: page.toString(),
@@ -70,7 +67,7 @@ const fetchPosts = async (page = 1, limit = 10, searchParams = {}) => {
 
     const response = await fetch(`${API_BASE_URL}/boards?${params}`, {
       headers,
-      credentials: "include",
+      credentials: "include", // 세션 쿠키 포함
     });
 
     if (!response.ok) {
@@ -118,20 +115,17 @@ const fetchTrendingPosts = async () => {
   }
 };
 
+// 좋아요 기능
 const toggleLike = async (postId, isLiked) => {
-  const token = localStorage.getItem("accessToken");
-  if (!token) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
   try {
     const method = isLiked ? "DELETE" : "POST";
     const response = await fetch(`${API_BASE_URL}/boards/${postId}/like`, {
       method,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        // Authorization 헤더 제거
       },
+      credentials: "include", // 세션 쿠키 포함
     });
 
     if (response.ok) {
@@ -146,15 +140,11 @@ const toggleLike = async (postId, isLiked) => {
 };
 
 const deletePost = async (postId) => {
-  const token = localStorage.getItem("accessToken");
-  if (!token) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
   try {
     const response = await fetch(`${API_BASE_URL}/boards/${postId}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // 세션 쿠키 포함
     });
 
     if (!response.ok) {
@@ -823,6 +813,8 @@ export default function CommunitySocial() {
   const handleClosePostDetailModal = () => {
     setShowPostDetailModal(false);
     setSelectedPostId(null);
+    // 댓글 변경 후 게시글 목록 새로고침
+    loadPosts(searchFilters);
   };
 
   const handleTrendPostClick = (postId) => {

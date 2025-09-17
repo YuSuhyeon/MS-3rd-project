@@ -10,9 +10,14 @@ import {
   Send,
   ChevronLeft,
   ChevronRight,
+  Edit,
+  Trash2,
+  MoreHorizontal,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 const PostDetailModal = ({ postId, onClose, isOpen }) => {
+  const { profile } = useAuth(); // 현재 사용자 정보
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,10 +27,17 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
   const [likesCount, setLikesCount] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  //  API 경로 일관성 있게 수정
-  const API_BASE_URL = "/api"; // process.env는 제거하고 통일
+  // 댓글 수정/삭제를 위한 상태
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingContent, setEditingContent] = useState("");
+  const [showCommentOptions, setShowCommentOptions] = useState({});
 
-  //  게시글 상세 정보 가져오기 - 데이터 설정 추가
+  const API_BASE_URL = "/api";
+
+  // 현재 사용자 ID 가져오기
+  const currentUserId = profile?.sub || profile?.id || profile?.user_id;
+
+  // 게시글 상세 조회
   const fetchPostDetail = async () => {
     if (!postId) return;
 
@@ -33,24 +45,13 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
     setError(null);
 
     try {
-      const token = localStorage.getItem("accessToken");
       const headers = { "Content-Type": "application/json" };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      console.log(`🔍 게시글 상세 조회 요청: ${API_BASE_URL}/boards/${postId}`);
-
       const response = await fetch(`${API_BASE_URL}/boards/${postId}`, {
         headers,
-        credentials: "include",
+        credentials: "include", // 세션 쿠키 포함
       });
 
-      // 응답 상태 확인
       if (!response.ok) {
-        console.error(
-          `❌ HTTP 오류: ${response.status} ${response.statusText}`
-        );
         if (response.status === 404) {
           throw new Error("게시글을 찾을 수 없습니다.");
         }
@@ -60,27 +61,113 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
         throw new Error(`서버 오류: ${response.status}`);
       }
 
-      // Content-Type 확인
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        console.error("❌ JSON이 아닌 응답:", contentType);
         const textResponse = await response.text();
-        console.error("응답 내용:", textResponse.substring(0, 200));
         throw new Error("서버에서 올바르지 않은 응답을 받았습니다.");
       }
 
       const data = await response.json();
-      console.log("✅ 게시글 상세 조회 성공:", data);
 
       setPost(data.post || data);
       setComments(data.comments || []);
-      setIsLiked(data.is_liked || false);
-      setLikesCount(data.likes_count || 0);
+      setIsLiked(data.post?.is_liked_by_current_user || false);
+      setLikesCount(data.post?.likes_count || 0);
     } catch (error) {
-      console.error("💥 게시글 상세 조회 실패:", error);
       setError(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+  // 댓글 옵션 토글
+  const toggleCommentOptions = (commentId) => {
+    setShowCommentOptions((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
+  };
+  // 댓글 수정
+  const updateComment = async (commentId, content) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ content }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "댓글 수정에 실패했습니다.");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("댓글 수정 실패:", error);
+      throw error;
+    }
+  };
+
+  // 댓글 수정 시작
+  const handleEditComment = (comment) => {
+    setEditingCommentId(comment.comment_id);
+    setEditingContent(comment.content);
+    setShowCommentOptions({});
+  };
+
+  // 댓글 수정 취소
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditingContent("");
+  };
+
+  // 댓글 수정 완료
+  const handleUpdateComment = async (commentId) => {
+    if (!editingContent.trim()) return;
+
+    try {
+      await updateComment(commentId, editingContent.trim());
+      setEditingCommentId(null);
+      setEditingContent("");
+      fetchPostDetail(); // 댓글 목록 새로고침
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+  // 댓글 삭제
+  const deleteComment = async (commentId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // 세션 쿠키 포함
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "댓글 삭제에 실패했습니다.");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("댓글 삭제 실패:", error);
+      throw error;
+    }
+  };
+
+  // 댓글 삭제 시작
+  const handleDeleteComment = async (commentId) => {
+    if (window.confirm("정말로 이 댓글을 삭제하시겠습니까?")) {
+      try {
+        await deleteComment(commentId);
+        fetchPostDetail(); // 댓글 목록 새로고침
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
@@ -99,12 +186,21 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
       );
     }
   };
+
   // 좋아요
   const handleLike = async () => {
+    if (!currentUserId) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/boards/${postId}/like`, {
         method: "POST",
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // 세션 쿠키 포함
       });
 
       if (response.ok) {
@@ -117,17 +213,25 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
     }
   };
 
+  //댓글 작성
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
+    if (!currentUserId) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
     try {
+      const token = localStorage.getItem("accessToken");
       const response = await fetch(
         `${API_BASE_URL}/boards/${postId}/comments`,
         {
-          // /api 제거
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           credentials: "include",
           body: JSON.stringify({ content: newComment }),
         }
@@ -136,9 +240,13 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
       if (response.ok) {
         setNewComment("");
         fetchPostDetail(); // 댓글 목록 새로고침
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "댓글 작성에 실패했습니다.");
       }
     } catch (error) {
       console.error("댓글 작성 실패:", error);
+      alert("댓글 작성에 실패했습니다.");
     }
   };
 
@@ -315,31 +423,41 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                   </h4>
 
                   {/* 댓글 작성 */}
-                  <div className="mb-6">
-                    <div className="flex gap-3">
-                      <div className="flex-1 relative">
-                        <input
-                          type="text"
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === "Enter") {
-                              handleCommentSubmit(e);
-                            }
-                          }}
-                          placeholder="댓글을 입력하세요..."
-                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400"
-                        />
+                  {currentUserId && (
+                    <div className="mb-6">
+                      <div className="flex gap-3">
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter") {
+                                handleCommentSubmit(e);
+                              }
+                            }}
+                            placeholder="댓글을 입력하세요..."
+                            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400"
+                          />
+                        </div>
+                        <button
+                          onClick={handleCommentSubmit}
+                          disabled={!newComment.trim()}
+                          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          <Send className="w-5 h-5" />
+                        </button>
                       </div>
-                      <button
-                        onClick={handleCommentSubmit}
-                        disabled={!newComment.trim()}
-                        className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      >
-                        <Send className="w-5 h-5" />
-                      </button>
                     </div>
-                  </div>
+                  )}
+
+                  {!currentUserId && (
+                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                      <p className="text-yellow-400 text-sm">
+                        댓글을 작성하려면 로그인이 필요합니다.
+                      </p>
+                    </div>
+                  )}
 
                   {/* 댓글 목록 */}
                   <div className="space-y-4">
@@ -348,7 +466,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                         key={comment.comment_id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex gap-3 p-4 bg-white/5 rounded-lg"
+                        className="flex gap-3 p-4 bg-white/5 rounded-lg relative"
                       >
                         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                           {comment.user_profile_image ? (
@@ -370,10 +488,88 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                               {new Date(comment.created_at).toLocaleString()}
                             </span>
                           </div>
-                          <p className="text-gray-300 text-sm leading-relaxed">
-                            {comment.content}
-                          </p>
+
+                          {editingCommentId === comment.comment_id ? (
+                            // 댓글 수정 모드
+                            <div className="space-y-2">
+                              <textarea
+                                value={editingContent}
+                                onChange={(e) =>
+                                  setEditingContent(e.target.value)
+                                }
+                                className="w-full p-2 bg-white/10 border border-white/20 rounded text-white text-sm resize-none"
+                                rows="2"
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() =>
+                                    handleUpdateComment(comment.comment_id)
+                                  }
+                                  className="px-3 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
+                                >
+                                  저장
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
+                                >
+                                  취소
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            // 일반 댓글 표시
+                            <p className="text-gray-300 text-sm leading-relaxed">
+                              {comment.content}
+                            </p>
+                          )}
                         </div>
+
+                        {/* 댓글 작성자인 경우 수정/삭제 버튼 */}
+                        {currentUserId && comment.can_edit && (
+                          <div className="relative">
+                            <button
+                              onClick={() =>
+                                toggleCommentOptions(comment.comment_id)
+                              }
+                              className="p-1 text-gray-400 hover:text-white transition-colors"
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
+
+                            <AnimatePresence>
+                              {showCommentOptions[comment.comment_id] && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                  className="absolute right-0 top-6 bg-gray-800 border border-gray-600 rounded-lg shadow-xl py-1 min-w-[80px] z-50"
+                                >
+                                  <button
+                                    onClick={() => {
+                                      handleEditComment(comment);
+                                      setShowCommentOptions({});
+                                    }}
+                                    className="w-full px-3 py-1 text-left text-xs text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                    수정
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleDeleteComment(comment.comment_id);
+                                      setShowCommentOptions({});
+                                    }}
+                                    className="w-full px-3 py-1 text-left text-xs text-red-400 hover:bg-gray-700 flex items-center gap-2"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    삭제
+                                  </button>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )}
                       </motion.div>
                     ))}
 
@@ -388,6 +584,14 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
             ) : null}
           </div>
         </motion.div>
+
+        {/* 댓글 옵션 메뉴 배경 클릭 감지 */}
+        {Object.values(showCommentOptions).some((show) => show) && (
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowCommentOptions({})}
+          />
+        )}
       </motion.div>
     </AnimatePresence>
   );

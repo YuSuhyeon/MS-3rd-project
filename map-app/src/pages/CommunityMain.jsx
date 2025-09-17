@@ -5,6 +5,7 @@ import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
 import { Navigation, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   Heart,
   MessageCircle,
@@ -58,7 +59,7 @@ const useMediaQuery = (query) => {
 const PlaylistCard = ({ playlist }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
-
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -167,19 +168,20 @@ const PlaylistCard = ({ playlist }) => {
 
 // 메인 컴포넌트
 export default function CommunityMain() {
+  const { t } = useTranslation("Navigation");
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 
   const tabs = [
     {
       id: "survival",
-      label: "survival kit",
+      label: t("survival_kit"),
       icon: <ShoppingBag />,
       variant: "primary",
     },
     {
       id: "playlists",
-      label: "playlists",
+      label: t("playlists"),
       icon: <Music />,
       variant: "success",
     },

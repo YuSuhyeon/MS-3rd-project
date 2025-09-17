@@ -129,11 +129,56 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-    
+                
+                
+    def update_post(self, board_id, user_id, title, content):
+        """
+        게시글을 수정합니다.
+        """
+        connection = None
+        try:
+            connection = self.get_connection()
+            if not connection:
+                return {'success': False, 'error': '데이터베이스 연결 실패'}
+            
+            cursor = connection.cursor(dictionary=True)
+            
+            # 게시글 작성자 확인
+            check_query = "SELECT user_id FROM boards WHERE id = %s AND deleted_at IS NULL"
+            cursor.execute(check_query, (board_id,))
+            result = cursor.fetchone()
+            
+            if not result:
+                return {'success': False, 'error': '게시글을 찾을 수 없습니다'}
+            
+            if result['user_id'] != user_id:
+                return {'success': False, 'error': '게시글을 수정할 권한이 없습니다'}
+            
+            # 게시글 수정
+            update_query = """
+                UPDATE boards 
+                SET title = %s, content = %s, updated_at = NOW() 
+                WHERE id = %s
+            """
+            cursor.execute(update_query, (title, content, board_id))
+            connection.commit()
+            
+            return {
+                'success': True,
+                'message': '게시글이 수정되었습니다'
+            }
+            
+        except Error as e:
+            print(f"게시글 수정 중 오류: {e}")
+            return {'success': False, 'error': str(e)}
+        finally:
+            if connection and connection.is_connected():
+                cursor.close()
+                connection.close()
+# =================================================================
+# 특정 게시글의 댓글 목록 
+# =================================================================    
     def get_comments(self, board_id):
-        """
-        특정 게시글의 댓글 목록을 가져옵니다.
-        """
         connection = None
         try:
             connection = self.get_connection()
@@ -170,11 +215,10 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-    
+# =================================================================
+# 댓글 Create
+# =================================================================      
     def create_comment(self, board_id, user_id, content):
-        """
-        댓글을 작성합니다.
-        """
         connection = None
         try:
             connection = self.get_connection()
@@ -205,11 +249,10 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-    
+# =================================================================
+# 특정 사용자의 게시글 목록
+# =================================================================         
     def get_user_posts(self, user_id, page=1, limit=10):
-        """
-        특정 사용자의 게시글 목록을 가져옵니다.
-        """
         connection = None
         try:
             connection = self.get_connection()
@@ -270,11 +313,10 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-    
+# =================================================================
+# 게시글 delete -> 실제 삭제가 아닌 deleted_at 컬럼에 삭제 시간 기록)
+# =================================================================          
     def delete_post(self, board_id, user_id):
-        """
-        게시글 실제 삭제가 아닌 deleted_at 컬럼에 삭제 시간 기록)
-        """
         connection = None
         try:
             connection = self.get_connection()
@@ -315,11 +357,10 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-
+# =================================================================
+# 소셜 로그인 정보로 user 조회
+# =================================================================   
     def get_user_by_social(self, provider, social_id):
-        """
-        소셜 로그인 정보로 사용자를 조회합니다.
-        """
         connection = None
         try:
             connection = self.get_connection()
@@ -671,9 +712,9 @@ class BoardService:
                 cursor.close()
                 connection.close()
                 
-    def get_post_detail(self, board_id):
+    def get_post_detail(self, board_id, current_user_id=None):
         """
-        게시글의 상세 정보를 조회합니다.
+        게시글의 상세 정보를 조회합니다. (현재 사용자 권한 정보 포함)
         """
         connection = None
         try:
@@ -683,10 +724,11 @@ class BoardService:
             
             cursor = connection.cursor(dictionary=True)
             
-            # 게시글 상세 정보 조회
+            # 게시글 상세 정보 조회 (작성자 ID 포함)
             post_query = """
                 SELECT 
                     b.id as board_id,
+                    b.user_id as author_id,
                     b.title,
                     b.content,
                     b.likes_count,
@@ -705,6 +747,15 @@ class BoardService:
             
             if not post:
                 return {'success': False, 'error': '게시글을 찾을 수 없습니다'}
+            
+            # 현재 사용자가 이 게시글을 좋아요했는지 확인
+            is_liked = False
+            if current_user_id:
+                like_query = "SELECT 1 FROM likes WHERE user_id = %s AND board_id = %s"
+                cursor.execute(like_query, (current_user_id, board_id))
+                is_liked = cursor.fetchone() is not None
+            
+            post['is_liked_by_current_user'] = is_liked
             
             # 이미지 조회
             picture_query = """
@@ -731,10 +782,11 @@ class BoardService:
             except:
                 post['tags'] = []
             
-            # 댓글 조회
+            # 댓글 조회 (현재 사용자 권한 정보 포함)
             comment_query = """
                 SELECT 
                     c.id as comment_id,
+                    c.user_id as comment_author_id,
                     c.content,
                     c.created_at,
                     u.name as user_name,
@@ -747,20 +799,32 @@ class BoardService:
             cursor.execute(comment_query, (board_id,))
             comments = cursor.fetchall()
             
+            # 각 댓글에 권한 정보 추가
+            for comment in comments:
+                comment['can_edit'] = current_user_id == comment['comment_author_id'] if current_user_id else False
+                comment['can_delete'] = current_user_id == comment['comment_author_id'] if current_user_id else False
+                
+                # 날짜 포맷팅
+                if comment['created_at']:
+                    comment['created_at'] = comment['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            
+            # 게시글에 대한 사용자 권한 정보
+            user_permissions = {
+                'can_edit_post': current_user_id == post['author_id'] if current_user_id else False,
+                'can_delete_post': current_user_id == post['author_id'] if current_user_id else False
+            }
+            
             # 날짜 포맷팅
             if post['created_at']:
                 post['created_at'] = post['created_at'].strftime('%Y-%m-%d %H:%M:%S')
             if post['updated_at']:
                 post['updated_at'] = post['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
             
-            for comment in comments:
-                if comment['created_at']:
-                    comment['created_at'] = comment['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-            
             return {
                 'success': True,
                 'post': post,
-                'comments': comments
+                'comments': comments,
+                'user_permissions': user_permissions
             }
             
         except mysql.connector.Error as e:
@@ -769,8 +833,8 @@ class BoardService:
         finally:
             if connection and connection.is_connected():
                 cursor.close()
-                connection.close()   
-                    
+                connection.close()
+                        
     def search_posts(self, query, page=1, limit=10, user_id=None, filters=None):
         """
         게시글 검색 기능
@@ -865,3 +929,216 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
+                
+    
+
+    def create_comment(self, board_id, user_id, content):
+            """
+            댓글을 작성합니다. (작성된 댓글 정보 반환)
+            """
+            connection = None
+            try:
+                connection = self.get_connection()
+                if not connection:
+                    return {'success': False, 'error': '데이터베이스 연결 실패'}
+                
+                connection.start_transaction()
+                cursor = connection.cursor(dictionary=True)
+                
+                # 댓글 생성
+                insert_query = """
+                    INSERT INTO comments (board_id, user_id, content) 
+                    VALUES (%s, %s, %s)
+                """
+                cursor.execute(insert_query, (board_id, user_id, content))
+                comment_id = cursor.lastrowid
+                
+                # 게시글의 댓글 수 업데이트 (트리거가 없다면 수동으로)
+                update_query = """
+                    UPDATE boards 
+                    SET comments_count = (
+                        SELECT COUNT(*) FROM comments 
+                        WHERE board_id = %s AND deleted_at IS NULL
+                    ) 
+                    WHERE id = %s
+                """
+                cursor.execute(update_query, (board_id, board_id))
+                
+                # 생성된 댓글 정보 조회
+                select_query = """
+                    SELECT 
+                        c.id as comment_id,
+                        c.user_id as comment_author_id,
+                        c.content,
+                        c.created_at,
+                        u.name as user_name,
+                        u.profile_image as user_profile_image
+                    FROM comments c
+                    JOIN users u ON c.user_id = u.id
+                    WHERE c.id = %s
+                """
+                cursor.execute(select_query, (comment_id,))
+                comment = cursor.fetchone()
+                
+                if comment:
+                    comment['can_edit'] = True
+                    comment['can_delete'] = True
+                    if comment['created_at']:
+                        comment['created_at'] = comment['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                
+                connection.commit()
+                
+                return {
+                    'success': True,
+                    'comment_id': comment_id,
+                    'comment': comment,
+                    'message': '댓글이 성공적으로 작성되었습니다'
+                }
+                
+            except Error as e:
+                if connection:
+                    connection.rollback()
+                print(f"댓글 작성 중 오류: {e}")
+                return {'success': False, 'error': str(e)}
+            finally:
+                if connection and connection.is_connected():
+                    cursor.close()
+                    connection.close()
+
+    def update_comment(self, comment_id, user_id, content):
+            """
+            댓글을 수정합니다.
+            """
+            connection = None
+            try:
+                connection = self.get_connection()
+                if not connection:
+                    return {'success': False, 'error': '데이터베이스 연결 실패'}
+                
+                cursor = connection.cursor(dictionary=True)
+                
+                # 댓글 작성자 확인
+                check_query = """
+                    SELECT user_id, board_id 
+                    FROM comments 
+                    WHERE id = %s AND deleted_at IS NULL
+                """
+                cursor.execute(check_query, (comment_id,))
+                comment_info = cursor.fetchone()
+                
+                if not comment_info:
+                    return {'success': False, 'error': '댓글을 찾을 수 없습니다'}
+                
+                if comment_info['user_id'] != user_id:
+                    return {'success': False, 'error': '댓글을 수정할 권한이 없습니다'}
+                
+                # 댓글 수정
+                update_query = """
+                    UPDATE comments 
+                    SET content = %s 
+                    WHERE id = %s
+                """
+                cursor.execute(update_query, (content, comment_id))
+                
+                # 수정된 댓글 정보 조회
+                select_query = """
+                    SELECT 
+                        c.id as comment_id,
+                        c.user_id as comment_author_id,
+                        c.content,
+                        c.created_at,
+                        u.name as user_name,
+                        u.profile_image as user_profile_image
+                    FROM comments c
+                    JOIN users u ON c.user_id = u.id
+                    WHERE c.id = %s
+                """
+                cursor.execute(select_query, (comment_id,))
+                comment = cursor.fetchone()
+                
+                if comment:
+                    comment['can_edit'] = True
+                    comment['can_delete'] = True
+                    if comment['created_at']:
+                        comment['created_at'] = comment['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                
+                connection.commit()
+                
+                return {
+                    'success': True,
+                    'comment': comment,
+                    'message': '댓글이 수정되었습니다'
+                }
+                
+            except Error as e:
+                print(f"댓글 수정 중 오류: {e}")
+                return {'success': False, 'error': str(e)}
+            finally:
+                if connection and connection.is_connected():
+                    cursor.close()
+                    connection.close()
+
+    def delete_comment(self, comment_id, user_id):
+            """
+            댓글을 삭제합니다. (소프트 삭제)
+            """
+            connection = None
+            try:
+                connection = self.get_connection()
+                if not connection:
+                    return {'success': False, 'error': '데이터베이스 연결 실패'}
+                
+                connection.start_transaction()
+                cursor = connection.cursor(dictionary=True)
+                
+                # 댓글 작성자 확인
+                check_query = """
+                    SELECT user_id, board_id 
+                    FROM comments 
+                    WHERE id = %s AND deleted_at IS NULL
+                """
+                cursor.execute(check_query, (comment_id,))
+                comment_info = cursor.fetchone()
+                
+                if not comment_info:
+                    return {'success': False, 'error': '댓글을 찾을 수 없습니다'}
+                
+                if comment_info['user_id'] != user_id:
+                    return {'success': False, 'error': '댓글을 삭제할 권한이 없습니다'}
+                
+                # 소프트 삭제
+                delete_query = """
+                    UPDATE comments 
+                    SET deleted_at = NOW() 
+                    WHERE id = %s
+                """
+                cursor.execute(delete_query, (comment_id,))
+                
+                # 게시글의 댓글 수 업데이트
+                board_id = comment_info['board_id']
+                update_query = """
+                    UPDATE boards 
+                    SET comments_count = (
+                        SELECT COUNT(*) FROM comments 
+                        WHERE board_id = %s AND deleted_at IS NULL
+                    ) 
+                    WHERE id = %s
+                """
+                cursor.execute(update_query, (board_id, board_id))
+                
+                connection.commit()
+                
+                return {
+                    'success': True,
+                    'message': '댓글이 삭제되었습니다'
+                }
+                
+            except Error as e:
+                if connection:
+                    connection.rollback()
+                print(f"댓글 삭제 중 오류: {e}")
+                return {'success': False, 'error': str(e)}
+            finally:
+                if connection and connection.is_connected():
+                    cursor.close()
+                    connection.close()               

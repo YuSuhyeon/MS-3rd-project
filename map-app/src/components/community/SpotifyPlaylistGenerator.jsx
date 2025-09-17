@@ -27,6 +27,7 @@ import {
   RefreshCw,
   ArrowRight,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // 1. 비디오 플레이어 모달 컴포넌트
 const VideoPlayerModal = ({ video, onClose }) => {
@@ -108,6 +109,7 @@ const YouTubeVideoCard = ({ video, onCardClick }) => {
 };
 
 const SpotifyPlaylistGenerator = () => {
+  const { t } = useTranslation("playlists"); 
   const [spotifyUser, setSpotifyUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
@@ -117,41 +119,41 @@ const SpotifyPlaylistGenerator = () => {
 
   // 테마 설정
   const THEMES = {
-    도시여행: {
+    [t("themes1")]: {
       icon: "🏙️",
       color: "from-blue-500 to-purple-600",
-      description: "활기찬 도심 탐험을 위한 에너지 넘치는 K-pop",
+      description: t("themes1_desc"),
     },
-    "여름 바캉스": {
+    [t("themes2")]: {
       icon: "🏖️",
       color: "from-yellow-400 to-orange-500",
-      description: "시원한 바다와 따뜻한 햇살을 느낄 수 있는 청량한 음악",
+      description: t("themes2_desc"),
     },
-    야시장: {
+    [t("themes3")]: {
       icon: "🎪",
       color: "from-pink-500 to-red-500",
-      description: "화려한 네온사인 아래 흥겨운 밤거리 분위기",
+      description: t("themes3_desc"),
     },
-    "차분한 여행": {
+    [t("themes4")]: {
       icon: "🍃",
       color: "from-green-400 to-teal-500",
-      description: "마음을 편안하게 하는 잔잔하고 감성적인 멜로디",
+      description: t("themes4_desc"),
     },
-    "운동/워크아웃": {
+    [t("themes5")]: {
       icon: "💪",
       color: "from-red-500 to-orange-600",
-      description: "강렬한 비트로 운동 효과를 극대화하는 파워풀한 음악",
+      description: t("themes5_desc"),
     },
-    "카페/독서": {
+    [t("themes6")]: {
       icon: "☕",
       color: "from-amber-400 to-yellow-600",
-      description: "집중력을 높이는 차분하고 감각적인 어쿠스틱 사운드",
+      description: t("themes6_desc"),
     },
   };
 
   // K-pop 아티스트 분류
   const KPOP_ARTISTS = {
-    "4세대 걸그룹": [
+    [t("kpop_artists1")]: [
       "NewJeans",
       "IVE",
       "aespa",
@@ -161,7 +163,7 @@ const SpotifyPlaylistGenerator = () => {
       "NMIXX",
       "STAYC",
     ],
-    "4세대 보이그룹": [
+    [t("kpop_artists2")]: [
       "Stray Kids",
       "ENHYPEN",
       "TXT",
@@ -169,7 +171,7 @@ const SpotifyPlaylistGenerator = () => {
       "RIIZE",
       "TREASURE",
     ],
-    "3세대 레전드": [
+    [t("kpop_artists3")]: [
       "BTS",
       "BLACKPINK",
       "TWICE",
@@ -178,7 +180,7 @@ const SpotifyPlaylistGenerator = () => {
       "NCT",
       "MAMAMOO",
     ],
-    "솔로 아티스트": [
+    [t("kpop_artists4")]: [
       "IU",
       "태연",
       "ROSÉ",
@@ -194,8 +196,8 @@ const SpotifyPlaylistGenerator = () => {
   const mockPlaylists = [
     {
       id: 1,
-      title: "Seoul City Vibes 🌃",
-      description: "서울 도심 여행할 때 듣기 좋은 어반 K-pop",
+      title: t("mock_playlists1") + " 🌃",
+      description: t("mock_playlists1_desc"),
       image: "/img/seoul_night.png",
       songs: [
         { title: "Shoot Me", artist: "Day6", duration: "3:32" },
@@ -204,13 +206,13 @@ const SpotifyPlaylistGenerator = () => {
       ],
       totalDuration: "45분",
       followers: 12500,
-      theme: "도시여행",
+      theme: t("themes1"),
       isLocked: true,
     },
     {
       id: 2,
-      title: "Summer Breeze ☀️",
-      description: "청량한 여름 바캉스 K-pop",
+      title: t("mock_playlists2") + " ☀️",
+      description: t("mock_playlists2_desc"),
       image: "/img/aespa.jpg",
       songs: [
         { title: "Rich Man", artist: "aespa", duration: "3:15" },
@@ -219,7 +221,7 @@ const SpotifyPlaylistGenerator = () => {
       ],
       totalDuration: "52분",
       followers: 8930,
-      theme: "여름 바캉스",
+      theme: t("themes2"),
       isLocked: true,
     },
   ];
@@ -816,7 +818,7 @@ const SpotifyPlaylistGenerator = () => {
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <Music className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                  <span className="font-medium truncate">{song.title}</span>
+                  <span className="font-medium truncate text-gray-500">{song.title}</span>
                   <span className="text-gray-500">- {song.artist}</span>
                 </div>
                 <span className="text-gray-400">{song.duration}</span>
@@ -842,7 +844,7 @@ const SpotifyPlaylistGenerator = () => {
               }`}
             >
               <Play className="w-4 h-4" />
-              재생
+              {t("play")}
             </button>
             <button
               disabled={playlist.isLocked}
@@ -942,11 +944,10 @@ const SpotifyPlaylistGenerator = () => {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    K-pop travel playlist
+                    {t("title")}
                   </h2>
                   <p className="text-gray-600">
-                    Log in to Spotify and make a playlist made by AI. Go ahead
-                    and experience it✨
+                    {t("description")}
                   </p>
                 </div>
               </div>
@@ -956,7 +957,7 @@ const SpotifyPlaylistGenerator = () => {
                   className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors flex items-center gap-2 font-medium"
                 >
                   <LogIn className="w-5 h-5" />
-                  Spotify Login
+                  {t("login")}
                 </button>
               </div>
             </div>
@@ -969,18 +970,18 @@ const SpotifyPlaylistGenerator = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-2xl font-bold text-gray-900">
-              {spotifyUser ? "My playlist" : "Playlist preview"}
+              {spotifyUser ? t("my_playlist") : t("playlist_preview")}
             </h3>
             <p className="text-gray-600 mt-1">
               {spotifyUser
-                ? "Your own special playlist created by AI"
-                : "Make your own playlist after logging in to Spotify"}
+                ? t("your_playlist")
+                : t("make_playlist")}
             </p>
           </div>
 
           {!spotifyUser && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
-              <p className="text-sm text-yellow-700 font-medium">Preview</p>
+              <p className="text-sm text-yellow-700 font-medium">{t("preview")}</p>
             </div>
           )}
         </div>
@@ -1000,16 +1001,16 @@ const SpotifyPlaylistGenerator = () => {
             >
               <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
               <h4 className="font-bold text-gray-900 mb-2">
-                첫 번째 플레이리스트 만들기
+                {t("create_playlist")}
               </h4>
               <p className="text-gray-600 mb-4">
-                AI가 당신의 취향에 맞는 완벽한 K-pop 플레이리스트를 생성합니다
+                {t("create_playlist_description")}
               </p>
               <button
                 onClick={() => setIsGeneratorOpen(true)}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
-                지금 시작하기
+                {t("start_now")}
               </button>
             </motion.div>
           )}
@@ -1023,10 +1024,10 @@ const SpotifyPlaylistGenerator = () => {
             >
               <Plus className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h4 className="font-bold text-gray-900 mb-2">
-                새 플레이리스트 생성
+                {t("create_new_playlist")}
               </h4>
               <p className="text-gray-600">
-                다른 테마나 아티스트로 새로운 플레이리스트를 만들어보세요
+                {t("create_new_playlist_description")}
               </p>
             </motion.div>
           )}
@@ -1040,10 +1041,10 @@ const SpotifyPlaylistGenerator = () => {
               <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
                 <Play className="w-5 h-5 text-white fill-current" />
               </div>
-              Featured YouTube Mix
+              {t("featured_youtube_mix")}
             </h3>
             <p className="text-gray-600 mt-1">
-              Latest K-pop travel playlists curated for your journey
+              {t("latest_k_pop_travel_playlists")}
             </p>
           </div>
           <a
@@ -1053,7 +1054,7 @@ const SpotifyPlaylistGenerator = () => {
             className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
           >
             <ExternalLink className="w-4 h-4" />
-            View Full Playlist
+            {t("view_full_playlist")}
           </a>
         </div>
 
@@ -1076,25 +1077,23 @@ const SpotifyPlaylistGenerator = () => {
           >
             <Headphones className="w-16 h-16 mx-auto mb-4" />
             <h3 className="text-2xl font-bold mb-3">
-              나만의 플레이리스트 만들기
+              {t("create_your_own_playlist")}
             </h3>
             <p className="text-purple-100 mb-6 max-w-2xl mx-auto">
-              AI가 당신의 취향과 여행 테마에 맞는 완벽한 K-pop 플레이리스트를
-              생성합니다. 수천 곡의 데이터베이스에서 최적의 조합을 찾아
-              Spotify에 바로 저장하세요.
+              {t("create_your_own_playlist_description")}
             </p>
             <div className="flex items-center justify-center gap-8 mb-6 text-sm">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5" />
-                <span>AI 맞춤 추천</span>
+                <span>{t("ai_custom_recommend")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Music className="w-5 h-5" />
-                <span>무제한 생성</span>
+                <span>{t("unlimited_creation")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Download className="w-5 h-5" />
-                <span>Spotify 자동 저장</span>
+                <span>{t("spotify_auto_save")}</span>
               </div>
             </div>
             <button
@@ -1102,7 +1101,7 @@ const SpotifyPlaylistGenerator = () => {
               className="px-8 py-4 bg-white text-purple-600 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center gap-2 mx-auto text-lg"
             >
               <LogIn className="w-6 h-6" />
-              지금 시작하기
+              {t("start_now")}
             </button>
           </motion.div>
         )}

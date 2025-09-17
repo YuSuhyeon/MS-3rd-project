@@ -26,9 +26,10 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("폼 데이터:", formData); // 실제 값 확인
-    console.log("제목 길이:", formData.title.length);
-    console.log("내용 길이:", formData.content.length);
+    console.log("폼 데이터:", formData);
+    console.log("모드:", mode);
+    console.log("게시글 ID:", post?.id || post?.board_id);
+
     // HTML5 유효성 검사 활용
     if (!e.target.checkValidity()) {
       setError("모든 필수 항목을 입력해주세요.");
@@ -62,43 +63,70 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
     setError("");
 
     try {
-      console.log("🍪 현재 쿠키:", document.cookie);
-      console.log("🔑 세션 스토리지:", sessionStorage.getItem("user"));
-      console.log("📦 로컬 스토리지:", localStorage.getItem("user"));
+      let url, method;
 
-      const response = await fetch("/api/boards", {
-        method: "POST",
+      if (mode === "edit" && post) {
+        // update
+        const postId = post.id || post.board_id;
+        url = `/api/boards/${postId}`;
+        method = "PUT";
+      } else {
+        //create
+        url = "/api/boards";
+        method = "POST";
+      }
+
+      console.log("🍪 현재 쿠키:", document.cookie);
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
-          // 세션 쿠키를 포함하도록 명시
         },
-        credentials: "include", // 이 부분이 중요합니다!
+        credentials: "include", // 세션 쿠키 포함
         body: JSON.stringify({
-          title: formData.title,
-          content: formData.content,
-          tags: formData.tags,
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          tags: formData.tags.trim(),
         }),
       });
 
-      console.log("📡 응답 상태:", response.status);
+      console.log("response.status:", response.status);
       console.log(
-        "📡 응답 헤더:",
+        "response.header ===========================:",
         Object.fromEntries(response.headers.entries())
       );
 
       if (response.ok) {
         const result = await response.json();
-        console.log("✅ 성공:", result);
-        onSuccess();
+        console.log(" 성공:", result);
+
+        // 성공 시 업데이트된 게시글 정보를 부모 컴포넌트에 전달
+        if (mode === "edit" && result.post) {
+          onSuccess(result.post);
+        } else {
+          onSuccess(result);
+        }
         onClose();
       } else {
         const errorData = await response.text();
-        console.error("❌ 서버 응답:", errorData);
-        alert("게시글 작성에 실패했습니다: " + errorData);
+        console.error("서버 응답:", errorData);
+
+        if (response.status === 403) {
+          setError("수정 권한이 없습니다.");
+        } else if (response.status === 404) {
+          setError("게시글을 찾을 수 없습니다.");
+        } else {
+          setError(
+            `${mode === "edit" ? "수정" : "작성"}에 실패했습니다: ${errorData}`
+          );
+        }
       }
     } catch (error) {
-      console.error("❌ 네트워크 오류:", error);
-      alert("네트워크 오류가 발생했습니다.");
+      console.error("네트워크 오류:", error);
+      setError("네트워크 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
     }
   };
 

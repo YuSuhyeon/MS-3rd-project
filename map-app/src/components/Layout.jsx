@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import BrandLogo from "components/BrandLogo";
@@ -186,28 +187,119 @@ const FlickerNumber = ({ value, formatter = (val) => val }) => {
   return <span className="font-mono text-purple-200">{displayValue}</span>;
 };
 
-// LiveInfoWidget 컴포넌트
 const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
   const [exchangeData, setExchangeData] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState(null);
+  const [displayValues, setDisplayValues] = useState({});
 
-  const fetchAllData = async () => {
+  // 1시간 = 3600000ms
+  const UPDATE_INTERVAL = 60 * 60 * 1000; // 1시간
+  const ANIMATION_INTERVAL = 3000; // 3초마다 애니메이션
+
+  // 실제 API 호출
+  const fetchRealData = async () => {
+    console.log("🔄 실제 API 데이터 가져오는 중...");
     setLoading(true);
-    const [exchange, weather] = await Promise.all([
-      callExchangeRateAPI(),
-      callWeatherAPI(),
-    ]);
-    setExchangeData(exchange);
-    setWeatherData(weather);
-    setLoading(false);
+
+    try {
+      const [exchange, weather] = await Promise.all([
+        callExchangeRateAPI(),
+        callWeatherAPI(),
+      ]);
+
+      if (exchange) {
+        setExchangeData(exchange);
+        console.log("✅ 환율 데이터 업데이트 완료");
+      }
+
+      if (weather) {
+        setWeatherData(weather);
+        console.log("✅ 날씨 데이터 업데이트 완료");
+      }
+
+      setLastUpdateTime(Date.now());
+    } catch (error) {
+      console.error("❌ API 호출 실패:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // 가짜 변동 효과 (실제 데이터는 유지하면서 살짝만 변경)
+  const createFlickerEffect = useCallback(() => {
+    if (!exchangeData || !weatherData) return;
+
+    setDisplayValues((prev) => {
+      const newValues = {};
+
+      // 환율 변동 효과 (±0.1% 범위)
+      if (exchangeData?.exchangeRates) {
+        const rates = exchangeData.exchangeRates;
+        newValues.USD = rates.USD
+          ? {
+              ...rates.USD,
+              dealRate:
+                rates.USD.dealRate * (1 + (Math.random() - 0.5) * 0.002),
+            }
+          : null;
+
+        newValues.JPY = rates.JPY
+          ? {
+              ...rates.JPY,
+              dealRate:
+                rates.JPY.dealRate * (1 + (Math.random() - 0.5) * 0.002),
+            }
+          : null;
+
+        newValues.CNY = rates.CNH
+          ? {
+              ...rates.CNH,
+              dealRate:
+                rates.CNH.dealRate * (1 + (Math.random() - 0.5) * 0.002),
+            }
+          : null;
+      }
+
+      // 날씨 변동 효과 (±1도, ±2% 습도, ±0.3m/s 풍속)
+      if (weatherData?.summary) {
+        newValues.weather = {
+          ...weatherData.summary,
+          temperature:
+            parseFloat(weatherData.summary.temperature) +
+            (Math.random() - 0.5) * 2,
+          humidity:
+            parseFloat(weatherData.summary.humidity) +
+            (Math.random() - 0.5) * 4,
+          windSpeed:
+            parseFloat(weatherData.summary.windSpeed) +
+            (Math.random() - 0.5) * 0.6,
+        };
+      }
+
+      return newValues;
+    });
+  }, [exchangeData, weatherData]);
+
+  // 초기 로드 및 1시간마다 실제 데이터 가져오기
   useEffect(() => {
-    fetchAllData();
-    const interval = setInterval(fetchAllData, 30 * 1000);
-    return () => clearInterval(interval);
+    fetchRealData();
+    const realDataInterval = setInterval(fetchRealData, UPDATE_INTERVAL);
+    return () => clearInterval(realDataInterval);
   }, []);
+
+  // 3초마다 가짜 변동 효과
+  useEffect(() => {
+    if (!isCollapsed && (exchangeData || weatherData)) {
+      createFlickerEffect(); // 초기 설정
+      const flickerInterval = setInterval(
+        createFlickerEffect,
+        ANIMATION_INTERVAL
+      );
+      return () => clearInterval(flickerInterval);
+    }
+  }, [isCollapsed, exchangeData, weatherData, createFlickerEffect]);
 
   const getWeatherIcon = (condition) => {
     if (!condition) return <Sun className="w-4 h-4 text-yellow-400" />;
@@ -229,7 +321,14 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
     return <Sun className="w-4 h-4 text-yellow-400" />;
   };
 
-  const cleanedExchangeRates = exchangeData?.exchangeRates
+  // 표시할 환율 데이터 (가짜 변동 효과 적용)
+  const displayExchangeRates = displayValues.USD
+    ? {
+        USD: displayValues.USD,
+        JPY: displayValues.JPY,
+        CNY: displayValues.CNY,
+      }
+    : exchangeData?.exchangeRates
     ? {
         USD: exchangeData.exchangeRates.USD,
         JPY: exchangeData.exchangeRates.JPY,
@@ -248,10 +347,10 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
         </button>
         <div className="flex items-center gap-1">
           <button
-            onClick={fetchAllData}
+            onClick={fetchRealData}
             disabled={loading}
             className="p-1.5 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors disabled:opacity-50"
-            title={t("refresh_data")}
+            //title={`${t("refresh_data")} (${getUpdateStatus()})`}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -275,9 +374,9 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
             <div className="text-xs font-medium text-purple-300 mb-2">
               {t("exchange_rate_krw")}
             </div>
-            {cleanedExchangeRates ? (
+            {displayExchangeRates ? (
               <div className="space-y-2">
-                {Object.entries(cleanedExchangeRates).map(
+                {Object.entries(displayExchangeRates).map(
                   ([currency, data]) =>
                     data && (
                       <div
@@ -301,42 +400,52 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
               </div>
             )}
           </div>
+
           <div>
             <div className="text-xs font-medium text-purple-300 mb-2">
               {t("seoul_weather")}
             </div>
-            {weatherData?.summary ? (
+            {displayValues.weather || weatherData?.summary ? (
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1">
-                    {getWeatherIcon(weatherData.summary.weather)}
-                    <span className="text-purple-200">{t("temp")}</span>
-                  </div>
-                  <FlickerNumber
-                    value={parseFloat(weatherData.summary.temperature)}
-                    formatter={(val) => `${val.toFixed(0)}°C`}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1">
-                    <Droplets className="w-3 h-3 text-blue-400" />
-                    <span className="text-purple-200">{t("humidity")}</span>
-                  </div>
-                  <FlickerNumber
-                    value={parseFloat(weatherData.summary.humidity)}
-                    formatter={(val) => `${val.toFixed(0)}%`}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1">
-                    <Wind className="w-3 h-3 text-gray-400" />
-                    <span className="text-purple-200">{t("wind")}</span>
-                  </div>
-                  <FlickerNumber
-                    value={parseFloat(weatherData.summary.windSpeed)}
-                    formatter={(val) => `${val.toFixed(1)}m/s`}
-                  />
-                </div>
+                {(() => {
+                  const weather = displayValues.weather || weatherData.summary;
+                  return (
+                    <>
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1">
+                          {getWeatherIcon(weather.weather)}
+                          <span className="text-purple-200">{t("temp")}</span>
+                        </div>
+                        <FlickerNumber
+                          value={parseFloat(weather.temperature)}
+                          formatter={(val) => `${val.toFixed(0)}°C`}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1">
+                          <Droplets className="w-3 h-3 text-blue-400" />
+                          <span className="text-purple-200">
+                            {t("humidity")}
+                          </span>
+                        </div>
+                        <FlickerNumber
+                          value={parseFloat(weather.humidity)}
+                          formatter={(val) => `${val.toFixed(0)}%`}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1">
+                          <Wind className="w-3 h-3 text-gray-400" />
+                          <span className="text-purple-200">{t("wind")}</span>
+                        </div>
+                        <FlickerNumber
+                          value={parseFloat(weather.windSpeed)}
+                          formatter={(val) => `${val.toFixed(1)}m/s`}
+                        />
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             ) : (
               <div className="text-xs text-purple-400">

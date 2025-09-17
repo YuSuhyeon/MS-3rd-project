@@ -9,27 +9,18 @@ import {
   Star,
   Bookmark,
   ShoppingBag,
-  TrendingUp,
-  Users,
-  DollarSign,
-  Award,
   Building2,
   Package,
   Search,
   Filter,
   Eye,
-  Cloud,
-  Sun,
-  CloudRain,
-  Thermometer,
-  Snowflake,
-  Wind,
-  Droplets,
-  RefreshCw,
-  AlertTriangle,
 } from "lucide-react";
 // 목업 데이터 임포트
-import { tourProducts, partnershipData } from "../utils/mockTourData";
+import {
+  tourProducts,
+  tourInfoData,
+  partnershipData,
+} from "../utils/mockTourData";
 // 웰컴 팝업
 {
   /*
@@ -394,31 +385,67 @@ const TourCard = ({ item, onDetailClick }) => {
       case "location":
         return {
           emoji: "📍",
-          label: "촬영지",
+          label: "Location",
           gradient: "from-purple-500 to-pink-500",
         };
       case "goods":
         return {
           emoji: "🛍️",
-          label: "굿즈",
+          label: "Shopping",
           gradient: "from-pink-500 to-fuchsia-500",
         };
       case "experience":
         return {
           emoji: "🎭",
-          label: "체험",
+          label: "Experience",
           gradient: "from-indigo-500 to-purple-500",
         };
       case "food":
         return {
           emoji: "🍜",
-          label: "먹방",
+          label: "Food",
           gradient: "from-orange-500 to-pink-500",
+        };
+      case "it":
+        return {
+          emoji: "🖥️",
+          label: "IT",
+          gradient: "from-blue-500 to-pink-500",
+        };
+      case "sports":
+        return {
+          emoji: "⚾",
+          label: "sports",
+          gradient: "from-blue-500 to-pink-500",
+        };
+      case "beauty":
+        return {
+          emoji: "💄",
+          label: "Beauty",
+          gradient: "from-pink-500 to-rose-500",
+        };
+      case "culture":
+        return {
+          emoji: "🏛️",
+          label: "Culture",
+          gradient: "from-purple-500 to-indigo-500",
+        };
+      case "adventure":
+        return {
+          emoji: "🏔️",
+          label: "Adventure",
+          gradient: "from-emerald-500 to-teal-500",
+        };
+      case "entertainment":
+        return {
+          emoji: "🎢",
+          label: "Entertainment",
+          gradient: "from-yellow-500 to-orange-500",
         };
       default:
         return {
           emoji: "🎵",
-          label: "기타",
+          label: "play",
           gradient: "from-gray-500 to-gray-600",
         };
     }
@@ -470,25 +497,23 @@ const TourCard = ({ item, onDetailClick }) => {
 
         <div className="absolute bottom-4 left-4 right-4">
           <div className="flex items-center justify-between">
-            <span className="px-3 py-1 bg-purple-600/80 text-white text-xs rounded-full backdrop-blur-sm font-medium border border-purple-500/50 shadow-lg">
-              {item.partnership}
-            </span>
             <div className="flex items-center gap-1 text-white text-sm bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               <span className="font-semibold">{item.rating}</span>
             </div>
+            <span className="text-sm text-gray-400">리뷰 {item.reviews}개</span>
           </div>
         </div>
       </div>
 
       <div className="p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+        {/* <div className="flex items-center gap-2 mb-3">
+          {/* <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
             {item.kpopGroup}
-          </span>
+          </span> 
           <span className="text-gray-400">•</span>
           <span className="text-sm text-gray-400">리뷰 {item.reviews}개</span>
-        </div>
+        </div> */}
 
         <h3 className="font-bold text-white text-lg mb-2 line-clamp-2">
           {item.title}
@@ -504,25 +529,6 @@ const TourCard = ({ item, onDetailClick }) => {
             <span className="text-sm">{item.location}</span>
           </div>
         )}
-
-        <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-2xl border border-purple-500/30 backdrop-blur-sm">
-          <div className="text-center">
-            <div className="text-xs text-gray-400 mb-1">ROI</div>
-            <div className="text-sm font-bold text-green-400">{item.roi}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-gray-400 mb-1">신규고객</div>
-            <div className="text-sm font-bold text-blue-400">
-              {item.newCustomers}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-gray-400 mb-1">브랜드가치</div>
-            <div className="text-sm font-bold text-purple-400">
-              {item.brandValue}
-            </div>
-          </div>
-        </div>
 
         <div className="flex flex-wrap gap-2 mb-4">
           {item.tags?.slice(0, 3).map((tag, index) => (
@@ -568,7 +574,11 @@ const TourCard = ({ item, onDetailClick }) => {
   );
 };
 
-// PartnershipSection 컴포넌트 (네온 테마 적용)
+//TourInfo 컴포넌트
+const TourInfoSection = () => {
+  return <NeonCard></NeonCard>;
+};
+// PartnershipSection 컴포넌트
 const PartnershipSection = () => {
   return (
     <NeonCard className="mb-8">
@@ -580,55 +590,76 @@ const PartnershipSection = () => {
           <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
             기업 제휴 파트너
           </h2>
-          <p className="text-gray-300">
-            신뢰할 수 있는 파트너사와의 전략적 협업
-          </p>
+          <p className="text-gray-300">신뢰할 수 있는 파트너사</p>
         </div>
       </div>
+      {/* 캐러셀 효과로 파트너십 보여주기 */}
+      <div className="relative overflow-hidden">
+        <motion.div
+          className="flex space-x-8"
+          animate={{
+            x: [0, -200 * partnershipData.length],
+          }}
+          transition={{
+            x: {
+              repeat: Infinity,
+              repeatType: "loop",
+              duration: partnershipData.length * 4,
+              ease: "linear",
+            },
+          }}
+        >
+          {/* 원본 + 복사본으로 무한 스크롤 */}
+          {[...partnershipData, ...partnershipData].map((partner, index) => (
+            <motion.div
+              key={`partner-${index}`}
+              whileHover={{ scale: 1.1, y: -8 }}
+              className="flex-shrink-0 w-40 text-center group"
+              style={{ minWidth: "160px" }}
+            >
+              {/* 로고만 깔끔하게 - 네온 테마 */}
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-black/10 group-hover:shadow-xl group-hover:shadow-purple-500/20 group-hover:scale-110 transition-all duration-300 border border-gray-100">
+                {partner.logo ? (
+                  <img
+                    src={partner.logo}
+                    alt={partner.name || partner.category}
+                    className="max-w-12 max-h-12 object-contain"
+                    style={{
+                      filter: "brightness(1.3) contrast(1.2)",
+                      objectFit: "contain",
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      const fallback = e.target.nextSibling;
+                      if (fallback) fallback.style.display = "flex";
+                    }}
+                  />
+                ) : null}
+                <div
+                  className={`text-white font-bold text-xl ${
+                    partner.logo ? "hidden" : "flex"
+                  }`}
+                >
+                  {(partner.name || partner.category || "P")
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+              </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {partnershipData.map((partner, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.1 }}
-            className="p-6 bg-gradient-to-br from-gray-800/50 to-gray-900/80 rounded-2xl border border-gray-600/30 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300 group backdrop-blur-sm"
-          >
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-800 shadow-md flex items-center justify-center group-hover:shadow-lg group-hover:shadow-purple-500/20 transition-shadow border border-gray-600/50">
-                <img
-                  src={partner.logo || "/placeholder.svg"}
-                  alt={partner.name}
-                  className="h-10 w-auto"
-                />
-              </div>
-              <h3 className="font-bold text-white mb-1">{partner.name}</h3>
-              <p className="text-sm text-gray-400 mb-3">{partner.category}</p>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-300">상품</span>
-                  <span className="font-semibold text-purple-300">
-                    {partner.products}개
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-300">매출</span>
-                  <span className="font-bold text-purple-400">
-                    {partner.revenue}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-300">성장률</span>
-                  <span className="font-bold text-green-400">
-                    {partner.growth}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+              {/* 텍스트만 깔끔하게 - 네온 테마 */}
+              <h3 className="font-bold text-white mb-1 text-lg group-hover:text-purple-300 transition-colors duration-300">
+                {partner.name || partner.category}
+              </h3>
+              <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                {partner.category}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* 좌우 페이드 효과 - 네온 테마 */}
+        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-gray-900/90 to-transparent pointer-events-none z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-gray-900/90 to-transparent pointer-events-none z-10" />
       </div>
     </NeonCard>
   );
@@ -654,7 +685,7 @@ export default function Tour() {
   });
 
   return (
-    <BackgroundEffect>
+    <BackgroundEffect className="w-full min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
@@ -664,22 +695,26 @@ export default function Tour() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-purple-500/30">
-                <ShoppingBag className="w-8 h-8 text-white" />
-              </div>
-            </div>
-
             <h1 className="text-4xl md:text-6xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4">
-              K-lover 투어
+              특별한 여행 경험을 만나보세요
             </h1>
-
-            <p className="text-lg md:text-xl text-gray-300 mb-8">
-              한류와 함께하는 특별한 여행 경험을 만나보세요
-            </p>
 
             {/* Search and Filter */}
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 max-w-2xl mx-auto">
+              <div className="relative">
+                <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="pl-12 pr-8 py-4 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white appearance-none cursor-pointer shadow-lg"
+                >
+                  <option value="all">전체 </option>
+                  <option value="location">촬영지</option>
+                  <option value="goods">굿즈</option>
+                  <option value="experience">체험</option>
+                  <option value="food">먹방</option>
+                </select>
+              </div>
               <div className="relative flex-1 w-full">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -690,27 +725,13 @@ export default function Tour() {
                   className="w-full pl-12 pr-4 py-4 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white placeholder-gray-400 shadow-lg"
                 />
               </div>
-              <div className="relative">
-                <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <select
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                  className="pl-12 pr-8 py-4 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white appearance-none cursor-pointer shadow-lg"
-                >
-                  <option value="all">전체 카테고리</option>
-                  <option value="location">촬영지</option>
-                  <option value="goods">굿즈</option>
-                  <option value="experience">체험</option>
-                  <option value="food">먹방</option>
-                </select>
-              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="w-full max-w-7xl mx-auto px-6 py-8">
         {/* Tour Products Section */}
         <NeonCard className="mb-8">
           <div className="flex items-center gap-4 mb-8">
@@ -722,7 +743,7 @@ export default function Tour() {
                 인기 투어 상품
               </h2>
               <p className="text-gray-300">
-                검증된 파트너사와 함께하는 프리미엄 상품
+                제휴된 파트너사와 함께하는 프리미엄 상품
               </p>
             </div>
           </div>
@@ -758,7 +779,8 @@ export default function Tour() {
             </motion.div>
           )}
         </NeonCard>
-
+        {/* TourInfo Section
+        <TourInfoSection /> */}
         {/* Partnership Section */}
         <PartnershipSection />
       </div>
