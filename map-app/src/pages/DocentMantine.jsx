@@ -24,12 +24,13 @@ import Papa from "papaparse";
 import {
   BackgroundEffect,
   NeonCard,
+  NeonCardJH,
   NeonButton,
   GradientText,
   NeonScrollbarStyles,
 } from "../components/ui/NeonTheme";
 
-import POIList from "components/docent/POIList";
+import POIList, { POIListJH } from "components/docent/POIList";
 import LocationMap from "components/docent/LocationMap";
 import POIDetails from "components/docent/POIDetails";
 
@@ -246,7 +247,14 @@ function getDistance(lat1, lon1, lat2, lon2) {
 // #################################################################
 // ## 고정형 챗봇 (모바일/데스크톱 공용)
 // #################################################################
-const FixedChatbot = ({ callApi, ui, isMobile, selectedLang = "ko" }) => {
+const FixedChatbot = ({
+  callApi,
+  ui,
+  isMobile,
+  selectedLang = "ko",
+  expanded,
+  setExpanded,
+}) => {
   const [messages, setMessages] = useState([
     {
       id: "initial",
@@ -258,7 +266,7 @@ const FixedChatbot = ({ callApi, ui, isMobile, selectedLang = "ko" }) => {
   const [inputMessage, setInputMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  // const [expanded, setExpanded] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null); // 갤러리/파일
   const cameraInputRef = useRef(null); // 카메라(촬영)
@@ -286,6 +294,7 @@ const FixedChatbot = ({ callApi, ui, isMobile, selectedLang = "ko" }) => {
   useEffect(scrollToBottom, [messages, isProcessing]);
 
   // YOLO / Azure Function 헬퍼
+
   const normalizeLabel = (raw) => {
     if (!raw) return null;
     const canon = TAG_ALIASES[raw] || String(raw);
@@ -616,8 +625,13 @@ const FixedChatbot = ({ callApi, ui, isMobile, selectedLang = "ko" }) => {
     event.target.value = "";
   };
 
-  const chatHeight = isMobile ? "h-[280px]" : "h-full";
-
+  // const chatHeight = isMobile ? "h-[280px]" : "h-full";
+  const chatHeight = isMobile
+    ? "h-full"
+    : // expanded
+      //   ? "h-[60vh]"
+      //   : "h-[280px]"
+      "h-full";
   return (
     <div className="h-full w-full bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-lg border-t border-purple-500/30">
       <div
@@ -824,6 +838,7 @@ export default function DocentMantine() {
   const [selectedLang, setSelectedLang] = useState("ko");
   const [translatedDesc, setTranslatedDesc] = useState("");
   const [category, setCategory] = useState("all");
+  const [expanded, setExpanded] = useState(false);
 
   const ui = UI[selectedLang] || UI.ko;
   const isMobile = useIsMobile();
@@ -1128,6 +1143,7 @@ export default function DocentMantine() {
                 selectedPOI={selectedPOI}
                 onSelectPOI={setSelectedPOI}
                 showSelectedPopup
+                directionsLabel={ui.directions} // ← 추가
               />
             </div>
 
@@ -1162,6 +1178,8 @@ export default function DocentMantine() {
               ui={ui}
               isMobile
               selectedLang={selectedLang}
+              expanded={expanded}
+              setExpanded={setExpanded}
             />
           </div>
         </div>
@@ -1241,13 +1259,13 @@ export default function DocentMantine() {
           <div className="h-[60%] flex min-h-0">
             {/* 왼쪽 POI 리스트 */}
             <div className="w-80 flex-shrink-0">
-              <NeonCard className="h-full overflow-hidden">
-                <div className="p-4 h-full flex flex-col">
+              <NeonCardJH className="h-full overflow-hidden">
+                <div className="p-3 pb-1 h-full flex flex-col">
                   <h3 className="text-lg font-semibold text-white mb-3">
                     관광지 목록
                   </h3>
                   <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
-                    <POIList
+                    <POIListJH
                       pois={filteredList}
                       maxRows={6}
                       selectedPOI={selectedPOI}
@@ -1259,61 +1277,115 @@ export default function DocentMantine() {
                     />
                   </div>
                 </div>
-              </NeonCard>
+              </NeonCardJH>
             </div>
 
             {/* 중앙 지도 */}
             <div className="w-1/2 relative min-w-0 min-h-0 m-3">
-              <div className="absolute inset-0 rounded-2xl overflow-hidden border border-purple-500/20">
+              <div className="absolute inset-0 rounded-2xl overflow-hidden border border-purple-500/20 kakao-map-theme">
                 <LocationMap
                   userLocation={userLocation}
                   pois={filteredList}
                   selectedPOI={selectedPOI}
                   onSelectPOI={setSelectedPOI}
                   showSelectedPopup
+                  directionsLabel={ui.directions} // ← 추가
                 />
               </div>
             </div>
 
             {/* 오른쪽 상세정보  */}
             <div className="w-80 flex-shrink-0">
-              <NeonCard className="h-full">
-                <div className="p-4 h-full">
+              <NeonCardJH className="h-full">
+                <div className="p-3 pb-0 h-full">
                   <h3 className="text-lg font-semibold text-white mb-3">
                     상세 정보
                   </h3>
 
                   {/* 강제 높이 제한으로 스크롤 보장 */}
                   <div
-                    className="overflow-y-auto neon-scrollbar"
+                    className="overflow-y-auto neon-scrollbar pb-2"
                     style={{
                       height: "calc(100% - 2.5rem)", // 헤더 높이만큼 빼기
-                      maxHeight: "500px", // 최대 높이 제한
+                      // maxHeight: "500px", // 최대 높이 제한
                     }}
                   >
-                    <POIDetails
-                      poi={
-                        selectedPOI
-                          ? { ...selectedPOI, description: translatedDesc }
-                          : null
-                      }
-                      userLocation={userLocation}
-                      onPlayTTS={() => speakText(translatedDesc, selectedLang)}
-                      isDocentActive={isDocentActive}
-                    />
+                    <div className="poi-details">
+                      <POIDetails
+                        poi={
+                          selectedPOI
+                            ? { ...selectedPOI, description: translatedDesc }
+                            : null
+                        }
+                        userLocation={userLocation}
+                        onPlayTTS={() =>
+                          speakText(translatedDesc, selectedLang)
+                        }
+                        isDocentActive={isDocentActive}
+                      />
+                    </div>
                   </div>
                 </div>
-              </NeonCard>
+              </NeonCardJH>
             </div>
           </div>
+          <style jsx global>{`
+            /* ===== Kakao InfoWindow / CustomOverlay 글자 가독성 ===== */
+            .kakao-map-theme {
+              --map-popup-title: #3e4044ff; /* 제목 색 */
+              --map-popup-text: #27324d; /* 본문 색 */
+              --map-popup-btn: #3f4042ff; /* 버튼 글자 색 */
+            }
+
+            /* 팝업 내부 텍스트가 다른 유틸에 의해 덮이지 않도록 */
+            .kakao-map-theme .map-popup * {
+              color: inherit;
+            }
+            /* ===== 우측 상세 정보(흰 카드) 글자 가독성 ===== */
+            .poi-details {
+              color: #0f172a;
+              opacity: 1 !important; /* 상위에서 opacity 먹는 경우 무력화 */
+            }
+            .poi-details h1,
+            .poi-details h2,
+            .poi-details h3,
+            .poi-details .title,
+            .poi-details .poi-name {
+              color: #1d273a !important; /* "갤러리 학고재" 같은 제목 */
+              font-weight: 800 !important;
+              text-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+            }
+            .poi-details p,
+            .poi-details li {
+              color: #2b3242 !important; /* 본문 */
+              line-height: 1.55;
+            }
+            .poi-details a {
+              color: #1f2937 !important;
+              font-weight: 700;
+            }
+            .poi-details [class*="opacity-"] {
+              opacity: 1 !important;
+            } /* 불투명 강제 */
+            .poi-details [class*="text-white/"],
+            .poi-details [class*="text-gray-"] {
+              color: #1d273a !important;
+            } /* 희미한 유틸 클래스 무력화 */
+          `}</style>
 
           {/* 하단 챗봇 영역 (40%) */}
-          <div className="h-[40%] flex-shrink-0">
+          <div
+            className={`transition-[height] duration-300 ease-in-out ${
+              expanded ? "h-[70%]" : "h-[40%]"
+            } flex-shrink-0`}
+          >
             <FixedChatbot
               callApi={callTourismAPI}
               ui={ui}
               isMobile={false}
               selectedLang={selectedLang}
+              expanded={expanded}
+              setExpanded={setExpanded}
             />
           </div>
         </div>

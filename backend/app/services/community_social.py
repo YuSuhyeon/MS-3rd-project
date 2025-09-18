@@ -374,13 +374,19 @@ class BoardService:
                 FROM users 
                 WHERE provider = %s AND social_id = %s
             """
+            print(f"🔍 사용자 검색 시도: provider='{provider}', social_id='{social_id}'")
             
             cursor.execute(query, (provider, social_id))
             user = cursor.fetchone()
-            
+            print(f"🔍 검색 결과: {user}")
             if user:
                 return {'success': True, 'user': user}
             else:
+                        
+                cursor.execute("SELECT id, social_id, provider, name FROM users WHERE provider = 'google'")
+                all_google_users = cursor.fetchall()
+                print(f"🔍 DB의 모든 Google 사용자: {all_google_users}")
+            
                 return {'success': False, 'error': '사용자를 찾을 수 없습니다'}
             
         except Error as e:
@@ -390,14 +396,14 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-
+# =================================================================
+#   새로운 사용자를 생성하거나 기존 사용자 정보를 업데이트
+# =================================================================   
     def create_or_update_user(self, provider, social_id, email, name, profile_image=None):
-        """
-        새로운 사용자를 생성하거나 기존 사용자 정보를 업데이트합니다.
-        """
+
         connection = None
         try:
-            # 먼저 기존 사용자 확인
+            # 1. provider + social_id로 기존 사용자 확인
             existing_user = self.get_user_by_social(provider, social_id)
             
             if existing_user['success']:
@@ -425,45 +431,92 @@ class BoardService:
                 }
             
             else:
-                # 신규 사용자 생성
+                # 2. 이메일로 기존 사용자 확인 (중복 방지)
                 connection = self.get_connection()
                 if not connection:
                     return {'success': False, 'error': '데이터베이스 연결 실패'}
                 
-                cursor = connection.cursor()
+                cursor = connection.cursor(dictionary=True)
+                
+                # 같은 이메일을 가진 사용자가 있는지 확인
+                email_check_query = "SELECT id, provider, social_id FROM users WHERE email = %s"
+                cursor.execute(email_check_query, (email,))
+                existing_email_user = cursor.fetchone()
+                
+                if existing_email_user:
+                    # 같은 이메일이지만 다른 provider인 경우
+                    print(f"⚠️ 이메일 중복 발견: {email}, 기존 provider: {existing_email_user['provider']}, 새 provider: {provider}")
+                    
+                    # 기존 사용자에 새 provider 정보 추가하는 대신, 오류 반환
+                    return {
+                        'success': False,
+                        'error': f'이 이메일({email})은 이미 {existing_email_user["provider"]} 계정으로 등록되어 있습니다. 해당 방법으로 로그인해주세요.'
+                    }
+                
+                # 3. 신규 사용자 생성
                 insert_query = """
                     INSERT INTO users (name, email, profile_image, provider, social_id, created_at)
                     VALUES (%s, %s, %s, %s, %s, NOW())
                 """
                 
-                cursor.execute(insert_query, (name, email, profile_image, provider, social_id))
-                connection.commit()
+                print(f"🆕 신규 사용자 생성 시도: provider={provider}, social_id={social_id}, email={email}")
                 
-                # 생성된 사용자 ID 가져오기
-                user_result = self.get_user_by_social(provider, social_id)
-                if user_result['success']:
-                    return {
-                        'success': True,
-                        'user_id': user_result['user']['id'],
-                        'message': '새로운 사용자가 생성되었습니다'
-                    }
-                else:
+                try:
+                    cursor.execute(insert_query, (name, email, profile_image, provider, social_id))
+                    connection.commit()
+                    
+                    # 생성된 사용자 ID 가져오기
+                    user_result = self.get_user_by_social(provider, social_id)
+                    if user_result['success']:
+                        print(f"✅ 신규 사용자 생성 완료: user_id={user_result['user']['id']}")
+                        return {
+                            'success': True,
+                            'user_id': user_result['user']['id'],
+                            'message': '새로운 사용자가 생성되었습니다'
+                        }
+                    else:
+                        return {
+                            'success': False,
+                            'error': '사용자 생성 후 조회 실패'
+                        }
+                        
+                except mysql.connector.IntegrityError as ie:
+                    print(f"❌ DB 제약 조건 위반: {ie}")
+                    if 'Duplicate entry' in str(ie):
+                        if 'email' in str(ie):
+                            return {
+                                'success': False,
+                                'error': '이미 등록된 이메일입니다. 다른 로그인 방법을 시도해주세요.'
+                            }
+                        elif 'uk_user' in str(ie):
+                            return {
+                                'success': False,
+                                'error': '이미 등록된 소셜 계정입니다.'
+                            }
                     return {
                         'success': False,
-                        'error': '사용자 생성 후 조회 실패'
+                        'error': f'사용자 등록 중 제약 조건 오류: {str(ie)}'
                     }
-                    
-        except Error as e:
-            print(f"create_or_update_user 오류: {e}")
+        
+        except mysql.connector.Error as e:
+            print(f"❌ MySQL 오류: {e}")
             return {
                 'success': False,
-                'error': str(e)
+                'error': f'데이터베이스 오류: {str(e)}'
+            }
+        except Exception as e:
+            print(f"❌ 일반 오류: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'success': False,
+                'error': f'사용자 생성 중 오류: {str(e)}'
             }
         finally:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-
+            
     def get_user_by_id(self, user_id):
         """
         사용자 ID로 사용자 정보를 조회합니다.

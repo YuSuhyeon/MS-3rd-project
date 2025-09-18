@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import BrandLogo from "components/BrandLogo";
 import LanguageButtons from "components/ui/LanguageButtons";
 import { useAuth } from "context/AuthContext";
 import { useTranslation } from "react-i18next";
-
 import {
   LogOut,
   LogIn,
@@ -186,7 +184,7 @@ const FlickerNumber = ({ value, formatter = (val) => val }) => {
 
   return <span className="font-mono text-purple-200">{displayValue}</span>;
 };
-
+// LiveInfoWidget 컴포넌트
 const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
   const [exchangeData, setExchangeData] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
@@ -194,13 +192,11 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
   const [lastUpdateTime, setLastUpdateTime] = useState(null);
   const [displayValues, setDisplayValues] = useState({});
 
-  // 1시간 = 3600000ms
   const UPDATE_INTERVAL = 60 * 60 * 1000; // 1시간
   const ANIMATION_INTERVAL = 3000; // 3초마다 애니메이션
 
   // 실제 API 호출
   const fetchRealData = async () => {
-    console.log("🔄 실제 API 데이터 가져오는 중...");
     setLoading(true);
 
     try {
@@ -468,20 +464,14 @@ export default function Layout({ children }) {
   const [isMobile, setIsMobile] = useState(false);
   const navigationItems = getNavigationItems(t);
 
-  // 모바일 감지
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const toggleLiveInfo = () =>
-    setIsLiveInfoCollapsed((prevState) => !prevState);
-
+  const toggleLiveInfo = () => setIsLiveInfoCollapsed((prev) => !prev);
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const closeMenu = () => setMenuOpen(false);
 
@@ -690,18 +680,29 @@ export default function Layout({ children }) {
           border-bottom: 1px solid rgba(168, 85, 247, 0.2);
         }
 
+        .main-content {
+          min-height: 100vh;
+          box-sizing: border-box;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 32px;
+        }
+
         @media (max-width: 767px) {
-          .neon-menu-toggle {
-            top: 15px;
-            left: 15px;
-            width: 45px;
-            height: 45px;
+          .main-content {
+            padding-left: 15px;
+            padding-right: 15px;
+            padding-bottom: 15px;
+            padding-top: 60px;
+            min-width: 0;
+            max-width: 100vw;
+            margin: 0;
           }
         }
       `}</style>
 
-      <div className="layout-container flex w-full">
-        {/* 네온 스타일 토글 버튼 - 메뉴가 닫혔을 때만 표시 */}
+      <div className="flex flex-col min-h-screen bg-[#18102a] relative">
+        {/* 메뉴버튼 (모바일/PC 모두 fixed) */}
         {!menuOpen && (
           <motion.button
             className="neon-menu-toggle"
@@ -712,6 +713,14 @@ export default function Layout({ children }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5 }}
+            style={{
+              position: "fixed",
+              top: 15,
+              left: 15,
+              zIndex: 1001,
+              width: 45,
+              height: 45,
+            }}
           >
             <img src="/img/menu_150.png" alt="메뉴" className="menu-icon" />
             <div className="neon-glow" />
@@ -732,7 +741,7 @@ export default function Layout({ children }) {
           )}
         </AnimatePresence>
 
-        {/* left side bar menu */}
+        {/* 사이드바 */}
         <motion.aside
           className="fixed inset-y-0 left-0 z-50 w-72 neon-sidebar flex flex-col"
           variants={sidebarVariants}
@@ -867,13 +876,14 @@ export default function Layout({ children }) {
             damping: 40,
           }}
         >
-          <div className="flex-1 overflow-auto">
-            <div
-              className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6"
-              style={{ paddingTop: "80px" }}
-            >
-              {children}
+          {/* ✅ 프레이머가 건드리지 않는 내부 래퍼 */}
+          <div className="main-content content-shift">
+            <div className="flex gap-4 w-full">
+              <div className="flex-[1.2] min-w-0">{/* 관광지 목록 */}</div>
+              <div className="flex-[2] min-w-0">{/* 지도 */}</div>
+              <div className="flex-[1] min-w-0">{/* 상세정보 */}</div>
             </div>
+            <div className="flex-1 flex flex-col">{children}</div>
           </div>
         </motion.main>
       </div>

@@ -1240,26 +1240,19 @@ export default function DocentMantine() {
           {/* 상단 영역 (60%) - POI리스트 + 지도 + 상세정보 */}
           <div className="h-[60%] flex min-h-0">
             {/* 왼쪽 POI 리스트 */}
-            <div className="w-80 lg:w-96 xl:w-80 min-h-0">
-              {" "}
-              {/* 화면 크기별 너비 */}
-              <NeonCard className="m-2 md:m-3 h-full overflow-hidden">
-                {" "}
-                {/* 반응형 마진 */}
-                <div className="p-4 md:p-6 h-full flex flex-col">
-                  {" "}
-                  {/* 반응형 패딩 */}
-                  <div className="flex-1 min-h-0 max-h-[40vh] md:max-h-[45vh] lg:max-h-[50vh] overflow-y-auto neon-scrollbar">
-                    {" "}
-                    {/* 화면 높이 비례 */}
+            <div className="w-80 flex-shrink-0">
+              <NeonCard className="h-full overflow-hidden">
+                <div className="p-4 h-full flex flex-col">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    관광지 목록
+                  </h3>
+                  <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
                     <POIList
                       pois={filteredList}
-                      maxRows={4}
+                      maxRows={6}
                       selectedPOI={selectedPOI}
-                      //   nearbyPOIs={nearbyCsvCards}
                       nearbyPOIs={[]}
                       userLocation={userLocation}
-                      //    onSelectPOI={(poi) => setSelectedPOI(poi)}
                       onSelectPOI={setSelectedPOI}
                       isDocentActive={isDocentActive}
                       isPlaying={isPlaying}
@@ -1270,11 +1263,10 @@ export default function DocentMantine() {
             </div>
 
             {/* 중앙 지도 */}
-            <div className="flex-1 relative min-w-0 min-h-0 m-3">
+            <div className="w-1/2 relative min-w-0 min-h-0 m-3">
               <div className="absolute inset-0 rounded-2xl overflow-hidden border border-purple-500/20">
                 <LocationMap
                   userLocation={userLocation}
-                  // pois={mapPoisDesktop}
                   pois={filteredList}
                   selectedPOI={selectedPOI}
                   onSelectPOI={setSelectedPOI}
@@ -1283,13 +1275,22 @@ export default function DocentMantine() {
               </div>
             </div>
 
-            {/* 오른쪽 상세정보 - 스크롤바 제거 */}
-            <div className="w-80 min-h-0">
-              <NeonCard className="m-3 h-full overflow-hidden">
-                {" "}
-                {/* overflow-y-auto 제거 */}
-                <div className="p-6 h-full flex flex-col">
-                  <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
+            {/* 오른쪽 상세정보  */}
+            <div className="w-80 flex-shrink-0">
+              <NeonCard className="h-full">
+                <div className="p-4 h-full">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    상세 정보
+                  </h3>
+
+                  {/* 강제 높이 제한으로 스크롤 보장 */}
+                  <div
+                    className="overflow-y-auto neon-scrollbar"
+                    style={{
+                      height: "calc(100% - 2.5rem)", // 헤더 높이만큼 빼기
+                      maxHeight: "500px", // 최대 높이 제한
+                    }}
+                  >
                     <POIDetails
                       poi={
                         selectedPOI

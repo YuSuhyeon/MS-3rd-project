@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
       try {
         console.log("🔑 Google 로그인 성공:", tokenResponse);
 
-        // 1. Google에서 사용자 정보 가져오기
+        // Google에서 사용자 정보 가져오기
         const res = await fetch(
           "https://www.googleapis.com/oauth2/v3/userinfo",
           {
@@ -35,19 +35,39 @@ export const AuthProvider = ({ children }) => {
         const googleUserData = await res.json();
         console.log("👤 Google 사용자 정보:", googleUserData);
 
-        // 2. 백엔드 콜백 API 호출 (중요!)
         const backendResponse = await fetch("/api/auth/google/callback", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // 세션 쿠키 포함
+          credentials: "include",
           body: JSON.stringify({
-            token: tokenResponse.access_token, // access_token 전달
-            user_info: googleUserData, // 사용자 정보도 함께 전달
+            token: tokenResponse.access_token,
+            user_info: googleUserData,
           }),
         });
 
+        // 응답 상태 먼저 확인
+        if (!backendResponse.ok) {
+          const errorText = await backendResponse.text();
+          console.error("❌ 백엔드 오류 응답:", errorText);
+          throw new Error(
+            `로그인 실패 (${backendResponse.status}): ${errorText.substring(
+              0,
+              100
+            )}`
+          );
+        }
+
+        // Content-Type 확인
+        const contentType = backendResponse.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const textResponse = await backendResponse.text();
+          console.error("❌ JSON이 아닌 응답:", textResponse);
+          throw new Error("서버에서 올바르지 않은 응답을 받았습니다.");
+        }
+
+        // JSON 파싱
         const backendData = await backendResponse.json();
         console.log("🏠 백엔드 응답:", backendData);
 

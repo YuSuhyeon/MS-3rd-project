@@ -147,72 +147,103 @@ const resources = {
       culture_guide: "한국 문화 가이드",
       // 문화 가이드 번역
       greeting: "인사 예절",
-      greeting_content: "한국에서는 나이가 많은 사람에게 먼저 인사하고, 고개를 숙여 인사합니다.",
-      greeting_extra: "보통 가벼운 목례만으로도 충분하며, 두 손으로 악수하면 더 공손하게 보입니다.",
+      greeting_content:
+        "한국에서는 나이가 많은 사람에게 먼저 인사하고, 고개를 숙여 인사합니다.",
+      greeting_extra:
+        "보통 가벼운 목례만으로도 충분하며, 두 손으로 악수하면 더 공손하게 보입니다.",
       greeting_modal_title: "한국의 존댓말과 기본 인사 표현",
-      greeting_modal_paragraphs: "한국에는 존댓말과 반말이 있어서 인사 표현도 상황에 따라 달라집니다.",
-      greeting_modal_paragraphs_2: "친구끼리는 '안녕'이라고 하지만, 어른이나 처음 만난 사람에게는 반드시 '안녕하세요'라고 해야 예의입니다.",
+      greeting_modal_paragraphs:
+        "한국에는 존댓말과 반말이 있어서 인사 표현도 상황에 따라 달라집니다.",
+      greeting_modal_paragraphs_2:
+        "친구끼리는 '안녕'이라고 하지만, 어른이나 처음 만난 사람에게는 반드시 '안녕하세요'라고 해야 예의입니다.",
       greeting_modal_list_1: "안녕하세요 (일상 존댓말)",
       greeting_modal_list_2: "안녕하십니까 (격식)",
       greeting_modal_list_3: "안녕 (친한 사이, 반말)",
       greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워",
       greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해",
       greeting_modal_link_1: "한국 사람들에게 인사하는 방법",
-      
+
       meal: "식사 예절",
-      meal_content: "어른이 먼저 수저를 들고, 밥그릇을 들고 먹지 않습니다. 술은 양손으로 받습니다.",
-      meal_extra: "밥을 다 먹은 후에는 젓가락을 그릇 위에 가지런히 올려두는 것이 예의입니다.",
+      meal_content:
+        "어른이 먼저 수저를 들고, 밥그릇을 들고 먹지 않습니다. 술은 양손으로 받습니다.",
+      meal_extra:
+        "밥을 다 먹은 후에는 젓가락을 그릇 위에 가지런히 올려두는 것이 예의입니다.",
       meal_modal_title: "한국의 식사 예절",
-      meal_modal_paragraphs: "한국에서 식사는 단순히 음식을 먹는 것이 아니라 상대방을 존중하는 중요한 자리입니다.",
-      meal_modal_paragraphs_2: "식사 전에는 '잘 먹겠습니다', 식사 후에는 '잘 먹었습니다'라고 인사하며, 이는 준비한 사람과 함께한 사람 모두에 대한 존중을 의미합니다.",
+      meal_modal_paragraphs:
+        "한국에서 식사는 단순히 음식을 먹는 것이 아니라 상대방을 존중하는 중요한 자리입니다.",
+      meal_modal_paragraphs_2:
+        "식사 전에는 '잘 먹겠습니다', 식사 후에는 '잘 먹었습니다'라고 인사하며, 이는 준비한 사람과 함께한 사람 모두에 대한 존중을 의미합니다.",
       meal_modal_list_1: "자리에 앉을 때는 연장자나 손님이 먼저 앉습니다.",
       meal_modal_list_2: "젓가락을 밥그릇에 꽂지 않습니다.",
       meal_modal_list_3: "술을 마실 때는 고개를 살짝 돌려서 마십니다.",
-      meal_modal_list_4: "큰 소리로 씹거나 젓가락으로 사람을 가리키는 것은 실례입니다.",
+      meal_modal_list_4:
+        "큰 소리로 씹거나 젓가락으로 사람을 가리키는 것은 실례입니다.",
       meal_modal_list_5: "그릇은 식탁 위에 놓고 먹습니다.",
       meal_modal_link_1: "한국인의 식사 예절",
-      
+
       transportation: "대중교통",
-      transportation_content: "지하철에서는 노약자석을 양보하고, 큰 소리로 통화하지 않습니다.",
-      transportation_extra: "혼잡한 시간대에는 가방을 앞으로 메는 것이 배려하는 태도입니다.",
+      transportation_content:
+        "지하철에서는 노약자석을 양보하고, 큰 소리로 통화하지 않습니다.",
+      transportation_extra:
+        "혼잡한 시간대에는 가방을 앞으로 메는 것이 배려하는 태도입니다.",
       transportation_modal_title: "한국의 대중교통",
-      transportation_modal_paragraphs: "한국의 지하철과 버스는 매우 편리하지만, 좌석과 행동 예절을 지키는 것이 중요합니다.",
-      transportation_modal_paragraphs_2: "특히 노약자석과 임산부 배려석은 외국인들이 헷갈리기 쉬운데, 비어 있어도 앉지 않는 것이 일반적인 문화입니다.",
-      transportation_modal_list_1: "노약자석은 노인, 장애인, 임산부 전용 좌석으로, 젊은 사람은 사용하지 않습니다.",
-      transportation_modal_list_2: "임산부 배려석(핑크좌석)은 임산부가 언제든 사용할 수 있도록 비워둡니다.",
-      transportation_modal_list_3: "대중교통 내에서는 큰 소리로 통화하지 않습니다.",
-      transportation_modal_list_4: "가방은 앞으로 메거나 내려놓아 다른 승객을 배려합니다.",
-      transportation_modal_list_5: "탑승 시에는 하차 승객이 먼저 내린 후 차례대로 승차합니다.",
+      transportation_modal_paragraphs:
+        "한국의 지하철과 버스는 매우 편리하지만, 좌석과 행동 예절을 지키는 것이 중요합니다.",
+      transportation_modal_paragraphs_2:
+        "특히 노약자석과 임산부 배려석은 외국인들이 헷갈리기 쉬운데, 비어 있어도 앉지 않는 것이 일반적인 문화입니다.",
+      transportation_modal_list_1:
+        "노약자석은 노인, 장애인, 임산부 전용 좌석으로, 젊은 사람은 사용하지 않습니다.",
+      transportation_modal_list_2:
+        "임산부 배려석(핑크좌석)은 임산부가 언제든 사용할 수 있도록 비워둡니다.",
+      transportation_modal_list_3:
+        "대중교통 내에서는 큰 소리로 통화하지 않습니다.",
+      transportation_modal_list_4:
+        "가방은 앞으로 메거나 내려놓아 다른 승객을 배려합니다.",
+      transportation_modal_list_5:
+        "탑승 시에는 하차 승객이 먼저 내린 후 차례대로 승차합니다.",
       transportation_modal_link_1: "한국 대중교통 이용",
       transportation_modal_link_2: "서울에서 지하철 이용하기",
-      
+
       tip: "팁 문화",
-      tip_content: "한국은 팁 문화가 없습니다. 서비스 요금이 이미 포함되어 있어요.",
-      tip_extra: "관광지 일부 호텔은 예외적으로 소액의 팁을 주기도 하지만 필수는 아닙니다.",
+      tip_content:
+        "한국은 팁 문화가 없습니다. 서비스 요금이 이미 포함되어 있어요.",
+      tip_extra:
+        "관광지 일부 호텔은 예외적으로 소액의 팁을 주기도 하지만 필수는 아닙니다.",
       tip_modal_title: "한국의 팁 문화",
-      tip_modal_paragraphs: "한국의 팁 문화는 서양과 달리 거의 존재하지 않습니다.",
+      tip_modal_paragraphs:
+        "한국의 팁 문화는 서양과 달리 거의 존재하지 않습니다.",
       tip_modal_list_1: "식당·카페: 팁 불필요",
       tip_modal_list_2: "택시: 정해진 요금만 지불",
       tip_modal_list_3: "미용실·마사지 등 서비스업: 팁 문화 없음",
-      
+
       footwear: "신발 벗기",
       footwear_content: "한국 가정이나 일부 식당에서는 신발을 벗고 들어갑니다.",
-      footwear_extra: "신발장은 보통 입구에 있으며, 실내화가 준비되어 있는 경우가 많습니다.",
+      footwear_extra:
+        "신발장은 보통 입구에 있으며, 실내화가 준비되어 있는 경우가 많습니다.",
       footwear_modal_title: "한국의 신발 벗기 문화",
-      footwear_modal_paragraphs: "한국에서는 집에 들어갈 때 신발을 벗는 것이 당연한 문화로 자리 잡고 있습니다.",
-      footwear_modal_paragraphs_2: "이는 실내를 청결하게 유지하고 가족의 건강을 지키기 위한 전통적인 습관입니다.",
-      footwear_modal_paragraphs_3: "실내에서는 신발 대신 슬리퍼를 신거나 양말만 신고 생활하는 경우가 많습니다.",
+      footwear_modal_paragraphs:
+        "한국에서는 집에 들어갈 때 신발을 벗는 것이 당연한 문화로 자리 잡고 있습니다.",
+      footwear_modal_paragraphs_2:
+        "이는 실내를 청결하게 유지하고 가족의 건강을 지키기 위한 전통적인 습관입니다.",
+      footwear_modal_paragraphs_3:
+        "실내에서는 신발 대신 슬리퍼를 신거나 양말만 신고 생활하는 경우가 많습니다.",
       footwear_modal_list_1: "가정집: 현관에서 신발을 벗고 들어감",
-      footwear_modal_list_2: "전통 한식당·한옥: 좌식 구조 때문에 신발 벗는 경우 많음.",
-      
+      footwear_modal_list_2:
+        "전통 한식당·한옥: 좌식 구조 때문에 신발 벗는 경우 많음.",
+
       gift: "선물 예절",
-      gift_content: "선물을 받을 때는 양손으로 받고, 바로 뜯지 않는 것이 예의입니다.",
-      gift_extra: "특히 어른이나 상사에게는 술, 건강식품, 차 등이 무난한 선물입니다.",
+      gift_content:
+        "선물을 받을 때는 양손으로 받고, 바로 뜯지 않는 것이 예의입니다.",
+      gift_extra:
+        "특히 어른이나 상사에게는 술, 건강식품, 차 등이 무난한 선물입니다.",
       gift_modal_title: "한국의 선물 예절",
-      gift_modal_paragraphs: "한국에서 선물은 단순한 물건이 아니라 관계와 존중의 의미를 담습니다.",
-      gift_modal_paragraphs_2: "선물을 줄 때와 받을 때는 반드시 양손을 사용하는 것이 예의입니다.",
+      gift_modal_paragraphs:
+        "한국에서 선물은 단순한 물건이 아니라 관계와 존중의 의미를 담습니다.",
+      gift_modal_paragraphs_2:
+        "선물을 줄 때와 받을 때는 반드시 양손을 사용하는 것이 예의입니다.",
       gift_modal_list_1: "양손으로 주고받기",
-      gift_modal_list_2: "명절·집들이·감사 인사 등 다양한 상황에서 선물 주고받음",
+      gift_modal_list_2:
+        "명절·집들이·감사 인사 등 다양한 상황에서 선물 주고받음",
     },
     VisionOCR: {
       image_upload: "이미지 업로드",
@@ -235,7 +266,8 @@ const resources = {
       source_info_2: "출처: 한국국제교류재단 한국음식정보",
       food_name: "음식명",
       translating: "번역 중...",
-      source_info_3: "출처: AI Hub (한국지능정보사회진흥원), 관광 음식메뉴판 데이터",
+      source_info_3:
+        "출처: AI Hub (한국지능정보사회진흥원), 관광 음식메뉴판 데이터",
       main_ingredients: "주요 성분",
       allergy_info: "알러지 정보",
       menu_select: "메뉴를 선택해주세요",
@@ -247,15 +279,22 @@ const resources = {
       // 파일 선택 관련 번역
       file_select: "파일 선택",
       no_file_selected: "선택된 파일 없음",
+      // 안내 문구
+      disclaimer:
+        "※ 제공되는 정보는 참고용입니다. 성분, 알러지 등 메뉴에 대한 정확한 정보는 매장에 문의해 주세요!",
       file_selected: "선택된 파일",
     },
     cultureGuide: {
       greeting: "인사 예절",
-      greeting_content: "한국에서는 나이가 많은 사람에게 먼저 인사하고, 고개를 숙여 인사합니다.",
-      greeting_extra: "보통 가벼운 목례만으로도 충분하며, 두 손으로 악수하면 더 공손하게 보입니다.",
+      greeting_content:
+        "한국에서는 나이가 많은 사람에게 먼저 인사하고, 고개를 숙여 인사합니다.",
+      greeting_extra:
+        "보통 가벼운 목례만으로도 충분하며, 두 손으로 악수하면 더 공손하게 보입니다.",
       greeting_modal_title: "한국의 존댓말과 기본 인사 표현",
-      greeting_modal_paragraphs: "한국에는 존댓말과 반말이 있어서 인사 표현도 상황에 따라 달라집니다.",
-      greeting_modal_paragraphs_2: "친구끼리는 '안녕'이라고 하지만, 어른이나 처음 만난 사람에게는 반드시 '안녕하세요'라고 해야 예의입니다.",
+      greeting_modal_paragraphs:
+        "한국에는 존댓말과 반말이 있어서 인사 표현도 상황에 따라 달라집니다.",
+      greeting_modal_paragraphs_2:
+        "친구끼리는 '안녕'이라고 하지만, 어른이나 처음 만난 사람에게는 반드시 '안녕하세요'라고 해야 예의입니다.",
       greeting_modal_list_1: "안녕하세요 (일상 존댓말)",
       greeting_modal_list_2: "안녕하십니까 (격식)",
       greeting_modal_list_3: "안녕 (친한 사이, 반말)",
@@ -263,55 +302,82 @@ const resources = {
       greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해",
       greeting_modal_link_1: "한국 사람들에게 인사하는 방법",
       meal: "식사 예절",
-      meal_content: "어른이 먼저 수저를 들고, 밥그릇을 들고 먹지 않습니다. 술은 양손으로 받습니다.",
-      meal_extra: "밥을 다 먹은 후에는 젓가락을 그릇 위에 가지런히 올려두는 것이 예의입니다.",
+      meal_content:
+        "어른이 먼저 수저를 들고, 밥그릇을 들고 먹지 않습니다. 술은 양손으로 받습니다.",
+      meal_extra:
+        "밥을 다 먹은 후에는 젓가락을 그릇 위에 가지런히 올려두는 것이 예의입니다.",
       meal_modal_title: "한국의 식사 예절",
-      meal_modal_paragraphs: "한국에서 식사는 단순히 음식을 먹는 것이 아니라 상대방을 존중하는 중요한 자리입니다.",
-      meal_modal_paragraphs_2: "식사 전에는 '잘 먹겠습니다', 식사 후에는 '잘 먹었습니다'라고 인사하며, 이는 준비한 사람과 함께한 사람 모두에 대한 존중을 의미합니다.",
+      meal_modal_paragraphs:
+        "한국에서 식사는 단순히 음식을 먹는 것이 아니라 상대방을 존중하는 중요한 자리입니다.",
+      meal_modal_paragraphs_2:
+        "식사 전에는 '잘 먹겠습니다', 식사 후에는 '잘 먹었습니다'라고 인사하며, 이는 준비한 사람과 함께한 사람 모두에 대한 존중을 의미합니다.",
       meal_modal_list_1: "자리에 앉을 때는 연장자나 손님이 먼저 앉습니다.",
       meal_modal_list_2: "젓가락을 밥그릇에 꽂지 않습니다.",
       meal_modal_list_3: "술을 마실 때는 고개를 살짝 돌려서 마십니다.",
-      meal_modal_list_4: "큰 소리로 씹거나 젓가락으로 사람을 가리키는 것은 실례입니다.",
+      meal_modal_list_4:
+        "큰 소리로 씹거나 젓가락으로 사람을 가리키는 것은 실례입니다.",
       meal_modal_list_5: "그릇은 식탁 위에 놓고 먹습니다.",
       meal_modal_link_1: "한국인의 식사 예절",
       transportation: "대중교통",
-      transportation_content: "지하철에서는 노약자석을 양보하고, 큰 소리로 통화하지 않습니다.",
-      transportation_extra: "혼잡한 시간대에는 가방을 앞으로 메는 것이 배려하는 태도입니다.",
+      transportation_content:
+        "지하철에서는 노약자석을 양보하고, 큰 소리로 통화하지 않습니다.",
+      transportation_extra:
+        "혼잡한 시간대에는 가방을 앞으로 메는 것이 배려하는 태도입니다.",
       transportation_modal_title: "한국의 대중교통",
-      transportation_modal_paragraphs: "한국의 지하철과 버스는 매우 편리하지만, 좌석과 행동 예절을 지키는 것이 중요합니다.",
-      transportation_modal_paragraphs_2: "특히 노약자석과 임산부 배려석은 외국인들이 헷갈리기 쉬운데, 비어 있어도 앉지 않는 것이 일반적인 문화입니다.",
-      transportation_modal_list_1: "노약자석은 노인, 장애인, 임산부 전용 좌석으로, 젊은 사람은 사용하지 않습니다.",
-      transportation_modal_list_2: "임산부 배려석(핑크좌석)은 임산부가 언제든 사용할 수 있도록 비워둡니다.",
-      transportation_modal_list_3: "대중교통 내에서는 큰 소리로 통화하지 않습니다.",
-      transportation_modal_list_4: "가방은 앞으로 메거나 내려놓아 다른 승객을 배려합니다.",
-      transportation_modal_list_5: "탑승 시에는 하차 승객이 먼저 내린 후 차례대로 승차합니다.",
+      transportation_modal_paragraphs:
+        "한국의 지하철과 버스는 매우 편리하지만, 좌석과 행동 예절을 지키는 것이 중요합니다.",
+      transportation_modal_paragraphs_2:
+        "특히 노약자석과 임산부 배려석은 외국인들이 헷갈리기 쉬운데, 비어 있어도 앉지 않는 것이 일반적인 문화입니다.",
+      transportation_modal_list_1:
+        "노약자석은 노인, 장애인, 임산부 전용 좌석으로, 젊은 사람은 사용하지 않습니다.",
+      transportation_modal_list_2:
+        "임산부 배려석(핑크좌석)은 임산부가 언제든 사용할 수 있도록 비워둡니다.",
+      transportation_modal_list_3:
+        "대중교통 내에서는 큰 소리로 통화하지 않습니다.",
+      transportation_modal_list_4:
+        "가방은 앞으로 메거나 내려놓아 다른 승객을 배려합니다.",
+      transportation_modal_list_5:
+        "탑승 시에는 하차 승객이 먼저 내린 후 차례대로 승차합니다.",
       transportation_modal_link_1: "한국 대중교통 이용",
       transportation_modal_link_2: "서울에서 지하철 이용하기",
       tip: "팁 문화",
-      tip_content: "한국은 팁 문화가 없습니다. 서비스 요금이 이미 포함되어 있어요.",
-      tip_extra: "관광지 일부 호텔은 예외적으로 소액의 팁을 주기도 하지만 필수는 아닙니다.",
+      tip_content:
+        "한국은 팁 문화가 없습니다. 서비스 요금이 이미 포함되어 있어요.",
+      tip_extra:
+        "관광지 일부 호텔은 예외적으로 소액의 팁을 주기도 하지만 필수는 아닙니다.",
       tip_modal_title: "한국의 팁 문화",
-      tip_modal_paragraphs: "한국의 팁 문화는 서양과 달리 거의 존재하지 않습니다.",
+      tip_modal_paragraphs:
+        "한국의 팁 문화는 서양과 달리 거의 존재하지 않습니다.",
       tip_modal_list_1: "식당·카페: 팁 불필요",
       tip_modal_list_2: "택시: 정해진 요금만 지불",
       tip_modal_list_3: "미용실·마사지 등 서비스업: 팁 문화 없음",
       footwear: "신발 벗기",
       footwear_content: "한국 가정이나 일부 식당에서는 신발을 벗고 들어갑니다.",
-      footwear_extra: "신발장은 보통 입구에 있으며, 실내화가 준비되어 있는 경우가 많습니다.",
+      footwear_extra:
+        "신발장은 보통 입구에 있으며, 실내화가 준비되어 있는 경우가 많습니다.",
       footwear_modal_title: "한국의 신발 벗기 문화",
-      footwear_modal_paragraphs: "한국에서는 집에 들어갈 때 신발을 벗는 것이 당연한 문화로 자리 잡고 있습니다.",
-      footwear_modal_paragraphs_2: "이는 실내를 청결하게 유지하고 가족의 건강을 지키기 위한 전통적인 습관입니다.",
-      footwear_modal_paragraphs_3: "실내에서는 신발 대신 슬리퍼를 신거나 양말만 신고 생활하는 경우가 많습니다.",
+      footwear_modal_paragraphs:
+        "한국에서는 집에 들어갈 때 신발을 벗는 것이 당연한 문화로 자리 잡고 있습니다.",
+      footwear_modal_paragraphs_2:
+        "이는 실내를 청결하게 유지하고 가족의 건강을 지키기 위한 전통적인 습관입니다.",
+      footwear_modal_paragraphs_3:
+        "실내에서는 신발 대신 슬리퍼를 신거나 양말만 신고 생활하는 경우가 많습니다.",
       footwear_modal_list_1: "가정집: 현관에서 신발을 벗고 들어감",
-      footwear_modal_list_2: "전통 한식당·한옥: 좌식 구조 때문에 신발 벗는 경우 많음.",
+      footwear_modal_list_2:
+        "전통 한식당·한옥: 좌식 구조 때문에 신발 벗는 경우 많음.",
       gift: "선물 예절",
-      gift_content: "선물을 받을 때는 양손으로 받고, 바로 뜯지 않는 것이 예의입니다.",
-      gift_extra: "특히 어른이나 상사에게는 술, 건강식품, 차 등이 무난한 선물입니다.",
+      gift_content:
+        "선물을 받을 때는 양손으로 받고, 바로 뜯지 않는 것이 예의입니다.",
+      gift_extra:
+        "특히 어른이나 상사에게는 술, 건강식품, 차 등이 무난한 선물입니다.",
       gift_modal_title: "한국의 선물 예절",
-      gift_modal_paragraphs: "한국에서 선물은 단순한 물건이 아니라 관계와 존중의 의미를 담습니다.",
-      gift_modal_paragraphs_2: "선물을 줄 때와 받을 때는 반드시 양손을 사용하는 것이 예의입니다.",
+      gift_modal_paragraphs:
+        "한국에서 선물은 단순한 물건이 아니라 관계와 존중의 의미를 담습니다.",
+      gift_modal_paragraphs_2:
+        "선물을 줄 때와 받을 때는 반드시 양손을 사용하는 것이 예의입니다.",
       gift_modal_list_1: "양손으로 주고받기",
-      gift_modal_list_2: "명절·집들이·감사 인사 등 다양한 상황에서 선물 주고받음",
+      gift_modal_list_2:
+        "명절·집들이·감사 인사 등 다양한 상황에서 선물 주고받음",
     },
     playlists: {
       themes1: "도시여행",
@@ -336,7 +402,8 @@ const resources = {
       mock_playlists2_desc: "청량한 여름 바캉스 K-pop",
       play: "재생",
       title: "K-pop 여행 플레이리스트",
-      description: "Spotify에 로그인하고 AI가 만든 플레이리스트를 생성하세요. 지금 바로 경험해보세요! ✨",
+      description:
+        "Spotify에 로그인하고 AI가 만든 플레이리스트를 생성하세요. 지금 바로 경험해보세요! ✨",
       login: "Spotify 로그인",
       my_playlist: "내 플레이리스트",
       playlist_preview: "플레이리스트 미리보기",
@@ -344,15 +411,19 @@ const resources = {
       make_playlist: "Spotify에 로그인한 후 당신만의 플레이리스트를 만드세요",
       preview: "미리보기",
       create_playlist: "첫 번째 플레이리스트 만들기",
-      create_playlist_description: "AI가 당신을 위해 완벽한 K-pop 플레이리스트를 생성합니다",
+      create_playlist_description:
+        "AI가 당신을 위해 완벽한 K-pop 플레이리스트를 생성합니다",
       start_now: "지금 시작하기",
       create_new_playlist: "새 플레이리스트 만들기",
-      create_new_playlist_description: "다른 테마나 아티스트로 새로운 플레이리스트를 만드세요",
+      create_new_playlist_description:
+        "다른 테마나 아티스트로 새로운 플레이리스트를 만드세요",
       featured_youtube_mix: "추천 YouTube 믹스",
-      latest_k_pop_travel_playlists: "당신의 여행을 위해 엄선된 최신 K-pop 여행 플레이리스트",
+      latest_k_pop_travel_playlists:
+        "당신의 여행을 위해 엄선된 최신 K-pop 여행 플레이리스트",
       view_full_playlist: "전체 플레이리스트 보기",
       create_your_own_playlist: "나만의 플레이리스트 만들기",
-      create_your_own_playlist_description: "AI가 당신의 취향과 여행 테마에 맞는 완벽한 K-pop 플레이리스트를 생성합니다. 수천 곡의 데이터베이스에서 최적의 조합을 찾아 Spotify에 바로 저장하세요.",
+      create_your_own_playlist_description:
+        "AI가 당신의 취향과 여행 테마에 맞는 완벽한 K-pop 플레이리스트를 생성합니다. 수천 곡의 데이터베이스에서 최적의 조합을 찾아 Spotify에 바로 저장하세요.",
       ai_custom_recommend: "AI 맞춤 추천",
       unlimited_creation: "무제한 생성",
       spotify_auto_save: "Spotify 자동 저장",
@@ -360,9 +431,9 @@ const resources = {
   },
   en: {
     playlists: {
-      
       title: "K-pop Travel Playlist",
-      description: "Log in to Spotify and create AI-generated playlists. Experience it now! ✨",
+      description:
+        "Log in to Spotify and create AI-generated playlists. Experience it now! ✨",
       login: "Spotify Login",
       my_playlist: "My Playlist",
       playlist_preview: "Playlist Preview",
@@ -370,28 +441,34 @@ const resources = {
       make_playlist: "Create your own playlist after logging in to Spotify",
       preview: "Preview",
       create_playlist: "Create Your First Playlist",
-      create_playlist_description: "AI creates a perfect K-pop playlist tailored for you",
+      create_playlist_description:
+        "AI creates a perfect K-pop playlist tailored for you",
       start_now: "Start Now",
       create_new_playlist: "Create New Playlist",
-      create_new_playlist_description: "Create a new playlist with different themes or artists",
+      create_new_playlist_description:
+        "Create a new playlist with different themes or artists",
       featured_youtube_mix: "Featured YouTube Mix",
-      latest_k_pop_travel_playlists: "Latest K-pop travel playlists curated for your journey",
+      latest_k_pop_travel_playlists:
+        "Latest K-pop travel playlists curated for your journey",
       view_full_playlist: "View Full Playlist",
       create_your_own_playlist: "Create Your Own Playlist",
-      create_your_own_playlist_description: "AI generates the perfect K-pop playlist that matches your taste and travel theme. Find the optimal combination from thousands of songs and save directly to Spotify.",
+      create_your_own_playlist_description:
+        "AI generates the perfect K-pop playlist that matches your taste and travel theme. Find the optimal combination from thousands of songs and save directly to Spotify.",
       ai_custom_recommend: "AI Custom Recommendation",
       unlimited_creation: "Unlimited Creation",
       spotify_auto_save: "Spotify Auto Save",
       themes1: "City Travel",
       themes1_desc: "Energetic K-pop for vibrant urban exploration",
       themes2: "Summer Vacation",
-      themes2_desc: "Refreshing music that captures cool ocean breezes and warm sunshine",
+      themes2_desc:
+        "Refreshing music that captures cool ocean breezes and warm sunshine",
       themes3: "Night Market",
       themes3_desc: "Exciting night street vibes under colorful neon signs",
       themes4: "Peaceful Travel",
       themes4_desc: "Calm and emotional melodies that soothe the mind",
       themes5: "Exercise/Workout",
-      themes5_desc: "Powerful music with intense beats to maximize workout effects",
+      themes5_desc:
+        "Powerful music with intense beats to maximize workout effects",
       themes6: "Cafe/Reading",
       themes6_desc: "Calm and sophisticated acoustic sounds that enhance focus",
       kpop_artists1: "4th Gen Girl Groups",
@@ -399,7 +476,8 @@ const resources = {
       kpop_artists3: "3rd Gen Legends",
       kpop_artists4: "Solo Artists",
       mock_playlists1: "Seoul City Vibes",
-      mock_playlists1_desc: "Urban K-pop perfect for exploring Seoul's city center",
+      mock_playlists1_desc:
+        "Urban K-pop perfect for exploring Seoul's city center",
       mock_playlists2: "Summer Breeze",
       mock_playlists2_desc: "Refreshing summer vacation K-pop",
       play: "Play",
@@ -527,7 +605,7 @@ const resources = {
       ai_docent: "AI Docent",
       community: "Community",
       tour: "Tour",
-      survival: "Survival", 
+      survival: "Survival",
       survival_kit: "Survival Kit",
       playlists: "Playlists",
       menu: "Menu",
@@ -552,72 +630,104 @@ const resources = {
       culture_guide: "Culture Guide",
       // 문화 가이드 번역
       greeting: "Greeting Etiquette",
-      greeting_content: "In Korea, greet older people first and bow your head when greeting.",
-      greeting_extra: "Usually a light nod is sufficient, and shaking hands with both hands appears more polite.",
+      greeting_content:
+        "In Korea, greet older people first and bow your head when greeting.",
+      greeting_extra:
+        "Usually a light nod is sufficient, and shaking hands with both hands appears more polite.",
       greeting_modal_title: "Korean Honorifics and Basic Greeting Expressions",
-      greeting_modal_paragraphs: "Korea has honorifics and informal speech, so greeting expressions vary depending on the situation.",
-      greeting_modal_paragraphs_2: "Friends say 'annyeong' to each other, but you must say 'annyeonghaseyo' to adults or people you meet for the first time to be polite.",
+      greeting_modal_paragraphs:
+        "Korea has honorifics and informal speech, so greeting expressions vary depending on the situation.",
+      greeting_modal_paragraphs_2:
+        "Friends say 'annyeong' to each other, but you must say 'annyeonghaseyo' to adults or people you meet for the first time to be polite.",
       greeting_modal_list_1: "안녕하세요 (Daily honorific)",
       greeting_modal_list_2: "안녕하십니까 (Formal)",
       greeting_modal_list_3: "안녕 (Close friends, informal)",
       greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워 (Thank you)",
       greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해 (Sorry)",
       greeting_modal_link_1: "How to greet Korean people",
-      
+
       meal: "Dining Etiquette",
-      meal_content: "Adults pick up utensils first, don't hold the rice bowl while eating. Receive alcohol with both hands.",
-      meal_extra: "After finishing your meal, it's polite to place chopsticks neatly on the bowl.",
+      meal_content:
+        "Adults pick up utensils first, don't hold the rice bowl while eating. Receive alcohol with both hands.",
+      meal_extra:
+        "After finishing your meal, it's polite to place chopsticks neatly on the bowl.",
       meal_modal_title: "Korean Dining Etiquette",
-      meal_modal_paragraphs: "In Korea, dining is not just about eating food but an important occasion to respect others.",
-      meal_modal_paragraphs_2: "Before eating, say 'jal meokgesseumnida' (I will eat well), and after eating, say 'jal meogeosseumnida' (I ate well), which shows respect for both the person who prepared the food and those who shared the meal.",
+      meal_modal_paragraphs:
+        "In Korea, dining is not just about eating food but an important occasion to respect others.",
+      meal_modal_paragraphs_2:
+        "Before eating, say 'jal meokgesseumnida' (I will eat well), and after eating, say 'jal meogeosseumnida' (I ate well), which shows respect for both the person who prepared the food and those who shared the meal.",
       meal_modal_list_1: "Elders or guests sit first when taking seats.",
       meal_modal_list_2: "Don't stick chopsticks into the rice bowl.",
       meal_modal_list_3: "When drinking alcohol, turn your head slightly.",
-      meal_modal_list_4: "Chewing loudly or pointing at people with chopsticks is impolite.",
+      meal_modal_list_4:
+        "Chewing loudly or pointing at people with chopsticks is impolite.",
       meal_modal_list_5: "Place bowls on the table and eat.",
       meal_modal_link_1: "Korean dining etiquette",
-      
+
       transportation: "Public Transportation",
-      transportation_content: "Give up priority seats on the subway and don't talk loudly on the phone.",
-      transportation_extra: "During rush hours, carrying bags in front is a considerate attitude.",
+      transportation_content:
+        "Give up priority seats on the subway and don't talk loudly on the phone.",
+      transportation_extra:
+        "During rush hours, carrying bags in front is a considerate attitude.",
       transportation_modal_title: "Korean Public Transportation",
-      transportation_modal_paragraphs: "Korean subways and buses are very convenient, but it's important to follow seat and behavior etiquette.",
-      transportation_modal_paragraphs_2: "Especially priority seats and pregnant women's seats are confusing for foreigners - it's common culture not to sit even if they're empty.",
-      transportation_modal_list_1: "Priority seats are for elderly, disabled, and pregnant women only - young people don't use them.",
-      transportation_modal_list_2: "Pregnant women's seats (pink seats) are kept empty so pregnant women can use them anytime.",
-      transportation_modal_list_3: "Don't talk loudly on public transportation.",
-      transportation_modal_list_4: "Carry bags in front or put them down to be considerate of other passengers.",
-      transportation_modal_list_5: "When boarding, let passengers exit first, then board in order.",
+      transportation_modal_paragraphs:
+        "Korean subways and buses are very convenient, but it's important to follow seat and behavior etiquette.",
+      transportation_modal_paragraphs_2:
+        "Especially priority seats and pregnant women's seats are confusing for foreigners - it's common culture not to sit even if they're empty.",
+      transportation_modal_list_1:
+        "Priority seats are for elderly, disabled, and pregnant women only - young people don't use them.",
+      transportation_modal_list_2:
+        "Pregnant women's seats (pink seats) are kept empty so pregnant women can use them anytime.",
+      transportation_modal_list_3:
+        "Don't talk loudly on public transportation.",
+      transportation_modal_list_4:
+        "Carry bags in front or put them down to be considerate of other passengers.",
+      transportation_modal_list_5:
+        "When boarding, let passengers exit first, then board in order.",
       transportation_modal_link_1: "Using Korean public transportation",
       transportation_modal_link_2: "Using Seoul subway",
-      
+
       tip: "Tipping Culture",
-      tip_content: "Korea has no tipping culture. Service charges are already included.",
-      tip_extra: "Some hotels in tourist areas may accept small tips as an exception, but it's not mandatory.",
+      tip_content:
+        "Korea has no tipping culture. Service charges are already included.",
+      tip_extra:
+        "Some hotels in tourist areas may accept small tips as an exception, but it's not mandatory.",
       tip_modal_title: "Korean Tipping Culture",
-      tip_modal_paragraphs: "Korea's tipping culture is very different from the West and barely exists.",
+      tip_modal_paragraphs:
+        "Korea's tipping culture is very different from the West and barely exists.",
       tip_modal_list_1: "Restaurants/Cafes: No tip needed",
       tip_modal_list_2: "Taxis: Pay only the set fare",
       tip_modal_list_3: "Hair salons/Massage services: No tipping culture",
-      
+
       footwear: "Removing Shoes",
-      footwear_content: "In Korean homes or some restaurants, you take off your shoes before entering.",
-      footwear_extra: "Shoe cabinets are usually at the entrance, and indoor slippers are often prepared.",
+      footwear_content:
+        "In Korean homes or some restaurants, you take off your shoes before entering.",
+      footwear_extra:
+        "Shoe cabinets are usually at the entrance, and indoor slippers are often prepared.",
       footwear_modal_title: "Korean Shoe Removal Culture",
-      footwear_modal_paragraphs: "In Korea, removing shoes when entering homes is a natural cultural practice.",
-      footwear_modal_paragraphs_2: "This is a traditional habit to keep the interior clean and protect family health.",
-      footwear_modal_paragraphs_3: "Indoors, people often wear slippers instead of shoes or just socks.",
+      footwear_modal_paragraphs:
+        "In Korea, removing shoes when entering homes is a natural cultural practice.",
+      footwear_modal_paragraphs_2:
+        "This is a traditional habit to keep the interior clean and protect family health.",
+      footwear_modal_paragraphs_3:
+        "Indoors, people often wear slippers instead of shoes or just socks.",
       footwear_modal_list_1: "Homes: Remove shoes at the entrance",
-      footwear_modal_list_2: "Traditional Korean restaurants/Hanok: Often remove shoes due to floor seating structure",
-      
+      footwear_modal_list_2:
+        "Traditional Korean restaurants/Hanok: Often remove shoes due to floor seating structure",
+
       gift: "Gift Etiquette",
-      gift_content: "When receiving gifts, accept them with both hands and don't open them immediately.",
-      gift_extra: "Especially for adults or superiors, alcohol, health foods, and tea are safe gift choices.",
+      gift_content:
+        "When receiving gifts, accept them with both hands and don't open them immediately.",
+      gift_extra:
+        "Especially for adults or superiors, alcohol, health foods, and tea are safe gift choices.",
       gift_modal_title: "Korean Gift Etiquette",
-      gift_modal_paragraphs: "In Korea, gifts carry meaning of relationship and respect, not just objects.",
-      gift_modal_paragraphs_2: "When giving and receiving gifts, you must use both hands as etiquette.",
+      gift_modal_paragraphs:
+        "In Korea, gifts carry meaning of relationship and respect, not just objects.",
+      gift_modal_paragraphs_2:
+        "When giving and receiving gifts, you must use both hands as etiquette.",
       gift_modal_list_1: "Give and receive with both hands",
-      gift_modal_list_2: "Exchange gifts in various situations like holidays, housewarming, gratitude",
+      gift_modal_list_2:
+        "Exchange gifts in various situations like holidays, housewarming, gratitude",
     },
     VisionOCR: {
       image_upload: "Image Upload",
@@ -633,14 +743,17 @@ const resources = {
       menu_info: "Menu Information",
       ai_generating_answer: "AI is generating an answer...",
       ai_analyze_result: "AI Analysis Result",
-      ai_generated_answer_desc: "This information is a reference answer generated by AI",
-      source_info: "Source: Korean Food Promotion Institute, 'Guide to Foreign Language Notation of Korean Menus 800 Selections'",
+      ai_generated_answer_desc:
+        "This information is a reference answer generated by AI",
+      source_info:
+        "Source: Korean Food Promotion Institute, 'Guide to Foreign Language Notation of Korean Menus 800 Selections'",
       menu_name: "Menu Name",
       description: "Description",
       source_info_2: "Source: Korea Foundation Korean Food Information",
       food_name: "Food Name",
       translating: "Translating...",
-      source_info_3: "Source: AI Hub (Korea National Information Society Agency), Tourism Food Menu Board Data",
+      source_info_3:
+        "Source: AI Hub (Korea National Information Society Agency), Tourism Food Menu Board Data",
       main_ingredients: "Main Ingredients",
       allergy_info: "Allergy Information",
       menu_select: "Please select a menu",
@@ -652,6 +765,9 @@ const resources = {
       // 파일 선택 관련 번역
       file_select: "File Select",
       no_file_selected: "No file selected",
+      // 안내 문구
+      disclaimer:
+        "※ The provided information is for reference only. For accurate information about ingredients, allergies, and other menu details, please contact the restaurant!",
       file_selected: "Selected file",
     },
   },
@@ -800,7 +916,8 @@ const resources = {
     },
     playlists: {
       title: "K-pop旅行プレイリスト",
-      description: "SpotifyにログインしてAIが作成したプレイリストを作成しましょう。今すぐ体験してみてください！✨",
+      description:
+        "SpotifyにログインしてAIが作成したプレイリストを作成しましょう。今すぐ体験してみてください！✨",
       login: "Spotifyログイン",
       my_playlist: "マイプレイリスト",
       playlist_preview: "プレイリストプレビュー",
@@ -808,15 +925,19 @@ const resources = {
       make_playlist: "Spotifyにログインしてあなただけのプレイリストを作成",
       preview: "プレビュー",
       create_playlist: "最初のプレイリストを作成",
-      create_playlist_description: "AIがあなたにぴったりの完璧なK-popプレイリストを作成します",
+      create_playlist_description:
+        "AIがあなたにぴったりの完璧なK-popプレイリストを作成します",
       start_now: "今すぐ開始",
       create_new_playlist: "新しいプレイリストを作成",
-      create_new_playlist_description: "異なるテーマやアーティストで新しいプレイリストを作成",
+      create_new_playlist_description:
+        "異なるテーマやアーティストで新しいプレイリストを作成",
       featured_youtube_mix: "注目のYouTubeミックス",
-      latest_k_pop_travel_playlists: "あなたの旅のために厳選された最新のK-pop旅行プレイリスト",
+      latest_k_pop_travel_playlists:
+        "あなたの旅のために厳選された最新のK-pop旅行プレイリスト",
       view_full_playlist: "フルプレイリストを見る",
       create_your_own_playlist: "あなただけのプレイリストを作成",
-      create_your_own_playlist_description: "AIがあなたの好みと旅行テーマに合った完璧なK-popプレイリストを生成します。数千曲のデータベースから最適な組み合わせを見つけて、Spotifyに直接保存できます。",
+      create_your_own_playlist_description:
+        "AIがあなたの好みと旅行テーマに合った完璧なK-popプレイリストを生成します。数千曲のデータベースから最適な組み合わせを見つけて、Spotifyに直接保存できます。",
       ai_custom_recommend: "AIカスタム推薦",
       unlimited_creation: "無制限作成",
       spotify_auto_save: "Spotify自動保存",
@@ -831,13 +952,15 @@ const resources = {
       themes5: "運動/ワークアウト",
       themes5_desc: "運動効果を最大化する激しいビートのパワフルな音楽",
       themes6: "カフェ/読書",
-      themes6_desc: "集中力を高める落ち着いた洗練されたアコースティックサウンド",
+      themes6_desc:
+        "集中力を高める落ち着いた洗練されたアコースティックサウンド",
       kpop_artists1: "4世代ガールグループ",
       kpop_artists2: "4世代ボーイグループ",
       kpop_artists3: "3世代レジェンド",
       kpop_artists4: "ソロアーティスト",
       mock_playlists1: "ソウル シティ バイブ",
-      mock_playlists1_desc: "ソウル都心を旅行する時に聞くのに良いアーバン K-pop",
+      mock_playlists1_desc:
+        "ソウル都心を旅行する時に聞くのに良いアーバン K-pop",
       mock_playlists2: "サマー ブリーズ",
       mock_playlists2_desc: "爽やかな夏休み K-pop",
       play: "再生",
@@ -849,71 +972,99 @@ const resources = {
       // 文化ガイド翻訳
       greeting: "挨拶マナー",
       greeting_content: "韓国では年上の人に先に挨拶し、頭を下げて挨拶します。",
-      greeting_extra: "通常は軽い会釈で十分で、両手で握手するとより丁寧に見えます。",
+      greeting_extra:
+        "通常は軽い会釈で十分で、両手で握手するとより丁寧に見えます。",
       greeting_modal_title: "韓国の敬語と基本的な挨拶表現",
-      greeting_modal_paragraphs: "韓国には敬語とタメ語があるため、挨拶表現も状況によって変わります。",
-      greeting_modal_paragraphs_2: "友達同士は「안녕」と言いますが、大人や初対面の人には必ず「안녕하세요」と言うのが礼儀です。",
+      greeting_modal_paragraphs:
+        "韓国には敬語とタメ語があるため、挨拶表現も状況によって変わります。",
+      greeting_modal_paragraphs_2:
+        "友達同士は「안녕」と言いますが、大人や初対面の人には必ず「안녕하세요」と言うのが礼儀です。",
       greeting_modal_list_1: "안녕하세요（日常敬語）",
       greeting_modal_list_2: "안녕하십니까（格式）",
       greeting_modal_list_3: "안녕（親しい間柄、タメ語）",
       greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워（ありがとう）",
       greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해（ごめんなさい）",
       greeting_modal_link_1: "韓国人への挨拶の仕方",
-      
+
       meal: "食事マナー",
-      meal_content: "大人が先にスプーンと箸を取り、ご飯茶碗を持って食べません。お酒は両手で受け取ります。",
-      meal_extra: "ご飯を食べ終えた後は、箸を茶碗の上にきちんと置くのが礼儀です。",
+      meal_content:
+        "大人が先にスプーンと箸を取り、ご飯茶碗を持って食べません。お酒は両手で受け取ります。",
+      meal_extra:
+        "ご飯を食べ終えた後は、箸を茶碗の上にきちんと置くのが礼儀です。",
       meal_modal_title: "韓国の食事マナー",
-      meal_modal_paragraphs: "韓国では食事は単に食べ物を食べるだけでなく、相手を尊重する重要な場です。",
-      meal_modal_paragraphs_2: "食事前には「잘 먹겠습니다」（いただきます）、食事後には「잘 먹었습니다」（ごちそうさまでした）と挨拶し、これは準備した人と一緒にいた人すべてへの尊重を意味します。",
+      meal_modal_paragraphs:
+        "韓国では食事は単に食べ物を食べるだけでなく、相手を尊重する重要な場です。",
+      meal_modal_paragraphs_2:
+        "食事前には「잘 먹겠습니다」（いただきます）、食事後には「잘 먹었습니다」（ごちそうさまでした）と挨拶し、これは準備した人と一緒にいた人すべてへの尊重を意味します。",
       meal_modal_list_1: "席に座るときは年長者やお客様が先に座ります。",
       meal_modal_list_2: "箸をご飯茶碗に刺しません。",
       meal_modal_list_3: "お酒を飲むときは頭を少し向けて飲みます。",
       meal_modal_list_4: "大きな音で噛んだり、箸で人を指すのは失礼です。",
       meal_modal_list_5: "茶碗は食卓の上に置いて食べます。",
       meal_modal_link_1: "韓国人の食事マナー",
-      
+
       transportation: "公共交通機関",
-      transportation_content: "地下鉄では優先席を譲り、大きな声で通話しません。",
-      transportation_extra: "混雑時間帯にはバッグを前に持つことが配慮する態度です。",
+      transportation_content:
+        "地下鉄では優先席を譲り、大きな声で通話しません。",
+      transportation_extra:
+        "混雑時間帯にはバッグを前に持つことが配慮する態度です。",
       transportation_modal_title: "韓国の公共交通機関",
-      transportation_modal_paragraphs: "韓国の地下鉄とバスは非常に便利ですが、座席と行動マナーを守ることが重要です。",
-      transportation_modal_paragraphs_2: "特に優先席と妊婦配慮席は外国人にとって混乱しやすいですが、空いていても座らないのが一般的な文化です。",
-      transportation_modal_list_1: "優先席は老人、障害者、妊婦専用座席で、若い人は使用しません。",
-      transportation_modal_list_2: "妊婦配慮席（ピンク席）は妊婦がいつでも使用できるよう空けておきます。",
+      transportation_modal_paragraphs:
+        "韓国の地下鉄とバスは非常に便利ですが、座席と行動マナーを守ることが重要です。",
+      transportation_modal_paragraphs_2:
+        "特に優先席と妊婦配慮席は外国人にとって混乱しやすいですが、空いていても座らないのが一般的な文化です。",
+      transportation_modal_list_1:
+        "優先席は老人、障害者、妊婦専用座席で、若い人は使用しません。",
+      transportation_modal_list_2:
+        "妊婦配慮席（ピンク席）は妊婦がいつでも使用できるよう空けておきます。",
       transportation_modal_list_3: "公共交通機関内では大きな声で通話しません。",
-      transportation_modal_list_4: "バッグは前に持つか下ろして他の乗客に配慮します。",
-      transportation_modal_list_5: "乗車時は降車客が先に降りてから順番に乗車します。",
+      transportation_modal_list_4:
+        "バッグは前に持つか下ろして他の乗客に配慮します。",
+      transportation_modal_list_5:
+        "乗車時は降車客が先に降りてから順番に乗車します。",
       transportation_modal_link_1: "韓国公共交通機関利用",
       transportation_modal_link_2: "ソウルで地下鉄利用",
-      
+
       tip: "チップ文化",
-      tip_content: "韓国にはチップ文化がありません。サービス料金が既に含まれています。",
-      tip_extra: "観光地の一部ホテルは例外的に少額のチップを受け取ることもありますが、必須ではありません。",
+      tip_content:
+        "韓国にはチップ文化がありません。サービス料金が既に含まれています。",
+      tip_extra:
+        "観光地の一部ホテルは例外的に少額のチップを受け取ることもありますが、必須ではありません。",
       tip_modal_title: "韓国のチップ文化",
-      tip_modal_paragraphs: "韓国のチップ文化は西洋とは異なり、ほとんど存在しません。",
+      tip_modal_paragraphs:
+        "韓国のチップ文化は西洋とは異なり、ほとんど存在しません。",
       tip_modal_list_1: "レストラン・カフェ：チップ不要",
       tip_modal_list_2: "タクシー：定められた料金のみ支払い",
       tip_modal_list_3: "美容院・マッサージ等サービス業：チップ文化なし",
-      
+
       footwear: "靴脱ぎ",
       footwear_content: "韓国の家庭や一部レストランでは靴を脱いで入ります。",
-      footwear_extra: "靴箱は通常入口にあり、室内履きが準備されている場合が多いです。",
+      footwear_extra:
+        "靴箱は通常入口にあり、室内履きが準備されている場合が多いです。",
       footwear_modal_title: "韓国の靴脱ぎ文化",
-      footwear_modal_paragraphs: "韓国では家に入るとき靴を脱ぐことが当然の文化として定着しています。",
-      footwear_modal_paragraphs_2: "これは室内を清潔に保ち、家族の健康を守るための伝統的な習慣です。",
-      footwear_modal_paragraphs_3: "室内では靴の代わりにスリッパを履いたり、靴下だけを履いて生活する場合が多いです。",
+      footwear_modal_paragraphs:
+        "韓国では家に入るとき靴を脱ぐことが当然の文化として定着しています。",
+      footwear_modal_paragraphs_2:
+        "これは室内を清潔に保ち、家族の健康を守るための伝統的な習慣です。",
+      footwear_modal_paragraphs_3:
+        "室内では靴の代わりにスリッパを履いたり、靴下だけを履いて生活する場合が多いです。",
       footwear_modal_list_1: "家庭：玄関で靴を脱いで入る",
-      footwear_modal_list_2: "伝統韓食店・韓屋：座式構造のため靴を脱ぐ場合が多い",
-      
+      footwear_modal_list_2:
+        "伝統韓食店・韓屋：座式構造のため靴を脱ぐ場合が多い",
+
       gift: "贈り物マナー",
-      gift_content: "贈り物を受け取るときは両手で受け取り、すぐに開けないのが礼儀です。",
-      gift_extra: "特に大人や上司には酒、健康食品、お茶などが無難な贈り物です。",
+      gift_content:
+        "贈り物を受け取るときは両手で受け取り、すぐに開けないのが礼儀です。",
+      gift_extra:
+        "特に大人や上司には酒、健康食品、お茶などが無難な贈り物です。",
       gift_modal_title: "韓国の贈り物マナー",
-      gift_modal_paragraphs: "韓国では贈り物は単純な物ではなく、関係と尊重の意味を込めます。",
-      gift_modal_paragraphs_2: "贈り物を渡すときと受け取るときは必ず両手を使うのが礼儀です。",
+      gift_modal_paragraphs:
+        "韓国では贈り物は単純な物ではなく、関係と尊重の意味を込めます。",
+      gift_modal_paragraphs_2:
+        "贈り物を渡すときと受け取るときは必ず両手を使うのが礼儀です。",
       gift_modal_list_1: "両手でやり取りする",
-      gift_modal_list_2: "名節・引っ越し祝い・感謝挨拶など様々な状況で贈り物のやり取り",
+      gift_modal_list_2:
+        "名節・引っ越し祝い・感謝挨拶など様々な状況で贈り物のやり取り",
     },
     VisionOCR: {
       image_upload: "画像アップロード",
@@ -936,7 +1087,8 @@ const resources = {
       source_info_2: "出典: 韓国国際交流財団韓国料理情報",
       food_name: "料理名",
       translating: "翻訳中...",
-      source_info_3: "出典: AI Hub（韓国情報化振興院）、観光料理メニューボードデータ",
+      source_info_3:
+        "出典: AI Hub（韓国情報化振興院）、観光料理メニューボードデータ",
       main_ingredients: "主な材料",
       allergy_info: "アレルギー情報",
       menu_select: "メニューを選択してください",
@@ -948,6 +1100,9 @@ const resources = {
       // 파일 선택 관련 번역
       file_select: "ファイル選択",
       no_file_selected: "選択されたファイルなし",
+      // 안내 문구
+      disclaimer:
+        "※ 提供される情報は参考用です。成分、アレルギー等のメニューに関する正確な情報は店舗にお問い合わせください！",
       file_selected: "選択されたファイル",
     },
   },
@@ -1082,7 +1237,8 @@ const resources = {
       latest_k_pop_travel_playlists: "为您的旅程精选的最新K-pop旅行播放列表",
       view_full_playlist: "查看完整播放列表",
       create_your_own_playlist: "创建您自己的播放列表",
-      create_your_own_playlist_description: "AI根据您的喜好和旅行主题生成完美的K-pop播放列表。从数千首歌曲的数据库中寻找最佳组合，直接保存到Spotify。",
+      create_your_own_playlist_description:
+        "AI根据您的喜好和旅行主题生成完美的K-pop播放列表。从数千首歌曲的数据库中寻找最佳组合，直接保存到Spotify。",
       ai_custom_recommend: "AI定制推荐",
       unlimited_creation: "无限创建",
       spotify_auto_save: "Spotify自动保存",
@@ -1143,42 +1299,50 @@ const resources = {
       greeting_content: "在韩国，要先向年长者问候，并低头行礼。",
       greeting_extra: "通常轻点头就足够了，用双手握手会显得更礼貌。",
       greeting_modal_title: "韩国的敬语和基本问候表达",
-      greeting_modal_paragraphs: "韩国有敬语和非敬语，所以问候表达也会根据情况而不同。",
-      greeting_modal_paragraphs_2: "朋友之间说'안녕'，但对大人或初次见面的人必须说'안녕하세요'才是礼貌的。",
+      greeting_modal_paragraphs:
+        "韩国有敬语和非敬语，所以问候表达也会根据情况而不同。",
+      greeting_modal_paragraphs_2:
+        "朋友之间说'안녕'，但对大人或初次见面的人必须说'안녕하세요'才是礼貌的。",
       greeting_modal_list_1: "안녕하세요（日常敬语）",
       greeting_modal_list_2: "안녕하십니까（正式）",
       greeting_modal_list_3: "안녕（亲密关系，非敬语）",
       greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워（谢谢）",
       greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해（对不起）",
       greeting_modal_link_1: "如何向韩国人问候",
-      
+
       meal: "用餐礼仪",
       meal_content: "大人先拿起餐具，不要端着饭碗吃饭。用双手接酒。",
       meal_extra: "吃完饭后将筷子整齐地放在碗上是礼貌的表现。",
       meal_modal_title: "韩国的用餐礼仪",
-      meal_modal_paragraphs: "在韩国，用餐不仅仅是吃食物，而是尊重对方的重要场合。",
-      meal_modal_paragraphs_2: "用餐前说'잘 먹겠습니다'（我开动了），用餐后说'잘 먹었습니다'（我吃好了），这表示对准备食物的人和一起用餐的人们的尊重。",
+      meal_modal_paragraphs:
+        "在韩国，用餐不仅仅是吃食物，而是尊重对方的重要场合。",
+      meal_modal_paragraphs_2:
+        "用餐前说'잘 먹겠습니다'（我开动了），用餐后说'잘 먹었습니다'（我吃好了），这表示对准备食物的人和一起用餐的人们的尊重。",
       meal_modal_list_1: "就座时年长者或客人先坐",
       meal_modal_list_2: "不要把筷子插在饭碗里",
       meal_modal_list_3: "喝酒时稍微转头喝",
       meal_modal_list_4: "大声咀嚼或用筷子指人是失礼的",
       meal_modal_list_5: "把碗放在餐桌上吃",
       meal_modal_link_1: "韩国人的用餐礼仪",
-      
+
       transportation: "公共交通",
       transportation_content: "在地铁上让座给老弱病残孕，不要大声通话。",
       transportation_extra: "在拥挤时段将包放在前面是体贴的态度。",
       transportation_modal_title: "韩国的公共交通",
-      transportation_modal_paragraphs: "韩国的地铁和公交车非常方便，但遵守座位和行为礼仪很重要。",
-      transportation_modal_paragraphs_2: "特别是老弱病残孕专座和孕妇专座对外国人来说容易混淆，即使空着也不坐是一般文化。",
-      transportation_modal_list_1: "老弱病残孕专座是老人、残疾人、孕妇专用座位，年轻人不使用",
-      transportation_modal_list_2: "孕妇专座（粉色座位）保持空着，以便孕妇随时使用",
+      transportation_modal_paragraphs:
+        "韩国的地铁和公交车非常方便，但遵守座位和行为礼仪很重要。",
+      transportation_modal_paragraphs_2:
+        "特别是老弱病残孕专座和孕妇专座对外国人来说容易混淆，即使空着也不坐是一般文化。",
+      transportation_modal_list_1:
+        "老弱病残孕专座是老人、残疾人、孕妇专用座位，年轻人不使用",
+      transportation_modal_list_2:
+        "孕妇专座（粉色座位）保持空着，以便孕妇随时使用",
       transportation_modal_list_3: "在公共交通工具内不大声通话",
       transportation_modal_list_4: "将包放在前面或放下，照顾其他乘客",
       transportation_modal_list_5: "上车时让下车乘客先下，然后按顺序上车",
       transportation_modal_link_1: "使用韩国公共交通",
       transportation_modal_link_2: "在首尔使用地铁",
-      
+
       tip: "小费文化",
       tip_content: "韩国没有小费文化。服务费已经包含在内。",
       tip_extra: "旅游区的一些酒店可能例外地接受少量小费，但不是必须的。",
@@ -1187,22 +1351,25 @@ const resources = {
       tip_modal_list_1: "餐厅·咖啡厅：不需要小费",
       tip_modal_list_2: "出租车：只支付规定费用",
       tip_modal_list_3: "美容院·按摩等服务行业：没有小费文化",
-      
+
       footwear: "脱鞋",
       footwear_content: "在韩国家庭或一些餐厅要脱鞋进入。",
       footwear_extra: "鞋柜通常在入口处，经常准备室内拖鞋。",
       footwear_modal_title: "韩国的脱鞋文化",
       footwear_modal_paragraphs: "在韩国，进入家中时脱鞋是理所当然的文化。",
-      footwear_modal_paragraphs_2: "这是为了保持室内清洁和保护家人健康的传统习惯。",
-      footwear_modal_paragraphs_3: "在室内经常穿拖鞋而不是鞋子，或者只穿袜子生活。",
+      footwear_modal_paragraphs_2:
+        "这是为了保持室内清洁和保护家人健康的传统习惯。",
+      footwear_modal_paragraphs_3:
+        "在室内经常穿拖鞋而不是鞋子，或者只穿袜子生活。",
       footwear_modal_list_1: "家庭：在玄关脱鞋进入",
       footwear_modal_list_2: "传统韩餐厅·韩屋：由于坐式结构经常脱鞋",
-      
+
       gift: "礼物礼仪",
       gift_content: "接受礼物时用双手接受，不要立即打开是礼貌的。",
       gift_extra: "特别是对大人或上司，酒、保健品、茶等是安全的礼物选择。",
       gift_modal_title: "韩国的礼物礼仪",
-      gift_modal_paragraphs: "在韩国，礼物不仅仅是物品，而是包含关系和尊重的意义。",
+      gift_modal_paragraphs:
+        "在韩国，礼物不仅仅是物品，而是包含关系和尊重的意义。",
       gift_modal_paragraphs_2: "送礼物和接受礼物时必须使用双手是礼仪。",
       gift_modal_list_1: "用双手给予和接受",
       gift_modal_list_2: "在节日、乔迁、感谢等各种情况下交换礼物",
@@ -1240,6 +1407,9 @@ const resources = {
       // 파일 선택 관련 번역
       file_select: "文件选择",
       no_file_selected: "未选择文件",
+      // 안내 문구
+      disclaimer:
+        "※ 提供的信息仅供参考。关于成分、过敏等菜单的准确信息，请联系餐厅！",
       file_selected: "已选择文件",
     },
   },
@@ -1250,7 +1420,14 @@ i18n.use(initReactI18next).init({
   lng: "ko",
   fallbackLng: "en",
   interpolation: { escapeValue: false },
-  ns: ["common", "QuickTranslator", "SurvivalKit", "Navigation", "VisionOCR", "playlists"],
+  ns: [
+    "common",
+    "QuickTranslator",
+    "SurvivalKit",
+    "Navigation",
+    "VisionOCR",
+    "playlists",
+  ],
   defaultNS: "common",
 });
 
