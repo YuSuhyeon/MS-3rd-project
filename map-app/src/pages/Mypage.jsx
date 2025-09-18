@@ -671,7 +671,7 @@ export default function MyPage() {
   const tabs = [
     { id: "dashboard", label: "대시보드", icon: BarChart3 },
     { id: "posts", label: "내가 쓴 글", icon: MessageSquare },
-    { id: "tags", label: "태그 관리", icon: Star },
+    // { id: "tags", label: "태그 관리", icon: Star },
     { id: "bookmarks", label: "북마크한 글", icon: Bookmark },
   ];
 
@@ -827,18 +827,12 @@ export default function MyPage() {
                   value={userStats.totalPosts}
                   variant="primary"
                 />
-                <StatCard
+                {/* <StatCard
                   icon={Star}
                   title="사용한 태그"
                   value={userStats.totalTags}
-                  variant="success"
-                />
-                <StatCard
-                  icon={Heart}
-                  title="받은 좋아요"
-                  value={userStats.totalLikes}
-                  variant="warning"
-                />
+                  variant="success"                /> */}
+
                 <StatCard
                   icon={Bookmark}
                   title="북마크한 글"
@@ -846,61 +840,6 @@ export default function MyPage() {
                   variant="danger"
                 />
               </div>
-
-              {/* 인기 태그 */}
-              <NeonCard className="mb-8">
-                <h3 className="text-xl font-bold text-white mb-6">
-                  내가 자주 쓰는 태그
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {mockUserTags.slice(0, 10).map((tag, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full border border-purple-500/30"
-                    >
-                      <Star className="w-4 h-4 text-yellow-400" />
-                      <span className="text-white">#{tag.name}</span>
-                      <span className="text-gray-400 text-sm">
-                        ({tag.count})
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </NeonCard>
-
-              {/* 최근 활동 */}
-              <NeonCard className="mb-8">
-                <h3 className="text-xl font-bold text-white mb-6">최근 활동</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 bg-gray-800/30 rounded-xl">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-gray-300">
-                      "NewJeans 은평 한옥마을" 글에 댓글 8개가 달렸습니다
-                    </span>
-                    <span className="text-gray-500 text-sm ml-auto">
-                      2시간 전
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 p-4 bg-gray-800/30 rounded-xl">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    <span className="text-gray-300">
-                      "강남 K-POP 굿즈샵" 글에 좋아요 45개를 받았습니다
-                    </span>
-                    <span className="text-gray-500 text-sm ml-auto">
-                      1일 전
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 p-4 bg-gray-800/30 rounded-xl">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                    <span className="text-gray-300">
-                      VIP 등급으로 승급하셨습니다! 🎉
-                    </span>
-                    <span className="text-gray-500 text-sm ml-auto">
-                      3일 전
-                    </span>
-                  </div>
-                </div>
-              </NeonCard>
             </motion.div>
           )}
 
@@ -917,12 +856,6 @@ export default function MyPage() {
                 <h2 className="text-2xl font-bold text-white">
                   내가 쓴 글 ({mockMyPosts.length})
                 </h2>
-                <NeonButton
-                  onClick={() => navigate("/write")}
-                  className="flex items-center gap-2"
-                >
-                  <Edit3 className="w-4 h-4" />새 글 작성
-                </NeonButton>
               </div>
               <div className="space-y-6">
                 {mockMyPosts.map((post) => (
@@ -937,7 +870,8 @@ export default function MyPage() {
             </motion.div>
           )}
 
-          {activeTab === "tags" && (
+          {/*태그 
+          activeTab === "tags" && (
             <motion.div
               key="tags"
               initial={{ opacity: 0, y: 20 }}
@@ -957,7 +891,7 @@ export default function MyPage() {
                 ))}
               </div>
             </motion.div>
-          )}
+          )*/}
 
           {activeTab === "bookmarks" && (
             <motion.div
