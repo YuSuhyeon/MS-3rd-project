@@ -22,6 +22,39 @@ _MODEL_COLUMNS: Optional[List[str]] = None
 _QUESTIONS: Optional[Dict[str, Any]] = None
 
 
+# Canonical 6 persona labels (K6)
+K6_LABELS = [
+    '알뜰 필수코스 정복자',
+    '플렉스 장기 체류객',
+    '관계 중심 체류객',
+    '실속파 쇼핑 원정대',
+    '문화유산 탐험가',
+    '미니멀 K-컬처 팬',
+]
+
+
+def _canonicalize_persona(name_or_id: Any) -> Optional[str]:
+    try:
+        if isinstance(name_or_id, (int, float)) or (isinstance(name_or_id, str) and name_or_id.isdigit()):
+            idx = int(name_or_id)
+            if 0 <= idx < len(K6_LABELS):
+                return K6_LABELS[idx]
+    except Exception:
+        pass
+    s = str(name_or_id or '').strip()
+    if s in K6_LABELS:
+        return s
+    # Legacy labels → K6
+    legacy = {
+        '문화 체험가': '문화유산 탐험가',
+        '미식가': '알뜰 필수코스 정복자',
+        '자연 힐링러': '알뜰 필수코스 정복자',
+        '액티비티 모험가': '미니멀 K-컬처 팬',
+        '럭셔리 트래블러': '플렉스 장기 체류객',
+    }
+    return legacy.get(s)
+
+
 def _artifact_paths() -> List[str]:
     return [
         os.path.join(MODELS_DIR, 'persona_classifier_model_k6.joblib'),
@@ -73,7 +106,7 @@ def _load_artifacts():
 
 
 def _map_simple_answers_to_feature_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
-    
+    # raw answers from UI
     vmap_rvit = {'v1': 1, 'v2': 2, 'v3': 3, 'v4plus': 4}
     vmap_q1 = {'leisure': 1, 'friends': 2}
     vmap_stay = {'h1': 1, 'h2': 2, 'h3': 3, 'h4': 4, 'h5': 5}
@@ -128,12 +161,15 @@ def _map_simple_answers_to_feature_keys(answers: Dict[str, Any]) -> Dict[str, An
 
 
 def _vectorize(columns: Optional[List[str]], mapped: Dict[str, Any]):
-    cols = columns or []
-    feat = { c: 0 for c in cols }
-    for k in ('rvit_key', 'q1_key', 'stay_key', 'budget_key'):
-        ck = mapped.get(k)
-        if ck in feat:
-            feat[ck] = 1
+    if not columns:
+        return [[0]]
+    cols = list(columns)
+    feat: Dict[str, int] = {c: 0 for c in cols}
+
+    for ck in ('rvit_key', 'q1_key', 'stay_key', 'budget_key'):
+        c = mapped.get(ck)
+        if c and c in feat:
+            feat[c] = 1
     for ck in mapped.get('considered_keys') or []:
         if ck in feat:
             feat[ck] = 1
@@ -146,50 +182,19 @@ def _vectorize(columns: Optional[List[str]], mapped: Dict[str, Any]):
 
 def _persona_description(name: str) -> str:
     desc = {
-        '문화 체험가': '전통·유산·박물관 등 문화 경험을 선호합니다.',
-        '미식가': '현지 맛집 탐방과 다양한 음식 경험을 선호합니다.',
-        '자연 힐링형': '자연 풍경 감상과 휴식을 선호합니다.',
-        '액티브 모험가': '액티비티와 역동적인 체험을 즐깁니다.',
-        '럭셔리 트래블러': '프리미엄 숙소와 편안한 휴식을 선호합니다.',
+        '알뜰 필수코스 정복자': '서울 핵심 랜드마크와 필수코스를 효율적으로 즐기는 타입입니다.',
+        '플렉스 장기 체류객': '프리미엄 숙소와 여유로운 일정으로 깊이 있게 머무는 타입입니다.',
+        '관계 중심 체류객': '가족·친구·연인과 함께 소통하며 추억을 쌓는 타입입니다.',
+        '실속파 쇼핑 원정대': '합리적인 쇼핑 스팟을 전략적으로 공략하는 타입입니다.',
+        '문화유산 탐험가': '궁·박물관·전통 골목 등 문화유산을 탐구하는 타입입니다.',
+        '미니멀 K-컬처 팬': 'K-POP/드라마/공연 등 한류 문화를 가볍고 알차게 즐기는 타입입니다.',
     }
     return desc.get(name, '')
 
 
 def _recommend_destinations(label: str, activities: Optional[List[str]] = None) -> List[Dict[str, Any]]:
-    base = {
-        '문화 체험가': [
-            { 'name': '경주 불국사', 'description': '천년의 숨결을 느끼는 문화유산 탐방', 'image_url': '', 'activities': ['유적지', '전통체험'] },
-            { 'name': '전주 한옥마을', 'description': '한옥 골목 산책과 전통문화 체험', 'image_url': '', 'activities': ['한옥', '전통체험'] },
-            { 'name': '서울 국립중앙박물관', 'description': '대한민국 최대 규모의 박물관 전시', 'image_url': '', 'activities': ['박물관'] },
-        ],
-        '미식가': [
-            { 'name': '서울 미슐랭 골목', 'description': '로컬부터 미슐랭까지 다채로운 미식 코스', 'image_url': '', 'activities': ['미식', '시장투어'] },
-            { 'name': '전주 비빔밥 거리', 'description': '전통 미식의 정수, 전주의 맛', 'image_url': '', 'activities': ['미식'] },
-            { 'name': '부산 자갈치 시장', 'description': '신선한 해산물 미식 경험', 'image_url': '', 'activities': ['미식', '시장'] },
-        ],
-        '자연 힐링형': [
-            { 'name': '제주 오름', 'description': '한적한 오름 산책과 드라이브', 'image_url': '', 'activities': ['자연', '산책'] },
-            { 'name': '강원 설악산', 'description': '계곡과 숲길이 어우러진 힐링 트레일', 'image_url': '', 'activities': ['등산', '트레킹'] },
-            { 'name': '서울 한강공원', 'description': '도심 속 여유로운 강변 산책', 'image_url': '', 'activities': ['산책', '피크닉'] },
-        ],
-        '액티브 모험가': [
-            { 'name': '양양 서핑', 'description': '동해 바다에서 즐기는 서핑 액티비티', 'image_url': '', 'activities': ['서핑', '액티비티'] },
-            { 'name': '용인 짚라인', 'description': '스릴 넘치는 공중 활강 체험', 'image_url': '', 'activities': ['짚라인', '액티비티'] },
-            { 'name': '한강 카약', 'description': '도심 속 수상 레저 경험', 'image_url': '', 'activities': ['카약', '수상'] },
-        ],
-        '럭셔리 트래블러': [
-            { 'name': '부산 럭셔리 리조트', 'description': '오션뷰 스파와 프리미엄 다이닝', 'image_url': '', 'activities': ['스파', '휴식'] },
-            { 'name': '서울 5성급 호텔', 'description': '클래식한 객실과 미식 경험', 'image_url': '', 'activities': ['호텔', '미식'] },
-            { 'name': '제주 프라이빗 빌라', 'description': '프라이버시를 중시한 여유로운 휴식', 'image_url': '', 'activities': ['프라이빗', '휴식'] },
-        ],
-    }
-    out = list(base.get(label, []))
-    acts = activities or []
-    if 'shopping' in acts:
-        out.insert(0, { 'name': '서울(명동·강남)', 'description': '쇼핑과 트렌드의 중심지', 'image_url': '', 'activities': ['쇼핑', '도심'] })
-    if 'food' in acts:
-        out.insert(0, { 'name': '전주 한옥마을', 'description': '전통과 미식의 조화', 'image_url': '', 'activities': ['미식', '전통'] })
-    return out[:3]
+    # CSV 기반 스팟을 별도 섹션에서 렌더링하므로 여기서는 비워 둡니다.
+    return []
 
 
 def analyze_persona(answers: Dict[str, Any]) -> Dict[str, Any]:
@@ -210,60 +215,58 @@ def analyze_persona(answers: Dict[str, Any]) -> Dict[str, Any]:
             pred_ids = _MODEL.predict(X)  # type: ignore[attr-defined]
             pred_id = int(pred_ids[0]) if hasattr(pred_ids, '__getitem__') else int(pred_ids)
             try:
-                persona_name = str(_LABEL_ENCODER.inverse_transform([pred_id])[0])  # type: ignore[attr-defined]
+                raw = _LABEL_ENCODER.inverse_transform([pred_id])[0]  # type: ignore[attr-defined]
             except Exception:
-                persona_name = str(pred_id)
+                raw = pred_id
+            persona_name = _canonicalize_persona(raw) or _canonicalize_persona(pred_id) or None
             proba = getattr(_MODEL, 'predict_proba', None)
             if callable(proba):
                 probs = proba(X)[0]
                 for i, p in enumerate(probs):
-                    try:
-                        name_i = str(_LABEL_ENCODER.inverse_transform([i])[0])  # type: ignore[attr-defined]
-                    except Exception:
-                        name_i = str(i)
-                    scores[name_i] = float(round(p, 4))
+                    label_i = _canonicalize_persona(i)
+                    if label_i:
+                        scores[label_i] = float(round(p, 4))
         except Exception:
             persona_name = None
 
+    # Heuristic fallback (when model missing or fails)
     if not persona_name:
-        cons = answers.get('considered') or []
+        cons = set(answers.get('considered') or [])
         purpose = str(answers.get('q1_purpose') or '')
-        if 'food' in cons:
-            persona_name = '미식가'
-        elif 'culture' in cons or 'heritage' in cons:
-            persona_name = '문화 체험가'
-        elif 'nature' in cons or 'relaxation' in cons:
-            persona_name = '자연 힐링형'
+        stay = str(answers.get('r19hap') or '')
+        budget = str(answers.get('cost') or '')
+        if stay in ('h4','h5') or budget in ('c4','c5'):
+            persona_name = '플렉스 장기 체류객'
+        elif 'shopping' in cons:
+            persona_name = '실속파 쇼핑 원정대'
+        elif any(x in cons for x in ('kpop','arts','festival','nightlife')):
+            persona_name = '미니멀 K-컬처 팬'
+        elif any(x in cons for x in ('culture','heritage','museum','tradition')):
+            persona_name = '문화유산 탐험가'
         elif purpose == 'friends':
-            persona_name = '액티브 모험가'
+            persona_name = '관계 중심 체류객'
         else:
-            persona_name = '럭셔리 트래블러'
+            persona_name = '알뜰 필수코스 정복자'
         if not scores:
-            candidates = ['문화 체험가','미식가','자연 힐링형','액티브 모험가','럭셔리 트래블러']
-            for n in candidates:
-                scores[n] = 0.7 if n == persona_name else round(0.3/(len(candidates)-1), 3)
+            for n in K6_LABELS:
+                scores[n] = 0.7 if n == persona_name else round(0.3/(len(K6_LABELS)-1), 3)
+
+    # Canonicalize again for safety
+    persona_name = _canonicalize_persona(persona_name) or persona_name
+
+    # Build code-style inputs for UI (humanize mapping on frontend expects these)
+    rvit_code = { 'v1':'RVIT_1','v2':'RVIT_2','v3':'RVIT_3','v4plus':'RVIT_4' }.get(str(answers.get('rvit')))
+    q1_code = { 'leisure':'Q1_1','friends':'Q1_2' }.get(str(answers.get('q1_purpose')))
+    stay_code = { 'h1':'STAY_1','h2':'STAY_2','h3':'STAY_3','h4':'STAY_4','h5':'STAY_5' }.get(str(answers.get('r19hap')))
+    budget_code = { 'c1':'BUDGET_1','c2':'BUDGET_2','c3':'BUDGET_3','c4':'BUDGET_4','c5':'BUDGET_4' }.get(str(answers.get('cost')))
 
     recs = _recommend_destinations(persona_name or '', activities=answers.get('considered'))
-
-    # Build dataset-like input codes for UI
-    rvit_code = mapped.get('rvit_key') or {
-        'v1':'RVIT_1','v2':'RVIT_2','v3':'RVIT_3','v4plus':'RVIT_4'
-    }.get(str(answers.get('rvit')))
-    q1_code = mapped.get('q1_key') or {
-        'leisure':'Q1_1','friends':'Q1_2'
-    }.get(str(answers.get('q1_purpose')))
-    stay_code = mapped.get('stay_key') or {
-        'h1':'STAY_1','h2':'STAY_2','h3':'STAY_3','h4':'STAY_4','h5':'STAY_5'
-    }.get(str(answers.get('r19hap')))
-    budget_code = mapped.get('budget_key') or {
-        'c1':'BUDGET_1','c2':'BUDGET_2','c3':'BUDGET_3','c4':'BUDGET_4','c5':'BUDGET_4'
-    }.get(str(answers.get('cost')))
 
     return {
         'model_loaded': bool(model_loaded),
         'persona_type': persona_name,
         'persona_description': _persona_description(persona_name or ''),
-        'analysis_reason': '질문 응답을 바탕으로 산출된 결과입니다.',
+        'analysis_reason': '질문 응답을 바탕으로 도출된 결과입니다.',
         'scores': scores,
         'recommended_destinations': recs,
         'inputs': {
@@ -274,3 +277,4 @@ def analyze_persona(answers: Dict[str, Any]) -> Dict[str, Any]:
             'considered': answers.get('considered') or [],
         },
     }
+

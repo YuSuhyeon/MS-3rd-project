@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+from flask import Blueprint, jsonify, redirect, request, session
+
+
+from ..services import persona_service , community_service
 import os
 from flask import Blueprint, jsonify, redirect, request, session
 from flask_cors import cross_origin 
@@ -21,6 +26,16 @@ REPO_ROOT = os.path.dirname(BACKEND_DIR)
 PUBLIC_DIR = os.path.join(REPO_ROOT, 'map-app', 'public')
 SEOUL_DATA_DIR = os.path.join(PUBLIC_DIR, 'seoul_data')
 ROUTE_PLANS_DIR = os.path.join(REPO_ROOT, 'backend', 'data', 'route_plans')
+
+
+k6_id2label = {
+    0: '알뜰 필수코스 정복자',
+    1: '플렉스 장기 체류객',
+    2: '관계 중심 체류객',
+    3: '실속파 쇼핑 원정대',
+    4: '문화유산 탐험가',
+    5: '미니멀 K-컬처 팬',
+}
 
 def _ensure_dir(path: str):
     try:
@@ -47,8 +62,13 @@ def health():
     })
 
 
-# ---------- Helpers for local CSV aggregation ----------
+# ---------- Seoul places data loading & caching ----------
 _PLACES_CACHE = { 'mtime': 0.0, 'items': [] }
+
+# 서울 지역 필터링을 위한 경계 상자 정의
+SEOUL_MIN_LAT, SEOUL_MAX_LAT = 37.413294, 37.715133
+SEOUL_MIN_LNG, SEOUL_MAX_LNG = 126.734086, 127.269311
+
 
 def _pick(o, keys):
     for k in keys:
@@ -63,12 +83,21 @@ def _pick(o, keys):
 def _normalize_row(row: dict, idx: int, src: str):
     name = _pick(row, ['name', 'Name', 'title', 'name_ko']) or f"place-{src}-{idx}"
     try:
-        lat = float(_pick(row, ['lat', 'LAT', 'Lat', 'latitude', 'Latitude', 'Y', 'y']))
-        lng = float(_pick(row, ['lon', 'LON', 'Lon', 'lng', 'LNG', 'Longitude', 'longitude', 'X', 'x']))
+        lat = float(_pick(row, ['lat', 'LAT', 'Lat', 'latitude', 'Latitude', 'Y', 'y', 'mapy', 'mapY', 'MapY']))
+        lng = float(_pick(row, ['lon', 'LON', 'Lon', 'lng', 'LNG', 'Longitude', 'longitude', 'X', 'x', 'mapx', 'mapX', 'MapX']))
     except Exception:
         return None
-    addr = _pick(row, ['address', 'addr', 'road_address', 'address_ko']) or ''
-    cat = _pick(row, ['category', 'cat', 'category_ko']) or ''
+    addr = _pick(row, ['address', 'addr', 'addr1', 'road_address', 'address_ko']) or ''
+    cat_parts = [
+        str(row.get('category') or ''),
+        str(row.get('cat') or ''),
+        str(row.get('category_ko') or ''),
+        str(row.get('cat1') or ''),
+        str(row.get('cat2') or ''),
+        str(row.get('cat3') or ''),
+        str(row.get('contenttype') or ''),
+    ]
+    cat = ' '.join([c for c in cat_parts if c]).strip()
     desc = str(_pick(row, ['desc', 'description', 'rag_seed_text_ko']) or '')
     return {
         'id': f"{src}-{idx}",
@@ -83,7 +112,6 @@ def _normalize_row(row: dict, idx: int, src: str):
 def _parse_csv(file_path: str, src_label: str):
     try:
         stat = os.stat(file_path)
-        # Try utf-8-sig then cp949
         for enc in ('utf-8-sig', 'utf-8', 'cp949'):
             try:
                 with open(file_path, 'r', encoding=enc, newline='') as f:
@@ -104,7 +132,18 @@ def _parse_csv(file_path: str, src_label: str):
 
 def _load_all_places():
     try:
-        latest_mtime = _PLACES_CACHE['mtime']
+        # Check if cache is fresh enough
+        current_max_mtime = 0
+        if os.path.isdir(SEOUL_DATA_DIR):
+            for fname in os.listdir(SEOUL_DATA_DIR):
+                if not fname.lower().endswith('.csv'): continue
+                try:
+                    current_max_mtime = max(current_max_mtime, os.path.getmtime(os.path.join(SEOUL_DATA_DIR, fname)))
+                except Exception: pass
+        if _PLACES_CACHE['mtime'] >= current_max_mtime and _PLACES_CACHE['items']:
+            return _PLACES_CACHE['items']
+
+        # Reload all
         aggregated = []
         if os.path.isdir(SEOUL_DATA_DIR):
             for fname in os.listdir(SEOUL_DATA_DIR):
@@ -113,16 +152,26 @@ def _load_all_places():
                 path = os.path.join(SEOUL_DATA_DIR, fname)
                 parsed = _parse_csv(path, fname)
                 aggregated.extend(parsed['items'])
-                if parsed['mtime'] > latest_mtime:
-                    latest_mtime = parsed['mtime']
+
         if aggregated:
+            # 서울 지역 내에 있는 장소만 필터링
+            aggregated = [x for x in aggregated if (
+                isinstance(x.get('lat'), (int, float)) and isinstance(x.get('lng'), (int, float)) and
+                SEOUL_MIN_LAT <= float(x['lat']) <= SEOUL_MAX_LAT and SEOUL_MIN_LNG <= float(x['lng']) <= SEOUL_MAX_LNG
+            )]
             _PLACES_CACHE['items'] = aggregated
-            _PLACES_CACHE['mtime'] = latest_mtime
+            _PLACES_CACHE['mtime'] = current_max_mtime # BUG FIX: latest_mtime -> current_max_mtime
             return aggregated
         return _PLACES_CACHE.get('items') or []
     except Exception:
         return _PLACES_CACHE.get('items') or []
 
+
+# ----- Persona label helpers (avoid encoding issues) -----
+def _persona_id_from_label(label: str) -> int:
+    # Reverse map for robustness
+    rev_map = {v: k for k, v in k6_id2label.items()}
+    return rev_map.get(str(label).strip(), 0)
 
 # ---------- Persona helpers (route builder) ----------
 def _haversine(lat1, lon1, lat2, lon2):
@@ -134,46 +183,64 @@ def _haversine(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
+# [정리] K6 페르소나를 위한 카테고리 추출 함수
 def _extract_category(item):
-    text = f"{item.get('name','')} {item.get('addr','')} {item.get('category','')} {item.get('desc','')}".lower()
-    def has(*keys):
-        return any(k in text for k in keys)
-    if has('박물관', '미술관', '전시', 'heritage', '문화'): return 'culture'
-    if has('맛집', '음식', '식당', 'food', 'restaurant', '카페', '미식'): return 'food'
-    if has('공원', '자연', '숲', '강', '호수', '피크닉', '휴양', '걷기'): return 'nature'
-    if has('쇼핑', '시장', '백화점', 'shopping', 'market'): return 'shopping'
-    if has('체험', '모험', '액티비티', '익사이팅'): return 'adventure'
-    if has('스파', '호텔', '리조트', '럭셔리', '프리미엄'): return 'luxury'
+    text = (f"{item.get('category','')} {item.get('name','')} {item.get('addr','')} {item.get('desc','')}").lower()
+    has = lambda *keys: any(str(k).lower() in text for k in keys)
+    if has('a04', 'shopping', '쇼핑', '시장', '백화점', '아울렛', '면세', '명동', '강남'): return 'shopping'
+    if has('a05', 'food', '맛집', '음식', '식당', 'restaurant', 'cafe', '카페', '미식'): return 'food'
+    if has('b02', '32', 'hotel', 'resort', '호텔', '리조트', '숙박', '스파', '럭셔리'): return 'luxury'
+    if has('a0201', 'park', '공원', '자연', '둘레길', '산', '숲', '호수', '하천', '강'): return 'nature'
+    if has('a0206', 'a0207', 'heritage', 'museum', 'gallery', 'culture', '문화', '박물관', '미술관', '궁', '한옥', '성곽'): return 'culture'
+    if has('k-pop', 'kpop', '한류', '엔터테인먼트', '아이돌', '방송', '팝업'): return 'k-culture'
     return 'general'
 
-def _score_by_persona(persona: str, item: dict):
+# [정리] K6 페르소나 ID 기반 점수 계산 함수
+def _score_by_persona_pid(pid: int, item: dict):
+    """Score item by K6 persona id (0..5). Avoids string-equality issues with encodings."""
     cat = _extract_category(item)
     text = f"{item.get('name','')} {item.get('addr','')} {item.get('category','')} {item.get('desc','')}".lower()
+    score = 0
     def anykey(*keys):
-        return any(k in text for k in keys)
-    if persona == '미식가':
-        return (4 if cat == 'food' else 0) + (1 if anykey('맛집', '전통', '한옥', '음식') else 0)
-    if persona == '문화 체험가':
-        return (4 if cat == 'culture' else 0) + (1 if anykey('전통', '한옥') else 0)
-    if persona == '자연 힐링형':
-        return (4 if cat == 'nature' else 0) + (1 if anykey('산책', '휴양', '힐링') else 0)
-    if persona == '액티브 모험가':
-        return (4 if cat == 'adventure' else 0) + (1 if anykey('야외', '체험') else 0)
-    if persona == '럭셔리 트래블러':
-        return (4 if cat == 'luxury' else 0) + (1 if anykey('럭셔리', '프리미엄') else 0)
-    return 1 if anykey('명소', '관광', '추천') else 0
+        return any(str(k).lower() in text for k in keys)
+    
+    if pid == 0: # 알뜰 필수코스 정복자
+        if cat in ['culture', 'shopping']: score += 2
+        if anykey('명소', '랜드마크', '궁', '타워', '광화문', '남산', '북촌', '한옥', '경복궁', '창덕궁', '덕수궁'): score += 2
+    elif pid == 1: # 플렉스 장기 체류객
+        if cat == 'luxury': score += 4
+        if anykey('호텔', '리조트', '스파', '프리미엄', '럭셔리'): score += 1
+    elif pid == 2: # 관계 중심 체류객
+        if cat in ['nature', 'food']: score += 3
+        if anykey('가족', '아이', '키즈', '데이트', '친구', '모임', '카페', '공원'): score += 1
+    elif pid == 3: # 실속파 쇼핑 원정대
+        if cat == 'shopping': score += 4
+        if anykey('쇼핑', '시장', '백화점', '아울렛', '면세점', '명동', '강남'): score += 1
+    elif pid == 4: # 문화유산 탐험가
+        if cat == 'culture': score += 4
+        if anykey('문화유산', '박물관', '미술관', '전시', '전통', '한옥', '궁', '유적'): score += 1
+    elif pid == 5: # 미니멀 K-컬처 팬
+        if cat in ['culture', 'shopping', 'k-culture']: score += 3
+        if anykey('k-pop', '한류', '아이돌', '드라마', '공연', '뮤직', '엔터', 'sm', 'hybe', 'jyp', 'yg'): score += 1
+    
+    return score if score > 0 else 1 # 기본 점수 1점 부여
 
-def _build_route(persona='문화 체험가', maxStops=6, maxLegKm=20.0, origin=None, preferDiversity=True):
+def _build_route(persona='문화유산 탐험가', maxStops=6, maxLegKm=20.0, origin=None, preferDiversity=True):
     all_items = _load_all_places()
     if not all_items:
         return []
+    
+    pid = _persona_id_from_label(persona)
+    
     enriched = []
     for it in all_items:
         e = dict(it)
         e['derived_category'] = _extract_category(it)
-        e['_score'] = _score_by_persona(persona, it)
+        e['_score'] = _score_by_persona_pid(pid, it)
         enriched.append(e)
-    top = [x for x in enriched if x['_score'] > 0]
+    
+    # 점수가 1보다 큰 장소들을 우선 풀로 사용
+    top = [x for x in enriched if x['_score'] > 1]
     pool = top if top else enriched
 
     seed = None
@@ -181,40 +248,50 @@ def _build_route(persona='문화 체험가', maxStops=6, maxLegKm=20.0, origin=N
         try:
             olat = float(origin.get('lat'))
             olng = float(origin.get('lng'))
+            # 원점에서 가장 가까운 장소를 시작점으로 선택
             seed = sorted(({'x':x, 'd': _haversine(olat, olng, x['lat'], x['lng'])} for x in pool), key=lambda a: a['d'])[0]['x']
         except Exception:
             seed = None
+
     if seed is None:
+        # 점수가 가장 높은 50개 장소 중 지리적으로 중심에 있는 장소를 시작점으로 선택
         topN = sorted(pool, key=lambda a: a['_score'], reverse=True)[:50]
         if topN:
             avgLat = sum(x['lat'] for x in topN)/len(topN)
             avgLng = sum(x['lng'] for x in topN)/len(topN)
             seed = sorted(topN, key=lambda a: _haversine(avgLat, avgLng, a['lat'], a['lng']))[0]
+        elif pool:
+            seed = pool[0] # 후보군이 없으면 그냥 첫번째 장소 사용
         else:
-            seed = pool[0]
+            return [] # 장소가 아예 없으면 빈 리스트 반환
 
     route = []
     used = set()
     current = seed
-    if not current:
-        return []
     route.append(current)
     used.add(current['id'])
+    
     while len(route) < max(3, int(maxStops)):
         candidates = [{ 'x': x, 'd': _haversine(current['lat'], current['lng'], x['lat'], x['lng']) } for x in pool if x['id'] not in used]
         within = [c for c in candidates if c['d'] <= max(3.0, float(maxLegKm))]
+        
         def diversity_penalty(cat):
             if not preferDiversity:
                 return 0
             lastCat = route[-1]['derived_category'] if route else None
+            # 이전 장소와 같은 카테고리면 페널티 부여
             return 1.5 if lastCat and cat == lastCat else 0
+            
         considered = within if within else candidates
         if not considered:
             break
+            
+        # 최종 점수 = 페르소나 점수 - 다양성 페널티 - 거리 페널티
         best = sorted(({
             **c,
             'score': c['x']['_score'] - diversity_penalty(c['x']['derived_category']) - (c['d'] / max(1.0, float(maxLegKm)))
         } for c in considered), key=lambda a: a['score'], reverse=True)[0]
+        
         nxt = best['x']
         route.append(nxt)
         used.add(nxt['id'])
@@ -234,7 +311,6 @@ def _build_route(persona='문화 체험가', maxStops=6, maxLegKm=20.0, origin=N
 #페르소나 분석에 필요한 질문 목록을 반환하는 API
 @api_bp.route('/persona/questions', methods=['GET'])
 def get_questions():
-    # 실제 질문을 로드하는 작업은 persona_service에게 위임합니다.
     questions = persona_service.load_questions()
     return jsonify(questions)
 
@@ -242,14 +318,9 @@ def get_questions():
 #사용자의 답변을 받아 페르소나를 분석하고 결과를 반환하는 API
 @api_bp.route('/persona/analyze', methods=['POST'])
 def analyze(): 
-    # 1. 프론트엔드에서 보낸 JSON 데이터를 받습니다.
     payload = request.get_json(force=True, silent=True) or {}
     answers = payload.get('answers') or {}
-
-    # 2. 실제 분석 작업은 persona_service에게 위임합니다.
     result = persona_service.analyze_persona(answers)
-
-    # 3. 받은 결과를 JSON 형태로 프론트엔드에 전달합니다.
     return jsonify(result)
 
 
@@ -270,7 +341,8 @@ def seoul_data():
 def persona_route():
     try:
         body = request.get_json(silent=True) or {}
-        persona = str(body.get('persona_type') or body.get('persona') or '문화 체험가')
+        # 기본 페르소나를 '문화유산 탐험가'로 변경
+        persona = str(body.get('persona_type') or body.get('persona') or '문화유산 탐험가')
         maxStops = max(3, min(8, int(body.get('maxStops') or 6)))
         maxLegKm = max(3.0, min(30.0, float(body.get('maxLegKm') or 20)))
         origin = body.get('origin') if isinstance(body.get('origin'), dict) else None
@@ -278,12 +350,13 @@ def persona_route():
         items = _build_route(persona=persona, maxStops=maxStops, maxLegKm=maxLegKm, origin=origin, preferDiversity=preferDiversity)
         return jsonify({ 'count': len(items), 'items': items })
     except Exception:
-        return jsonify({ 'error': 'route_build_failed' }), 500
+        # 개발 환경에서는 상세 에러를 반환하는 것이 디버깅에 용이
+        import traceback
+        return jsonify({ 'error': 'route_build_failed', 'detail': traceback.format_exc() }), 500
 
 
 @api_bp.route('/translate', methods=['GET'])
 def translate():
-    # Echo if missing keys or no texts
     key = os.getenv('AZURE_TRANSLATOR_KEY') or os.getenv('REACT_APP_AZURE_TRANSLATOR_KEY')
     region = os.getenv('AZURE_TRANSLATOR_REGION') or os.getenv('REACT_APP_AZURE_TRANSLATOR_REGION')
     endpoint = os.getenv('AZURE_TRANSLATOR_ENDPOINT') or os.getenv('REACT_APP_AZURE_TRANSLATOR_ENDPOINT') or 'https://api.cognitive.microsofttranslator.com'
@@ -350,23 +423,22 @@ def _naver_parse_route(j):
         route = j.get('route') or {}
         if not route:
             return None
-        # pick best available route list (prefer walking when present)
+        prefer = ['trawalk', 'traoptimal', 'trafast']
         keys = list(route.keys())
-        key = 'trawalk' if 'trawalk' in keys else ('traoptimal' if 'traoptimal' in keys else (keys[0] if keys else None))
-        if not key:
-            return None
-        arr = route.get(key) or []
-        if not arr:
-            return None
-        r0 = arr[0]
-        summ = (r0.get('summary') or {})
-        distance = int(summ.get('distance') or 0)
-        duration = int(summ.get('duration') or 0)
-        path = r0.get('path') or []  # [[x,y], ...]
-        return {
-            'summary': { 'distance': distance, 'duration': duration },
-            'path': path,
-        }
+        for k in prefer + [k for k in keys if k not in prefer]:
+            arr = route.get(k)
+            if isinstance(arr, list) and arr:
+                r0 = arr[0]
+                path = r0.get('path') or []
+                if path:
+                    summ = (r0.get('summary') or {})
+                    distance = int(summ.get('distance') or 0)
+                    duration = int(summ.get('duration') or 0)
+                    return {
+                        'summary': { 'distance': distance, 'duration': duration },
+                        'path': path,
+                    }
+        return None
     except Exception:
         return None
 
@@ -377,7 +449,6 @@ def _naver_leg(mode: str, start_xy: tuple, end_xy: tuple, timeout=10):
         return None, 'NO_NAVER_KEY'
     sx, sy = start_xy
     gx, gy = end_xy
-    # Try a series of endpoints depending on mode
     candidates = []
     if mode == 'walking':
         candidates = [
@@ -416,7 +487,6 @@ def naver_walking_route():
         destination = payload.get('destination') or {}
         wps = payload.get('waypoints') or []
         stops = [origin] + wps + [destination]
-        # Validate
         for s in stops:
             if 'x' not in s or 'y' not in s:
                 return jsonify({ 'error': 'invalid_coordinates' }), 400
@@ -432,7 +502,6 @@ def naver_walking_route():
                 total_dist += leg['summary']['distance']
                 total_dur += leg['summary']['duration']
             else:
-                # fallback: straight line estimate (m, s)
                 km = _haversine(sy, sx, gy, gx)
                 dist = int(km*1000)
                 dur = int((km/4.5)*3600)
@@ -466,7 +535,6 @@ def naver_transit_route():
                 total_dist += leg['summary']['distance']
                 total_dur += leg['summary']['duration']
             else:
-                # fallback transit: 25km/h + 5분 편의치
                 km = _haversine(sy, sx, gy, gx)
                 dist = int(km*1000)
                 dur = int((km/25)*3600 + 300)
@@ -477,16 +545,111 @@ def naver_transit_route():
         return jsonify({ 'error': 'naver_transit_failed', 'detail': str(e) }), 500
 
 
-# ---------- Persona courses (UTF-8/UTF-8-SIG first, CP949 fallback) ----------
+def _sections_path_to_kakao_roads(sections: list):
+    out = []
+    for sec in sections or []:
+        try:
+            path = sec.get('path') or []
+            vertexes = []
+            for pt in path:
+                if isinstance(pt, (list, tuple)) and len(pt) >= 2:
+                    vertexes.extend([float(pt[0]), float(pt[1])])
+            out.append({
+                'summary': sec.get('summary') or { 'distance': 0, 'duration': 0 },
+                'roads': [{ 'vertexes': vertexes }],
+            })
+        except Exception:
+            out.append({ 'summary': { 'distance': 0, 'duration': 0 }, 'roads': [] })
+    return out
+
+
+@api_bp.route('/tmap/route', methods=['POST'])
+def tmap_route():
+    try:
+        body = request.get_json(silent=True) or {}
+        mode = str(body.get('mode') or 'CAR').upper()
+
+        if mode == 'PEDESTRIAN':
+            origin = body.get('origin') or {}
+            destination = body.get('destination') or {}
+            wps = body.get('waypoints') or []
+            stops = [origin] + wps + [destination]
+            for s in stops:
+                if 'x' not in s or 'y' not in s:
+                    return jsonify({ 'error': 'invalid_coordinates' }), 400
+            sections = []
+            total_dist = 0
+            total_dur = 0
+            for i in range(len(stops)-1):
+                sx = float(stops[i]['x']); sy = float(stops[i]['y'])
+                gx = float(stops[i+1]['x']); gy = float(stops[i+1]['y'])
+                leg, err = _naver_leg('walking', (sx, sy), (gx, gy))
+                if leg:
+                    sections.append({ 'summary': leg['summary'], 'path': leg['path'] })
+                    total_dist += leg['summary']['distance']
+                    total_dur += leg['summary']['duration']
+                else:
+                    km = _haversine(sy, sx, gy, gx)
+                    dist = int(km*1000)
+                    dur = int((km/4.5)*3600)
+                    sections.append({ 'summary': { 'distance': dist, 'duration': dur }, 'path': [[sx,sy],[gx,gy]] })
+                    total_dist += dist; total_dur += dur
+            kakao_like_sections = _sections_path_to_kakao_roads(sections)
+            return jsonify({ 'routes': [{ 'summary': { 'distance': total_dist, 'duration': total_dur }, 'sections': kakao_like_sections }] })
+
+        key = os.getenv('KAKAO_REST_API_KEY') or os.getenv('REACT_APP_KAKAO_API_KEY')
+        if not key:
+            return jsonify({ 'result_code': 'NO_API_KEY', 'result_msg': 'Kakao REST API key is missing' }), 400
+        url = 'https://apis-navi.kakaomobility.com/v1/waypoints/directions'
+        r = requests.post(url, headers={
+            'Authorization': f'KakaoAK {key}',
+            'Content-Type': 'application/json',
+        }, data=_json.dumps(body), timeout=15)
+        try:
+            data = r.json()
+        except Exception:
+            data = { 'error': 'invalid_json' }
+        return jsonify(data), r.status_code
+    except Exception as e:
+        return jsonify({ 'error': 'tmap_route_failed', 'detail': str(e) }), 500
+
+
+@api_bp.route('/tmap/transit', methods=['POST'])
+def tmap_transit():
+    try:
+        body = request.get_json(silent=True) or {}
+        origin = body.get('origin') or {}
+        destination = body.get('destination') or {}
+        wps = body.get('waypoints') or []
+        stops = [origin] + wps + [destination]
+        for s in stops:
+            if 'x' not in s or 'y' not in s:
+                return jsonify({ 'error': 'invalid_coordinates' }), 400
+        sections = []
+        total_dist = 0
+        total_dur = 0
+        for i in range(len(stops)-1):
+            sx = float(stops[i]['x']); sy = float(stops[i]['y'])
+            gx = float(stops[i+1]['x']); gy = float(stops[i+1]['y'])
+            leg, err = _naver_leg('transit', (sx, sy), (gx, gy))
+            if leg:
+                sections.append({ 'summary': leg['summary'], 'path': leg['path'] })
+                total_dist += leg['summary']['distance']
+                total_dur += leg['summary']['duration']
+            else:
+                km = _haversine(sy, sx, gy, gx)
+                dist = int(km*1000)
+                dur = int((km/25)*3600 + 300)
+                sections.append({ 'summary': { 'distance': dist, 'duration': dur }, 'path': [[sx,sy],[gx,gy]] })
+                total_dist += dist; total_dur += dur
+        kakao_like_sections = _sections_path_to_kakao_roads(sections)
+        return jsonify({ 'routes': [{ 'summary': { 'distance': total_dist, 'duration': total_dur }, 'sections': kakao_like_sections }] })
+    except Exception as e:
+        return jsonify({ 'error': 'tmap_transit_failed', 'detail': str(e) }), 500
+
+
 @api_bp.route('/persona/courses', methods=['GET'])
 def persona_courses():
-    """
-    Parse and return courses from public/course_data/routes_all_simplified.csv
-    Query:
-      - pid: persona id (int)
-      - grouped: '1' groups by (personaId, courseCode) and returns stops per course
-    Returns JSON always in UTF-8 to avoid client-side mojibake.
-    """
     try:
         course_dir = os.path.join(PUBLIC_DIR, 'course_data')
         csv_path = os.path.join(course_dir, 'routes_all_simplified.csv')
@@ -506,35 +669,32 @@ def persona_courses():
 
         items = []
         for r in rows:
-            if len(r) < 7:
-                continue
+            if len(r) < 7: continue
             try:
-                pid = int(str(r[0]).strip())
-                course_no = int(str(r[1]).strip())
-                code = str(r[2]).strip()
-                order = int(str(r[3]).strip())
-                name = str(r[4]).strip()
-                lat = float(str(r[5]).strip())
-                lng = float(str(r[6]).strip())
-            except Exception:
-                continue
-            items.append({
-                'personaId': pid,
-                'courseNo': course_no,
-                'courseCode': code,
-                'order': order,
-                'name': name,
-                'lat': lat,
-                'lng': lng,
-            })
-
+                items.append({
+                    'personaId': int(str(r[0]).strip()),
+                    'courseNo': int(str(r[1]).strip()),
+                    'courseCode': str(r[2]).strip(),
+                    'order': int(str(r[3]).strip()),
+                    'name': str(r[4]).strip(),
+                    'lat': float(str(r[5]).strip()),
+                    'lng': float(str(r[6]).strip()),
+                })
+            except Exception: continue
+        
         pid_q = request.args.get('pid')
+        ptype_q = request.args.get('ptype')
+        if (pid_q is None or pid_q == '') and ptype_q is not None:
+            _label = str(ptype_q).strip()
+            _k6_map_rev = {v: k for k, v in k6_id2label.items()}
+            _m2 = _k6_map_rev.get(_label)
+            if _m2 is not None:
+                pid_q = str(_m2)
         if pid_q is not None and pid_q != '':
             try:
                 pid_v = int(pid_q)
                 items = [x for x in items if x['personaId'] == pid_v]
-            except Exception:
-                pass
+            except Exception: pass
 
         if request.args.get('grouped') in ('1', 'true', 'yes'):
             grouped = {}
@@ -544,7 +704,8 @@ def persona_courses():
             out = []
             for key, stops in grouped.items():
                 stops_sorted = sorted(stops, key=lambda x: x['order'])
-                title = f"{stops_sorted[0]['name']} → {stops_sorted[-1]['name']}" if stops_sorted else ''
+                # BUG FIX: '??' -> ' 등'
+                title = f"{stops_sorted[0]['name']} 등" if stops_sorted else ''
                 out.append({
                     'key': key,
                     'code': key.split('__')[1] if '__' in key else '',
@@ -552,20 +713,92 @@ def persona_courses():
                     'title': title,
                     'stops': [ { 'name': s['name'], 'lat': s['lat'], 'lng': s['lng'] } for s in stops_sorted ]
                 })
-        return jsonify({ 'items': out })
-
+            return jsonify({ 'items': out })
         return jsonify({ 'items': items })
     except Exception as e:
         return jsonify({ 'error': 'courses_failed', 'detail': str(e) }), 500
 
 
-# ---------- Route plan save/load (share) ----------
+@api_bp.route('/persona/courses2', methods=['GET'])
+def persona_courses2():
+    try:
+        course_dir = os.path.join(PUBLIC_DIR, 'course_data')
+        csv_path = os.path.join(course_dir, 'routes_all_simplified.csv')
+        if not os.path.exists(csv_path):
+            return jsonify({ 'items': [] })
+
+        rows = []
+        for enc in ('utf-8-sig', 'utf-8', 'cp949'):
+            try:
+                with open(csv_path, 'r', encoding=enc, newline='') as f:
+                    rdr = csv.reader(f)
+                    rows = [r for r in rdr if r]
+                    if rows:
+                        break
+            except Exception:
+                continue
+
+        items = []
+        for r in rows:
+            if len(r) < 7: continue
+            try:
+                items.append({
+                    'personaId': int(str(r[0]).strip()),
+                    'courseNo': int(str(r[1]).strip()),
+                    'courseCode': str(r[2]).strip(),
+                    'order': int(str(r[3]).strip()),
+                    'name': str(r[4]).strip(),
+                    'lat': float(str(r[5]).strip()),
+                    'lng': float(str(r[6]).strip()),
+                })
+            except Exception: continue
+
+        pid_q = request.args.get('pid')
+        ptype_q = request.args.get('ptype')
+        if (pid_q is None or pid_q == '') and ptype_q is not None:
+            _label = str(ptype_q).strip()
+            _k6_map_rev = {v: k for k, v in k6_id2label.items()}
+            _m2 = _k6_map_rev.get(_label)
+            if _m2 is not None:
+                pid_q = str(_m2)
+        if pid_q is not None and pid_q != '':
+            try:
+                pid_v = int(pid_q)
+                items = [x for x in items if x['personaId'] == pid_v]
+            except Exception: pass
+
+        if request.args.get('grouped') in ('1','true','yes'):
+            grouped = {}
+            for it in items:
+                key = f"{it['personaId']}__{it['courseCode']}"
+                grouped.setdefault(key, []).append(it)
+            out = []
+            for key, stops in grouped.items():
+                stops_sorted = sorted(stops, key=lambda x: x['order'])
+                if not stops_sorted: continue
+                pid_v = stops_sorted[0]['personaId']
+                # BUG FIX: '??' -> ' 등'
+                title = f"{stops_sorted[0]['name']} 등"
+                out.append({
+                    'key': key,
+                    'code': key.split('__')[1] if '__' in key else '',
+                    'personaId': pid_v,
+                    'personaType': k6_id2label.get(pid_v),
+                    'title': title,
+                    'stops': [ { 'name': s['name'], 'lat': s['lat'], 'lng': s['lng'] } for s in stops_sorted ]
+                })
+            return jsonify({ 'items': out })
+
+        return jsonify({ 'items': items })
+    except Exception as e:
+        return jsonify({ 'error': 'courses2_failed', 'detail': str(e) }), 500
+
+
 @api_bp.route('/route-plans', methods=['POST'])
 def save_route_plan():
     try:
         _ensure_dir(ROUTE_PLANS_DIR)
         body = request.get_json(silent=True) or {}
-        # Always create new id unless client explicitly passes update_id
         plan_id = body.get('id') or _gen_share_id()
         body['id'] = plan_id
         body['updated_at'] = int(time.time())
@@ -591,166 +824,6 @@ def load_route_plan(plan_id: str):
         return jsonify(data)
     except Exception as e:
         return jsonify({ 'error': 'load_failed', 'detail': str(e) }), 500
-#-----------------------------------------------
-# ---------- YOLO DETECT (file upload) ----------
-_YOLO_MODEL = None
-# best.pt 경로 찾음 
-def get_model_path():    
-    #  현재 파일(routes.py) 기준으로 프로젝트 루트 찾기
-    current_file = Path(__file__).resolve()  # /path/to/backend/app/api/routes.py
-    backend_root = current_file.parent.parent.parent  # /path/to/backend/
-    model_path = backend_root / "models" / "best.pt"
-    
-    print(f"계산된 모델 경로: {model_path}")
-    print(f"파일 존재: {model_path.exists()}")
-    
-    if model_path.exists():
-        return str(model_path)
-    
-    # 환경변수 확인 
-    env_path = os.getenv("YOLO_MODEL_PATH")
-    if env_path and os.path.exists(env_path):
-        return env_path
-    
-    # 기본 모델로 폴백
-    return "yolov8n.pt"
-# ---------- YOLO DETECT  ----------
-@api_bp.route("/detect", methods=["POST", "OPTIONS"])
-def detect():
-    try:        
-        if request.method == "OPTIONS":
-            return ("", 204)
-        if "file" not in request.files:
-            return jsonify({"error": "missing_file"}), 400
-
-        # 파라미터 파싱
-        conf = float(request.form.get("conf", 0.25))
-        imgsz = int(request.form.get("imgsz", 640))
-        device = os.getenv("YOLO_DEVICE", "cpu")       
-        # 모델 로딩 (한 번만 로딩)
-        model_path = get_model_path()
-        
-        global _YOLO_MODEL
-        if _YOLO_MODEL is None:         
-            from ultralytics import YOLO
-            _YOLO_MODEL = YOLO(model_path)
-        # 업로드된 파일 처리
-        f = request.files["file"]
-        print(f"업로드된 파일: {f.filename}")
-        
-        # 임시 파일로 저장 (YOLO가 파일 경로 필요)
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-            f.save(tmp.name)
-            tmp_path = tmp.name
-            print(f" 임시 파일 저장: {tmp_path}")
-
-        try:
-            # YOLO 추론 실행
-            preds = _YOLO_MODEL.predict(
-                source=tmp_path, 
-                conf=conf, 
-                imgsz=imgsz, 
-                device=device, 
-                verbose=False
-            )
-            print(f" YOLO 추론 완료: {len(preds)}개 결과")
-        
-        finally:
-            # 임시 파일 정리
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
-
-        # 결과 처리 및 JSON 변환
-        detections = []
-        if preds and len(preds) > 0:
-            result = preds[0]  # 첫 번째 결과 사용
-            
-            # boxes와 names 추출
-            if hasattr(result, 'boxes') and result.boxes is not None:
-                names = result.names  # 클래스 인덱스 -> 이름 매핑
-                boxes = result.boxes
-                
-                # 각 탐지된 객체 정보 추출
-                if len(boxes) > 0:
-                    cls_list = boxes.cls.tolist() if hasattr(boxes, "cls") else []
-                    conf_list = boxes.conf.tolist() if hasattr(boxes, "conf") else []
-                    
-                    for i in range(len(cls_list)):
-                        cls_idx = int(cls_list[i])
-                        confidence = float(conf_list[i]) if i < len(conf_list) else 0.0
-                        
-                        # 클래스 이름 가져오기
-                        if isinstance(names, dict):
-                            class_name = names.get(cls_idx, f"class_{cls_idx}")
-                        else:
-                            class_name = str(cls_idx)
-                        
-                        detections.append({
-                            "name": class_name,
-                            "cls": cls_idx,
-                            "conf": confidence,
-                        })                        
-
-        print(f" 최종 탐지된 객체 수: {len(detections)}")
-        
-        # 성공 응답
-        return jsonify({
-            "success": True,
-            "detections": detections,
-            "total_count": len(detections)
-        })
-
-    except ImportError as e:
-        return jsonify({
-            "error": "ultralytics_not_installed",
-            "message": "YOLO 라이브러리가 설치되지 않았습니다.",
-            "detail": str(e)
-        }), 500
-        
-    except FileNotFoundError as e:
-        return jsonify({
-            "error": "model_file_not_found", 
-            "message": "YOLO 모델 파일을 찾을 수 없습니다.",
-            "detail": str(e)
-        }), 500
-        
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"오류:\n{error_details}")
-        
-        return jsonify({
-            "error": "yolo_processing_failed",
-            "message": "이미지 처리 중 오류가 발생했습니다.", 
-            "detail": str(e)
-        }), 500
-
-
-# ---------- POI INFO (names -> info) ----------
-@api_bp.route("/poi-info", methods=["POST", "OPTIONS"])
-@cross_origin(
-    origins=["http://localhost:5000","http://127.0.0.1:5000","http://localhost:3000","http://127.0.0.1:3000"],
-    methods=["POST","OPTIONS"],
-    allow_headers=["Content-Type"],
-    max_age=600,
-)
-def poi_info():
-    print("=== POI Info endpoint called ===")
-    if request.method == "OPTIONS":
-        return ("", 204)
-    payload = request.get_json(silent=True) or {}
-    
-    names = payload.get("names", [])
-    # 고정 정보 DB
-    DB = {
-        "63스퀘어":      {"name":"63스퀘어","address":"서울 영등포구 63로 50","open_hours_text":"10:00–22:00(시설별 상이)","ticket_price_text":"전시/전망대 유료","phone":"02-789-5663","website":"https://www.63.co.kr","description":"한강변 랜드마크. 아쿠아리움/전시/전망대가 유명."},
-        "경복궁":        {"name":"경복궁","address":"서울 종로구 사직로 161","open_hours_text":"09:00–18:00(요일·계절별 상이, 화요일 휴궁)","ticket_price_text":"유료, 한복 착용 무료","phone":"02-3700-3900","website":"https://www.royalpalace.go.kr","description":"조선의 정궁. 근정전, 경회루 등 볼거리 풍부."},
-        "남산서울타워":  {"name":"남산서울타워","address":"서울 용산구 남산공원길 105","open_hours_text":"10:00–23:00(변동 가능)","ticket_price_text":"전망대 유료","phone":"02-3455-9277","website":"https://www.seoultower.co.kr","description":"서울 전경을 볼 수 있는 대표 전망 명소."},
-        "롯데월드타워":  {"name":"롯데월드타워","address":"서울 송파구 올림픽로 300","open_hours_text":"시설별 상이","ticket_price_text":"SEOUL SKY 유료","phone":"1661-2000","website":"https://www.lwt.co.kr","description":"123층 초고층 타워. 전망대·쇼핑·호텔 집합."},
-    }
-    items = [DB[n] for n in names if n in DB]
-
-    return jsonify({"items": items})
 
 
 #----------- Azure Computer Vision OCR API -----------

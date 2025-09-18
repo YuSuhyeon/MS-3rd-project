@@ -2,9 +2,9 @@ import React from "react";
 import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
 import { Plus, X, GripVertical, MapPin } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 
-export default function WaypointList({ waypoints, onAdd, onRemove, onUpdate }) {
+export default function WaypointList({ waypoints, onAdd, onRemove, onUpdate, onReorder }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -21,37 +21,37 @@ export default function WaypointList({ waypoints, onAdd, onRemove, onUpdate }) {
         </Button>
       </div>
 
-      <AnimatePresence>
-        {waypoints.map((waypoint, index) => (
-          <motion.div
-            key={waypoint.id}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mb-3"
-          >
-            <div className="flex items-center gap-2">
-              <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
-              <div className="flex-1">
-                <Input
-                  placeholder={`경유지 ${index + 1}`}
-                  value={waypoint.location}
-                  onChange={(e) => onUpdate(waypoint.id, e.target.value)}
-                  className="text-sm"
-                />
+      <Reorder.Group axis="y" values={waypoints} onReorder={onReorder} className="space-y-3">
+        <AnimatePresence>
+          {waypoints.map((waypoint, index) => (
+            <Reorder.Item key={waypoint.id} value={waypoint}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <div className="flex items-center gap-2">
+                <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                <div className="flex-1">
+                  <Input
+                    placeholder={`경유지 ${index + 1}`}
+                    value={waypoint.location}
+                    onChange={(e) => onUpdate(waypoint.id, e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onRemove(waypoint.id)}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onRemove(waypoint.id)}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+            </Reorder.Item>
+          ))}
+        </AnimatePresence>
+      </Reorder.Group>
 
       {waypoints.length === 0 && (
         <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">

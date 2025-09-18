@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from "react";
 
 function addMonths(d, n) {
-  const nd = new Date(d.getFullYear(), d.getMonth() + n, 1);
-  return nd;
+  return new Date(d.getFullYear(), d.getMonth() + n, 1);
 }
 
 function monthKey(d) {
@@ -10,9 +9,8 @@ function monthKey(d) {
 }
 
 function buildMonthMatrix(year, month) {
-  // month: 1-12
   const first = new Date(year, month - 1, 1);
-  const startDow = first.getDay(); // 0-6, Sun=0
+  const startDow = first.getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
   const cells = [];
   for (let i = 0; i < startDow; i++) cells.push(null);
@@ -44,10 +42,13 @@ export default function DateRangeModal({ open, start, end, onClose, onApply }) {
   const onPick = (date) => {
     if (!date) return;
     if (!tempStart || (tempStart && tempEnd)) {
-      setTempStart(date); setTempEnd(null);
+      setTempStart(date);
+      setTempEnd(null);
     } else if (tempStart && !tempEnd) {
-      if (date < tempStart) { setTempEnd(tempStart); setTempStart(date); }
-      else setTempEnd(date);
+      if (date < tempStart) {
+        setTempEnd(tempStart);
+        setTempStart(date);
+      } else setTempEnd(date);
     }
   };
 
@@ -75,11 +76,7 @@ export default function DateRangeModal({ open, start, end, onClose, onApply }) {
             const ranged = d && inRange(new Date(d));
             const cls = `cell day${disabled ? " disabled" : ""}${selected ? " selected" : ""}${ranged ? " in-range" : ""}`;
             return (
-              <div
-                key={idx}
-                className={cls}
-                onClick={() => !disabled && onPick(new Date(d))}
-              >
+              <div key={idx} className={cls} onClick={() => !disabled && onPick(new Date(d))}>
                 {d ? d.getDate() : ""}
               </div>
             );
@@ -97,7 +94,7 @@ export default function DateRangeModal({ open, start, end, onClose, onApply }) {
         <div className="body">
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8, padding:'0 8px'}}>
             <button onClick={() => setCursor(addMonths(cursor, -1))} style={{padding:'6px 10px', border:'1px solid #e5e7eb', borderRadius:8}}>{"<"}</button>
-            <div style={{color:'#475569', fontSize:14}}>{formatHuman(tempStart)} {tempStart ? '→' : ''} {formatHuman(tempEnd)}</div>
+            <div style={{color:'#475569', fontSize:14}}>{formatHuman(tempStart)} {tempStart ? '~' : ''} {formatHuman(tempEnd)}</div>
             <button onClick={() => setCursor(addMonths(cursor, 1))} style={{padding:'6px 10px', border:'1px solid #e5e7eb', borderRadius:8}}>{">"}</button>
           </div>
           <div className="cal-wrap">
@@ -106,11 +103,7 @@ export default function DateRangeModal({ open, start, end, onClose, onApply }) {
           </div>
         </div>
         <div className="foot">
-          <button
-            className="apply"
-            onClick={() => tempStart && tempEnd && onApply(tempStart, tempEnd)}
-            disabled={!tempStart || !tempEnd}
-          >
+          <button className="apply" onClick={() => tempStart && tempEnd && onApply(tempStart, tempEnd)} disabled={!tempStart || !tempEnd}>
             선택
           </button>
         </div>
