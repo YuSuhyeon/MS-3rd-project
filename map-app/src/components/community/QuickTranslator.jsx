@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  detectLanguage,
-  getLanguageName,
-  translateText,
-} from "../../integrations/translator";
+import { detectLanguage, translateText } from "../../integrations/translator";
 import { speakText, stopTTS } from "../../integrations/tts";
 import { startSpeechRecognition, stopSTT } from "../../integrations/stt";
 import { NeonCard, NeonButton, GradientText } from "../ui/NeonTheme";
@@ -15,72 +11,75 @@ export default function QuickTranslator() {
   // TTS
   const [playingAudio, setPlayingAudio] = useState(null);
 
+  // STT
+  const [isListening, setIsListening] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
   // Detect
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState(null);
   const [detectionError, setDetectionError] = useState("");
 
-  // Input
-  const [inputText, setInputText] = useState("");
-
+  // Translate
   const [translationResults, setTranslationResults] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
 
+  // Input
+  const [inputText, setInputText] = useState("");
+
   const [selectedCategory, setSelectedCategory] = useState(t("all"));
-  const [isFocused, setIsFocused] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+
   const isTranslatingRef = useRef(false);
   const translationCompleteRef = useRef(false);
   const lastInputTextRef = useRef("");
 
   // 자주 쓰는 표현 데이터
   const quickPhrases = [
-    { korean: "안녕하세요", english: "Hello", category: t("greeting") },
-    { korean: "감사합니다", english: "Thank you", category: t("greeting") },
-    { korean: "죄송합니다", english: "Sorry", category: t("greeting") },
+    { korean: "안녕하세요", english: t("phrases1"), category: t("greeting") },
+    { korean: "감사합니다", english: t("phrases2"), category: t("greeting") },
+    { korean: "죄송합니다", english: t("phrases3"), category: t("greeting") },
     {
       korean: "화장실이 어디에 있나요?",
-      english: "Where is the bathroom?",
+      english: t("phrases4"),
       category: t("location"),
     },
-    { korean: "얼마예요?", english: "How much is it?", category: t("price") },
-    { korean: "도와주세요", english: "Help me", category: t("help") },
+    { korean: "얼마예요?", english: t("phrases5"), category: t("price") },
+    { korean: "도와주세요", english: t("phrases6"), category: t("help") },
     {
       korean: "지하철역이 어디에 있나요?",
-      english: "Where is the subway station?",
+      english: t("phrases7"),
       category: t("transport"),
     },
-    { korean: "맛있어요", english: "It's delicious", category: t("food") },
-    { korean: "도착했어요", english: "I've arrived", category: t("status") },
+    { korean: "맛있어요", english: t("phrases8"), category: t("food") },
+    { korean: "도착했어요", english: t("phrases9"), category: t("status") },
     {
       korean: "카드로 결제할 수 있나요?",
-      english: "Can I pay by card?",
+      english: t("phrases10"),
       category: t("payment"),
     },
     {
       korean: "영수증 주세요",
-      english: "Please give me a receipt",
+      english: t("phrases11"),
       category: t("payment"),
     },
     {
       korean: "메뉴 주세요",
-      english: "Please give me the menu",
+      english: t("phrases12"),
       category: t("food"),
     },
     {
       korean: "물 주세요",
-      english: "Please give me water",
+      english: t("phrases13"),
       category: t("food"),
     },
     {
       korean: "계산서 주세요",
-      english: "Please give me the bill",
+      english: t("phrases14"),
       category: t("payment"),
     },
     {
       korean: "포장해주세요",
-      english: "Please wrap it up",
+      english: t("phrases15"),
       category: t("food"),
     },
   ];
@@ -151,6 +150,11 @@ export default function QuickTranslator() {
       return;
     }
 
+    // 번역 완료 후 텍스트 변화가 없으면 언어 감지 중단
+    if (translationCompleteRef.current) {
+      return;
+    }
+
     // 번역 완료 후 텍스트가 변경되었으면 언어 감지 재개 및 이전 번역 결과 제거
     if (
       translationCompleteRef.current &&
@@ -158,11 +162,6 @@ export default function QuickTranslator() {
     ) {
       translationCompleteRef.current = false;
       // setTranslationResults(null); // 이전 번역 결과 제거
-    }
-
-    // 번역 완료 후 텍스트 변화가 없으면 언어 감지 중단
-    if (translationCompleteRef.current) {
-      return;
     }
 
     // 입력하자마자 즉시 감지 상태 표시 및 이전 번역 결과 제거
@@ -173,7 +172,7 @@ export default function QuickTranslator() {
       try {
         const detection = await detectLanguage(inputText);
         setDetectedLanguage(detection);
-        lastInputTextRef.current = inputText; // 언어 감지 완료 후 텍스트 저장
+        lastInputTextRef.current = inputText;
       } catch (error) {
         setDetectionError(t("language_detection_error"));
         console.error("Language detection error:", error);
@@ -192,7 +191,6 @@ export default function QuickTranslator() {
     if (!translationCompleteRef.current) {
       translationCompleteRef.current = true;
     }
-    setIsTranslating(true);
 
     setTranslationResults(null);
 
@@ -228,6 +226,7 @@ export default function QuickTranslator() {
           });
         }
         setIsTranslating(false);
+        isTranslatingRef.current = false;
 
         // 번역 완료 후 언어 감지 완전 차단
         translationCompleteRef.current = true;
@@ -238,9 +237,7 @@ export default function QuickTranslator() {
         error: "번역 중 오류가 발생했습니다.",
       });
       setIsTranslating(false);
-
-      // 에러 발생 시에도 언어 감지 완전 차단
-      translationCompleteRef.current = true;
+      isTranslatingRef.current = false;
     }
   };
 
@@ -385,12 +382,9 @@ export default function QuickTranslator() {
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    // 즉시 번역 상태 설정하여 언어 감지 useEffect가 실행되지 않도록 함
                     translationCompleteRef.current = true; // 번역 완료 후 언어 감지 차단
                     handleTranslate();
                   }
@@ -435,7 +429,8 @@ export default function QuickTranslator() {
                   <span className="text-gray-300 text-sm font-medium">
                     {t("detected_language")}:{" "}
                     <span className="text-green-400 font-semibold">
-                      {getLanguageName(detectedLanguage.language)}
+                      {" "}
+                      {detectedLanguage.language}
                     </span>
                   </span>
                 </div>
@@ -457,7 +452,9 @@ export default function QuickTranslator() {
 
           <button
             onClick={() => {
-              // 즉시 번역 상태 설정하여 언어 감지 useEffect가 실행되지 않도록 함
+              // ref를 사용하여 즉시 언어 감지 차단
+              isTranslatingRef.current = true;
+              setIsTranslating(true);
               translationCompleteRef.current = true; // 번역 완료 후 언어 감지 차단
               handleTranslate();
             }}
@@ -754,17 +751,6 @@ export default function QuickTranslator() {
                   <span className="text-sm text-gray-300">
                     {phrase.english}
                   </span>
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setInputText(phrase.korean);
-                    }}
-                    className="text-xs bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1.5 rounded-full hover:from-green-700 hover:to-blue-700 transition-colors"
-                  >
-                    {t("use")}
-                  </button>
                 </div>
               </div>
             </NeonCard>

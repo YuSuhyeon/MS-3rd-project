@@ -17,7 +17,8 @@ import {
 import { useAuth } from "../../context/AuthContext";
 
 const PostDetailModal = ({ postId, onClose, isOpen }) => {
-  const { profile } = useAuth(); // 현재 사용자 정보
+  //const { profile } = useAuth(); // 현재 사용자 정보
+  const { profile, isLoading: authLoading } = useAuth();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,16 +27,18 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // 댓글 수정/삭제를 위한 상태
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingContent, setEditingContent] = useState("");
   const [showCommentOptions, setShowCommentOptions] = useState({});
-
   const API_BASE_URL = "/api";
-
-  // 현재 사용자 ID 가져오기
-  const currentUserId = profile?.sub || profile?.id || profile?.user_id;
+  const currentUserId = profile?.id;
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="text-white">인증 확인 중...</div>
+      </div>
+    );
+  }
 
   // 게시글 상세 조회
   const fetchPostDetail = async () => {
@@ -224,7 +227,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
     }
 
     try {
-      const token = localStorage.getItem("accessToken");
+      //const token = localStorage.getItem("accessToken");
       const response = await fetch(
         `${API_BASE_URL}/boards/${postId}/comments`,
         {
@@ -259,6 +262,21 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
 
   if (!isOpen) return null;
 
+  // 인증 로딩 상태 처리
+  if (authLoading) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+        >
+          <div className="text-white text-lg">인증 확인 중...</div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
   return (
     <AnimatePresence>
       <motion.div

@@ -735,9 +735,11 @@ def detect():
     max_age=600,
 )
 def poi_info():
+    print("=== POI Info endpoint called ===")
     if request.method == "OPTIONS":
         return ("", 204)
     payload = request.get_json(silent=True) or {}
+    
     names = payload.get("names", [])
     # 고정 정보 DB
     DB = {
@@ -747,6 +749,7 @@ def poi_info():
         "롯데월드타워":  {"name":"롯데월드타워","address":"서울 송파구 올림픽로 300","open_hours_text":"시설별 상이","ticket_price_text":"SEOUL SKY 유료","phone":"1661-2000","website":"https://www.lwt.co.kr","description":"123층 초고층 타워. 전망대·쇼핑·호텔 집합."},
     }
     items = [DB[n] for n in names if n in DB]
+
     return jsonify({"items": items})
 
 
@@ -1154,7 +1157,8 @@ def get_comments(board_id):
 @api_bp.route('/boards/<int:board_id>', methods=['PUT'])
 def update_board(board_id):
     try:
-        current_user_id = session.get('user_id')
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
         
         if not current_user_id:
             return jsonify({
@@ -1360,8 +1364,8 @@ def toggle_like(board_id):
 @api_bp.route('/boards/<int:board_id>/like', methods=['DELETE'])
 def remove_like(board_id):
     try:
-        # 현재 로그인된 사용자 ID
-        current_user_id = session.get('user_id', 1)
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
         
         if not current_user_id:
             return jsonify({
@@ -1471,9 +1475,7 @@ def search_boards():
 @api_bp.route('/boards/<int:board_id>', methods=['GET'])
 def get_board_detail(board_id):
     try:
-        # 현재 사용자 ID 가져오기 (로그인하지 않은 경우 None)
-        #auth_header = request.headers.get('Authorization')
-        #current_user_id = get_user_from_token(auth_header)
+        # 현재 사용자 ID 가져오기 (로그인하지 않은 경우 None)  
         current_user_id = session.get('user_id')        
         result = board_service.get_post_detail(board_id, current_user_id)
         
@@ -1542,14 +1544,12 @@ def get_boards():
         limit = int(request.args.get('limit', 10))
         query = request.args.get('query', '').strip()
         
-        current_user_id = session.get('user_id', 1)
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
         
-        if query:
-            print(f"🔎 검색 모드: '{query}' 검색 중...")
-            # ✅ 간단한 형태로 호출 (search_posts 메서드 시그니처에 맞게)
+        if query: 
             result = board_service.search_posts(query, page, limit)
         else:
-            print(f"📄 일반 모드: 전체 게시글 조회 중...")
             result = board_service.get_posts(page=page, limit=limit, user_id=current_user_id)
         
         if result['success']:
@@ -1563,7 +1563,7 @@ def get_boards():
                 response_data['search_query'] = query
                 response_data['search_results_count'] = len(result['posts'])
                 
-            print(f"✅ 응답 데이터: {len(result['posts'])}개 게시글 반환")
+
             return jsonify(response_data)
         else:
             return jsonify({
@@ -1593,8 +1593,8 @@ def get_boards():
 def google_callback():
     try:
         data = request.get_json()
-        access_token = data.get('token')  # access_token
-        user_info = data.get('user_info')  # 프론트엔드에서 이미 가져온 사용자 정보
+        access_token = data.get('token')
+        user_info = data.get('user_info')  
         
         if not access_token:
             return jsonify({
@@ -1603,14 +1603,12 @@ def google_callback():
             }), 400
         
         # 사용자 정보 추출
-        if user_info:
-            # 프론트엔드에서 사용자 정보를 가져온 경우
+        if user_info:     
             google_id = user_info.get('sub')
             email = user_info.get('email')
             name = user_info.get('name')
             profile_image = user_info.get('picture')                        
         else:
-            print(f"🔍 백엔드에서 Google API 호출...")
             try:
                 google_api_url = f"https://www.googleapis.com/oauth2/v3/userinfo"
                 headers = {'Authorization': f'Bearer {access_token}'}
@@ -1706,15 +1704,101 @@ def google_callback():
             'error': '로그인 처리 중 오류가 발생했습니다'
         }), 500
 
-# =================================================================
+#Microsoft Login===============================================
+
+# routes.py에 추가
+@api_bp.route('/auth/microsoft/callback', methods=['POST'])
+def microsoft_callback():
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        access_token = data.get('token')
+        user_info = data.get('user_info')
+        
+        if not access_token or not user_info:
+            return jsonify({'success': False, 'error': 'Missing token or user info'}), 400
+        
+        # Microsoft 사용자 정보 추출
+        microsoft_id = user_info.get('id')
+        email = user_info.get('mail') or user_info.get('userPrincipalName')
+        name = user_info.get('displayName')
+        
+        if not microsoft_id or not email:
+            return jsonify({'success': False, 'error': 'Microsoft 사용자 정보가 불완전합니다'}), 400
+        
+        print(f"Microsoft 로그인 시도: microsoft_id={microsoft_id}, email={email}")
+        
+        # DB에서 기존 사용자 확인 또는 생성
+        user_result = board_service.get_user_by_social('microsoft', microsoft_id)
+        
+        if user_result['success']:
+            user = user_result['user']
+            user_id = user['id']
+            print(f"기존 Microsoft 사용자 로그인: user_id={user_id}")
+        else:
+            # 신규 사용자 생성
+            create_result = board_service.create_or_update_user(
+                provider='microsoft',
+                social_id=microsoft_id,
+                email=email,
+                name=name,
+                profile_image=None
+            )
+            
+            if create_result['success']:
+                user_id = create_result['user_id']
+                print(f"신규 Microsoft 사용자 생성: user_id={user_id}")
+            else:
+                return jsonify({'success': False, 'error': 'Microsoft 사용자 생성에 실패했습니다'}), 500
+        
+        # 세션 설정
+        session.clear()
+        session['user_id'] = user_id
+        session['provider'] = 'microsoft'
+        session['social_id'] = microsoft_id
+        session['email'] = email
+        session['name'] = name
+        session.permanent = True
+        
+        # 응답 데이터 준비
+        user_data = {
+            'id': user_id,
+            'name': name,
+            'email': email,
+            'profile_image': None,
+            'provider': 'microsoft'
+        }
+        
+        return jsonify({
+            'success': True,
+            'message': 'Microsoft 로그인 성공',
+            'user': user_data,
+            'session_user_id': session.get('user_id')
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Microsoft 콜백 오류: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Microsoft 로그인 처리 중 오류가 발생했습니다'
+        }), 500
+
+
+#=================================================================
 # 현재 사용자의 프로필 정보 조회 API
 # =================================================================
 @api_bp.route('/user/profile', methods=['GET'])
 def get_current_user():
 
     try:
-        # 세션에서 사용자 정보 확인
-        user_id = session.get('user_id')
+        auth_header = request.headers.get('Authorization')
+        user_id = get_user_from_token(auth_header)
+        
         
         if not user_id:
             return jsonify({
@@ -1735,8 +1819,8 @@ def get_current_user():
                     'id': user['id'],
                     'name': user['name'],
                     'email': user['email'],
-                    'profile_image': user['profile_image'],
-                    'provider': user['provider']
+                    'profile_image': user.get('profile_image'),  
+                    'provider': user.get('provider')  
                 }
             })
         else:
@@ -1755,7 +1839,50 @@ def get_current_user():
             'is_logged_in': False,
             'error': str(e)
         }), 500
-
+# =================================================================
+#  현재 로그인 상태를 확인 -새로고침 시 로그인 상태 복원
+@api_bp.route('/auth/status', methods=['GET'])
+def auth_status():
+    try:
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
+        
+        if not current_user_id:
+            return jsonify({
+                'success': False, 
+                'message': 'Not authenticated',
+                'is_logged_in': False
+            }), 401
+        
+        # DB에서 사용자 정보 가져오기
+        user_result = board_service.get_user_by_id(current_user_id)
+        if not user_result['success']:
+            session.clear()
+            return jsonify({
+                'success': False, 
+                'message': 'User not found',
+                'is_logged_in': False
+            }), 401
+        
+        user_data = user_result['user']
+        return jsonify({
+            'success': True,
+            'is_logged_in': True,
+            'user': {
+                'id': user_data['id'],
+                'email': user_data['email'],
+                'name': user_data['name'],
+                'picture': user_data.get('picture') or user_data.get('profile_image')
+            }
+        })
+        
+    except Exception as e:
+        print(f"인증 상태 확인 오류: {str(e)}")
+        return jsonify({
+            'success': False, 
+            'error': str(e),
+            'is_logged_in': False
+        }), 500
         
 # =================================================================
 # 로그아웃 API

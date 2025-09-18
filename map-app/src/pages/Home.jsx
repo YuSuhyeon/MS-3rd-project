@@ -155,12 +155,12 @@ const KPopTravelHome = () => {
   useEffect(() => {
     if (profile && showLoginModal) {
       setShowLoginModal(false);
-      if (redirectOnLogin) {
-        setTimeout(() => {
-          navigate("/persona");
-          setRedirectOnLogin(false);
-        }, 2000);
-      }
+      // if (redirectOnLogin) {
+      //   setTimeout(() => {
+      //     navigate("/persona");
+      //     setRedirectOnLogin(false);
+      //   }, 2000);
+      // }
     }
   }, [profile, showLoginModal, redirectOnLogin, navigate]);
 
@@ -346,7 +346,7 @@ const KPopTravelHome = () => {
               </div>
               <div>
                 <GradientText variant="primary" size="lg" className="font-bold">
-                  TravelK
+                  플랫폼 이름
                 </GradientText>
                 <p className="text-xs text-gray-300 whitespace-nowrap">
                   {t("main.badge")}
@@ -354,36 +354,34 @@ const KPopTravelHome = () => {
               </div>
             </motion.div>
             <div className="flex items-center gap-4">
+              {/* Login/Profile section */}
               <LanguageButtons />
+              {profile ? (
+                <div className="flex items-center gap-4">
+                  <img
+                    src={profile.picture || "https://via.placeholder.com/40"}
+                    alt="profile"
+                    className="w-8 h-8 rounded-full border-2 border-purple-400"
+                  />
+                  <span className="text-white/90 font-semibold hidden sm:block">
+                    {t("login.welcome", { name: profile.name })}
+                  </span>
+                  <NeonButton onClick={logout} variant="secondary" size="sm">
+                    {t("login.logout")}
+                  </NeonButton>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <NeonButton
+                    onClick={() => setShowLoginModal(true)}
+                    variant="primary"
+                    size="md"
+                  >
+                    {t("login.login")}
+                  </NeonButton>
+                </div>
+              )}{" "}
             </div>
-            {/* Login/Profile section 
-            {profile ? (
-              <div className="flex items-center gap-4">
-                <LanguageButtons />
-                <img
-                  src={profile.picture || "https://via.placeholder.com/40"}
-                  alt="profile"
-                  className="w-8 h-8 rounded-full border-2 border-purple-400"
-                />
-                <span className="text-white/90 font-semibold hidden sm:block">
-                  {t("login.welcome", { name: profile.name })}
-                </span>
-                <NeonButton onClick={logout} variant="secondary" size="sm">
-                  {t("login.logout")}
-                </NeonButton>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <LanguageButtons />
-                <NeonButton
-                  onClick={() => setShowLoginModal(true)}
-                  variant="primary"
-                  size="md"
-                >
-                  {t("login.login")}
-                </NeonButton>
-              </div>
-            )}*/}
           </div>
         </div>
       </motion.nav>
@@ -684,7 +682,28 @@ const KPopTravelHome = () => {
           </NeonCard>
         </motion.div>
       </section>
-
+      {/* Section 5: Final CTA */}
+      <section id="cta">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+            이제, 당신의 완벽한 여행을 시작할 시간
+          </h2>
+          <div className="mt-8">
+            <Link
+              to="/persona"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-white shadow-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg"
+            >
+              5가지 질문으로 시작하기
+            </Link>
+          </div>
+        </motion.div>
+      </section>
       {/* Footer */}
       <footer
         className="relative py-16 px-6"
@@ -740,7 +759,7 @@ const KPopTravelHome = () => {
         </div>
       </footer>
 
-      {/* Login Modal 
+      {/* Login Modal */}
       <AnimatePresence>
         {showLoginModal && (
           <motion.div
@@ -864,7 +883,7 @@ const KPopTravelHome = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>*/}
+      </AnimatePresence>
     </BackgroundEffect>
   );
 };

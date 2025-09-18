@@ -140,6 +140,7 @@ const resources = {
       plan_your_trip_with_ai: "AI와 함께 여행을 계획하세요",
       log_out: "로그아웃",
       log_in: "로그인",
+      mypage: "마이 페이지",
     },
     SurvivalKit: {
       vision_ocr: "비전 OCR",

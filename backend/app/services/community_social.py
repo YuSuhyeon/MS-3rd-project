@@ -28,10 +28,6 @@ class BoardService:
         
     
     def toggle_like(self, board_id, user_id):
-        """
-        게시글 좋아요를 토글합니다.
-        이미 좋아요를 눌렀다면 취소하고, 그렇지 않다면 추가합니다.
-        """
         connection = None
         try:
             connection = self.get_connection()
@@ -551,6 +547,7 @@ class BoardService:
                 cursor.close()
                 connection.close()
 
+# 게시글 목록 조회 (태그 포함)
     def get_posts(self, page=1, limit=10, user_id=None):
         """
         게시글 목록 조회 (태그 포함)
@@ -564,11 +561,28 @@ class BoardService:
             cursor = connection.cursor(dictionary=True)
             offset = (page - 1) * limit
             
-            # 게시글과 태그를 함께 조회하는 쿼리
+            #  좋아요 상태와 실제 좋아요 수를 포함한 쿼리
             posts_query = """
-                SELECT b.id as board_id, b.title, b.content, b.likes_count, 
-                    b.comments_count, b.created_at, b.updated_at,
-                    u.id as user_id, u.name as user_name, u.profile_image as user_profile_image
+                SELECT b.id as board_id, b.title, b.content, 
+                    b.created_at, b.updated_at,
+                    u.id as user_id, u.name as user_name, u.profile_image as user_profile_image,
+                    
+                    -- 실제 likes 테이블에서 좋아요 수 계산
+                    COALESCE((SELECT COUNT(*) FROM likes WHERE board_id = b.id), 0) as likes_count,
+                    
+                    -- 실제 comments 테이블에서 댓글 수 계산  
+                    COALESCE((SELECT COUNT(*) FROM comments WHERE board_id = b.id AND deleted_at IS NULL), 0) as comments_count
+            """
+            
+            # 로그인한 사용자인 경우 좋아요 상태 확인
+            if user_id:
+                posts_query += """,
+                    COALESCE((SELECT COUNT(*) FROM likes WHERE board_id = b.id AND user_id = %s), 0) > 0 as is_liked_by_current_user
+                """
+            else:
+                posts_query += ", FALSE as is_liked_by_current_user"
+                
+            posts_query += """
                 FROM boards b
                 JOIN users u ON b.user_id = u.id
                 WHERE b.deleted_at IS NULL
@@ -583,13 +597,17 @@ class BoardService:
                 WHERE deleted_at IS NULL
             """
             
-            # 게시글 목록 조회
-            cursor.execute(posts_query, (limit, offset))
-            posts = cursor.fetchall()
-            
-            # 각 게시글의 태그 조회
+            #  파라미터 바인딩 수정
+            if user_id:
+                cursor.execute(posts_query, (user_id, limit, offset))
+            else:
+                cursor.execute(posts_query, (limit, offset))
+                
+            posts = cursor.fetchall()            
+
+            # 각 게시글의 태그와 이미지 조회
             for post in posts:
-                # 이미지 조회 (기존 로직 유지)
+                # 이미지 조회
                 picture_query = """
                     SELECT image_url 
                     FROM pictures 
@@ -648,6 +666,10 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
+
+                
+                
+                
                             
     def get_trending_tags(self, limit=5):
         """인기 태그 조회"""

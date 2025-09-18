@@ -1,22 +1,59 @@
-import React, { useState, createContext, useContext } from "react";
+import React, { useState, createContext, useContext, useEffect } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 
-// Context 생성
 const AuthContext = createContext();
-
-// Context를 사용하기 위한 커스텀 훅
 export const useAuth = () => {
   return useContext(AuthContext);
 };
 
 export const AuthProvider = ({ children }) => {
-  const [profile, setProfile] = useState(null); // 사용자 프로필 상태
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // useGoogleLogin이 반환하는 로그인 함수를 'googleLogin' 상수에 할당
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
+          const response = await fetch("/api/auth/status", {
+            method: "GET",
+            credentials: "include", // 쿠키 포함
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+              setProfile(data.user);
+              localStorage.setItem("user", JSON.stringify(data.user));
+            } else {
+              localStorage.removeItem("user");
+              setProfile(null);
+            }
+          } else {
+            localStorage.removeUser("user");
+            setProfile(null);
+            console.log("서버 응답 오류로 로그인 상태 초기화");
+          }
+        } else {
+          console.log("로컬스토리지에 사용자 정보 없음");
+        }
+      } catch (error) {
+        localStorage.removeItem("user");
+        setProfile(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
+
+  //Google Login
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        console.log("🔑 Google 로그인 성공:", tokenResponse);
+        console.log(" Google 로그인 성공:", tokenResponse);
 
         // Google에서 사용자 정보 가져오기
         const res = await fetch(
@@ -33,7 +70,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         const googleUserData = await res.json();
-        console.log("👤 Google 사용자 정보:", googleUserData);
+        console.log(" Google 사용자 정보:", googleUserData);
 
         const backendResponse = await fetch("/api/auth/google/callback", {
           method: "POST",
@@ -50,7 +87,6 @@ export const AuthProvider = ({ children }) => {
         // 응답 상태 먼저 확인
         if (!backendResponse.ok) {
           const errorText = await backendResponse.text();
-          console.error("❌ 백엔드 오류 응답:", errorText);
           throw new Error(
             `로그인 실패 (${backendResponse.status}): ${errorText.substring(
               0,
@@ -63,24 +99,18 @@ export const AuthProvider = ({ children }) => {
         const contentType = backendResponse.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
           const textResponse = await backendResponse.text();
-          console.error("❌ JSON이 아닌 응답:", textResponse);
           throw new Error("서버에서 올바르지 않은 응답을 받았습니다.");
         }
 
         // JSON 파싱
         const backendData = await backendResponse.json();
-        console.log("🏠 백엔드 응답:", backendData);
+        console.log(" 백엔드 응답:", backendData);
 
         if (backendData.success) {
-          // 3. AuthContext 상태 업데이트
           setProfile(backendData.user);
-
-          // 4. 로컬 스토리지에도 저장 (선택사항)
           localStorage.setItem("user", JSON.stringify(backendData.user));
-
-          console.log("✅ 로그인 완료:", backendData.user);
+          console.log(" 로그인 완료:", backendData.user);
         } else {
-          console.error("❌ 백엔드 로그인 실패:", backendData.error);
           throw new Error(backendData.error || "백엔드 로그인 처리 실패");
         }
       } catch (error) {
@@ -98,8 +128,9 @@ export const AuthProvider = ({ children }) => {
   const login = (provider) => {
     if (provider === "google") {
       googleLogin();
+    } else if (provider === "microsoft") {
+      //microsoftLogin();
     }
-    // 여기에 나중에 else if (provider === 'microsoft') { ... } 를 추가할 수 있습니다.
   };
 
   const logout = () => {
@@ -111,7 +142,6 @@ export const AuthProvider = ({ children }) => {
       .then(() => {
         setProfile(null);
         localStorage.removeItem("user");
-        console.log("로그아웃 완료");
       })
       .catch((error) => {
         console.error("로그아웃 오류:", error);
@@ -121,7 +151,7 @@ export const AuthProvider = ({ children }) => {
       });
   };
 
-  const value = { profile, login, logout };
+  const value = { profile, login, logout, isLoading };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -20,6 +20,7 @@ import Tour from "./pages/Tour";
 import TourDetail from "./pages/TourDetail";
 import PopularPlaces from "./pages/PopularPlaces";
 import CommunitySocial from "./pages/CommunitySocial";
+import Mypage from "./pages/Mypage";
 
 function AppRoutes() {
   return (
@@ -46,6 +47,7 @@ function AppRoutes() {
               <Route path="/vision" element={<DocentVision />} />
               <Route path="/tour" element={<Tour />} />
               <Route path="/tour/:id" element={<TourDetail />} />
+              <Route path="/mypage" element={<Mypage />} />
               <Route
                 path="/popular-places/:areaName"
                 element={<PopularPlaces />}

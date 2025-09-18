@@ -42,9 +42,9 @@ const LoginModal = ({ onClose }) => {
               <Sparkles className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">
-            소셜 피드에 오신 것을 환영합니다
-          </h2>
+          {/* <h2 className="text-2xl font-bold text-white mb-2">
+          
+          </h2>  소셜 피드에 오신 것을 환영합니다 */}
           <p className="text-gray-300">
             로그인하여 게시글을 작성하고 소통해보세요
           </p>

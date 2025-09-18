@@ -30,7 +30,8 @@ const getNavigationItems = (t) => [
   { title: t("ai_docent"), url: "/docent" },
   { title: t("community"), url: "/social" }, //community main 에서 social로 이동
   { title: t("tour"), url: "/tour" },
-  { title: t("survival"), url: "/community" },
+  { title: t("survival"), url: "/community" }, //서바이벌 키트
+  { title: t("mypage"), url: "/mypage" },
 ];
 
 // 배너 컴포넌트

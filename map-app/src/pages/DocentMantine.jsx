@@ -229,6 +229,7 @@ const ALLOWED_POIS = new Set([
   "남산서울타워",
   "롯데월드타워",
 ]);
+
 const prettyPct = (p = 0) => (p * 100).toFixed(1) + "%";
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // km
@@ -300,6 +301,7 @@ const FixedChatbot = ({
     const canon = TAG_ALIASES[raw] || String(raw);
     return ALLOWED_POIS.has(canon) ? canon : null;
   };
+  console.log("✅normalizeLabel=============", normalizeLabel);
 
   const callYOLO = async (file) => {
     const fd = new FormData();

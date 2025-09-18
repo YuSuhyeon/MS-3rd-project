@@ -693,6 +693,11 @@ function VisionOCR() {
         </div>
       </div> */}
 
+      {/* 안내 문구 - 최상단 */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl text-center backdrop-blur-sm">
+        <p className="text-purple-200 text-sm font-medium">{t("disclaimer")}</p>
+      </div>
+
       {/* ============================================================================
           모바일 버전 렌더링
           ============================================================================ */}
