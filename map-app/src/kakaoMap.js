@@ -1,3 +1,48 @@
+// Kakao Maps SDK 로더 (중복 로딩 방지)
+export function ensureKakaoMaps(appkey) {
+  if (typeof window === "undefined")
+    return Promise.reject(new Error("no-window"));
+  if (window.kakao && window.kakao.maps) {
+    return new Promise((resolve) => window.kakao.maps.load(resolve));
+  }
+  if (window.__kakaoMapsLoading) return window.__kakaoMapsLoading;
+  const key =
+    appkey ||
+    process.env.REACT_APP_KAKAO_API_KEY ||
+    window.REACT_APP_KAKAO_API_KEY;
+  if (!key)
+    return Promise.reject(
+      new Error("Kakao API key missing (REACT_APP_KAKAO_API_KEY)")
+    );
+  const src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(
+    key
+  )}&autoload=false&libraries=services`;
+  window.__kakaoMapsLoading = new Promise((resolve, reject) => {
+    const exist = document.querySelector(
+      'script[src^="https://dapi.kakao.com/v2/maps/sdk.js"]'
+    );
+    if (exist) {
+      // If script exists but Kakao not available yet, re-inject to avoid stale/error state
+      try {
+        if (exist.parentNode) exist.parentNode.removeChild(exist);
+      } catch {}
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.onload = () => window.kakao.maps.load(resolve);
+    script.onerror = (e) => {
+      // Allow future retries
+      try {
+        delete window.__kakaoMapsLoading;
+      } catch {}
+      reject(e);
+    };
+    document.head.appendChild(script);
+  });
+  return window.__kakaoMapsLoading;
+}
+
 // Kakao 지도 생성 함수
 export function createKakaoMap({
   containerId,
