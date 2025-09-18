@@ -20,6 +20,7 @@ import Tour from "./pages/Tour";
 import TourDetail from "./pages/TourDetail";
 import PopularPlaces from "./pages/PopularPlaces";
 import CommunitySocial from "./pages/CommunitySocial";
+
 import Mypage from "./pages/Mypage";
 
 function AppRoutes() {
@@ -42,7 +43,8 @@ function AppRoutes() {
               {/* community 경로를 Layout 안으로 이동 */}
               <Route path="/community" element={<CommunityMain />} />
               <Route path="/community/*" element={<CommunityMain />} />
-              <Route path="/social" element={<CommunitySocial />} />{" "}
+              <Route path="/social" element={<CommunitySocial />} />
+
               <Route path="/visionocr" element={<VisionOCR />} />
               <Route path="/vision" element={<DocentVision />} />
               <Route path="/tour" element={<Tour />} />

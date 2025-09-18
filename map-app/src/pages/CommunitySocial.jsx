@@ -14,6 +14,9 @@ import {
   Hash,
   Filter,
   TrendingUp,
+  LogOut,
+  Users,
+  Loader,
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
@@ -52,9 +55,7 @@ const fetchPosts = async (page = 1, limit = 10, searchParams = {}) => {
   console.log("🚀 API 호출 시도:", `${API_BASE_URL}/boards`);
 
   try {
-    // 토큰 관련 코드 제거
     const headers = { "Content-Type": "application/json" };
-    // if (token) { headers.Authorization = `Bearer ${token}`; } 제거
 
     const params = new URLSearchParams({
       page: page.toString(),
@@ -67,7 +68,7 @@ const fetchPosts = async (page = 1, limit = 10, searchParams = {}) => {
 
     const response = await fetch(`${API_BASE_URL}/boards?${params}`, {
       headers,
-      credentials: "include", // 세션 쿠키 포함
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -119,22 +120,38 @@ const fetchTrendingPosts = async () => {
 const toggleLike = async (postId, isLiked) => {
   try {
     const method = isLiked ? "DELETE" : "POST";
+    console.log(
+      `💗 좋아요 API 요청: postId=${postId}, 현재상태=${isLiked}, 메소드=${method}`
+    );
+
     const response = await fetch(`${API_BASE_URL}/boards/${postId}/like`, {
       method,
       headers: {
         "Content-Type": "application/json",
-        // Authorization 헤더 제거
       },
-      credentials: "include", // 세션 쿠키 포함
+      credentials: "include",
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      return data.likes_count;
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("로그인이 필요합니다.");
+      }
+      throw new Error(`API 오류: ${response.status}`);
     }
-    throw new Error("좋아요 처리에 실패했습니다.");
+
+    const data = await response.json();
+
+    return {
+      likes_count: data.likes_count || data.likesCount || 0,
+      is_liked:
+        data.is_liked !== undefined
+          ? data.is_liked
+          : data.isLiked !== undefined
+          ? data.isLiked
+          : !isLiked,
+    };
   } catch (error) {
-    console.error("좋아요 토글 실패:", error);
+    console.error("좋아요 API 오류:", error);
     throw error;
   }
 };
@@ -250,79 +267,6 @@ const SearchHeader = ({
           </div>
         </div>
       </form>
-
-      {/* 필터 옵션 */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/20 p-4 mb-4"
-          >
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-purple-400" />
-                <select
-                  value={searchFilters.region || ""}
-                  onChange={(e) =>
-                    setSearchFilters((prev) => ({
-                      ...prev,
-                      region: e.target.value,
-                    }))
-                  }
-                  className="bg-gray-800 text-white rounded-lg px-3 py-1 text-sm border border-gray-600 focus:border-purple-400"
-                >
-                  <option value="">전체 지역</option>
-                  <option value="서울">서울</option>
-                  <option value="부산">부산</option>
-                  <option value="제주도">제주도</option>
-                  <option value="강릉">강릉</option>
-                  <option value="전주">전주</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Hash className="w-4 h-4 text-purple-400" />
-                <select
-                  value={searchFilters.category || ""}
-                  onChange={(e) =>
-                    setSearchFilters((prev) => ({
-                      ...prev,
-                      category: e.target.value,
-                    }))
-                  }
-                  className="bg-gray-800 text-white rounded-lg px-3 py-1 text-sm border border-gray-600 focus:border-purple-400"
-                >
-                  <option value="">전체 카테고리</option>
-                  <option value="맛집">맛집</option>
-                  <option value="숙박">숙박</option>
-                  <option value="관광지">관광지</option>
-                  <option value="액티비티">액티비티</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-purple-400" />
-                <select
-                  value={searchFilters.sortBy || "latest"}
-                  onChange={(e) =>
-                    setSearchFilters((prev) => ({
-                      ...prev,
-                      sortBy: e.target.value,
-                    }))
-                  }
-                  className="bg-gray-800 text-white rounded-lg px-3 py-1 text-sm border border-gray-600 focus:border-purple-400"
-                >
-                  <option value="latest">최신순</option>
-                  <option value="popular">인기순</option>
-                  <option value="comments">댓글순</option>
-                </select>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
@@ -331,13 +275,78 @@ const SearchHeader = ({
 const TrendingSidebar = ({
   trendingTags,
   trendingPosts,
+  profile,
   onTagClick,
   onPostClick,
+  onShowLoginModal,
+  onLogout,
+  onRemoveTag,
+  onRemoveBookmark,
 }) => {
   return (
     <div className="w-80 space-y-6">
+      {/* 로그인 카드 - 최상단 고정 */}
+      {profile ? (
+        <NeonCard variant="primary" className="sticky top-6 z-30 mb-6">
+          <div className="flex items-center gap-3">
+            <img
+              src={profile.picture || "/img/default_profile_img.png"}
+              alt="프로필"
+              className="w-12 h-12 rounded-full border-2 border-purple-400"
+              onError={(e) => {
+                e.target.src = "/img/default_profile_img.png";
+              }}
+            />
+            <div className="flex-1">
+              <p className="text-white font-medium">
+                {profile.name ||
+                  profile.nickname ||
+                  "서울의 오늘을 함께한 여행자"}
+                님
+              </p>
+              <p className="text-white/70 text-sm">서울의 하루를 나눠보세요.</p>
+            </div>
+            <button
+              onClick={() => {
+                if (window.confirm("로그아웃 하시겠습니까?")) {
+                  onLogout();
+                }
+              }}
+              className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+              title="로그아웃"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </NeonCard>
+      ) : (
+        <NeonCard variant="info" className="sticky top-6 z-30 mb-6">
+          <div className="text-center">
+            <div className="flex justify-center mb-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h3 className="text-white font-semibold mb-2">
+              K-컬처 팬들의 생생한 여행 후기를 둘러보세요!
+            </h3>
+            <p className="text-white/70 text-sm mb-4">
+              좋아요, 댓글, 글 작성을 하려면 로그인이 필요합니다.
+            </p>
+            <NeonButton
+              onClick={onShowLoginModal}
+              variant="primary"
+              size="base"
+              className="w-full"
+            >
+              로그인 / 회원가입
+            </NeonButton>
+          </div>
+        </NeonCard>
+      )}
+
       {/* 인기 태그 */}
-      <NeonCard variant="primary" className="sticky top-6">
+      <NeonCard variant="primary" className="sticky top-44 z-20">
         <div className="flex items-center gap-2 mb-4">
           <GradientText variant="primary" size="lg" className="font-bold">
             🔥 인기 태그
@@ -375,7 +384,7 @@ const TrendingSidebar = ({
       </NeonCard>
 
       {/* 인기 글 */}
-      <NeonCard variant="secondary" className="sticky top-80">
+      <NeonCard variant="secondary" className="sticky top-96 z-10">
         <div className="flex items-center gap-2 mb-4">
           <GradientText variant="secondary" size="lg" className="font-bold">
             ⭐ 인기 글
@@ -426,7 +435,6 @@ const TrendingSidebar = ({
   );
 };
 
-// SocialPost 컴포넌트
 const SocialPost = ({
   post,
   onLikeUpdate,
@@ -434,16 +442,42 @@ const SocialPost = ({
   onPostDelete,
   onPostClick,
   currentUserId,
+  onEditPost,
 }) => {
-  const [isLiked, setIsLiked] = useState(post.isLiked || false);
-  const [likesCount, setLikesCount] = useState(post.likes_count || 0);
+  const [isLiked, setIsLiked] = useState(() => {
+    return post.isLiked || post.is_liked || false;
+  });
+  const [likesCount, setLikesCount] = useState(() => {
+    return post.likes_count || post.likesCount || 0;
+  });
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
   const isOwner =
     currentUserId &&
     (post.user_id === currentUserId || post.user?.id === currentUserId);
+  useEffect(() => {
+    console.log("🔄 Post props 변경 감지:", {
+      postId: post.id || post.board_id,
+      newIsLiked: post.isLiked || post.is_liked,
+      newLikesCount: post.likes_count || post.likesCount,
+      currentIsLiked: isLiked,
+      currentLikesCount: likesCount,
+    });
+
+    setIsLiked(post.isLiked || post.is_liked || false);
+    setLikesCount(post.likes_count || post.likesCount || 0);
+  }, [
+    post.isLiked,
+    post.is_liked,
+    post.likes_count,
+    post.likesCount,
+    post.id,
+    post.board_id,
+  ]);
 
   const handleLikeClick = async () => {
     if (!currentUserId) {
@@ -453,18 +487,38 @@ const SocialPost = ({
 
     if (isUpdating) return;
 
-    setIsUpdating(true);
-    try {
-      const newLikesCount = await toggleLike(post.id || post.board_id, isLiked);
-      const newLikedState = !isLiked;
+    const postId = post.id || post.board_id;
+    const originalLiked = isLiked;
+    const originalCount = likesCount;
+    const newIsLiked = !originalLiked;
+    const newCount = originalLiked ? originalCount - 1 : originalCount + 1;
 
-      setIsLiked(newLikedState);
-      setLikesCount(newLikesCount);
-      onLikeUpdate &&
-        onLikeUpdate(post.id || post.board_id, newLikesCount, newLikedState);
+    setIsLiked(newIsLiked);
+    setLikesCount(newCount);
+    setIsUpdating(true);
+
+    try {
+      const result = await toggleLike(postId, originalLiked);
+      console.log(`💗 좋아요 API 응답:`, result);
+
+      if (result) {
+        setIsLiked(result.is_liked);
+        setLikesCount(result.likes_count);
+
+        if (onLikeUpdate) {
+          onLikeUpdate(postId, result.likes_count, result.is_liked);
+        }
+      }
     } catch (error) {
+      console.error("💥 좋아요 처리 실패:", error);
+
+      setIsLiked(originalLiked);
+      setLikesCount(originalCount);
+
       if (error.message === "로그인이 필요합니다.") {
         setShowLoginModal(true);
+      } else {
+        alert("좋아요 처리에 실패했습니다.");
       }
     } finally {
       setIsUpdating(false);
@@ -479,6 +533,15 @@ const SocialPost = ({
       } catch (error) {
         alert("삭제에 실패했습니다.");
       }
+    }
+  };
+
+  const handleEdit = () => {
+    if (onEditPost) {
+      onEditPost(post);
+    } else {
+      // 기본 편집 모달 방식
+      setShowEditModal(true);
     }
   };
 
@@ -545,7 +608,7 @@ const SocialPost = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowEditModal(true);
+                        handleEdit();
                         setShowOptionsMenu(false);
                       }}
                       className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
@@ -662,7 +725,7 @@ const SocialPost = ({
 
 // 메인 컴포넌트
 export default function CommunitySocial() {
-  const { profile } = useAuth();
+  const { profile, logout } = useAuth(); // logout 함수 추가
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const [posts, setPosts] = useState([]);
@@ -759,11 +822,17 @@ export default function CommunitySocial() {
       setTrendModalType("tags");
       setShowTrendModal(true);
     } else {
-      const searchQuery = `#${tag}`;
-      console.log("🏷️ 태그 클릭:", searchQuery);
+      // 백엔드 검색 API에 맞춰 수정
+      console.log("🏷️ 태그 클릭:", tag);
 
-      setCurrentSearchTerm(searchQuery);
-      handleSearch({ query: searchQuery });
+      // 화면에는 #태그 형태로 표시
+      const displayQuery = `#${tag}`;
+      setCurrentSearchTerm(displayQuery);
+
+      // API에는 태그명만 전송 (백엔드가 search_posts에서 처리)
+      handleSearch({
+        query: tag, // 백엔드의 search_posts가 태그를 포함한 검색을 처리
+      });
     }
   };
 
@@ -774,12 +843,30 @@ export default function CommunitySocial() {
       setShowPostModal(true);
     }
   };
-
   const handleLikeUpdate = (postId, newLikesCount, isLiked) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId || post.board_id === postId
-          ? { ...post, likes_count: newLikesCount, isLiked }
+    setPosts((prevPosts) => {
+      const updatedPosts = prevPosts.map((post) => {
+        const currentPostId = post.id || post.board_id;
+        if (currentPostId === postId) {
+          const updatedPost = {
+            ...post,
+            likes_count: newLikesCount,
+            likesCount: newLikesCount,
+            isLiked: isLiked,
+            is_liked: isLiked,
+          };
+
+          return updatedPost;
+        }
+        return post;
+      });
+      return updatedPosts;
+    });
+
+    setTrendingPosts((prevTrending) =>
+      prevTrending.map((post) =>
+        (post.id || post.board_id) === postId
+          ? { ...post, likes_count: newLikesCount, isLiked: isLiked }
           : post
       )
     );
@@ -823,6 +910,41 @@ export default function CommunitySocial() {
       setShowTrendModal(true);
     } else {
       handlePostClick(postId);
+    }
+  };
+
+  // 로그아웃 핸들러
+  const handleLogout = async () => {
+    if (window.confirm("로그아웃 하시겠습니까?")) {
+      try {
+        await logout();
+        // 로그아웃 후 필요한 추가 처리가 있다면 여기에 추가
+      } catch (error) {
+        console.error("로그아웃 실패:", error);
+      }
+    }
+  };
+
+  // 게시글 편집 핸들러 (navigate 사용하려면 useNavigate import 필요)
+  const handleEditPost = (post) => {
+    console.log("Edit post:", post);
+    // navigate(`/write?edit=${post.id}`); // 편집 페이지로 이동하는 경우
+    // 또는 모달로 편집하는 경우는 기존 방식 유지
+  };
+
+  // 태그 삭제 핸들러
+  const handleRemoveTag = (tagName) => {
+    if (window.confirm(`"${tagName}" 태그를 삭제하시겠습니까?`)) {
+      console.log("Remove tag:", tagName);
+      // 실제 태그 삭제 API 호출
+    }
+  };
+
+  // 북마크 제거 핸들러
+  const handleRemoveBookmark = (postId) => {
+    if (window.confirm("북마크를 제거하시겠습니까?")) {
+      console.log("Remove bookmark:", postId);
+      // 실제 북마크 제거 API 호출
     }
   };
 
@@ -872,7 +994,7 @@ export default function CommunitySocial() {
         <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
           {/* 왼쪽 메인 콘텐츠 */}
           <div className="flex-1">
-            {/* 헤더 */}
+            {/* 헤더 
             <motion.header>
               {!profile && (
                 <NeonCard variant="info" delay={0.3} className="mb-6">
@@ -983,6 +1105,7 @@ export default function CommunitySocial() {
                         onPostDelete={handlePostDelete}
                         onPostClick={handlePostClick}
                         currentUserId={currentUserId}
+                        onEditPost={handleEditPost}
                       />
                     </motion.div>
                   ))}
@@ -996,8 +1119,11 @@ export default function CommunitySocial() {
               <TrendingSidebar
                 trendingTags={trendingTags}
                 trendingPosts={trendingPosts}
+                profile={profile}
                 onTagClick={handleTagClick}
                 onPostClick={handleTrendPostClick}
+                onShowLoginModal={() => setShowLoginModal(true)}
+                onLogout={handleLogout}
               />
             </motion.aside>
           )}
@@ -1026,7 +1152,7 @@ export default function CommunitySocial() {
             onPostClick={handlePostClick}
           />
         )}
-        {showPostDetailModal && (
+        {showPostDetailModal && selectedPostId && (
           <PostDetailModal
             postId={selectedPostId}
             isOpen={showPostDetailModal}

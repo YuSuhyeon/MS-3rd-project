@@ -13,11 +13,11 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
+  Loader,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const PostDetailModal = ({ postId, onClose, isOpen }) => {
-  //const { profile } = useAuth(); // 현재 사용자 정보
   const { profile, isLoading: authLoading } = useAuth();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -30,20 +30,14 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingContent, setEditingContent] = useState("");
   const [showCommentOptions, setShowCommentOptions] = useState({});
+
   const API_BASE_URL = "/api";
-  const currentUserId = profile?.id;
-  if (authLoading) {
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="text-white">인증 확인 중...</div>
-      </div>
-    );
-  }
+
+  // 사용자 ID 가져오기
+  const currentUserId = profile?.sub || profile?.id || profile?.user_id;
 
   // 게시글 상세 조회
   const fetchPostDetail = async () => {
-    if (!postId) return;
-
     setLoading(true);
     setError(null);
 
@@ -72,16 +66,30 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
 
       const data = await response.json();
 
-      setPost(data.post || data);
-      setComments(data.comments || []);
-      setIsLiked(data.post?.is_liked_by_current_user || false);
-      setLikesCount(data.post?.likes_count || 0);
+      if (data.success) {
+        setPost(data.post || data);
+        setComments(data.comments || []);
+        setIsLiked(data.post?.is_liked_by_current_user || false);
+        setLikesCount(data.post?.likes_count || 0);
+      } else {
+        throw new Error(data.error || "게시글을 불러올 수 없습니다.");
+      }
     } catch (error) {
       setError(error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  // 게시글 데이터 로드 useEffect (중복 제거됨)
+  useEffect(() => {
+    if (isOpen && postId) {
+      console.log("🎯 useEffect 실행 - 게시글 상세 로드");
+      fetchPostDetail();
+      setCurrentImageIndex(0);
+    }
+  }, [isOpen, postId]);
+
   // 댓글 옵션 토글
   const toggleCommentOptions = (commentId) => {
     setShowCommentOptions((prev) => ({
@@ -89,6 +97,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
       [commentId]: !prev[commentId],
     }));
   };
+
   // 댓글 수정
   const updateComment = async (commentId, content) => {
     try {
@@ -139,6 +148,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
       alert(error.message);
     }
   };
+
   // 댓글 삭제
   const deleteComment = async (commentId) => {
     try {
@@ -190,33 +200,57 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
     }
   };
 
-  // 좋아요
+  // 좋아요 처리 수정
   const handleLike = async () => {
     if (!currentUserId) {
       alert("로그인이 필요합니다.");
       return;
     }
 
+    const originalLiked = isLiked;
+    const originalCount = likesCount;
+
+    console.log(
+      `💗 PostDetailModal 좋아요 클릭: postId=${postId}, 현재상태=${originalLiked}`
+    );
+
     try {
+      const method = isLiked ? "DELETE" : "POST";
       const response = await fetch(`${API_BASE_URL}/boards/${postId}/like`, {
-        method: "POST",
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include", // 세션 쿠키 포함
       });
 
+      console.log("📡 PostDetailModal 좋아요 API 응답 상태:", response.status);
+
       if (response.ok) {
         const data = await response.json();
-        setLikesCount(data.likes_count);
-        setIsLiked(data.is_liked);
+        console.log("💗 PostDetailModal 좋아요 API 응답 데이터:", data);
+
+        if (data.success) {
+          setLikesCount(data.likes_count);
+          setIsLiked(data.is_liked);
+        } else {
+          throw new Error(data.error || "좋아요 처리에 실패했습니다.");
+        }
+      } else {
+        throw new Error("좋아요 처리에 실패했습니다.");
       }
     } catch (error) {
-      console.error("좋아요 처리 실패:", error);
+      console.error("💥 PostDetailModal 좋아요 처리 실패:", error);
+
+      // 에러 시 원래 상태로 복구
+      setIsLiked(originalLiked);
+      setLikesCount(originalCount);
+
+      alert("좋아요 처리에 실패했습니다.");
     }
   };
 
-  //댓글 작성
+  // 댓글 작성
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -227,7 +261,6 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
     }
 
     try {
-      //const token = localStorage.getItem("accessToken");
       const response = await fetch(
         `${API_BASE_URL}/boards/${postId}/comments`,
         {
@@ -253,13 +286,6 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
     }
   };
 
-  useEffect(() => {
-    if (isOpen && postId) {
-      fetchPostDetail();
-      setCurrentImageIndex(0);
-    }
-  }, [isOpen, postId]);
-
   if (!isOpen) return null;
 
   // 인증 로딩 상태 처리
@@ -277,6 +303,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
       </AnimatePresence>
     );
   }
+
   return (
     <AnimatePresence>
       <motion.div
@@ -307,12 +334,23 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
           {/* 내용 */}
           <div className="flex-1 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="flex justify-center items-center h-64 bg-gradient-to-br from-purple-900 via-black to-pink-900">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader className="w-12 h-12 text-purple-400" />
+                </motion.div>
               </div>
             ) : error ? (
-              <div className="flex items-center justify-center h-64 text-red-400">
-                <p>{error}</p>
+              <div className="flex flex-col items-center justify-center h-64 text-red-400">
+                <p className="mb-4">{error}</p>
+                <button
+                  onClick={fetchPostDetail}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                >
+                  다시 시도
+                </button>
               </div>
             ) : post ? (
               <div className="p-6 space-y-6">

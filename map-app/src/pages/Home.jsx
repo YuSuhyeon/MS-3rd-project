@@ -267,55 +267,39 @@ const KPopTravelHome = () => {
   ];
 
   // 스크롤 80%에서 버튼 나타나게 하는 효과
-  useEffect(() => {
-    const updateButtonVisibility = () => {
-      const scrollTop =
-        window.pageYOffset || document.documentElement.scrollTop;
-      const windowHeight = window.innerHeight;
-      const docHeight = Math.max(
-        document.body.scrollHeight,
-        document.body.offsetHeight,
-        document.documentElement.clientHeight,
-        document.documentElement.scrollHeight,
-        document.documentElement.offsetHeight
-      );
-      const totalDocScrollLength = docHeight - windowHeight;
-      const scrollPosition = Math.floor(
-        (scrollTop / totalDocScrollLength) * 100
-      );
+  // useEffect(() => {
+  //   const updateButtonVisibility = () => {
+  //     const scrollTop =
+  //       window.pageYOffset || document.documentElement.scrollTop;
+  //     const windowHeight = window.innerHeight;
+  //     const docHeight = Math.max(
+  //       document.body.scrollHeight,
+  //       document.body.offsetHeight,
+  //       document.documentElement.clientHeight,
+  //       document.documentElement.scrollHeight,
+  //       document.documentElement.offsetHeight
+  //     );
+  //     const totalDocScrollLength = docHeight - windowHeight;
+  //     const scrollPosition = Math.floor(
+  //       (scrollTop / totalDocScrollLength) * 100
+  //     );
+  //     if (scrollPosition >= 80) {
+  //       console.log("Button should show!");
+  //       setShowButton(true);
+  //     } else {
+  //       setShowButton(false);
+  //     }
+  //   };
+  //   updateButtonVisibility();
 
-      // 디버깅용 콘솔 로그 (나중에 제거)
-      console.log("Scroll Debug:", {
-        scrollTop,
-        windowHeight,
-        docHeight,
-        totalDocScrollLength,
-        scrollPosition,
-      });
+  //   window.addEventListener("scroll", updateButtonVisibility);
+  //   const unsubscribe = scrollY.onChange(updateButtonVisibility);
 
-      if (scrollPosition >= 80) {
-        console.log("Button should show!");
-        setShowButton(true);
-      } else {
-        setShowButton(false);
-      }
-    };
-
-    // 초기 설정
-    updateButtonVisibility();
-
-    // 스크롤 이벤트 리스너 직접 추가 (Framer Motion과 병행)
-    window.addEventListener("scroll", updateButtonVisibility);
-
-    // Framer Motion의 scrollY도 함께 사용
-    const unsubscribe = scrollY.onChange(updateButtonVisibility);
-
-    return () => {
-      window.removeEventListener("scroll", updateButtonVisibility);
-      unsubscribe();
-    };
-  }, [scrollY]); // scrollY 의존성 추가
-
+  //   return () => {
+  //     window.removeEventListener("scroll", updateButtonVisibility);
+  //     unsubscribe();
+  //   };
+  // }, [scrollY]);
   return (
     <BackgroundEffect className="min-h-screen neon-scrollbar">
       {/* NeonTheme 스크롤바 스타일 */}
@@ -435,7 +419,6 @@ const KPopTravelHome = () => {
               {t("main.subtitle")}
             </motion.p>
 
-            {/* AnimatePresence 없이 직접 애니메이션 */}
             <motion.div
               className="flex flex-col sm:flex-row gap-4 justify-center"
               initial={{ opacity: 0, y: 30 }}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -16,7 +16,66 @@ import {
   Calendar,
   ShoppingBag,
   MapPin,
+  Gift,
+  Star,
 } from "lucide-react";
+
+// 투어 상품 데이터 (mockTourData.js에서 가져온 것)
+const tourProducts = [
+  {
+    id: 1,
+    title: "Netflix x Interpark Global",
+    image: "/img/tour_mock_01.jpg",
+    price: "₩89,000",
+    category: "entertainment",
+    kpopGroup: "K-Pop Demon Hunters",
+    description: "Everland 자유입장권이 포함된 Kpop Demon Hunters 테마 투어",
+    tags: ["Day Tour", "K-Pop Demon Hunters", "Amusement Park", "Netflix"],
+    rating: 4.9,
+    reviews: 250,
+    location: "서울 강남구 → 용인 에버랜드",
+  },
+  {
+    id: 2,
+    title: "Microsoft AI Tour Seoul",
+    image: "/img/thumbnail_ms.jpg",
+    price: "₩125,000",
+    category: "it",
+    kpopGroup: "Microsoft",
+    description: "Microsoft AI Tour Seoul - AI 기술과 문화재 복원의 만남",
+    tags: ["Microsoft", "AI Technology", "Cultural Heritage", "Bootcamp"],
+    rating: 5.0,
+    reviews: 89,
+    location: "서울 중구",
+  },
+  {
+    id: 3,
+    title: "한강버스 X 인스타그램 서울 핫플 투어",
+    image: "/img/hangang_bus.jpg",
+    price: "₩85,000",
+    category: "experience",
+    kpopGroup: "서울관광재단",
+    description:
+      "한강버스를 타고 서울 대표 포토스팟과 인스타 핫플을 돌아보는 감성 투어",
+    tags: ["Instagram", "Han River Bus", "Photo Spot", "Seoul Hotplace"],
+    rating: 4.6,
+    reviews: 312,
+    location: "한강 전구간",
+  },
+  {
+    id: 4,
+    title: "LG 트윈스 야구 관람",
+    image: "/img/baseball_chicken.jpg",
+    price: "₩100,000",
+    category: "sports",
+    kpopGroup: "LG 트윈스",
+    description: "잠실야구장 프리미엄 관람 + 치킨맥주 + 스포츠 체험",
+    tags: ["Baseball", "Korean Food", "Sports", "Jamsil"],
+    rating: 4.8,
+    reviews: 445,
+    location: "서울 송파구 (잠실 관광 특구)",
+  },
+];
 
 // 장소별 이미지와 설명 데이터
 const placeInfo = {
@@ -40,6 +99,85 @@ const placeInfo = {
     description:
       "다양한 국가의 문화가 공존하는 국제적인 거리. 이국적인 음식점과 바, 클럽들이 모여 있는 서울의 글로벌 핫플레이스입니다.",
   },
+};
+
+// 지하철 도착시간을 분 단위로 파싱하는 함수
+const parseArrivalTime = (timeString) => {
+  if (!timeString) return Infinity;
+
+  // "곧 도착", "1분 후", "3분 후" 등의 형태를 파싱
+  if (timeString.includes("곧")) return 0;
+
+  const match = timeString.match(/(\d+)분/);
+  if (match) return parseInt(match[1]);
+
+  // 숫자만 있는 경우
+  const numberMatch = timeString.match(/(\d+)/);
+  if (numberMatch) return parseInt(numberMatch[1]);
+
+  return Infinity;
+};
+
+// 호선별로 가장 빠른 지하철 정보만 추출하는 함수
+const getUniqueSubwayLines = (subwayStationList) => {
+  const lineMap = new Map();
+
+  subwayStationList.forEach((station) => {
+    const line = station.SUB_STN_LINE?._text;
+    if (!line) return;
+
+    const details = Array.isArray(station.SUB_DETAIL?.SUB_DETAIL)
+      ? station.SUB_DETAIL.SUB_DETAIL
+      : station.SUB_DETAIL?.SUB_DETAIL
+      ? [station.SUB_DETAIL.SUB_DETAIL]
+      : [];
+
+    details.forEach((train) => {
+      const arrivalTime = parseArrivalTime(train.SUB_ARMG1?._text);
+      const lineKey = `${line}호선`;
+
+      if (
+        !lineMap.has(lineKey) ||
+        arrivalTime < parseArrivalTime(lineMap.get(lineKey).arrivalTime)
+      ) {
+        lineMap.set(lineKey, {
+          line: lineKey,
+          stationName: station.SUB_STN_NM?._text,
+          destination: train.SUB_ROUTE_NM?._text,
+          arrivalTime: train.SUB_ARMG1?._text,
+          arrivalMinutes: arrivalTime,
+        });
+      }
+    });
+  });
+
+  return Array.from(lineMap.values()).sort(
+    (a, b) => a.arrivalMinutes - b.arrivalMinutes
+  );
+};
+
+// 지역별 투어 상품 필터링 함수
+const getAreaTourProducts = (areaName) => {
+  const decodedAreaName = decodeURIComponent(areaName);
+
+  // 지역명에 따른 투어 상품 매핑
+  const areaMapping = {
+    "잠실 관광특구": ["잠실", "송파구", "Jamsil"],
+    "명동 관광특구": ["명동", "중구"],
+    "광화문·덕수궁": ["광화문", "덕수궁", "중구"],
+    "이태원 관광특구": ["이태원", "용산구"],
+  };
+
+  const keywords = areaMapping[decodedAreaName] || [];
+
+  return tourProducts.filter((product) =>
+    keywords.some(
+      (keyword) =>
+        product.location.includes(keyword) ||
+        product.description.includes(keyword) ||
+        product.tags.some((tag) => tag.includes(keyword))
+    )
+  );
 };
 
 // 네온 스타일 카드 컴포넌트
@@ -143,16 +281,21 @@ const HeroSection = ({ placeData, areaName }) => {
 
 const PopularPlaces = () => {
   const { areaName } = useParams();
+  const navigate = useNavigate();
   const decodedAreaName = decodeURIComponent(areaName || "");
   const [placeData, setPlaceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // 투어 상품 클릭 핸들러
+  const handleTourClick = (tourId) => {
+    navigate(`/tour/${tourId}`);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-      //const decodedAreaName = decodeURIComponent(areaName);
       const url = `https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/CityDataDetailAPI?areaName=${decodedAreaName}`;
 
       try {
@@ -206,14 +349,22 @@ const PopularPlaces = () => {
   const eventList = Array.isArray(placeData.EVENT_STTS?.EVENT_STTS)
     ? placeData.EVENT_STTS.EVENT_STTS
     : [];
+
   const commercialList = Array.isArray(
     placeData.LIVE_CMRCL_STTS?.CMRCL_RSB?.CMRCL_RSB
   )
     ? placeData.LIVE_CMRCL_STTS.CMRCL_RSB.CMRCL_RSB
     : [];
+
   const subwayStationList = Array.isArray(placeData.SUB_STTS?.SUB_STTS)
     ? placeData.SUB_STTS.SUB_STTS
     : [];
+
+  // 호선별 가장 빠른 지하철 정보만 추출
+  const uniqueSubwayLines = getUniqueSubwayLines(subwayStationList);
+
+  // 해당 지역 투어 상품 가져오기
+  const areaTourProducts = getAreaTourProducts(areaName);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 text-white">
@@ -257,13 +408,6 @@ const PopularPlaces = () => {
               alt="홈으로"
               className="w-5 h-5 group-hover:-translate-x-1 transition-transform"
             />
-            <span></span>
-            {/*<ArrowLeft
-              size={20}
-              className="group-hover:-translate-x-1 transition-transform"
-            />
-            홈으로
-            */}
           </Link>
         </motion.div>
 
@@ -319,6 +463,97 @@ const PopularPlaces = () => {
               </p>
             </NeonInfoCard>
 
+            {/* 지하철 정보 - 개선된 버전 */}
+            {uniqueSubwayLines.length > 0 && (
+              <NeonInfoCard
+                icon={<Train />}
+                title="지하철 도착 정보"
+                delay={0.4}
+              >
+                <div className="space-y-3">
+                  {uniqueSubwayLines.map((subway, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                      className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-green-900/30 to-blue-900/30 border border-green-500/20"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-sm">
+                          {subway.line.replace("호선", "")}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-green-300">
+                            {subway.stationName}
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            {subway.destination}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-green-400 bg-green-900/50 px-3 py-1 rounded-lg">
+                          {subway.arrivalTime}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </NeonInfoCard>
+            )}
+
+            {/* 투어 상품 섹션 - 새로 추가 */}
+            {areaTourProducts.length > 0 && (
+              <NeonInfoCard icon={<Gift />} title="추천 투어 상품" delay={0.5}>
+                <div className="space-y-4">
+                  {areaTourProducts.map((tour) => (
+                    <motion.div
+                      key={tour.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * tour.id }}
+                      className="p-4 rounded-xl bg-gradient-to-r from-pink-900/30 to-purple-900/30 border border-pink-500/20 hover:border-pink-400/50 transition-colors cursor-pointer"
+                      onClick={() => handleTourClick(tour.id)}
+                    >
+                      <div className="flex gap-4">
+                        {tour.image && (
+                          <img
+                            src={tour.image}
+                            alt={tour.title}
+                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h3 className="font-bold text-pink-300 mb-1">
+                            {tour.title}
+                          </h3>
+                          <p className="text-sm text-gray-300 mb-2">
+                            {tour.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Star
+                                className="text-yellow-400"
+                                size={14}
+                                fill="currentColor"
+                              />
+                              <span className="text-sm text-gray-300">
+                                {tour.rating} ({tour.reviews})
+                              </span>
+                            </div>
+                            <div className="font-bold text-pink-400">
+                              {tour.price}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </NeonInfoCard>
+            )}
+
             {/* 문화행사 */}
             {eventList.length > 0 && (
               <NeonInfoCard
@@ -346,61 +581,6 @@ const PopularPlaces = () => {
                       <p className="text-xs text-gray-400 mt-1">
                         {evt.EVENT_PLACE?._text}
                       </p>
-                    </motion.div>
-                  ))}
-                </div>
-              </NeonInfoCard>
-            )}
-
-            {/* 지하철 정보 */}
-            {subwayStationList.length > 0 && (
-              <NeonInfoCard
-                icon={<Train />}
-                title="지하철 도착 정보"
-                delay={0.4}
-              >
-                <div className="space-y-4">
-                  {subwayStationList.map((station, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                      className="p-4 rounded-xl bg-gradient-to-r from-green-900/30 to-blue-900/30 border border-green-500/20"
-                    >
-                      <h3 className="font-bold text-green-300 border-b border-green-500/30 pb-2 mb-2">
-                        {station.SUB_STN_NM?._text} (
-                        {station.SUB_STN_LINE?._text}호선)
-                      </h3>
-                      <div className="space-y-1 text-sm max-h-24 overflow-y-auto custom-scrollbar">
-                        {Array.isArray(station.SUB_DETAIL?.SUB_DETAIL) ? (
-                          station.SUB_DETAIL.SUB_DETAIL.map((train, i) => (
-                            <div
-                              key={i}
-                              className="flex justify-between items-center py-1"
-                            >
-                              <span className="text-gray-300">
-                                {train.SUB_ROUTE_NM?._text}
-                              </span>
-                              <span className="font-semibold text-green-400 bg-green-900/30 px-2 py-1 rounded">
-                                {train.SUB_ARMG1?._text}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-300">
-                              {
-                                station.SUB_DETAIL?.SUB_DETAIL?.SUB_ROUTE_NM
-                                  ?._text
-                              }
-                            </span>
-                            <span className="font-semibold text-green-400 bg-green-900/30 px-2 py-1 rounded">
-                              {station.SUB_DETAIL?.SUB_DETAIL?.SUB_ARMG1?._text}
-                            </span>
-                          </div>
-                        )}
-                      </div>
                     </motion.div>
                   ))}
                 </div>
