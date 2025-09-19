@@ -489,17 +489,19 @@ export default function TourDetail({ onBack }) {
             className="space-y-8"
           >
             {tourData.detailSections.map((section, index) => (
-            <NeonCard key={index} className="overflow-hidden">
-              <img
-              src={section.image}
-              alt={section.title}
-              className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover"
-            />
-              <div className="p-6 space-y-3">
-                <h4 className="text-xl font-bold text-white">{section.title}</h4>
-                <p className="text-gray-300">{section.text}</p>
-              </div>
-            </NeonCard>
+              <NeonCard key={index} className="overflow-hidden">
+                <img
+                  src={section.image}
+                  alt={section.title}
+                  className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover"
+                />
+                <div className="p-6 space-y-3">
+                  <h4 className="text-xl font-bold text-white">
+                    {section.title}
+                  </h4>
+                  <p className="text-gray-300">{section.text}</p>
+                </div>
+              </NeonCard>
             ))}
           </motion.div>
         );

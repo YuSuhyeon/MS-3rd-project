@@ -25,26 +25,22 @@ export default function LocationMap({
   // 팝업 HTML (가독성 색상 inline)
   const buildInfoContent = (name = "", address = "") => `
     <div style="
-      padding:12px 14px;
-      max-width:320px;
-      min-width:280px;
-      font-size:18px;
-      line-height:1.5;
+      padding:8px 10px;
+      max-width:260px;
+      font-size:13px;
+      line-height:1.45;
       color:var(--map-popup-text, #0f172a);
     ">
       <div style="
         color:var(--map-popup-title, #1b243a);
         font-weight:800;
         letter-spacing:.2px;
-        margin-bottom:6px;
-        font-size:18px;
+        margin-bottom:4px;
       ">${name}</div>
 
       <div style="
         color:var(--map-popup-text, #27324d);
-        margin-bottom:10px;
-        font-size:15px;
-        line-height:1.4;
+        margin-bottom:8px;
       ">${address}</div>
 
       <button type="button" class="map-popup-btn" style="
@@ -52,10 +48,9 @@ export default function LocationMap({
         font-weight:700;
         border:1px solid #cbd5e1;
         border-radius:6px;
-        padding:8px 12px;
+        padding:6px 10px;
         background:#fff;
         cursor:pointer;
-        font-size:13px;
       ">
         ${directionsLabel}
       </button>
@@ -196,26 +191,29 @@ export default function LocationMap({
     if (!map || !selectedPOI?.location) return;
     const { kakao } = window;
     const { lat, lng } = selectedPOI.location;
-    
+
     // 지도 중심 이동
     const moveToCenter = () => {
       const moveLatLng = new kakao.maps.LatLng(lat, lng);
       map.panTo(moveLatLng);
-      
+
       // 지도 크기 변화 후 다시 중심 조정 및 팝업 표시
       setTimeout(() => {
         map.relayout(); // 지도 크기 재계산
-        
+
         // 팝업이 표시되어야 하는 경우에만 팝업 표시
         if (showSelectedPopup) {
-          const key = selectedPOI.id ?? 
-            (selectedPOI.location ? `${selectedPOI.location.lat},${selectedPOI.location.lng}` : undefined);
+          const key =
+            selectedPOI.id ??
+            (selectedPOI.location
+              ? `${selectedPOI.location.lat},${selectedPOI.location.lng}`
+              : undefined);
           const marker = key ? markersRef.current.get(key) : null;
-          
+
           if (marker) {
             // 기존 팝업 닫기
             infoWindowRef.current?.close?.();
-            
+
             // 새로운 팝업 표시 (약간의 지연을 두어 안정성 확보)
             setTimeout(() => {
               infoWindowRef.current = showKakaoInfoWindow({
@@ -229,12 +227,12 @@ export default function LocationMap({
             }, 100);
           }
         }
-        
+
         // 중심 재조정
         map.setCenter(moveLatLng);
       }, 600); // 지도 크기 변화 애니메이션 완료 후
     };
-    
+
     moveToCenter();
   }, [selectedPOI, showSelectedPopup]);
 

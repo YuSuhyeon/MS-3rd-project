@@ -1372,7 +1372,7 @@ def google_callback():
 
 
 
-#Microsoft Login [수정 예정]===============================================
+#Microsoft Login ==============================================
 
 @api_bp.route('/auth/microsoft/callback', methods=['POST'])
 def microsoft_callback():
@@ -1477,7 +1477,6 @@ def logout():
             
 # ========================Social 게시판 CRUD=====================================
 #  Create 
-
 # 게시글 작성 --------------------------------
 @api_bp.route('/boards', methods=['POST'])
 def create_board():
@@ -1550,7 +1549,6 @@ def create_board():
 def create_comment(board_id):
 
     try:
-        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
         auth_header = request.headers.get('Authorization')
         current_user_id = get_user_from_token(auth_header)
         
@@ -1759,11 +1757,7 @@ def delete_comment(comment_id):
 # 게시글 삭제 API  ----------------------------------------------------
 @api_bp.route('/boards/<int:board_id>', methods=['DELETE'])
 def delete_board(board_id):
-    """
-    게시글을 삭제합니다. (소프트 삭제)
-    """
     try:
-        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
         auth_header = request.headers.get('Authorization')
         current_user_id = get_user_from_token(auth_header)
         
@@ -1796,12 +1790,11 @@ def delete_board(board_id):
 
 
 # =================================================================
-# Likes  기능
-# =================================================================
+# 좋아요  기능
+# insert --------------------------------
 @api_bp.route('/boards/<int:board_id>/like', methods=['POST'])
-def toggle_like(board_id):
+def add_like(board_id):
     try:
-        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
         auth_header = request.headers.get('Authorization')
         current_user_id = get_user_from_token(auth_header)
         
@@ -1811,28 +1804,34 @@ def toggle_like(board_id):
                 'error': '로그인이 필요합니다'
             }), 401
         
-        result = board_service.toggle_like(board_id, current_user_id)
+
+        data = request.get_json() if request.is_json else {}
+        
+        result = board_service.add_like(board_id, current_user_id)
         
         if result['success']:
             return jsonify({
                 'success': True,
                 'likes_count': result['likes_count'],
-                'is_liked': result['is_liked'],
-                'message': result.get('message', '')
-            })
+                'is_liked': True,
+                'message': '좋아요를 추가했습니다'
+            }), 201
         else:
+            # 이미 좋아요를 눌렀거나 다른 에러
+            status_code = 409 if '이미' in result['error'] else 500
             return jsonify({
                 'success': False,
                 'error': result['error']
-            }), 500
+            }), status_code
             
     except Exception as e:
-        print(f"Error in /boards/{board_id}/like: {e}")
+        print(f"Error in POST /boards/{board_id}/like: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
 
+#좋아요 취소
 @api_bp.route('/boards/<int:board_id>/like', methods=['DELETE'])
 def remove_like(board_id):
     try:
@@ -1845,30 +1844,33 @@ def remove_like(board_id):
                 'error': '로그인이 필요합니다'
             }), 401
         
-        result = board_service.toggle_like(board_id, current_user_id)
+        # ✅ remove_like 메서드 호출 (add_like가 아님!)
+        result = board_service.remove_like(board_id, current_user_id)
         
         if result['success']:
             return jsonify({
                 'success': True,
                 'likes_count': result['likes_count'],
-                'is_liked': result['is_liked']
-            })
+                'is_liked': False,
+                'message': result['message']
+            }), 200
         else:
+            status_code = 404 if '누르지' in result['error'] else 400
             return jsonify({
                 'success': False,
                 'error': result['error']
-            }), 500
+            }), status_code
             
     except Exception as e:
         print(f"Error in DELETE /boards/{board_id}/like: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)
-        }), 500
-         
             
-
-# =================================================================
+        }),500
+#=================================================================
 # 인기 태그 
 # =================================================================
 @api_bp.route('/boards/trending/tags', methods=['GET'])
