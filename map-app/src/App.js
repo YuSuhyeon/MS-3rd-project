@@ -10,6 +10,7 @@ import PersonaAnalysis from "./pages/PersonaAnalysis";
 import ItineraryView from "./pages/ItineraryView";
 import DocentMantine from "./pages/DocentMantine";
 import DirectionsMyro from "./pages/DirectionsMyro";
+import DirectionsMantineImproved from "./pages/DirectionsMantineImproved";
 import VisionOCR from "./pages/VisionOCR";
 import DocentVision from "./pages/DocentVision";
 import CommunityMain from "./pages/CommunityMain";
@@ -32,7 +33,10 @@ function AppRoutes() {
               <Route path="/persona" element={<PersonaAnalysis />} />
               <Route path="/result" element={<ResultDashboard />} />
               <Route path="/docent" element={<DocentMantine />} />
-              <Route path="/directions" element={<DirectionsMyro />} />
+              <Route
+                path="/directions"
+                element={<DirectionsMantineImproved />}
+              />
               <Route path="/itinerary" element={<ItineraryView />} />
               {/* community 경로를 Layout 안으로 이동 */}
               <Route path="/community" element={<CommunityMain />} />
