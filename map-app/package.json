@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@azure/msal-browser": "^4.23.0",
+    "@azure/msal-react": "^3.0.19",
     "@hello-pangea/dnd": "^18.0.1",
     "@mantine/core": "^8.2.8",
     "@mantine/dates": "8.2.8",
