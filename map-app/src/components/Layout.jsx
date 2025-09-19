@@ -34,32 +34,31 @@ const getNavigationItems = (t) => [
   { title: t("mypage"), url: "/mypage" },
 ];
 
-// 배너 컴포넌트
 const BannerWidget = () => {
   const banners = [
     {
       id: 1,
       image: "../../img/seoul_kdh_policies.jpg",
-      title: "배너타이틀",
-      subtitle: "배너 테스트",
+      // title: "배너타이틀",
+      //  subtitle: "배너 테스트",
     },
     {
       id: 2,
       image: "../../img/seoul_kdh_policies_1.jpg",
-      title: "배너타이틀1",
-      subtitle: "배너 테스트1",
+      // title: "배너타이틀1",
+      // subtitle: "배너 테스트1",
     },
     {
       id: 3,
       image: "../../img/seoul_kdh_policies_2.jpg",
-      title: "배너타이틀2",
-      subtitle: "배너 테스트2",
+      //title: "배너타이틀2",
+      // subtitle: "배너 테스트2",
     },
     {
       id: 4,
       image: "../../img/seoul_kdh_policies_3.jpg",
-      title: "배너타이틀3",
-      subtitle: "배너 테스트3",
+      // title: "배너타이틀3",
+      // subtitle: "배너 테스트3",
     },
   ];
 
@@ -150,7 +149,7 @@ const callWeatherAPI = async () => {
   }
 };
 
-// FlickerNumber 컴포넌트 (네온 테마 적용)
+// 숫자 효과
 const FlickerNumber = ({ value, formatter = (val) => val }) => {
   const [displayValue, setDisplayValue] = useState(formatter(value));
   const animationRef = useRef();
@@ -185,7 +184,8 @@ const FlickerNumber = ({ value, formatter = (val) => val }) => {
 
   return <span className="font-mono text-purple-200">{displayValue}</span>;
 };
-// LiveInfoWidget 컴포넌트
+
+// LiveInfoWidget 실시간 위젯
 const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
   const [exchangeData, setExchangeData] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
@@ -208,12 +208,10 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
 
       if (exchange) {
         setExchangeData(exchange);
-        console.log("✅ 환율 데이터 업데이트 완료");
       }
 
       if (weather) {
         setWeatherData(weather);
-        console.log("✅ 날씨 데이터 업데이트 완료");
       }
 
       setLastUpdateTime(Date.now());
@@ -224,7 +222,7 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
     }
   };
 
-  // 가짜 변동 효과 (실제 데이터는 유지하면서 살짝만 변경)
+  // 가짜 변동 효과 (실제 데이터는 유지하면서 효과로만 변경)
   const createFlickerEffect = useCallback(() => {
     if (!exchangeData || !weatherData) return;
 

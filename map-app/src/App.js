@@ -40,11 +40,9 @@ function AppRoutes() {
               <Route path="/docent" element={<DocentMantine />} />
               <Route path="/directions" element={<DirectionsMyro />} />
               <Route path="/itinerary" element={<ItineraryView />} />
-              {/* community 경로를 Layout 안으로 이동 */}
               <Route path="/community" element={<CommunityMain />} />
               <Route path="/community/*" element={<CommunityMain />} />
               <Route path="/social" element={<CommunitySocial />} />
-
               <Route path="/visionocr" element={<VisionOCR />} />
               <Route path="/vision" element={<DocentVision />} />
               <Route path="/tour" element={<Tour />} />

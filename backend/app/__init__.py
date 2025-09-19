@@ -23,6 +23,7 @@ def create_app():
         'http://localhost:3000',
         'http://127.0.0.1:5000',
         'http://localhost:5000'
+        
     ]
    
     # 환경변수에서 추가 origin 가져오기

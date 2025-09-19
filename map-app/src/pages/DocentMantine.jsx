@@ -25,6 +25,7 @@ import {
   BackgroundEffect,
   NeonCard,
   NeonCardJH,
+  NeonCardJHMobile,
   NeonButton,
   GradientText,
   NeonScrollbarStyles,
@@ -229,7 +230,6 @@ const ALLOWED_POIS = new Set([
   "남산서울타워",
   "롯데월드타워",
 ]);
-
 const prettyPct = (p = 0) => (p * 100).toFixed(1) + "%";
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // km
@@ -273,15 +273,29 @@ const FixedChatbot = ({
   const cameraInputRef = useRef(null); // 카메라(촬영)
 
   useEffect(() => {
-    // 언어가 바뀌면 초기 메시지만 새 언어로
-    setMessages([
-      {
-        id: "initial",
-        type: "ai",
-        content: ui.chatbotInitialMessage,
-        timestamp: new Date(),
-      },
-    ]);
+    // 언어가 바뀌면 초기 메시지만 새 언어로 업데이트 (기존 대화 내용 유지)
+    setMessages((prev) => {
+      const hasInitialMessage = prev.some(msg => msg.id === "initial");
+      if (hasInitialMessage) {
+        // 초기 메시지만 새 언어로 업데이트
+        return prev.map(msg => 
+          msg.id === "initial" 
+            ? { ...msg, content: ui.chatbotInitialMessage }
+            : msg
+        );
+      } else {
+        // 초기 메시지가 없으면 새로 추가
+        return [
+          {
+            id: "initial",
+            type: "ai",
+            content: ui.chatbotInitialMessage,
+            timestamp: new Date(),
+          },
+          ...prev
+        ];
+      }
+    });
     setInputMessage("");
   }, [ui.chatbotInitialMessage]);
 
@@ -301,7 +315,6 @@ const FixedChatbot = ({
     const canon = TAG_ALIASES[raw] || String(raw);
     return ALLOWED_POIS.has(canon) ? canon : null;
   };
-  console.log("✅normalizeLabel=============", normalizeLabel);
 
   const callYOLO = async (file) => {
     const fd = new FormData();
@@ -540,12 +553,16 @@ const FixedChatbot = ({
           "이 이미지의 장소에 대해 알려주세요. 관광 정보를 제공해 주세요.";
         const ragResponse = await callApi(fallbackQuery);
 
+        const fallbackMessage = selectedLang === "ko" 
+          ? "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?"
+          : await translateText("대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?", selectedLang);
+        
         setMessages((prev) => [
           ...prev,
           {
             id: String(Date.now() + 1),
             type: "ai",
-            content: "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?",
+            content: fallbackMessage,
             timestamp: new Date(),
           },
         ]);
@@ -562,12 +579,16 @@ const FixedChatbot = ({
           .slice(0, 3)
           .map((d) => `${d.label}(${prettyPct(d.conf)})`)
           .join(", ");
+        const unsupportedMessage = selectedLang === "ko" 
+          ? `지원 라벨만 제공 중입니다.\n감지: ${tops}`
+          : await translateText(`지원 라벨만 제공 중입니다.\n감지: ${tops}`, selectedLang);
+        
         setMessages((prev) => [
           ...prev,
           {
             id: String(Date.now() + 2),
             type: "ai",
-            content: `지원 라벨만 제공 중입니다.\n감지: ${tops}`,
+            content: unsupportedMessage,
             timestamp: new Date(),
           },
         ]);
@@ -589,23 +610,32 @@ const FixedChatbot = ({
 
       const ragResponse = await callApi(ragQuery); // callTourismAPI 사용
 
+      // 6) 선택된 언어로 번역
+      const translatedResponse = selectedLang === "ko" 
+        ? ragResponse 
+        : await translateText(ragResponse, selectedLang);
+
       setMessages((prev) => [
         ...prev,
         {
           id: String(Date.now() + 3),
           type: "ai",
-          content: ragResponse,
+          content: translatedResponse,
           timestamp: new Date(),
         },
       ]);
     } catch (err) {
       console.error(err);
+      const errorMessage = selectedLang === "ko" 
+        ? `오류가 발생했어요: ${String(err?.message || err)}`
+        : await translateText(`오류가 발생했어요: ${String(err?.message || err)}`, selectedLang);
+      
       setMessages((prev) => [
         ...prev,
         {
           id: String(Date.now() + 999),
           type: "ai",
-          content: `오류가 발생했어요: ${String(err?.message || err)}`,
+          content: errorMessage,
           timestamp: new Date(),
         },
       ]);
@@ -634,8 +664,9 @@ const FixedChatbot = ({
       //   ? "h-[60vh]"
       //   : "h-[280px]"
       "h-full";
+  // const inChatHeight = "h-full";
   return (
-    <div className="h-full w-full bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-lg border-t border-purple-500/30">
+    <div className={`${chatHeight} w-full bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-lg border-t border-purple-500/30`}>
       <div
         className={`flex flex-col ${chatHeight}  p-4 transition-all duration-300`}
       >
@@ -658,7 +689,7 @@ const FixedChatbot = ({
                   </div>
                 )}
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
+                  className={`${isMobile ? "max-w-[70%]" : "max-w-[60%]"} rounded-2xl px-4 py-2.5 ${
                     message.type === "user"
                       ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25"
                       : "bg-gradient-to-r from-gray-800/80 to-gray-900/90 text-white border border-gray-600/30"
@@ -670,7 +701,11 @@ const FixedChatbot = ({
                         <img
                           src={attachment.url}
                           alt={attachment.caption}
-                          className="rounded-lg max-w-full h-auto border border-purple-500/30"
+                          className={`rounded-lg border border-purple-500/30 ${
+                            isMobile 
+                              ? "max-w-32 h-auto ml-auto" 
+                              : "max-w-48 h-auto"
+                          }`}
                         />
                       )}
                     </div>
@@ -841,6 +876,7 @@ export default function DocentMantine() {
   const [translatedDesc, setTranslatedDesc] = useState("");
   const [category, setCategory] = useState("all");
   const [expanded, setExpanded] = useState(false);
+  const [isLocationTracking, setIsLocationTracking] = useState(false);
 
   const ui = UI[selectedLang] || UI.ko;
   const isMobile = useIsMobile();
@@ -956,20 +992,40 @@ export default function DocentMantine() {
     if (category === "all") return listData;
     return listData.filter((p) => p.category === category);
   }, [listData, category]);
-  // 위치 추적
+  // 위치 추적 토글 함수
+  const toggleLocationTracking = () => {
+    if (isLocationTracking) {
+      // 위치 추적 중지
+      if (watchId.current) {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+      setIsLocationTracking(false);
+      setUserLocation({ lat: 37.5665, lng: 126.978 }); // 서울로 리셋
+    } else {
+      // 위치 추적 시작
+      if (navigator.geolocation) {
+        setIsLocationTracking(true);
+        watchId.current = navigator.geolocation.watchPosition(
+          (pos) => {
+            setUserLocation({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+            });
+          },
+          (err) => {
+            console.warn("위치 추적 오류:", err);
+            setIsLocationTracking(false);
+          },
+          { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 }
+        );
+      }
+    }
+  };
+
+  // 초기 위치 설정
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    watchId.current = navigator.geolocation.watchPosition(
-      (pos) =>
-        setUserLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        }),
-      (err) => console.warn(err),
-      { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 }
-    );
-    return () =>
-      watchId.current && navigator.geolocation.clearWatch(watchId.current);
+    setUserLocation({ lat: 37.5665, lng: 126.978 });
   }, []);
   // 상세설명 번역
   useEffect(() => {
@@ -1025,12 +1081,12 @@ export default function DocentMantine() {
   );
 
   const mapPoisMobile = useMemo(
-    () => (selectedPOI ? [selectedPOI] : limitedListData),
-    [selectedPOI, limitedListData]
+    () => (selectedPOI ? [selectedPOI] : filteredList),
+    [selectedPOI, filteredList]
   );
   const mapPoisDesktop = useMemo(
-    () => (selectedPOI ? [selectedPOI] : listData),
-    [selectedPOI, listData]
+    () => (selectedPOI ? [selectedPOI] : filteredList),
+    [selectedPOI, filteredList]
   );
   const stopAllTTS = () => {
     stopTTS();
@@ -1059,17 +1115,21 @@ export default function DocentMantine() {
   // 카테고리 버튼 – pill
   const CategoryBar = ({ ui, category, setCategory }) => (
     <div className="bg-gray-900/80 backdrop-blur-lg border-b border-purple-500/30 px-4 py-3">
-      <div className="flex flex-wrap gap-2">
+      <div className={`flex flex-wrap ${isMobile ? 'gap-1' : 'gap-2'}`}>
         {CATEGORY_OPTIONS.map((key) => (
           <NeonButton
             key={key}
             size="sm"
             variant={category === key ? "primary" : "outline"}
             onClick={() => setCategory(key)}
-            className={`rounded-full px-4 py-2 text-sm transition-all duration-300 ${
-              category === key
-                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
-                : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"
+            className={`rounded-full transition-all duration-300 ${
+              isMobile 
+                ? `px-2 py-1 text-xs ${category === key
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
+                    : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"}`
+                : `px-4 py-2 text-sm ${category === key
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
+                    : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"}`
             }`}
           >
             {ui?.categories?.[key] || key}
@@ -1088,45 +1148,49 @@ export default function DocentMantine() {
         <NeonScrollbarStyles />
         <div className="h-screen flex flex-col">
           {/* 헤더 */}
-          <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-4 py-3 shadow-lg flex-shrink-0">
+          <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-3 py-2 shadow-lg flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/25">
-                  <Navigation className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <GradientText
-                    variant="secondary"
-                    size="lg"
-                    className="font-bold"
-                  >
-                    {ui.title}
-                  </GradientText>
-                </div>
-              </div>
               <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/25">
+                  <Navigation className="w-3 h-3 text-white" />
+                </div>
+                <GradientText
+                  variant="secondary"
+                  size="lg"
+                  className="font-bold"
+                >
+                  {ui.title}
+                </GradientText>
+              </div>
+              <div className="flex items-center gap-1">
                 <select
                   value={selectedLang}
                   onChange={(e) => setSelectedLang(e.target.value)}
-                  className="border border-purple-500/30 rounded-md px-2 py-1 text-xs bg-gray-800/50 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="border border-purple-500/30 rounded px-1 py-0.5 text-xs bg-gray-800/50 text-white backdrop-blur-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
                 >
                   <option value="ko">한국어</option>
                   <option value="en">Eng</option>
                   <option value="ja">日本語</option>
                   <option value="zh">中文</option>
                 </select>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <Switch
                     checked={isDocentActive}
                     onCheckedChange={(v) => {
                       if (!v) stopAllTTS();
                       setIsDocentActive(v);
                     }}
-                    className="data-[state=checked]:from-indigo-500 data-[state=checked]:to-purple-500 data-[state=checked]:bg-gradient-to-r"
+                    className="data-[state=checked]:from-indigo-500 data-[state=checked]:to-purple-500 data-[state=checked]:bg-gradient-to-r scale-75"
                   />
-                  <label className="text-sm font-medium text-gray-300">
-                    {ui.aiDocent}
-                  </label>
+                  <span className="text-xs text-gray-300">AI</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Switch
+                    checked={isLocationTracking}
+                    onCheckedChange={toggleLocationTracking}
+                    className="data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:bg-gradient-to-r scale-75"
+                  />
+                  <span className="text-xs text-gray-300">위치</span>
                 </div>
               </div>
             </div>
@@ -1138,51 +1202,75 @@ export default function DocentMantine() {
           {/* 콘텐츠 영역 */}
           <div className="flex-1 flex flex-col min-h-0">
             {/* 지도 */}
-            <div className="h-1/3 flex-shrink-0 border border-purple-500/20 rounded-lg m-2 overflow-hidden">
+            <div
+              className={`${selectedPOI ? 'h-1/2' : 'h-1/3'} flex-shrink-0 border border-purple-500/20 rounded-lg m-2 overflow-hidden relative z-20 transition-all duration-500 ease-in-out`}
+              style={{ pointerEvents: "auto", touchAction: "none" }}
+            >
               <LocationMap
                 userLocation={userLocation}
                 pois={mapPoisMobile}
                 selectedPOI={selectedPOI}
                 onSelectPOI={setSelectedPOI}
                 showSelectedPopup
-                directionsLabel={ui.directions} // ← 추가
+                directionsLabel={ui.directions}
               />
             </div>
 
-            {/* 목록/상세정보 (스크롤) */}
-            <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
-              <NeonCard className="m-2 h-full">
-                {selectedPOI ? (
-                  <POIDetails
-                    poi={{ ...selectedPOI, description: translatedDesc }}
-                    userLocation={userLocation}
-                    onPlayTTS={() => speakText(translatedDesc, selectedLang)}
-                    isDocentActive={isDocentActive}
-                  />
-                ) : (
-                  <POIList
-                    pois={limitedListData}
-                    maxRows={4}
-                    selectedPOI={selectedPOI}
-                    nearbyPOIs={[]}
-                    userLocation={userLocation}
-                    onSelectPOI={setSelectedPOI}
-                    isDocentActive={isDocentActive}
-                    isPlaying={isPlaying}
-                  />
-                )}
-              </NeonCard>
+            {/* 카드 목록 영역 */}
+            <div className="flex-1 min-h-0">
+              <NeonCardJHMobile className="m-2 ">
+                <div className="p-3 pb-1 flex flex-col h-full">
+                  <h3 className="text-lg font-semibold text-white mb-3 flex-shrink-0">
+                    {category === "all" ? "전체 관광지" : ui?.categories?.[category] || category}
+                  </h3>
+                  <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
+                    {selectedPOI ? (
+                      <POIDetails
+                        poi={{ ...selectedPOI, description: translatedDesc }}
+                        userLocation={userLocation}
+                        onPlayTTS={() => speakText(translatedDesc, selectedLang)}
+                        isDocentActive={isDocentActive}
+                      />
+                    ) : (
+                      <POIListJH
+                        pois={filteredList}
+                        maxRows={0}
+                        selectedPOI={selectedPOI}
+                        nearbyPOIs={[]}
+                        userLocation={userLocation}
+                        onSelectPOI={setSelectedPOI}
+                        isDocentActive={isDocentActive}
+                        isPlaying={isPlaying}
+                      />
+                    )}
+                  </div>
+                </div>
+              </NeonCardJHMobile>
             </div>
 
             {/* 하단 고정 챗봇 */}
-            <FixedChatbot
+            <div
+              className={`transition-[height] duration-300 ease-in-out ${
+                expanded ? "h-[60%]" : "h-[10%]"
+              } flex-shrink-0`}
+            >
+              <FixedChatbot
+                callApi={callTourismAPI}
+                ui={ui}
+                isMobile={true}
+                selectedLang={selectedLang}
+                expanded={expanded}
+                setExpanded={setExpanded}
+              />
+            </div>
+            {/* <FixedChatbot
               callApi={callTourismAPI}
               ui={ui}
               isMobile
               selectedLang={selectedLang}
               expanded={expanded}
               setExpanded={setExpanded}
-            />
+            /> */}
           </div>
         </div>
       </BackgroundEffect>
@@ -1239,6 +1327,15 @@ export default function DocentMantine() {
                   {ui.aiDocent}
                 </span>
               </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={isLocationTracking}
+                  onCheckedChange={toggleLocationTracking}
+                />
+                <span className="data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:bg-gradient-to-r">
+                  위치 추적
+                </span>
+              </div>
               {isPlaying && (
                 <NeonButton
                   variant="outline"
@@ -1284,10 +1381,13 @@ export default function DocentMantine() {
 
             {/* 중앙 지도 */}
             <div className="w-1/2 relative min-w-0 min-h-0 m-3">
-              <div className="absolute inset-0 rounded-2xl overflow-hidden border border-purple-500/20 kakao-map-theme">
+              <div 
+                className="absolute inset-0 rounded-2xl overflow-hidden border border-purple-500/20 kakao-map-theme"
+                style={{ pointerEvents: "auto" }}
+              >
                 <LocationMap
                   userLocation={userLocation}
-                  pois={filteredList}
+                  pois={mapPoisDesktop}
                   selectedPOI={selectedPOI}
                   onSelectPOI={setSelectedPOI}
                   showSelectedPopup

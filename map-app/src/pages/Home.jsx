@@ -23,6 +23,7 @@ import {
   Award,
   Play,
   Pause,
+  LogOut,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import BrandLogo from "components/BrandLogo";
@@ -30,6 +31,7 @@ import LanguageButtons from "components/ui/LanguageButtons";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import Menu from "components/ui/Menu";
 
 import {
   BackgroundEffect,
@@ -49,10 +51,6 @@ const KPopTravelHome = () => {
   const [redirectOnLogin, setRedirectOnLogin] = useState(false);
   const { profile, login, logout } = useAuth();
 
-  // 랜덤 이름과 애니메이션을 위한 상태들
-  const [displayName, setDisplayName] = useState("'s");
-  const [isNameAnimating, setIsNameAnimating] = useState(false);
-
   // 스크롤 기반 버튼 상태 추가
   const [currentSection, setCurrentSection] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -60,6 +58,9 @@ const KPopTravelHome = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const { scrollY } = useScroll();
 
+  // 랜덤 이름과 애니메이션을 위한 상태들
+  const [displayName, setDisplayName] = useState("'s");
+  const [isNameAnimating, setIsNameAnimating] = useState(false);
   // 랜덤 이름 배열
   const randomNames = [
     "Tom",
@@ -76,6 +77,10 @@ const KPopTravelHome = () => {
     "도운",
     "원필",
     "Chris",
+    "수현",
+    "봉현",
+    "Sammy",
+    "준호",
   ];
 
   // 실시간 인기 여행지 목록
@@ -172,6 +177,10 @@ const KPopTravelHome = () => {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+  useEffect(() => {
+    console.log("Home 컴포넌트에서 profile 변경됨:", profile);
+  }, [profile]);
+
   const handleStartClick = () => {
     if (profile) {
       navigate("/persona");
@@ -266,40 +275,6 @@ const KPopTravelHome = () => {
     },
   ];
 
-  // 스크롤 80%에서 버튼 나타나게 하는 효과
-  // useEffect(() => {
-  //   const updateButtonVisibility = () => {
-  //     const scrollTop =
-  //       window.pageYOffset || document.documentElement.scrollTop;
-  //     const windowHeight = window.innerHeight;
-  //     const docHeight = Math.max(
-  //       document.body.scrollHeight,
-  //       document.body.offsetHeight,
-  //       document.documentElement.clientHeight,
-  //       document.documentElement.scrollHeight,
-  //       document.documentElement.offsetHeight
-  //     );
-  //     const totalDocScrollLength = docHeight - windowHeight;
-  //     const scrollPosition = Math.floor(
-  //       (scrollTop / totalDocScrollLength) * 100
-  //     );
-  //     if (scrollPosition >= 80) {
-  //       console.log("Button should show!");
-  //       setShowButton(true);
-  //     } else {
-  //       setShowButton(false);
-  //     }
-  //   };
-  //   updateButtonVisibility();
-
-  //   window.addEventListener("scroll", updateButtonVisibility);
-  //   const unsubscribe = scrollY.onChange(updateButtonVisibility);
-
-  //   return () => {
-  //     window.removeEventListener("scroll", updateButtonVisibility);
-  //     unsubscribe();
-  //   };
-  // }, [scrollY]);
   return (
     <BackgroundEffect className="min-h-screen neon-scrollbar">
       {/* NeonTheme 스크롤바 스타일 */}
@@ -313,63 +288,74 @@ const KPopTravelHome = () => {
           backdropFilter: "none",
           borderBottom: "none",
           outline: "none",
+          zIndex: 40,
         }}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8 }}
       >
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <motion.div
-              className="flex items-center gap-3"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-white" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          {/* 전체 헤더를 flex로 배치 */}
+          <div className="flex items-center justify-between h-10">
+            {/* 왼쪽: 메뉴 */}
+            <div className="flex items-center h-10">
+              <Menu />
+            </div>
+
+            {/* 우측: 언어선택 + 로그인/프로필 */}
+            <div className="flex items-center gap-3 h-10">
+              {/* 언어 선택 드롭다운 - 높이 통일 */}
+              <div className="h-10 flex items-center">
+                <div className="h-10 flex items-center justify-center">
+                  <LanguageButtons />
+                </div>
               </div>
-              <div>
-                <GradientText variant="primary" size="lg" className="font-bold">
-                  플랫폼 이름
-                </GradientText>
-                <p className="text-xs text-gray-300 whitespace-nowrap">
-                  {t("main.badge")}
-                </p>
-              </div>
-            </motion.div>
-            <div className="flex items-center gap-4">
-              {/* Login/Profile section */}
-              <LanguageButtons />
+
+              {/* 로그인/프로필 섹션 */}
               {profile ? (
-                <div className="flex items-center gap-4">
-                  <img
-                    src={profile.picture || "https://via.placeholder.com/40"}
-                    alt="profile"
-                    className="w-8 h-8 rounded-full border-2 border-purple-400"
-                  />
-                  <span className="text-white/90 font-semibold hidden sm:block">
-                    {t("login.welcome", { name: profile.name })}
+                <div className="flex items-center gap-2 h-10">
+                  {/* 프로필 이미지 - 표준 크기로 조정 */}
+                  <div className="h-10 flex items-center">
+                    <img
+                      src={
+                        profile.picture ||
+                        profile.profile_image ||
+                        "/img/default_profile_purple_img.png"
+                      }
+                      alt="profile"
+                      className="w-8 h-8 rounded-full border border-purple-400/50 flex-shrink-0"
+                      onError={(e) => {
+                        e.target.src = "/img/default_profile_purple_img.png";
+                      }}
+                    />
+                  </div>
+
+                  {/* 사용자 이름 - 큰 화면에서만 표시 */}
+                  <span className="text-white/90 font-semibold hidden lg:block max-w-24 xl:max-w-32 truncate text-sm">
+                    {profile.name}
                   </span>
-                  <NeonButton onClick={logout} variant="secondary" size="sm">
-                    {t("login.logout")}
-                  </NeonButton>
+
+                  {/* 로그아웃 버튼 - 통일된 크기 */}
+                  <button
+                    onClick={logout}
+                    className="h-10 w-10 flex items-center justify-center rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-300 hover:scale-105"
+                  >
+                    <LogOut size={18} />
+                  </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <NeonButton
-                    onClick={() => setShowLoginModal(true)}
-                    variant="primary"
-                    size="md"
-                  >
-                    {t("login.login")}
-                  </NeonButton>
-                </div>
-              )}{" "}
+                /* 로그인 버튼 - 통일된 크기 */
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="h-10 px-4 flex items-center justify-center rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all duration-300 hover:scale-105 font-medium text-sm"
+                >
+                  {t("login.login")}
+                </button>
+              )}
             </div>
           </div>
         </div>
       </motion.nav>
-
       {/* Hero Section */}
       <motion.section
         className="relative min-h-screen flex items-center justify-center px-6 pt-20"
@@ -419,7 +405,7 @@ const KPopTravelHome = () => {
               {t("main.subtitle")}
             </motion.p>
 
-            <motion.div
+            {/* <motion.div
               className="flex flex-col sm:flex-row gap-4 justify-center"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -450,7 +436,7 @@ const KPopTravelHome = () => {
                   <ChevronRight className="w-5 h-5" />
                 </NeonButton>
               </motion.div>
-            </motion.div>
+            </motion.div> */}
           </motion.div>
 
           {/* Stats */}

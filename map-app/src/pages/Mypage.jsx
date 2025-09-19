@@ -747,7 +747,7 @@ export default function MyPage() {
               <div className="text-center">
                 <div className="relative inline-block mb-4">
                   <img
-                    src={profile.picture || "/default-avatar.png"}
+                    src={profile.picture || "/default_profile_img"}
                     alt="Profile"
                     className="w-24 h-24 rounded-full object-cover border-4 border-purple-500/50 shadow-lg shadow-purple-500/25"
                   />

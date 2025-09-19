@@ -1,7 +1,11 @@
 import React, { useState, createContext, useContext, useEffect } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
+import { flushSync } from "react-dom";
+// msal.js에서 두 함수를 모두 가져옵니다.
+import { microsoftLoginAndGetToken, handleMicrosoftRedirect } from "./msal";
 
 const AuthContext = createContext();
+
 export const useAuth = () => {
   return useContext(AuthContext);
 };
@@ -10,35 +14,62 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 1. 초기 인증 상태 확인 및 Microsoft 리디렉션 처리
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const savedUser = localStorage.getItem("user");
-        if (savedUser) {
-          const userData = JSON.parse(savedUser);
-          const response = await fetch("/api/auth/status", {
-            method: "GET",
-            credentials: "include", // 쿠키 포함
+        // Microsoft 로그인 리디렉션 후 토큰이 있는지 확인
+        const msAccessToken = await handleMicrosoftRedirect();
+
+        if (msAccessToken) {
+          // Microsoft 로그인 성공 시 백엔드 콜백 호출
+          const me = await fetch("https://graph.microsoft.com/v1.0/me", {
+            headers: { Authorization: `Bearer ${msAccessToken}` },
+          }).then((r) => r.json());
+
+          const backendRes = await fetch("/api/auth/microsoft/callback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ token: msAccessToken, user_info: me }),
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.user) {
-              setProfile(data.user);
-              localStorage.setItem("user", JSON.stringify(data.user));
+          if (!backendRes.ok) throw new Error("MS 로그인 백엔드 처리 실패");
+          const data = await backendRes.json();
+          if (data.success && data.user) {
+            setProfile(data.user);
+            localStorage.setItem("user", JSON.stringify(data.user));
+          } else {
+            throw new Error(data.error || "MS 로그인 실패");
+          }
+        } else {
+          // Microsoft 로그인 토큰이 없으면 기존 인증 상태 확인
+          const savedUser = localStorage.getItem("user");
+          if (savedUser) {
+            const response = await fetch("/api/auth/status", {
+              method: "GET",
+              credentials: "include",
+            });
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.user) {
+                setProfile(data.user);
+                localStorage.setItem("user", JSON.stringify(data.user));
+              } else {
+                localStorage.removeItem("user");
+                setProfile(null);
+                console.log("서버 응답 오류로 로그인 상태 초기화");
+              }
             } else {
               localStorage.removeItem("user");
               setProfile(null);
             }
           } else {
-            localStorage.removeUser("user");
-            setProfile(null);
-            console.log("서버 응답 오류로 로그인 상태 초기화");
+            console.log("로컬스토리지에 사용자 정보 없음");
           }
-        } else {
-          console.log("로컬스토리지에 사용자 정보 없음");
         }
       } catch (error) {
+        console.error("인증 상태 확인 또는 Microsoft 로그인 처리 실패:", error);
         localStorage.removeItem("user");
         setProfile(null);
       } finally {
@@ -49,34 +80,25 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  //Google Login
+  // 2. Google 로그인 로직
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        console.log(" Google 로그인 성공:", tokenResponse);
+        console.log("Google 로그인 성공:", tokenResponse);
 
-        // Google에서 사용자 정보 가져오기
         const res = await fetch(
           "https://www.googleapis.com/oauth2/v3/userinfo",
           {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-            },
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
           }
         );
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch user info");
-        }
-
+        if (!res.ok) throw new Error("Failed to fetch user info");
         const googleUserData = await res.json();
-        console.log(" Google 사용자 정보:", googleUserData);
 
         const backendResponse = await fetch("/api/auth/google/callback", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
             token: tokenResponse.access_token,
@@ -84,7 +106,6 @@ export const AuthProvider = ({ children }) => {
           }),
         });
 
-        // 응답 상태 먼저 확인
         if (!backendResponse.ok) {
           const errorText = await backendResponse.text();
           throw new Error(
@@ -95,21 +116,21 @@ export const AuthProvider = ({ children }) => {
           );
         }
 
-        // Content-Type 확인
         const contentType = backendResponse.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-          const textResponse = await backendResponse.text();
           throw new Error("서버에서 올바르지 않은 응답을 받았습니다.");
         }
 
-        // JSON 파싱
         const backendData = await backendResponse.json();
-        console.log(" 백엔드 응답:", backendData);
+        console.log("백엔드 응답:", backendData);
 
         if (backendData.success) {
-          setProfile(backendData.user);
-          localStorage.setItem("user", JSON.stringify(backendData.user));
-          console.log(" 로그인 완료:", backendData.user);
+          const userData = backendData.user;
+          flushSync(() => {
+            setProfile(userData);
+          });
+          localStorage.setItem("user", JSON.stringify(userData));
+          console.log("로그인 완료, 프로필 설정됨:", userData);
         } else {
           throw new Error(backendData.error || "백엔드 로그인 처리 실패");
         }
@@ -124,17 +145,16 @@ export const AuthProvider = ({ children }) => {
     },
   });
 
-  // login 함수는 그대로 유지
-  const login = (provider) => {
+  // 3. 로그인 분기 함수: 버튼 클릭 시 호출
+  const login = async (provider) => {
     if (provider === "google") {
       googleLogin();
     } else if (provider === "microsoft") {
-      //microsoftLogin();
+      await microsoftLoginAndGetToken(); // 리디렉션만 시작
     }
   };
 
   const logout = () => {
-    // 세션도 클리어
     fetch("/api/logout", {
       method: "POST",
       credentials: "include",
@@ -145,7 +165,6 @@ export const AuthProvider = ({ children }) => {
       })
       .catch((error) => {
         console.error("로그아웃 오류:", error);
-        // 에러가 나도 프론트엔드 상태는 초기화
         setProfile(null);
         localStorage.removeItem("user");
       });

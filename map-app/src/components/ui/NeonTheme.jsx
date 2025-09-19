@@ -448,6 +448,82 @@ export const NeonCardJH = ({
   );
 };
 
+// 2. 네온 카드_jh mobile
+export const NeonCardJHMobile = ({
+  icon,
+  title,
+  children,
+  delay = 0.2,
+  className = "",
+  variant = "default", // default, primary, success, warning, danger
+  ...props
+}) => {
+  const variants = {
+    default:
+      "border-purple-500/30 hover:border-pink-500/50 hover:shadow-pink-500/20",
+    primary:
+      "border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20",
+    success:
+      "border-green-500/30 hover:border-emerald-500/50 hover:shadow-emerald-500/20",
+    warning:
+      "border-yellow-500/30 hover:border-orange-500/50 hover:shadow-orange-500/20",
+    danger:
+      "border-red-500/30 hover:border-rose-500/50 hover:shadow-rose-500/20",
+  };
+
+  const iconVariants = {
+    default: "from-purple-500 to-pink-500",
+    primary: "from-blue-500 to-cyan-500",
+    success: "from-green-500 to-emerald-500",
+    warning: "from-yellow-500 to-orange-500",
+    danger: "from-red-500 to-rose-500",
+  };
+
+  return (
+    <motion.div
+      className={`relative bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg
+                  border ${variants[variant]} rounded-2xl p-6 shadow-2xl
+                  hover:shadow-2xl transition-all duration-300 h-full ${className}`}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+      whileHover={{ y: -5, scale: 1.02 }}
+      {...props}
+    >
+      {/* 네온 글로우 효과 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-2xl blur-xl" />
+
+      <div className="relative z-10 h-full">
+        {(icon || title) && (
+          <motion.div
+            className="flex items-center gap-3 mb-4"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: delay + 0.2 }}
+          >
+            {icon && (
+              <div
+                className={`p-2 rounded-lg bg-gradient-to-r ${iconVariants[variant]}`}
+              >
+                {React.cloneElement(icon, {
+                  className: "text-white",
+                  size: 20,
+                })}
+              </div>
+            )}
+            {title && (
+              <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                {title}
+              </h2>
+            )}
+          </motion.div>
+        )}
+        {/* 내용 */}
+        <div className="space-y-2 text-gray-100 h-full">{children}</div>
+      </div>
+    </motion.div>
+  );
+};
 // 3. 그라데이션 텍스트 효과
 export const GradientText = ({
   children,
