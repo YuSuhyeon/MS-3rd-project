@@ -1,6 +1,6 @@
 // pages/DirectionsMantineImproved.jsx
 
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "components/ui/button";
 import PlaceSearchInput from "components/directions/PlaceSearchInput";
@@ -92,6 +92,13 @@ export default function DirectionsMantineImproved() {
   const markerRefs = useRef([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const [addDayMenuOpen, setAddDayMenuOpen] = useState(false);
+  const addDayMenuRef = useRef(null);
+  const [coursePickerOpen, setCoursePickerOpen] = useState(false);
+  const [recommendedCourses, setRecommendedCourses] = useState([]);
+  const [recommendedLoading, setRecommendedLoading] = useState(false);
+  const [recommendedError, setRecommendedError] = useState(null);
+  const [personaCourseId, setPersonaCourseId] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -106,6 +113,31 @@ export default function DirectionsMantineImproved() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (!addDayMenuOpen) return;
+    const handleClick = (event) => {
+      if (
+        addDayMenuRef.current &&
+        !addDayMenuRef.current.contains(event.target)
+      ) {
+        setAddDayMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [addDayMenuOpen]);
+
+  useEffect(() => {
+    if (!coursePickerOpen) return;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setCoursePickerOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [coursePickerOpen]);
 
   // ▼▼▼▼▼ ensureTmap 호출 방식을 API 키 없이 변경 ▼▼▼▼▼
   useEffect(() => {
@@ -210,6 +242,9 @@ export default function DirectionsMantineImproved() {
       if (!preset) {
         const raw = sessionStorage.getItem("routePreset");
         if (raw) preset = JSON.parse(raw);
+      }
+      if (preset?.personaId !== undefined && preset.personaId !== null) {
+        setPersonaCourseId(preset.personaId);
       }
       if (preset?.stops?.length >= 2) {
         setDays((prev) => {
@@ -540,12 +575,134 @@ export default function DirectionsMantineImproved() {
     }
   };
 
+  const makeDayFromCourse = (course, idx) => {
+    if (!course || !Array.isArray(course.stops)) return null;
+    const stops = course.stops
+      .map((stop) => {
+        const lat = Number(stop?.lat);
+        const lng = Number(stop?.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        return {
+          ...stop,
+          lat,
+          lng,
+        };
+      })
+      .filter(Boolean);
+    if (stops.length < 2) return null;
+
+    const formatAddress = (stop) => {
+      const road =
+        typeof stop?.roadAddress === "string" ? stop.roadAddress.trim() : "";
+      const addr =
+        typeof stop?.address === "string" ? stop.address.trim() : "";
+      return {
+        address: road || addr,
+        roadAddress: road,
+      };
+    };
+
+    const first = stops[0];
+    const last = stops[stops.length - 1];
+    const base = makeEmptyDay(idx);
+
+    const firstAddr = formatAddress(first);
+    const lastAddr = formatAddress(last);
+
+    return {
+      ...base,
+      startLocation: first?.name || "",
+      startCoords: { lat: first.lat, lng: first.lng },
+      startAddress: firstAddr.address,
+      startRoadAddress: firstAddr.roadAddress,
+      endLocation: last?.name || "",
+      endCoords: { lat: last.lat, lng: last.lng },
+      endAddress: lastAddr.address,
+      endRoadAddress: lastAddr.roadAddress,
+      waypoints: stops.slice(1, -1).map((stop) => {
+        const info = formatAddress(stop);
+        return {
+          name: stop?.name || "",
+          lat: stop.lat,
+          lng: stop.lng,
+          address: info.address,
+          roadAddress: info.roadAddress,
+        };
+      }),
+    };
+  };
+
   const addDay = () => {
     setDays((prev) => {
       const next = [...prev, makeEmptyDay(prev.length)];
       setActiveDay(next.length - 1);
       return next;
     });
+  };
+
+  const loadRecommendedCourses = useCallback(async () => {
+    setRecommendedLoading(true);
+    setRecommendedError(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("grouped", "1");
+      if (personaCourseId !== null && personaCourseId !== undefined) {
+        params.set("pid", String(personaCourseId));
+      }
+      const response = await fetch(`/api/persona/courses2?${params.toString()}`, {
+        cache: "no-cache",
+      });
+      if (!response.ok) {
+        throw new Error("추천 코스를 불러오지 못했습니다.");
+      }
+      const data = await response.json();
+      const items = Array.isArray(data?.items) ? data.items : [];
+      setRecommendedCourses(items);
+    } catch (error) {
+      console.error(error);
+      setRecommendedError(
+        error?.message || "추천 코스를 불러오지 못했습니다."
+      );
+    } finally {
+      setRecommendedLoading(false);
+    }
+  }, [personaCourseId]);
+
+  const handleSelectRecommendedCourse = (course) => {
+    if (!course) return;
+    const nextIndex = days.length;
+    const newDay = makeDayFromCourse(course, nextIndex);
+    if (!newDay) {
+      setToast({
+        id: Date.now(),
+        message: "코스 정보를 적용할 수 없습니다.",
+        tone: "error",
+      });
+      return;
+    }
+    if (
+      personaCourseId === null &&
+      course?.personaId !== undefined &&
+      course.personaId !== null
+    ) {
+      setPersonaCourseId(course.personaId);
+    }
+    setDays((prev) => [...prev, newDay]);
+    setActiveDay(nextIndex);
+    setCoursePickerOpen(false);
+    setToast({
+      id: Date.now(),
+      message: `${nextIndex + 1}일차에 추천 코스를 추가했어요.`,
+      tone: "success",
+    });
+  };
+
+  const handleAddRecommendedDay = () => {
+    setAddDayMenuOpen(false);
+    setCoursePickerOpen(true);
+    if (!recommendedCourses.length && !recommendedLoading) {
+      loadRecommendedCourses();
+    }
   };
 
   const removeDay = (idx) => {
@@ -1022,14 +1179,48 @@ export default function DirectionsMantineImproved() {
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={addDay}
-                    className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <div className="relative" ref={addDayMenuRef}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        setAddDayMenuOpen((prev) => !prev)
+                      }
+                      className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600"
+                      aria-label="일차 추가 메뉴"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <AnimatePresence>
+                      {addDayMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                          transition={{ duration: 0.12 }}
+                          className="absolute right-0 top-full z-10 mt-2 w-44 origin-top-right rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              addDay();
+                              setAddDayMenuOpen(false);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                          >
+                            새 일차 추가
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleAddRecommendedDay}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-indigo-600 hover:bg-indigo-50"
+                          >
+                            추천 코스 추가
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
 
@@ -1266,6 +1457,85 @@ export default function DirectionsMantineImproved() {
           )}
         </div>
       </motion.div>
+
+      <AnimatePresence>
+        {coursePickerOpen && (
+          <motion.div
+            key="coursePicker"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur"
+          >
+            <div className="flex items-center justify-between px-5 pt-6 pb-4">
+              <h3 className="text-lg font-semibold text-white">추천 코스 불러오기</h3>
+              <button
+                onClick={() => setCoursePickerOpen(false)}
+                className="rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                aria-label="추천 코스 선택 닫기"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="px-5 pb-4 text-sm text-slate-300">
+              <p>추가하고 싶은 코스를 선택하면 새 일차로 준비됩니다.</p>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 pb-10 space-y-3">
+              {recommendedLoading ? (
+                <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                  추천 코스를 불러오는 중입니다...
+                </div>
+              ) : recommendedError ? (
+                <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-6 text-sm text-rose-100">
+                  <p className="font-semibold">불러오기 실패</p>
+                  <p className="mt-2 text-xs text-rose-100/80">{recommendedError}</p>
+                  <button
+                    type="button"
+                    onClick={loadRecommendedCourses}
+                    className="mt-4 inline-flex items-center justify-center rounded-full border border-rose-300/40 px-4 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-400/20"
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              ) : recommendedCourses.length === 0 ? (
+                <div className="rounded-2xl border border-slate-700 bg-slate-800/70 px-4 py-6 text-center text-sm text-slate-300">
+                  사용할 수 있는 추천 코스가 없습니다.
+                </div>
+              ) : (
+                recommendedCourses.map((course) => {
+                  const stopNames = Array.isArray(course.stops)
+                    ? course.stops
+                        .map((stop) => stop?.name)
+                        .filter(Boolean)
+                    : [];
+                  return (
+                    <button
+                      key={course.key || course.code || course.title}
+                      type="button"
+                      onClick={() => handleSelectRecommendedCourse(course)}
+                      className="w-full rounded-2xl border border-slate-700 bg-slate-800/80 px-4 py-4 text-left shadow-lg transition hover:border-indigo-400 hover:bg-slate-800"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-semibold text-white">
+                          {course.title || (`코스 ${course.code || ""}`).trim()}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {Array.isArray(course.stops) ? `${course.stops.length}곳` : ''}
+                        </span>
+                      </div>
+                      {stopNames.length > 0 && (
+                        <p className="mt-2 text-xs text-slate-400 line-clamp-2">
+                          {stopNames.join(' · ')}
+                        </p>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {searchContext && (
