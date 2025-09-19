@@ -33,15 +33,27 @@ const sanitizeDay = (day) => {
     endRoadAddress: day.endRoadAddress || "",
     waypoints: (day.waypoints || []).map((w) => ({
       name: w?.name || "",
-      lat: w?.lat,
-      lng: w?.lng,
+      lat: typeof w?.lat === "number" ? w.lat : null,
+      lng: typeof w?.lng === "number" ? w.lng : null,
       address: w?.address || "",
       roadAddress: w?.roadAddress || "",
     })),
     priority: day.priority || "RECOMMEND",
     startTime: day.startTime || "09:00",
     stays: Array.isArray(day.stays) ? [...day.stays] : [],
-    timeline: Array.isArray(day.timeline) ? [...day.timeline] : [],
+    timeline: Array.isArray(day.timeline)
+      ? day.timeline.map((step) => ({
+          idx: step?.idx ?? null,
+          name: step?.name || "",
+          arrival: step?.arrival || "",
+          minutes: typeof step?.minutes === "number" ? step.minutes : 0,
+          km: typeof step?.km === "number" ? step.km : 0,
+          lat: typeof step?.lat === "number" ? step.lat : null,
+          lng: typeof step?.lng === "number" ? step.lng : null,
+          address: step?.address || "",
+          roadAddress: step?.roadAddress || "",
+        }))
+      : [],
     summary: day.summary || null,
   };
 };
@@ -68,9 +80,7 @@ export const RoutePlan = {
       items
         .slice()
         .sort(
-          (a, b) =>
-            (b.updatedAt || b.createdAt || 0) -
-            (a.updatedAt || a.createdAt || 0)
+          (a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0)
         )
     );
   },
@@ -85,7 +95,7 @@ export const RoutePlan = {
     const sanitized = sanitizePlan(plan);
     const items = readAll();
     const now = Date.now();
-    let stored;
+    let stored = null;
 
     if (sanitized.id) {
       const idx = items.findIndex((item) => item.id === sanitized.id);
