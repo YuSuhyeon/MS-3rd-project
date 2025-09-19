@@ -69,7 +69,8 @@ export default function DirectionsMantine() {
   const haversine = (a, b) => {
     const R = 6371;
     const toRad = (d) => (d * Math.PI) / 180;
-    const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+    const dLat = toRad(b.lat - a.lat),
+      dLng = toRad(b.lng - a.lng);
     const s =
       Math.sin(dLat / 2) ** 2 +
       Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
@@ -91,17 +92,21 @@ export default function DirectionsMantine() {
         );
         if (typeof opts.radius === "number") options.radius = opts.radius;
       }
-      ps.keywordSearch(name, (data, status) => {
-        if (status === window.kakao.maps.services.Status.OK && data[0]) {
-          resolve({
-            lat: parseFloat(data[0].y),
-            lng: parseFloat(data[0].x),
-            name: data[0].place_name || name,
-          });
-        } else {
-          reject(new Error("not_found"));
-        }
-      }, options);
+      ps.keywordSearch(
+        name,
+        (data, status) => {
+          if (status === window.kakao.maps.services.Status.OK && data[0]) {
+            resolve({
+              lat: parseFloat(data[0].y),
+              lng: parseFloat(data[0].x),
+              name: data[0].place_name || name,
+            });
+          } else {
+            reject(new Error("not_found"));
+          }
+        },
+        options
+      );
     });
 
   const clearMap = () => {
@@ -149,7 +154,8 @@ export default function DirectionsMantine() {
       const a = stops[i];
       const b = stops[i + 1];
       if (
-        a && b &&
+        a &&
+        b &&
         typeof a.lat === "number" &&
         typeof a.lng === "number" &&
         typeof b.lat === "number" &&
@@ -172,7 +178,8 @@ export default function DirectionsMantine() {
     list.forEach((route, idx) => {
       const path = buildPathFromRoute(route);
       if (!path || !path.length) return;
-      const isActive = activeRouteIdx === -1 ? idx === 0 : idx === activeRouteIdx;
+      const isActive =
+        activeRouteIdx === -1 ? idx === 0 : idx === activeRouteIdx;
       if (showOnlyActive && !isActive) return;
       const poly = new window.kakao.maps.Polyline({
         path,
@@ -200,7 +207,9 @@ export default function DirectionsMantine() {
           x: String(stops[stops.length - 1].lng),
           y: String(stops[stops.length - 1].lat),
         },
-        waypoints: stops.slice(1, -1).map((m) => ({ x: String(m.lng), y: String(m.lat) })),
+        waypoints: stops
+          .slice(1, -1)
+          .map((m) => ({ x: String(m.lng), y: String(m.lat) })),
       };
       const r = await fetch("/api/naver/walking", {
         method: "POST",
@@ -237,7 +246,9 @@ export default function DirectionsMantine() {
       const payload = {
         origin: { x: String(start.lng), y: String(start.lat) },
         destination: { x: String(end.lng), y: String(end.lat) },
-        waypoints: mids.slice(0, 10).map((m) => ({ x: String(m.lng), y: String(m.lat) })),
+        waypoints: mids
+          .slice(0, 10)
+          .map((m) => ({ x: String(m.lng), y: String(m.lat) })),
         priority: "RECOMMEND",
         multi: true,
       };
@@ -256,9 +267,16 @@ export default function DirectionsMantine() {
       // 3) Legend (unified style)
       const legend = (j.routes || []).slice(0, 3).map((rt, idx) => {
         const p = rt?.__priority;
-        const base = p === "DISTANCE" ? "최단거리" : p === "FAST" ? "빠른길" : "추천";
-        const km = rt?.summary && typeof rt.summary.distance === "number" ? rt.summary.distance / 1000 : 0;
-        const min = rt?.summary && typeof rt.summary.duration === "number" ? Math.round(rt.summary.duration / 60) : 0;
+        const base =
+          p === "DISTANCE" ? "최단거리" : p === "FAST" ? "빠른길" : "추천";
+        const km =
+          rt?.summary && typeof rt.summary.distance === "number"
+            ? rt.summary.distance / 1000
+            : 0;
+        const min =
+          rt?.summary && typeof rt.summary.duration === "number"
+            ? Math.round(rt.summary.duration / 60)
+            : 0;
         const label = base + (km ? ` · ${km.toFixed(1)}km · ${min}분` : "");
         return { color: ROUTE_COLORS[idx % ROUTE_COLORS.length], label };
       });
@@ -274,9 +292,14 @@ export default function DirectionsMantine() {
         // 4-1) Re-geocode with region bias (average center)
         let center = null;
         try {
-          const all = stops.filter((s) => typeof s.lat === "number" && typeof s.lng === "number");
+          const all = stops.filter(
+            (s) => typeof s.lat === "number" && typeof s.lng === "number"
+          );
           if (all.length) {
-            const avg = all.reduce((acc, s) => ({ lat: acc.lat + s.lat, lng: acc.lng + s.lng }), { lat: 0, lng: 0 });
+            const avg = all.reduce(
+              (acc, s) => ({ lat: acc.lat + s.lat, lng: acc.lng + s.lng }),
+              { lat: 0, lng: 0 }
+            );
             center = { lat: avg.lat / all.length, lng: avg.lng / all.length };
           }
         } catch {}
@@ -287,13 +310,17 @@ export default function DirectionsMantine() {
             const m2 = [];
             for (const w of waypoints) {
               if (!w?.name) continue;
-              try { m2.push(await geocode(w.name, { center, radius: 20000 })); } catch {}
+              try {
+                m2.push(await geocode(w.name, { center, radius: 20000 }));
+              } catch {}
             }
             lastStopsRef.current = [s2, ...m2, e2];
             const payload2 = {
               origin: { x: String(s2.lng), y: String(s2.lat) },
               destination: { x: String(e2.lng), y: String(e2.lat) },
-              waypoints: m2.slice(0, 10).map((m) => ({ x: String(m.lng), y: String(m.lat) })),
+              waypoints: m2
+                .slice(0, 10)
+                .map((m) => ({ x: String(m.lng), y: String(m.lat) })),
               priority: "RECOMMEND",
               multi: true,
             };
@@ -331,7 +358,8 @@ export default function DirectionsMantine() {
       const steps = [];
       for (let i = 0; i < lastStopsRef.current.length; i++) {
         const cur = lastStopsRef.current[i];
-        let km = 0, minutes = 0;
+        let km = 0,
+          minutes = 0;
         if (i > 0 && sections[i - 1]?.summary) {
           const dist = sections[i - 1].summary.distance || 0;
           const dur = sections[i - 1].summary.duration || 0;
@@ -417,13 +445,18 @@ export default function DirectionsMantine() {
                     />
                     <Button
                       variant="outline"
-                      onClick={() => setWaypoints(waypoints.filter((_, idx) => idx !== i))}
+                      onClick={() =>
+                        setWaypoints(waypoints.filter((_, idx) => idx !== i))
+                      }
                     >
                       삭제
                     </Button>
                   </div>
                 ))}
-                <Button variant="outline" onClick={() => setWaypoints([...waypoints, { name: "" }])}>
+                <Button
+                  variant="outline"
+                  onClick={() => setWaypoints([...waypoints, { name: "" }])}
+                >
                   경유지 추가
                 </Button>
               </div>
@@ -441,11 +474,17 @@ export default function DirectionsMantine() {
                           type="button"
                           onClick={() => {
                             setActiveRouteIdx(idx);
-                            if (lastRoutesRef.current) drawPolylines(lastRoutesRef.current);
+                            if (lastRoutesRef.current)
+                              drawPolylines(lastRoutesRef.current);
                           }}
-                          className={`flex items-center gap-1 ${activeRouteIdx === idx ? "font-semibold" : ""}`}
+                          className={`flex items-center gap-1 ${
+                            activeRouteIdx === idx ? "font-semibold" : ""
+                          }`}
                         >
-                          <span style={{ background: it.color }} className="inline-block w-3 h-3 rounded-full border" />
+                          <span
+                            style={{ background: it.color }}
+                            className="inline-block w-3 h-3 rounded-full border"
+                          />
                           <span>{it.label}</span>
                         </button>
                       ))}
@@ -455,7 +494,8 @@ export default function DirectionsMantine() {
                           checked={showOnlyActive}
                           onChange={(e) => {
                             setShowOnlyActive(e.target.checked);
-                            if (lastRoutesRef.current) drawPolylines(lastRoutesRef.current);
+                            if (lastRoutesRef.current)
+                              drawPolylines(lastRoutesRef.current);
                           }}
                         />
                         <span>선택 경로만 표시</span>
@@ -463,7 +503,10 @@ export default function DirectionsMantine() {
                     </div>
                   </div>
                 )}
-                <div ref={mapElRef} className="w-full h-full rounded-2xl border" />
+                <div
+                  ref={mapElRef}
+                  className="w-full h-full rounded-2xl border"
+                />
               </div>
 
               <div className="lg:col-span-2">
@@ -474,19 +517,27 @@ export default function DirectionsMantine() {
                   <CardContent>
                     {summary && (
                       <div className="text-sm text-slate-600 mb-2">
-                        총 {summary.distance?.toFixed?.(1) || 0} km · {summary.duration || 0} 분
+                        총 {summary.distance?.toFixed?.(1) || 0} km ·{" "}
+                        {summary.duration || 0} 분
                       </div>
                     )}
                     <ol className="space-y-2 text-sm">
                       {timeline.map((s) => (
-                        <li key={s.idx} className="p-2 rounded-xl border bg-white flex items-start gap-3">
+                        <li
+                          key={s.idx}
+                          className="p-2 rounded-xl border bg-white flex items-start gap-3"
+                        >
                           <div className="w-7 h-7 rounded-lg bg-slate-100 grid place-items-center font-bold text-slate-700">
                             {s.idx}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-slate-900 truncate">{s.name}</div>
+                            <div className="font-semibold text-slate-900 truncate">
+                              {s.name}
+                            </div>
                             {s.idx > 1 && (
-                              <div className="text-slate-500">약 {s.km.toFixed(1)} km · {s.minutes} 분</div>
+                              <div className="text-slate-500">
+                                약 {s.km.toFixed(1)} km · {s.minutes} 분
+                              </div>
                             )}
                           </div>
                         </li>
@@ -502,4 +553,3 @@ export default function DirectionsMantine() {
     </div>
   );
 }
-

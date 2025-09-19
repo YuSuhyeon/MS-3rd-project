@@ -275,11 +275,11 @@ const FixedChatbot = ({
   useEffect(() => {
     // 언어가 바뀌면 초기 메시지만 새 언어로 업데이트 (기존 대화 내용 유지)
     setMessages((prev) => {
-      const hasInitialMessage = prev.some(msg => msg.id === "initial");
+      const hasInitialMessage = prev.some((msg) => msg.id === "initial");
       if (hasInitialMessage) {
         // 초기 메시지만 새 언어로 업데이트
-        return prev.map(msg => 
-          msg.id === "initial" 
+        return prev.map((msg) =>
+          msg.id === "initial"
             ? { ...msg, content: ui.chatbotInitialMessage }
             : msg
         );
@@ -292,7 +292,7 @@ const FixedChatbot = ({
             content: ui.chatbotInitialMessage,
             timestamp: new Date(),
           },
-          ...prev
+          ...prev,
         ];
       }
     });
@@ -553,10 +553,14 @@ const FixedChatbot = ({
           "이 이미지의 장소에 대해 알려주세요. 관광 정보를 제공해 주세요.";
         const ragResponse = await callApi(fallbackQuery);
 
-        const fallbackMessage = selectedLang === "ko" 
-          ? "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?"
-          : await translateText("대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?", selectedLang);
-        
+        const fallbackMessage =
+          selectedLang === "ko"
+            ? "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?"
+            : await translateText(
+                "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?",
+                selectedLang
+              );
+
         setMessages((prev) => [
           ...prev,
           {
@@ -579,10 +583,14 @@ const FixedChatbot = ({
           .slice(0, 3)
           .map((d) => `${d.label}(${prettyPct(d.conf)})`)
           .join(", ");
-        const unsupportedMessage = selectedLang === "ko" 
-          ? `지원 라벨만 제공 중입니다.\n감지: ${tops}`
-          : await translateText(`지원 라벨만 제공 중입니다.\n감지: ${tops}`, selectedLang);
-        
+        const unsupportedMessage =
+          selectedLang === "ko"
+            ? `지원 라벨만 제공 중입니다.\n감지: ${tops}`
+            : await translateText(
+                `지원 라벨만 제공 중입니다.\n감지: ${tops}`,
+                selectedLang
+              );
+
         setMessages((prev) => [
           ...prev,
           {
@@ -611,9 +619,10 @@ const FixedChatbot = ({
       const ragResponse = await callApi(ragQuery); // callTourismAPI 사용
 
       // 6) 선택된 언어로 번역
-      const translatedResponse = selectedLang === "ko" 
-        ? ragResponse 
-        : await translateText(ragResponse, selectedLang);
+      const translatedResponse =
+        selectedLang === "ko"
+          ? ragResponse
+          : await translateText(ragResponse, selectedLang);
 
       setMessages((prev) => [
         ...prev,
@@ -626,10 +635,14 @@ const FixedChatbot = ({
       ]);
     } catch (err) {
       console.error(err);
-      const errorMessage = selectedLang === "ko" 
-        ? `오류가 발생했어요: ${String(err?.message || err)}`
-        : await translateText(`오류가 발생했어요: ${String(err?.message || err)}`, selectedLang);
-      
+      const errorMessage =
+        selectedLang === "ko"
+          ? `오류가 발생했어요: ${String(err?.message || err)}`
+          : await translateText(
+              `오류가 발생했어요: ${String(err?.message || err)}`,
+              selectedLang
+            );
+
       setMessages((prev) => [
         ...prev,
         {
@@ -666,7 +679,9 @@ const FixedChatbot = ({
       "h-full";
   // const inChatHeight = "h-full";
   return (
-    <div className={`${chatHeight} w-full bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-lg border-t border-purple-500/30`}>
+    <div
+      className={`${chatHeight} w-full bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-lg border-t border-purple-500/30`}
+    >
       <div
         className={`flex flex-col ${chatHeight}  p-4 transition-all duration-300`}
       >
@@ -689,7 +704,9 @@ const FixedChatbot = ({
                   </div>
                 )}
                 <div
-                  className={`${isMobile ? "max-w-[70%]" : "max-w-[60%]"} rounded-2xl px-4 py-2.5 ${
+                  className={`${
+                    isMobile ? "max-w-[70%]" : "max-w-[60%]"
+                  } rounded-2xl px-4 py-2.5 ${
                     message.type === "user"
                       ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25"
                       : "bg-gradient-to-r from-gray-800/80 to-gray-900/90 text-white border border-gray-600/30"
@@ -702,8 +719,8 @@ const FixedChatbot = ({
                           src={attachment.url}
                           alt={attachment.caption}
                           className={`rounded-lg border border-purple-500/30 ${
-                            isMobile 
-                              ? "max-w-32 h-auto ml-auto" 
+                            isMobile
+                              ? "max-w-32 h-auto ml-auto"
                               : "max-w-48 h-auto"
                           }`}
                         />
@@ -1115,7 +1132,7 @@ export default function DocentMantine() {
   // 카테고리 버튼 – pill
   const CategoryBar = ({ ui, category, setCategory }) => (
     <div className="bg-gray-900/80 backdrop-blur-lg border-b border-purple-500/30 px-4 py-3">
-      <div className={`flex flex-wrap ${isMobile ? 'gap-1' : 'gap-2'}`}>
+      <div className={`flex flex-wrap ${isMobile ? "gap-1" : "gap-2"}`}>
         {CATEGORY_OPTIONS.map((key) => (
           <NeonButton
             key={key}
@@ -1123,13 +1140,17 @@ export default function DocentMantine() {
             variant={category === key ? "primary" : "outline"}
             onClick={() => setCategory(key)}
             className={`rounded-full transition-all duration-300 ${
-              isMobile 
-                ? `px-2 py-1 text-xs ${category === key
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
-                    : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"}`
-                : `px-4 py-2 text-sm ${category === key
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
-                    : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"}`
+              isMobile
+                ? `px-2 py-1 text-xs ${
+                    category === key
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
+                      : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"
+                  }`
+                : `px-4 py-2 text-sm ${
+                    category === key
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
+                      : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"
+                  }`
             }`}
           >
             {ui?.categories?.[key] || key}
@@ -1203,7 +1224,9 @@ export default function DocentMantine() {
           <div className="flex-1 flex flex-col min-h-0">
             {/* 지도 */}
             <div
-              className={`${selectedPOI ? 'h-1/2' : 'h-1/3'} flex-shrink-0 border border-purple-500/20 rounded-lg m-2 overflow-hidden relative z-20 transition-all duration-500 ease-in-out`}
+              className={`${
+                selectedPOI ? "h-1/2" : "h-1/3"
+              } flex-shrink-0 border border-purple-500/20 rounded-lg m-2 overflow-hidden relative z-20 transition-all duration-500 ease-in-out`}
               style={{ pointerEvents: "auto", touchAction: "none" }}
             >
               <LocationMap
@@ -1221,14 +1244,18 @@ export default function DocentMantine() {
               <NeonCardJHMobile className="m-2 ">
                 <div className="p-3 pb-1 flex flex-col h-full">
                   <h3 className="text-lg font-semibold text-white mb-3 flex-shrink-0">
-                    {category === "all" ? "전체 관광지" : ui?.categories?.[category] || category}
+                    {category === "all"
+                      ? "전체 관광지"
+                      : ui?.categories?.[category] || category}
                   </h3>
                   <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
                     {selectedPOI ? (
                       <POIDetails
                         poi={{ ...selectedPOI, description: translatedDesc }}
                         userLocation={userLocation}
-                        onPlayTTS={() => speakText(translatedDesc, selectedLang)}
+                        onPlayTTS={() =>
+                          speakText(translatedDesc, selectedLang)
+                        }
                         isDocentActive={isDocentActive}
                       />
                     ) : (
@@ -1381,7 +1408,7 @@ export default function DocentMantine() {
 
             {/* 중앙 지도 */}
             <div className="w-1/2 relative min-w-0 min-h-0 m-3">
-              <div 
+              <div
                 className="absolute inset-0 rounded-2xl overflow-hidden border border-purple-500/20 kakao-map-theme"
                 style={{ pointerEvents: "auto" }}
               >

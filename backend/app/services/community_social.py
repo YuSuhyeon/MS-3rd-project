@@ -26,62 +26,10 @@ class BoardService:
             print(f"데이터베이스 연결 오류: {e}")
             return None
         
-    
-    def toggle_like(self, board_id, user_id):
-        connection = None
-        try:
-            connection = self.get_connection()
-            if not connection:
-                return {'success': False, 'error': '데이터베이스 연결 실패'}
-            
-            connection.start_transaction()
-            cursor = connection.cursor(dictionary=True)
-            
-            # 현재 좋아요 상태 확인
-            check_query = "SELECT * FROM likes WHERE user_id = %s AND board_id = %s"
-            cursor.execute(check_query, (user_id, board_id))
-            existing_like = cursor.fetchone()
-            
-            if existing_like:
-                # 좋아요 취소
-                delete_query = "DELETE FROM likes WHERE user_id = %s AND board_id = %s"
-                cursor.execute(delete_query, (user_id, board_id))
-                is_liked = False
-            else:
-                # 좋아요 추가
-                insert_query = "INSERT INTO likes (user_id, board_id) VALUES (%s, %s)"
-                cursor.execute(insert_query, (user_id, board_id))
-                is_liked = True
-            
-            # 업데이트된 좋아요 수 조회 (트리거가 자동으로 업데이트할 예정)
-            count_query = "SELECT likes_count FROM boards WHERE id = %s"
-            cursor.execute(count_query, (board_id,))
-            result = cursor.fetchone()
-            likes_count = result['likes_count'] if result else 0
-            
-            connection.commit()
-            
-            return {
-                'success': True,
-                'likes_count': likes_count,
-                'is_liked': is_liked
-            }
-            
-        except Error as e:
-            if connection:
-                connection.rollback()
-            print(f"좋아요 토글 중 오류: {e}")
-            return {'success': False, 'error': str(e)}
-        finally:
-            if connection and connection.is_connected():
-                cursor.close()
-                connection.close()
-    
+ #=============================================================================== 
+    #게시글 작성
     def create_post(self, user_id, title, content, images=None):
-        """
-        새로운 게시글을 작성합니다.
-        기존 DB 스키마에 맞춰 title이 필수입니다.
-        """
+  
         connection = None
         try:
             connection = self.get_connection()
@@ -126,11 +74,8 @@ class BoardService:
                 cursor.close()
                 connection.close()
                 
-                
+    #게시글 수정          
     def update_post(self, board_id, user_id, title, content):
-        """
-        게시글을 수정합니다.
-        """
         connection = None
         try:
             connection = self.get_connection()
@@ -171,147 +116,9 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-# =================================================================
-# 특정 게시글의 댓글 목록 
-# =================================================================    
-    def get_comments(self, board_id):
-        connection = None
-        try:
-            connection = self.get_connection()
-            if not connection:
-                return {'success': False, 'error': '데이터베이스 연결 실패'}
-            
-            cursor = connection.cursor(dictionary=True)
-            
-            query = """
-                SELECT 
-                    c.id AS comment_id,
-                    c.content,
-                    c.created_at,
-                    u.name AS user_name,
-                    u.profile_image AS user_profile_image
-                FROM comments c
-                JOIN users u ON c.user_id = u.id
-                WHERE c.board_id = %s AND c.deleted_at IS NULL
-                ORDER BY c.created_at ASC
-            """
-            
-            cursor.execute(query, (board_id,))
-            comments = cursor.fetchall()
-            
-            return {
-                'success': True,
-                'comments': comments
-            }
-            
-        except Error as e:
-            print(f"댓글 조회 중 오류: {e}")
-            return {'success': False, 'error': str(e)}
-        finally:
-            if connection and connection.is_connected():
-                cursor.close()
-                connection.close()
-# =================================================================
-# 댓글 Create
-# =================================================================      
-    def create_comment(self, board_id, user_id, content):
-        connection = None
-        try:
-            connection = self.get_connection()
-            if not connection:
-                return {'success': False, 'error': '데이터베이스 연결 실패'}
-            
-            cursor = connection.cursor()
-            
-            query = """
-                INSERT INTO comments (board_id, user_id, content) 
-                VALUES (%s, %s, %s)
-            """
-            cursor.execute(query, (board_id, user_id, content))
-            connection.commit()
-            
-            comment_id = cursor.lastrowid
-            
-            return {
-                'success': True,
-                'comment_id': comment_id,
-                'message': '댓글이 성공적으로 작성되었습니다'
-            }
-            
-        except Error as e:
-            print(f"댓글 작성 중 오류: {e}")
-            return {'success': False, 'error': str(e)}
-        finally:
-            if connection and connection.is_connected():
-                cursor.close()
-                connection.close()
-# =================================================================
-# 특정 사용자의 게시글 목록
-# =================================================================         
-    def get_user_posts(self, user_id, page=1, limit=10):
-        connection = None
-        try:
-            connection = self.get_connection()
-            if not connection:
-                return {'success': False, 'error': '데이터베이스 연결 실패'}
-            
-            cursor = connection.cursor(dictionary=True)
-            offset = (page - 1) * limit
-            
-            query = """
-                SELECT 
-                    b.id AS board_id,
-                    b.title,
-                    b.content,
-                    b.likes_count,
-                    b.comments_count,
-                    b.created_at,
-                    b.updated_at,
-                    u.name AS user_name,
-                    u.profile_image AS user_profile_image
-                FROM boards b
-                JOIN users u ON b.user_id = u.id
-                WHERE b.user_id = %s AND b.deleted_at IS NULL
-                ORDER BY b.created_at DESC
-                LIMIT %s OFFSET %s
-            """
-            
-            cursor.execute(query, (user_id, limit, offset))
-            posts = cursor.fetchall()
-            
-            # 각 게시글의 이미지들을 별도로 조회
-            for post in posts:
-                picture_query = """
-                    SELECT image_url 
-                    FROM pictures 
-                    WHERE board_id = %s 
-                    ORDER BY sort_order
-                """
-                cursor.execute(picture_query, (post['board_id'],))
-                pictures = cursor.fetchall()
-                post['pictures'] = [pic['image_url'] for pic in pictures]
-                post['tags'] = []  # 태그 정보는 별도 처리 필요시 추가
-            
-            return {
-                'success': True,
-                'posts': posts,
-                'pagination': {
-                    'page': page,
-                    'limit': limit,
-                    'has_more': len(posts) == limit
-                }
-            }
-            
-        except Error as e:
-            print(f"사용자 게시글 조회 중 오류: {e}")
-            return {'success': False, 'error': str(e)}
-        finally:
-            if connection and connection.is_connected():
-                cursor.close()
-                connection.close()
-# =================================================================
-# 게시글 delete -> 실제 삭제가 아닌 deleted_at 컬럼에 삭제 시간 기록)
-# =================================================================          
+                
+
+# 게시글 delete -> 실제 삭제가 아닌 deleted_at 컬럼에 삭제 시간 기록)   
     def delete_post(self, board_id, user_id):
         connection = None
         try:
@@ -354,8 +161,7 @@ class BoardService:
                 cursor.close()
                 connection.close()
 # =================================================================
-# 소셜 로그인 정보로 user 조회
-# =================================================================   
+# 소셜 로그인 정보로 user 조회 
     def get_user_by_social(self, provider, social_id):
         connection = None
         try:
@@ -392,9 +198,8 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-# =================================================================
+                
 #   새로운 사용자를 생성하거나 기존 사용자 정보를 업데이트
-# =================================================================   
     def create_or_update_user(self, provider, social_id, email, name, profile_image=None):
 
         connection = None
@@ -512,11 +317,9 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-            
+
+#로그인한 사용자 정보 조회           
     def get_user_by_id(self, user_id):
-        """
-        사용자 ID로 사용자 정보를 조회합니다.
-        """
         connection = None
         try:
             connection = self.get_connection()
@@ -547,11 +350,73 @@ class BoardService:
                 cursor.close()
                 connection.close()
 
+#특정 사용자의 게시글 목록 
+    def get_user_posts(self, user_id, page=1, limit=10):
+        connection = None
+        try:
+            connection = self.get_connection()
+            if not connection:
+                return {'success': False, 'error': '데이터베이스 연결 실패'}
+            
+            cursor = connection.cursor(dictionary=True)
+            offset = (page - 1) * limit
+            
+            query = """
+                SELECT 
+                    b.id AS board_id,
+                    b.title,
+                    b.content,
+                    b.likes_count,
+                    b.comments_count,
+                    b.created_at,
+                    b.updated_at,
+                    u.name AS user_name,
+                    u.profile_image AS user_profile_image
+                FROM boards b
+                JOIN users u ON b.user_id = u.id
+                WHERE b.user_id = %s AND b.deleted_at IS NULL
+                ORDER BY b.created_at DESC
+                LIMIT %s OFFSET %s
+            """
+            
+            cursor.execute(query, (user_id, limit, offset))
+            posts = cursor.fetchall()
+            
+            # 각 게시글의 이미지들을 별도로 조회
+            for post in posts:
+                picture_query = """
+                    SELECT image_url 
+                    FROM pictures 
+                    WHERE board_id = %s 
+                    ORDER BY sort_order
+                """
+                cursor.execute(picture_query, (post['board_id'],))
+                pictures = cursor.fetchall()
+                post['pictures'] = [pic['image_url'] for pic in pictures]
+                post['tags'] = []  # 태그 정보는 별도 처리 필요시 추가
+            
+            return {
+                'success': True,
+                'posts': posts,
+                'pagination': {
+                    'page': page,
+                    'limit': limit,
+                    'has_more': len(posts) == limit
+                }
+            }
+            
+        except Error as e:
+            print(f"사용자 게시글 조회 중 오류: {e}")
+            return {'success': False, 'error': str(e)}
+        finally:
+            if connection and connection.is_connected():
+                cursor.close()
+                connection.close()
+                
+#==============================================================                
 # 게시글 목록 조회 (태그 포함)
     def get_posts(self, page=1, limit=10, user_id=None):
-        """
-        게시글 목록 조회 (태그 포함)
-        """
+
         connection = None
         try:
             connection = self.get_connection()
@@ -667,12 +532,8 @@ class BoardService:
                 cursor.close()
                 connection.close()
 
-                
-                
-                
-                            
+#인기 태그                                 
     def get_trending_tags(self, limit=5):
-        """인기 태그 조회"""
         connection = None
         try:
             connection = self.get_connection()
@@ -680,14 +541,12 @@ class BoardService:
                 return {'success': False, 'error': 'DB 연결 실패'}
             
             cursor = connection.cursor(dictionary=True)
-            
-            # VIEW가 있으면 사용, 없으면 직접 쿼리
+        
             try:
                 query = "SELECT tag, count FROM v_trending_tags LIMIT %s"
                 cursor.execute(query, (limit,))
                 tags = cursor.fetchall()
             except:
-                # VIEW가 없으면 직접 쿼리
                 query = """
                     SELECT 
                         t.name as tag,
@@ -713,8 +572,8 @@ class BoardService:
                 cursor.close()
                 connection.close()
 
+#인기 게시글 조회
     def get_trending_posts(self, limit=5):
-        """인기 게시글 조회"""
         connection = None
         try:
             connection = self.get_connection()
@@ -751,8 +610,9 @@ class BoardService:
                 cursor.close()
                 connection.close()
 
+#===============================================================================
+#특정 태그의 게시글 조회 
     def get_posts_by_tag(self, tag_name, page=1, limit=10):
-        """특정 태그의 게시글 조회"""
         connection = None
         try:
             connection = self.get_connection()
@@ -786,11 +646,10 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-                
+                          
+# 게시글 상세 정보 조회              
     def get_post_detail(self, board_id, current_user_id=None):
-        """
-        게시글의 상세 정보를 조회합니다. (현재 사용자 권한 정보 포함)
-        """
+
         connection = None
         try:
             connection = self.get_connection()
@@ -909,11 +768,9 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-                        
+   
+   #게시글 검색                     
     def search_posts(self, query, page=1, limit=10, user_id=None, filters=None):
-        """
-        게시글 검색 기능
-        """
         connection = None
         try:
             connection = self.get_connection()
@@ -991,9 +848,9 @@ class BoardService:
                 'success': True,
                 'posts': posts,
                 'pagination': {
-                    'page': page,
-                    'limit': limit,
-                    'has_more': len(posts) == limit
+                'page': page,
+                'limit': limit,
+                'has_more': len(posts) == limit
                 }
             }
             
@@ -1004,13 +861,48 @@ class BoardService:
             if connection and connection.is_connected():
                 cursor.close()
                 connection.close()
-                
-    
-
-    def create_comment(self, board_id, user_id, content):
+   
+#===========================================================================================                
+ #선택한 게시글의 댓글 확인   
+    def get_comments(self, board_id):
+        connection = None
+        try:
+            connection = self.get_connection()
+            if not connection:
+                return {'success': False, 'error': '데이터베이스 연결 실패'}
+            
+            cursor = connection.cursor(dictionary=True)
+            
+            query = """
+                SELECT 
+                    c.id AS comment_id,
+                    c.content,
+                    c.created_at,
+                    u.name AS user_name,
+                    u.profile_image AS user_profile_image
+                FROM comments c
+                JOIN users u ON c.user_id = u.id
+                WHERE c.board_id = %s AND c.deleted_at IS NULL
+                ORDER BY c.created_at ASC
             """
-            댓글을 작성합니다. (작성된 댓글 정보 반환)
-            """
+            
+            cursor.execute(query, (board_id,))
+            comments = cursor.fetchall()
+            
+            return {
+                'success': True,
+                'comments': comments
+            }
+            
+        except Error as e:
+            print(f"댓글 조회 중 오류: {e}")
+            return {'success': False, 'error': str(e)}
+        finally:
+            if connection and connection.is_connected():
+                cursor.close()
+                connection.close()
+#댓글 작성
+    def create_comment(self, board_id, user_id, content):            
             connection = None
             try:
                 connection = self.get_connection()
@@ -1079,11 +971,9 @@ class BoardService:
                 if connection and connection.is_connected():
                     cursor.close()
                     connection.close()
-
+#댓글 수정
     def update_comment(self, comment_id, user_id, content):
-            """
-            댓글을 수정합니다.
-            """
+
             connection = None
             try:
                 connection = self.get_connection()
@@ -1152,11 +1042,9 @@ class BoardService:
                 if connection and connection.is_connected():
                     cursor.close()
                     connection.close()
-
+#댓글 삭제 
     def delete_comment(self, comment_id, user_id):
-            """
-            댓글을 삭제합니다. (소프트 삭제)
-            """
+
             connection = None
             try:
                 connection = self.get_connection()
@@ -1216,4 +1104,170 @@ class BoardService:
             finally:
                 if connection and connection.is_connected():
                     cursor.close()
-                    connection.close()               
+                    connection.close()             
+                    
+                    
+#========================================
+#Likes 기능 
+
+# =================================================================
+# 좋아요 기능 (REST API 설계 원칙에 따라 분리)
+# =================================================================
+
+#좋아요 상태 조회
+def get_like_status(self, board_id, user_id):
+    connection = None
+    try:
+        connection = self.get_connection()
+        if not connection:
+            return {'success': False, 'error': '데이터베이스 연결 실패'}
+        
+        cursor = connection.cursor(dictionary=True)
+        
+        # 게시글 존재 여부와 좋아요 수 확인
+        board_query = "SELECT likes_count FROM boards WHERE id = %s AND deleted_at IS NULL"
+        cursor.execute(board_query, (board_id,))
+        board = cursor.fetchone()
+        
+        if not board:
+            return {'success': False, 'error': '존재하지 않는 게시글입니다'}
+        
+        # 현재 사용자의 좋아요 상태 확인
+        like_query = "SELECT 1 FROM likes WHERE board_id = %s AND user_id = %s"
+        cursor.execute(like_query, (board_id, user_id))
+        is_liked = cursor.fetchone() is not None
+        
+        return {
+            'success': True,
+            'is_liked': is_liked,
+            'likes_count': board['likes_count']
+        }
+        
+    except Error as e:
+        print(f"좋아요 상태 조회 중 오류: {e}")
+        return {'success': False, 'error': str(e)}
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+                    
+#좋아요 생성
+def add_like(self, board_id, user_id):
+
+    connection = None
+    try:
+        connection = self.get_connection()
+        if not connection:
+            return {'success': False, 'error': '데이터베이스 연결 실패'}
+        
+        connection.start_transaction()
+        cursor = connection.cursor(dictionary=True)
+        
+        # 게시글 존재 여부 확인
+        check_board_query = "SELECT id FROM boards WHERE id = %s AND deleted_at IS NULL"
+        cursor.execute(check_board_query, (board_id,))
+        if not cursor.fetchone():
+            return {'success': False, 'error': '존재하지 않는 게시글입니다'}
+        
+        # 이미 좋아요가 있는지 확인
+        check_like_query = "SELECT 1 FROM likes WHERE board_id = %s AND user_id = %s"
+        cursor.execute(check_like_query, (board_id, user_id))
+        if cursor.fetchone():
+            return {'success': False, 'error': '이미 좋아요를 누르셨습니다'}
+        
+        # 좋아요 추가
+        insert_query = "INSERT INTO likes (board_id, user_id) VALUES (%s, %s)"
+        cursor.execute(insert_query, (board_id, user_id))
+        
+        # 게시글의 좋아요 수 업데이트 
+        update_query = """
+            UPDATE boards 
+            SET likes_count = (
+                SELECT COUNT(*) FROM likes WHERE board_id = %s
+            ) 
+            WHERE id = %s
+        """
+        cursor.execute(update_query, (board_id, board_id))
+        
+        # 현재 좋아요 수 조회
+        cursor.execute("SELECT likes_count FROM boards WHERE id = %s", (board_id,))
+        likes_count = cursor.fetchone()['likes_count']
+        
+        connection.commit()
+        
+        return {
+            'success': True,
+            'likes_count': likes_count,
+            'message': '좋아요를 추가했습니다'
+        }
+        
+    except Error as e:
+        if connection:
+            connection.rollback()
+        print(f"좋아요 추가 중 오류: {e}")
+        return {'success': False, 'error': str(e)}
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+#좋아요 delete
+def remove_like(self, board_id, user_id):
+    connection = None
+    try:
+        connection = self.get_connection()
+        if not connection:
+            return {'success': False, 'error': '데이터베이스 연결 실패'}
+        
+        connection.start_transaction()
+        cursor = connection.cursor(dictionary=True)
+        
+        # 게시글 존재 여부 확인
+        check_board_query = "SELECT id FROM boards WHERE id = %s AND deleted_at IS NULL"
+        cursor.execute(check_board_query, (board_id,))
+        if not cursor.fetchone():
+            return {'success': False, 'error': '존재하지 않는 게시글입니다'}
+        
+        # 좋아요가 있는지 확인
+        check_like_query = "SELECT 1 FROM likes WHERE board_id = %s AND user_id = %s"
+        cursor.execute(check_like_query, (board_id, user_id))
+        if not cursor.fetchone():
+            return {'success': False, 'error': '좋아요를 누르지 않으셨습니다'}
+        
+        # 좋아요 삭제
+        delete_query = "DELETE FROM likes WHERE board_id = %s AND user_id = %s"
+        cursor.execute(delete_query, (board_id, user_id))
+        
+        # 게시글의 좋아요 수 업데이트 
+        update_query = """
+            UPDATE boards 
+            SET likes_count = (
+                SELECT COUNT(*) FROM likes WHERE board_id = %s
+            ) 
+            WHERE id = %s
+        """
+        cursor.execute(update_query, (board_id, board_id))
+        
+        # 현재 좋아요 수 조회
+        cursor.execute("SELECT likes_count FROM boards WHERE id = %s", (board_id,))
+        likes_count = cursor.fetchone()['likes_count']
+        
+        connection.commit()
+        
+        return {
+            'success': True,
+            'likes_count': likes_count,
+            'message': '좋아요를 취소했습니다'
+        }
+        
+    except Error as e:  
+        if connection:
+            connection.rollback()
+        print(f"좋아요 취소 중 오류: {e}")
+        return {'success': False, 'error': str(e)}
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()

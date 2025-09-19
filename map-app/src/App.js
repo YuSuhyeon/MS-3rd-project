@@ -49,6 +49,7 @@ function AppRoutes() {
               <Route path="/visionocr" element={<VisionOCR />} />
               <Route path="/vision" element={<DocentVision />} />
               <Route path="/tour" element={<Tour />} />
+              <Route path="/social" element={<CommunitySocial />} />
               <Route path="/tour/:id" element={<TourDetail />} />
               <Route path="/mypage" element={<Mypage />} />
               <Route
