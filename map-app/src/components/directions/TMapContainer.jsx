@@ -1,5 +1,7 @@
+// components/directions/TMapContainer.jsx
+
 import React, { useEffect, useRef } from "react";
-import { ensureTmap } from "integrations/tmapLoader";
+import ensureTmap from "integrations/tmapLoader";
 
 /**
  * T Map 지도 컨테이너
@@ -13,46 +15,54 @@ export default function TMapContainer({ stops = [], path = [] }) {
   const apiRef = useRef(null);
   const overlaysRef = useRef({ markers: [], polylines: [] });
 
+  // 지도 초기화 useEffect
   useEffect(() => {
     let cancelled = false;
-    const overrideKey =
-      (typeof process !== 'undefined' && process.env && process.env.REACT_APP_TMAP_APP_KEY) ||
-      (typeof window !== 'undefined' && window.REACT_APP_TMAP_APP_KEY) ||
-      undefined;
-    ensureTmap(overrideKey).then((Tmapv2) => {
-      if (cancelled || !containerRef.current) return;
-      if (!Tmapv2) return; // API not ready, skip
-      const waitReady = () =>
-        typeof Tmapv2?.Map === 'function' && typeof Tmapv2?.LatLng === 'function';
-      let tries = 0;
-      const tick = () => {
-        if (cancelled) return;
-        if (waitReady()) {
-          const center = new Tmapv2.LatLng(37.5665, 126.9780);
-          const map = new Tmapv2.Map(containerRef.current, { center, zoom: 14 });
-          mapRef.current = map;
-          apiRef.current = Tmapv2;
-        } else if (tries++ < 100) {
-          setTimeout(tick, 100);
+
+    // ensureTmap는 이제 index.html에서 로드된 Tmapv2 객체를 기다리는 역할만 함
+    ensureTmap()
+      .then((Tmapv2) => {
+        // 컴포넌트가 언마운트되었거나, 컨테이너가 없거나, 지도가 이미 생성되었다면 중단
+        if (cancelled || !containerRef.current || mapRef.current) return;
+
+        apiRef.current = Tmapv2;
+        const center = new Tmapv2.LatLng(37.5665, 126.978);
+        const map = new Tmapv2.Map(containerRef.current, {
+          center,
+          zoom: 14,
+          width: "100%",
+          height: "100%",
+        });
+        mapRef.current = map;
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error("TMap 초기화 실패:", error);
         }
-      };
-      tick();
-    });
+      });
+
+    // Cleanup 함수
     return () => {
       cancelled = true;
-      overlaysRef.current.markers.forEach((m) => m.setMap(null));
-      overlaysRef.current.polylines.forEach((p) => p.setMap(null));
-      overlaysRef.current = { markers: [], polylines: [] };
-      mapRef.current = null;
-      if (containerRef.current) containerRef.current.innerHTML = "";
-    };
-  }, []);
+      if (mapRef.current) {
+        // 오버레이 제거
+        overlaysRef.current.markers.forEach((m) => m.setMap(null));
+        overlaysRef.current.polylines.forEach((p) => p.setMap(null));
 
-  // 마커 및 경로 갱신
+        // 맵 인스턴스 파괴
+        mapRef.current.destroy();
+        mapRef.current = null;
+        apiRef.current = null;
+        overlaysRef.current = { markers: [], polylines: [] };
+      }
+    };
+  }, []); // 컴포넌트 마운트 시 한 번만 실행
+
+  // 마커 및 경로 갱신 useEffect
   useEffect(() => {
-    const Tmapv2 = apiRef.current || window.Tmapv2;
+    const Tmapv2 = apiRef.current;
     const map = mapRef.current;
-    if (!Tmapv2 || !map || typeof Tmapv2.LatLng !== 'function') return;
+    if (!Tmapv2 || !map || typeof Tmapv2.LatLng !== "function") return;
 
     // cleanup
     overlaysRef.current.markers.forEach((m) => m.setMap(null));
@@ -72,7 +82,9 @@ export default function TMapContainer({ stops = [], path = [] }) {
       if (s?.name) {
         const label = new Tmapv2.InfoWindow({
           position: pos,
-          content: `<div style="padding:4px 6px;font-size:12px;background:#fff;border:1px solid #ddd;border-radius:6px;">${idx + 1}. ${s.name}</div>`,
+          content: `<div style="padding:4px 6px;font-size:12px;background:#fff;border:1px solid #ddd;border-radius:6px;">${
+            idx + 1
+          }. ${s.name}</div>`,
           type: 2, // DOM
           map,
         });
@@ -83,32 +95,41 @@ export default function TMapContainer({ stops = [], path = [] }) {
     // polyline path (좌표 배열 정규화)
     const normPath = [];
     (path || []).forEach((pt) => {
-      if (Array.isArray(pt) && pt.length >= 2 && typeof pt[0] === "number" && typeof pt[1] === "number") {
-        // [lng, lat] 형태
+      if (
+        Array.isArray(pt) &&
+        pt.length >= 2 &&
+        typeof pt[0] === "number" &&
+        typeof pt[1] === "number"
+      ) {
         normPath.push({ lat: pt[1], lng: pt[0] });
       } else if (typeof pt?.lat === "number" && typeof pt?.lng === "number") {
         normPath.push(pt);
       }
     });
-    // Fallback: 경로 좌표가 없으면 정점(stops)으로 직선 연결
-    const pathToDraw = normPath.length >= 2 ? normPath : (
-      (stops || []).filter(s => typeof s?.lat === 'number' && typeof s?.lng === 'number')
-    );
+
+    const pathToDraw =
+      normPath.length >= 2
+        ? normPath
+        : (stops || []).filter(
+            (s) => typeof s?.lat === "number" && typeof s?.lng === "number"
+          );
+
     if (pathToDraw.length >= 2) {
+      const linePath = pathToDraw.map((p) => new Tmapv2.LatLng(p.lat, p.lng));
       const line = new Tmapv2.Polyline({
-        path: pathToDraw.map((p) => new Tmapv2.LatLng(p.lat, p.lng)),
+        path: linePath,
         strokeColor: "#2563eb",
         strokeWeight: 4,
         map,
       });
       overlaysRef.current.polylines.push(line);
-      pathToDraw.forEach((p) => bounds.extend(new Tmapv2.LatLng(p.lat, p.lng)));
+      linePath.forEach((p) => bounds.extend(p));
     }
 
     if (!bounds.isEmpty()) {
-      map.fitBounds(bounds, 30);
+      map.panToBounds(bounds, true, 80);
     }
-  }, [stops, path]);
+  }, [stops, path]); // stops 또는 path가 변경될 때만 실행
 
   return <div ref={containerRef} className="w-full h-full" />;
 }

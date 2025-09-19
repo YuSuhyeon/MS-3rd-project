@@ -1,13 +1,14 @@
+﻿// pages/DirectionsMantineImproved.jsx
+
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "components/ui/button";
 import PlaceSearchInput from "components/directions/PlaceSearchInput";
 import TMapContainer from "components/directions/TMapContainer";
-import { ensureTmap } from "integrations/tmapLoader";
+import ensureTmap from "integrations/tmapLoader";
 import { RoutePlan } from "Entities/RoutePlan";
 import {
   Plus,
-  Search,
   X,
   Save,
   Trash2,
@@ -15,16 +16,49 @@ import {
   Car,
   Clock,
   GripVertical,
+  ChevronDown,
+  ChevronUp,
+  ChevronRight,
+  MoreVertical,
   Map,
-  PersonStanding, // 'Walking' 대신 'PersonStanding' 아이콘을 사용
+  PersonStanding,
   Train,
 } from "lucide-react";
 import { Reorder, motion, AnimatePresence } from "framer-motion";
 
+console.log("React App이 인식하는 환경 변수:", process.env);
+
+let kakaoSdkPromise = null;
+const ensureKakao = () => {
+  if (!kakaoSdkPromise) {
+    kakaoSdkPromise = new Promise((resolve, reject) => {
+      if (window.kakao && window.kakao.maps) {
+        return resolve(window.kakao);
+      }
+      const KAKAO_API_KEY =
+        process.env.REACT_APP_KAKAO_API_KEY || window.REACT_APP_KAKAO_API_KEY;
+      if (!KAKAO_API_KEY) {
+        return reject(new Error("Kakao API Key is not configured."));
+      }
+
+      const script = document.createElement("script");
+      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_API_KEY}&libraries=services&autoload=false`;
+      script.async = true;
+      document.head.appendChild(script);
+      script.onload = () => {
+        window.kakao.maps.load(() => resolve(window.kakao));
+      };
+      script.onerror = () => {
+        reject(new Error("Failed to load Kakao Maps SDK."));
+      };
+    });
+  }
+  return kakaoSdkPromise;
+};
+
 export default function DirectionsMantineImproved() {
   const location = useLocation();
 
-  // --- STATE AND LOGIC ---
   const makeEmptyDay = (idx = 0) => ({
     id: `day-${Date.now()}-${idx}`,
     title: `${idx + 1}일차`,
@@ -40,101 +74,116 @@ export default function DirectionsMantineImproved() {
     summary: null,
     lastRoutes: null,
   });
+
   const [days, setDays] = useState([makeEmptyDay(0)]);
   const [activeDay, setActiveDay] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [shareInfo, setShareInfo] = useState(null);
+  const [searchContext, setSearchContext] = useState(null);
   const [mapProvider, setMapProvider] = useState("KAKAO");
   const [routeMode, setRouteMode] = useState("CAR");
   const presetAppliedRef = useRef(false);
   const [tmapReady, setTmapReady] = useState(false);
+  const [tmapError, setTmapError] = useState(false);
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [toast, setToast] = useState(null);
   const mapElRef = useRef(null);
   const mapObjRef = useRef(null);
   const polyRefs = useRef([]);
+  const TMAP_ERROR_MESSAGE =
+    "T map 로딩에 실패했습니다. API 키를 확인해주세요.";
   const markerRefs = useRef([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   useEffect(() => {
     let cancelled = false;
+
     if (mapProvider !== "TMAP") {
       setTmapReady(false);
+      setTmapError(false);
+      setToast((current) =>
+        current?.message === TMAP_ERROR_MESSAGE ? null : current
+      );
       return;
     }
-    const overrideKey =
-      process.env.REACT_APP_TMAP_APP_KEY || window.REACT_APP_TMAP_APP_KEY;
-    ensureTmap(overrideKey)
+
+    setTmapReady(false);
+    setTmapError(false);
+
+    ensureTmap()
       .then((api) => {
-        if (!cancelled) setTmapReady(!!(api && api.Map));
+        if (cancelled) return;
+        const ready = !!(api && api.Map);
+        setTmapReady(ready);
+        setTmapError(!ready);
+        if (!ready) {
+          setToast({
+            id: Date.now(),
+            message: TMAP_ERROR_MESSAGE,
+            tone: "error",
+          });
+        }
       })
-      .catch(() => {
-        if (!cancelled) setTmapReady(false);
+      .catch((error) => {
+        if (cancelled) return;
+        console.error(error);
+        setTmapReady(false);
+        setTmapError(true);
+        setToast({
+          id: Date.now(),
+          message: error.message || TMAP_ERROR_MESSAGE,
+          tone: "error",
+        });
       });
+
     return () => {
       cancelled = true;
     };
   }, [mapProvider]);
 
   useEffect(() => {
-    const ensureKakao = () =>
-      new Promise((resolve) => {
-        if (window.kakao && window.kakao.maps) {
-          resolve();
-          return;
-        }
-        const appkey =
-          process.env.REACT_APP_KAKAO_API_KEY || window.REACT_APP_KAKAO_API_KEY;
-        const src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appkey}&libraries=services&autoload=false`;
-        const s = document.createElement("script");
-        s.src = src;
-        s.async = true;
-        s.onload = () => window.kakao.maps.load(resolve);
-        document.head.appendChild(s);
-      });
-    ensureKakao().then(() => {
-      if (!mapObjRef.current && mapElRef.current) {
-        const center = new window.kakao.maps.LatLng(37.5665, 126.978);
-        mapObjRef.current = new window.kakao.maps.Map(mapElRef.current, {
-          center,
-          level: 7,
-        });
-      }
-    });
-  }, []);
-
-  // 맵 스위칭할 때, 안전하게 맵 재생성
-  useEffect(() => {
-    if (mapProvider !== "KAKAO") return;
-    const init = async () => {
-      const ensureKakao = () =>
-        new Promise((resolve) => {
-          if (window.kakao && window.kakao.maps) {
-            resolve();
-            return;
-          }
-          const appkey =
-            process.env.REACT_APP_KAKAO_API_KEY ||
-            window.REACT_APP_KAKAO_API_KEY;
-          const src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appkey}&libraries=services&autoload=false`;
-          const s = document.createElement("script");
-          s.src = src;
-          s.async = true;
-          s.onload = () => window.kakao.maps.load(resolve);
-          document.head.appendChild(s);
-        });
-      await ensureKakao();
-      if (mapElRef.current) {
-        try {
-          clearMap();
-        } catch {}
-        mapObjRef.current = null;
-        const center = new window.kakao.maps.LatLng(37.5665, 126.978);
-        mapObjRef.current = new window.kakao.maps.Map(mapElRef.current, {
-          center,
-          level: 7,
+    if (mapProvider !== "KAKAO") {
+      return;
+    }
+    const mapContainer = mapElRef.current;
+    if (!mapContainer) return;
+    let mapInstance = null;
+    const initMap = async () => {
+      try {
+        const kakao = await ensureKakao();
+        mapContainer.innerHTML = "";
+        const center = new kakao.maps.LatLng(37.5665, 126.978);
+        const options = { center, level: 7 };
+        mapInstance = new kakao.maps.Map(mapContainer, options);
+        mapObjRef.current = mapInstance;
+      } catch (error) {
+        console.error("카카오맵 초기화 실패:", error);
+        setToast({
+          id: Date.now(),
+          message: "지도 로딩에 실패했습니다.",
+          tone: "error",
         });
       }
     };
-    init();
+    initMap();
+    return () => {
+      mapObjRef.current = null;
+      if (mapContainer) mapContainer.innerHTML = "";
+    };
   }, [mapProvider]);
 
   useEffect(() => {
@@ -208,70 +257,95 @@ export default function DirectionsMantineImproved() {
   const geocode = (name) =>
     new Promise((resolve, reject) => {
       if (!name) {
-        reject(new Error("empty"));
-        return;
+        return reject(new Error("empty"));
       }
-      const ps = new window.kakao.maps.services.Places();
-      ps.keywordSearch(name, (data, status) =>
-        status === window.kakao.maps.services.Status.OK && data[0]
-          ? resolve({
-              lat: parseFloat(data[0].y),
-              lng: parseFloat(data[0].x),
-              name,
-            })
-          : reject(new Error("not_found"))
-      );
+      ensureKakao()
+        .then((kakao) => {
+          const ps = new kakao.maps.services.Places();
+          ps.keywordSearch(name, (data, status) =>
+            status === kakao.maps.services.Status.OK && data[0]
+              ? resolve({
+                  lat: parseFloat(data[0].y),
+                  lng: parseFloat(data[0].x),
+                  name,
+                })
+              : reject(new Error("not_found"))
+          );
+        })
+        .catch((error) => reject(error));
     });
 
   const clearMap = () => {
-    polyRefs.current.forEach((p) => p.setMap(null));
-    polyRefs.current = [];
-    markerRefs.current.forEach((m) => m.setMap(null));
-    markerRefs.current = [];
+    if (polyRefs.current) {
+      polyRefs.current.forEach((p) => p.setMap(null));
+      polyRefs.current = [];
+    }
+    if (markerRefs.current) {
+      markerRefs.current.forEach((m) => m.setMap(null));
+      markerRefs.current = [];
+    }
   };
 
   const drawPolylines = (routes) => {
-    if (mapProvider !== "KAKAO" && tmapReady) return;
     const map = mapObjRef.current;
     if (!map) return;
     clearMap();
     if (!routes?.length) return;
-    const colors = ["#60a5fa", "#a78bfa", "#34d399"];
-    const bounds = new window.kakao.maps.LatLngBounds();
-    routes.slice(0, 3).forEach((route, idx) => {
-      const path = [];
-      (route.sections || []).forEach((sec) =>
-        (sec.roads || []).forEach((r) => {
-          for (let i = 0; i < (r.vertexes || []).length; i += 2) {
-            const ll = new window.kakao.maps.LatLng(
-              r.vertexes[i + 1],
-              r.vertexes[i]
-            );
-            path.push(ll);
-            bounds.extend(ll);
-          }
-        })
-      );
-      if (path.length) {
-        const poly = new window.kakao.maps.Polyline({
-          path,
-          strokeWeight: 5,
-          strokeColor: colors[idx % colors.length],
-          strokeOpacity: 0.9,
-          strokeStyle: "solid",
-        });
-        poly.setMap(map);
-        polyRefs.current.push(poly);
-      }
+
+    ensureKakao().then((kakao) => {
+      const colors = ["#60a5fa", "#a78bfa", "#34d399"];
+      const bounds = new kakao.maps.LatLngBounds();
+      routes.slice(0, 3).forEach((route, idx) => {
+        const path = [];
+        (route.sections || []).forEach((sec) =>
+          (sec.roads || []).forEach((r) => {
+            for (let i = 0; i < (r.vertexes || []).length; i += 2) {
+              const ll = new kakao.maps.LatLng(
+                r.vertexes[i + 1],
+                r.vertexes[i]
+              );
+              path.push(ll);
+              bounds.extend(ll);
+            }
+          })
+        );
+        if (path.length) {
+          const poly = new kakao.maps.Polyline({
+            path,
+            strokeWeight: 5,
+            strokeColor: colors[idx % colors.length],
+            strokeOpacity: 0.9,
+            strokeStyle: "solid",
+          });
+          poly.setMap(map);
+          polyRefs.current.push(poly);
+        }
+      });
+      if (!bounds.isEmpty()) map.setBounds(bounds);
     });
-    if (!bounds.isEmpty()) map.setBounds(bounds);
   };
 
   useEffect(() => {
-    if (mapProvider === "KAKAO" || !tmapReady)
-      cur?.lastRoutes ? drawPolylines(cur.lastRoutes) : clearMap();
-    else clearMap();
-  }, [activeDay, mapProvider, cur.lastRoutes, tmapReady]);
+    const currentDay = days[activeDay];
+    const lastRoutes = currentDay?.lastRoutes;
+
+    if (mapProvider === "KAKAO") {
+      const checkMapAndDraw = () => {
+        if (mapObjRef.current) {
+          if (lastRoutes) {
+            drawPolylines(lastRoutes);
+          } else {
+            clearMap();
+          }
+        } else {
+          setTimeout(checkMapAndDraw, 100);
+        }
+      };
+      checkMapAndDraw();
+    } else {
+      clearMap();
+    }
+  }, [days, activeDay, mapProvider]);
 
   const tmapStops = useMemo(() => {
     const stops = [];
@@ -473,7 +547,8 @@ export default function DirectionsMantineImproved() {
       setActiveDay((prevActive) => {
         if (filtered.length === 0) return 0;
         if (prevActive > idx) return prevActive - 1;
-        if (prevActive === idx) return Math.max(0, Math.min(idx, filtered.length - 1));
+        if (prevActive === idx)
+          return Math.max(0, Math.min(idx, filtered.length - 1));
         return prevActive;
       });
       return filtered.length ? filtered : [makeEmptyDay(0)];
@@ -499,7 +574,9 @@ export default function DirectionsMantineImproved() {
   const saveToBackend = async () => {
     try {
       if (!days.some((d) => d.startLocation && d.endLocation)) {
-        window.alert("저장할 경로가 없습니다. 최소한 출발지와 도착지를 설정해주세요.");
+        window.alert(
+          "저장할 경로가 없습니다. 최소한 출발지와 도착지를 설정해주세요."
+        );
         return;
       }
       const defaultName = days
@@ -511,7 +588,7 @@ export default function DirectionsMantineImproved() {
         .join(", ");
       const nameInput = window.prompt(
         "저장할 플랜 이름을 입력하세요.",
-        defaultName || "새 경로 플랜"
+        defaultName || "내 경로 플랜"
       );
       if (nameInput === null) return;
       const trimmedName = nameInput.trim();
@@ -547,7 +624,9 @@ export default function DirectionsMantineImproved() {
         activeDay,
       });
 
-      window.alert("경로 플랜이 저장되었습니다. 일정 플래너에서 관리할 수 있어요.");
+      window.alert(
+        "경로 플랜이 저장되었습니다. 일정 플래너에서 관리할 수 있어요."
+      );
     } catch (error) {
       console.error("Failed to save route plan", error);
       window.alert("경로 플랜 저장 중 오류가 발생했습니다.");
@@ -607,347 +686,609 @@ export default function DirectionsMantineImproved() {
     });
   };
 
-  const SegmentedControl = ({ value, options, onChange }) => (
-    <div className="flex items-center gap-1 bg-slate-700/50 p-1 rounded-lg">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onChange(opt.value)}
-          className={`relative flex-1 px-2 py-1 text-xs font-semibold rounded-md transition-colors ${
-            value === opt.value
-              ? "text-white"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          {value === opt.value && (
-            <motion.div
-              layoutId={`active-segment-${options[0].value}`}
-              className="absolute inset-0 bg-slate-600 rounded-md"
-            />
-          )}
-          <span className="relative z-10 flex items-center justify-center gap-1.5">
-            {opt.icon}
-            {opt.label}
-          </span>
-        </button>
-      ))}
-    </div>
-  );
+  const removeWaypoint = (index) => {
+    updateCur({
+      waypoints: (cur.waypoints || []).filter((_, i) => i !== index),
+    });
+  };
+
+  const SegmentedControl = ({ value, options, onChange }) => {
+    const groupId = useMemo(
+      () => options.map((opt) => opt.value).join("-"),
+      [options]
+    );
+
+    return (
+      <div className="flex items-center rounded-2xl bg-slate-100 p-1">
+        {options.map((opt) => {
+          const isActive = value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => onChange(opt.value)}
+              className={`relative flex-1 rounded-2xl px-3 py-2 text-xs font-semibold transition ${
+                isActive
+                  ? "text-slate-900"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId={`segment-${groupId}`}
+                  className="absolute inset-0 rounded-2xl bg-white shadow"
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1.5">
+                {opt.icon}
+                {opt.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const collapsedSummary = useMemo(() => {
+    const title = cur?.title || `Day ${activeDay + 1}`;
+    const startLabel = cur?.startLocation || "출발지 미정";
+    const endLabel = cur?.endLocation || "도착지 미정";
+    const waypointCount = cur?.waypoints?.length || 0;
+    const waypointText = waypointCount ? ` · 경유 ${waypointCount}곳` : "";
+    return `${title} · ${startLabel} → ${endLabel}${waypointText}`;
+  }, [
+    cur?.title,
+    cur?.startLocation,
+    cur?.endLocation,
+    cur?.waypoints,
+    activeDay,
+  ]);
+
+  const canCalculate = Boolean(cur.startLocation && cur.endLocation);
+  const showFab = canCalculate;
+
+  const openSearch = (type) => {
+    setSheetExpanded(true);
+    setSearchContext(type);
+  };
+
+  const closeSearch = () => setSearchContext(null);
+
+  const coerceCoords = (value) =>
+    typeof value === "number" ? value : parseFloat(value || 0);
+
+  const handlePlaceSelect = (place) => {
+    if (!place) return;
+    if (searchContext === "start") {
+      updateCur({
+        startLocation: place.name,
+        startCoords: {
+          lat: coerceCoords(place.lat),
+          lng: coerceCoords(place.lng),
+        },
+      });
+    } else if (searchContext === "end") {
+      updateCur({
+        endLocation: place.name,
+        endCoords: {
+          lat: coerceCoords(place.lat),
+          lng: coerceCoords(place.lng),
+        },
+      });
+    } else if (searchContext === "waypoint") {
+      const next = [
+        ...(cur.waypoints || []),
+        {
+          name: place.name,
+          lat: coerceCoords(place.lat),
+          lng: coerceCoords(place.lng),
+        },
+      ];
+      updateCur({ waypoints: next });
+    }
+    closeSearch();
+  };
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  const toastToneClass =
+    toast?.tone === "error"
+      ? "bg-rose-600 text-white"
+      : toast?.tone === "success"
+      ? "bg-emerald-600 text-white"
+      : "bg-slate-900/80 text-white";
+
+  const searchTitleMap = {
+    start: "출발지 검색",
+    end: "도착지 검색",
+    waypoint: "경유지 검색",
+  };
 
   return (
-    <div className="w-full h-screen bg-slate-900 text-slate-200 font-sans grid grid-cols-[450px_1fr] overflow-hidden">
-      <aside className="p-4 flex flex-col gap-4 bg-slate-900/50 border-r border-slate-800 overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between flex-shrink-0"
+    <div className="relative min-h-screen bg-slate-900 text-white">
+      <div className="fixed inset-0 z-0">
+        <div
+          ref={mapElRef}
+          className="h-full w-full"
+          style={{ display: mapProvider === "KAKAO" ? "block" : "none" }}
+        />
+        <div
+          style={{
+            display: mapProvider === "TMAP" && tmapReady ? "block" : "none",
+            height: "100%",
+            width: "100%",
+          }}
         >
-          <h1 className="text-xl font-bold text-white">경로 플래너</h1>
-          <Button
-            variant="outline"
-            onClick={saveToBackend}
-            className="bg-slate-700/50 border-slate-600 hover:bg-slate-700"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            저장
-          </Button>
-        </motion.div>
-
-        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-          {days.map((d, i) => {
-            const isActive = activeDay === i;
-            return (
-              <div key={d.id} className="relative group">
-                <button
-                  onClick={() => setActiveDay(i)}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-indigo-600 text-white font-semibold"
-                      : "bg-slate-700/50 hover:bg-slate-700 text-slate-300"
-                  }`}
-                >
-                  {d.title}
-                </button>
-                {days.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeDay(i)}
-                    className={`absolute -top-2 -right-2 rounded-full border border-slate-800 bg-slate-900/80 p-1 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-rose-300 hover:bg-slate-800 ${
-                      isActive ? "opacity-100" : ""
-                    }`}
-                    aria-label={`${d.title} 삭제`}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-          <Button
-            onClick={addDay}
-            size="icon"
-            variant="ghost"
-            className="text-slate-400 hover:bg-slate-700 hover:text-indigo-400"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="flex-1 flex flex-col gap-4 min-h-0 overflow-y-auto pr-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-700">
-          <motion.div
-            layout
-            className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-3"
-          >
-            <PlaceSearchInput
-              dark
-              value={cur.startLocation}
-              onSelect={(p) =>
-                updateCur({
-                  startLocation: p.name,
-                  startCoords: { lat: p.lat, lng: p.lng },
-                })
-              }
-              placeholder="출발지"
-            />
-            <PlaceSearchInput
-              dark
-              value={cur.endLocation}
-              onSelect={(p) =>
-                updateCur({
-                  endLocation: p.name,
-                  endCoords: { lat: p.lat, lng: p.lng },
-                })
-              }
-              placeholder="도착지"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                onClick={() => setSearchOpen(true)}
-                variant="outline"
-                className="w-full bg-slate-700/50 border-slate-600 hover:bg-slate-700"
-              >
-                <Search className="w-4 h-4 mr-2" />
-                경유지 추가
-              </Button>
-              <Button
-                onClick={calculateRoute}
-                disabled={
-                  isCalculating || !cur.startLocation || !cur.endLocation
-                }
-                className="w-full bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20"
-              >
-                {isCalculating ? "계산 중..." : "경로 계산"}
-              </Button>
-            </div>
-          </motion.div>
-
-          <motion.div
-            layout
-            className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-4"
-          >
-            <div>
-              <label className="text-xs text-slate-400 mb-1.5 block">
-                지도/교통
-              </label>
-              <SegmentedControl
-                value={mapProvider}
-                onChange={setMapProvider}
-                options={[
-                  {
-                    value: "KAKAO",
-                    label: "카카오맵",
-                    icon: <Map size={14} />,
-                  },
-                  { value: "TMAP", label: "TMAP", icon: <Map size={14} /> },
-                ]}
-              />
-            </div>
-            <div>
-              <SegmentedControl
-                value={routeMode}
-                onChange={setRouteMode}
-                options={[
-                  { value: "CAR", label: "자동차", icon: <Car size={14} /> },
-                  {
-                    value: "PEDESTRIAN",
-                    label: "도보",
-                    icon: <PersonStanding size={14} />,
-                  },
-                  {
-                    value: "TRANSIT",
-                    label: "대중교통",
-                    icon: <Train size={14} />,
-                  },
-                ]}
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            layout
-            className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4"
-          >
-            <h3 className="text-sm font-semibold text-white mb-2">
-              전체 경로 순서
-            </h3>
-            <Reorder.Group
-              axis="y"
-              values={allStopsForReorder}
-              onReorder={handleReorder}
-              className="space-y-2"
-            >
-              {allStopsForReorder.map((s) => (
-                <Reorder.Item
-                  key={s.id}
-                  value={s}
-                  className="p-2 rounded-lg bg-slate-700/50 flex items-center gap-2 cursor-grab active:cursor-grabbing"
-                >
-                  <GripVertical className="w-4 h-4 text-slate-500" />
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full border ${
-                      s.type === "start"
-                        ? "bg-sky-500/10 border-sky-500/30 text-sky-300"
-                        : s.type === "end"
-                        ? "bg-rose-500/10 border-rose-500/30 text-rose-300"
-                        : "bg-slate-600/50 border-slate-500 text-slate-300"
-                    }`}
-                  >
-                    {s.type === "start"
-                      ? "출발"
-                      : s.type === "end"
-                      ? "도착"
-                      : "경유"}
-                  </span>
-                  <span className="text-sm text-slate-200 truncate flex-1">
-                    {s.name || "(미지정)"}
-                  </span>
-                </Reorder.Item>
-              ))}
-            </Reorder.Group>
-          </motion.div>
-
-          <motion.div
-            layout
-            className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4"
-          >
-            <h3 className="text-sm font-semibold text-white mb-2">타임라인</h3>
-            {cur.summary && (
-              <div className="text-xs text-slate-400 mb-3">
-                총{" "}
-                <span className="font-semibold text-indigo-400">
-                  {cur.summary.distance.toFixed(1)}km
-                </span>{" "}
-                ·{" "}
-                <span className="font-semibold text-indigo-400">
-                  {cur.summary.duration}분
-                </span>
-              </div>
-            )}
-            <ol className="space-y-2 text-sm">
-              {(cur.timeline || []).map((s, idx) => (
-                <li key={s.idx} className="p-2 rounded-lg bg-slate-700/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-slate-600 text-white grid place-items-center font-bold text-xs flex-shrink-0">
-                      {s.idx}
-                    </div>
-                    <div className="font-semibold text-slate-100 truncate flex-1">
-                      {s.name}
-                    </div>
-                  </div>
-                  {s.idx > 1 && (
-                    <div className="text-slate-400 text-xs mt-1.5 pl-9 flex items-center gap-3">
-                      <span>
-                        <Car size={12} className="inline mr-1" />
-                        {s.km.toFixed(1)}km·{s.minutes}분
-                      </span>
-                      <span>
-                        <Clock size={12} className="inline mr-1" />
-                        {s.arrival} 도착
-                      </span>
-                    </div>
-                  )}
-                  <div className="pl-9 mt-2 flex items-center gap-2 text-xs text-slate-400">
-                    <label className="whitespace-nowrap">체류(분)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={cur.stays?.[idx] ?? 0}
-                      onChange={(e) => updateStay(idx, e.target.value)}
-                      className="w-20 bg-slate-600/50 border border-slate-500 rounded-md px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </motion.div>
-        </div>
-      </aside>
-
-      <main className="p-4 relative">
-        {mapProvider === "TMAP" && tmapReady ? (
-          <div className="w-full h-full rounded-2xl border border-slate-700 overflow-hidden">
+          {mapProvider === "TMAP" && tmapReady && (
             <TMapContainer stops={tmapStops} path={tmapPath} />
+          )}
+        </div>
+      </div>
+
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-10 h-44 bg-gradient-to-b from-slate-950/90 to-transparent" />
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 h-56 bg-gradient-to-t from-slate-950/90 to-transparent" />
+
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-20">
+        <div className="pointer-events-auto mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 py-5 sm:gap-4">
+          <div className="flex-1 space-y-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-200/80">
+              Route Planner
+            </span>
+            <h1 className="truncate text-xl font-bold text-white sm:text-2xl">
+              경로 플래너
+            </h1>
           </div>
-        ) : (
-          <>
-            {mapProvider === "TMAP" && !tmapReady && (
-              <div className="absolute z-10 top-6 left-6 text-xs bg-rose-500/20 text-rose-300 px-2 py-1 rounded-full border border-rose-500/30">
-                TMap SDK 로딩 실패. 카카오맵으로 표시합니다.
-              </div>
-            )}
-            <div
-              ref={mapElRef}
-              className="w-full h-full rounded-2xl border border-slate-700 bg-slate-800"
-            />
-          </>
-        )}
-      </main>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => duplicateDay(activeDay)}
+              className="hidden h-10 items-center rounded-full border-white/20 bg-white/10 px-4 text-sm font-semibold text-white shadow-lg backdrop-blur hover:bg-white/20 sm:flex"
+              aria-label="일정 복제"
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              <span>일정 복제</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={saveToBackend}
+              className="hidden h-10 items-center rounded-full border-white/20 bg-white/10 px-4 text-sm font-semibold text-white shadow-lg backdrop-blur hover:bg-white/20 sm:flex"
+              aria-label="경로 저장"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              <span>경로 저장</span>
+            </Button>
+            <div className="relative" ref={menuRef}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                className="h-10 w-10 rounded-full border border-white/10 bg-white/5 text-white hover:bg-white/10"
+                aria-label="더보기"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+              <AnimatePresence>
+                {isMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-48 origin-top-right rounded-xl bg-white p-2 text-slate-900 shadow-2xl ring-1 ring-black/5 sm:hidden"
+                  >
+                    <button
+                      onClick={() => {
+                        duplicateDay(activeDay);
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                      <Copy className="h-4 w-4 text-slate-500" />
+                      <span>일정 복제</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        saveToBackend();
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                      <Save className="h-4 w-4 text-slate-500" />
+                      <span>경로 저장</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <AnimatePresence>
-        {searchOpen && (
+        {toast && (
           <motion.div
+            key={toast.id}
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2 }}
+            className={`pointer-events-auto fixed top-24 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-sm shadow-xl ${toastToneClass}`}
+          >
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showFab && (
+          <motion.button
+            key="route-fab"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            onClick={calculateRoute}
+            disabled={!canCalculate || isCalculating}
+            className="fixed bottom-28 right-6 z-30 flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-2xl hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-500"
+          >
+            <Map className="h-4 w-4" />
+            {isCalculating ? "경로 계산 중..." : "경로 계산"}
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-4xl px-4 pb-4"
+        initial={false}
+        animate={{ height: sheetExpanded ? "80vh" : "150px" }}
+        transition={{ type: "spring", stiffness: 260, damping: 30 }}
+      >
+        <div className="pointer-events-auto flex h-full flex-col overflow-hidden rounded-t-3xl bg-white text-slate-900 shadow-2xl">
+          <div className="flex items-center justify-center py-2">
+            <span className="h-1.5 w-12 rounded-full bg-slate-300" />
+          </div>
+          <button
+            type="button"
+            onClick={() => setSheetExpanded((prev) => !prev)}
+            className="flex items-center justify-between gap-3 px-5 pb-3 text-left"
+          >
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
+                Day {activeDay + 1}
+              </span>
+              <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+                {collapsedSummary}
+              </p>
+            </div>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+              {sheetExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronUp className="h-4 w-4" />
+              )}
+            </span>
+          </button>
+
+          {sheetExpanded && (
+            <div className="flex-1 space-y-6 overflow-y-auto px-5 pb-8">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-1 items-center gap-2 overflow-x-auto pb-1">
+                  {days.map((d, i) => {
+                    const isActive = activeDay === i;
+                    return (
+                      <button
+                        key={d.id}
+                        onClick={() => setActiveDay(i)}
+                        className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                          isActive
+                            ? "bg-indigo-600 text-white shadow"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        {d.title}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeDay(activeDay)}
+                    disabled={days.length <= 1}
+                    className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 hover:border-rose-200 hover:text-rose-500 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={addDay}
+                    className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
+                <div className="grid gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openSearch("start")}
+                    className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm"
+                  >
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        출발지
+                      </span>
+                      <p className="mt-1 text-sm font-medium text-slate-700">
+                        {cur.startLocation || "출발지를 설정하세요"}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openSearch("end")}
+                    className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm"
+                  >
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        도착지
+                      </span>
+                      <p className="mt-1 text-sm font-medium text-slate-700">
+                        {cur.endLocation || "도착지를 설정하세요"}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    onClick={() => openSearch("waypoint")}
+                    variant="outline"
+                    className="rounded-full border-slate-300 bg-white px-4 text-sm font-semibold text-slate-600 hover:border-indigo-200 hover:text-indigo-600"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    경유지 추가
+                  </Button>
+                  {cur.waypoints?.length ? (
+                    cur.waypoints.map((wp, idx) => (
+                      <span
+                        key={`${wp.name}-${idx}`}
+                        className="group inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow"
+                      >
+                        {idx + 1}. {wp.name || "이름 없음"}
+                        <button
+                          type="button"
+                          onClick={() => removeWaypoint(idx)}
+                          className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-rose-500"
+                          aria-label="경유지 삭제"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-400">
+                      경유지를 추가하면 더 정교한 경로를 만들 수 있어요.
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    지도 제공자
+                  </label>
+                  <SegmentedControl
+                    value={mapProvider}
+                    onChange={setMapProvider}
+                    options={[
+                      {
+                        value: "KAKAO",
+                        label: "카카오맵",
+                        icon: <Map size={14} />,
+                      },
+                      {
+                        value: "TMAP",
+                        label: "T map",
+                        icon: <Map size={14} />,
+                      },
+                    ]}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    이동 수단
+                  </label>
+                  <SegmentedControl
+                    value={routeMode}
+                    onChange={setRouteMode}
+                    options={[
+                      {
+                        value: "CAR",
+                        label: "자동차",
+                        icon: <Car size={14} />,
+                      },
+                      {
+                        value: "PEDESTRIAN",
+                        label: "도보",
+                        icon: <PersonStanding size={14} />,
+                      },
+                      {
+                        value: "TRANSIT",
+                        label: "대중교통",
+                        icon: <Train size={14} />,
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-700">
+                    경로 순서 조정
+                  </h3>
+                  <span className="text-xs text-slate-400">
+                    드래그하여 순서를 변경하세요
+                  </span>
+                </div>
+                <Reorder.Group
+                  axis="y"
+                  values={allStopsForReorder}
+                  onReorder={handleReorder}
+                  className="space-y-3"
+                >
+                  {allStopsForReorder.map((s) => (
+                    <Reorder.Item
+                      key={s.id}
+                      value={s}
+                      className="flex cursor-grab items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 shadow-sm active:cursor-grabbing"
+                    >
+                      <GripVertical className="h-4 w-4 text-slate-400" />
+                      <span
+                        className={`text-xs font-semibold uppercase tracking-wide ${
+                          s.type === "start"
+                            ? "text-sky-600"
+                            : s.type === "end"
+                            ? "text-rose-500"
+                            : "text-slate-500"
+                        }`}
+                      >
+                        {s.type === "start"
+                          ? "출발"
+                          : s.type === "end"
+                          ? "도착"
+                          : "경유"}
+                      </span>
+                      <span className="truncate text-slate-700">
+                        {s.name ||
+                          (s.type === "start"
+                            ? "출발지를 선택하세요"
+                            : s.type === "end"
+                            ? "도착지를 선택하세요"
+                            : "경유지를 추가하세요")}
+                      </span>
+                    </Reorder.Item>
+                  ))}
+                </Reorder.Group>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
+                <h3 className="mb-3 text-sm font-semibold text-slate-700">
+                  이동 요약
+                </h3>
+                {cur.summary && (
+                  <div className="mb-4 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                    <span>
+                      총 이동거리{" "}
+                      <span className="font-semibold text-indigo-600">
+                        {cur.summary.distance.toFixed(1)}km
+                      </span>
+                    </span>
+                    <span>
+                      예상 소요시간{" "}
+                      <span className="font-semibold text-indigo-600">
+                        {cur.summary.duration}분
+                      </span>
+                    </span>
+                  </div>
+                )}
+                <ol className="space-y-3 text-sm">
+                  {(cur.timeline || []).map((s, idx) => (
+                    <li
+                      key={s.idx}
+                      className="rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="grid h-7 w-7 place-items-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
+                          {s.idx}
+                        </div>
+                        <div className="flex-1 truncate font-semibold text-slate-700">
+                          {s.name}
+                        </div>
+                      </div>
+                      {s.idx > 1 && (
+                        <div className="mt-2 flex flex-wrap items-center gap-4 pl-10 text-xs text-slate-500">
+                          <span className="flex items-center gap-1">
+                            <Car size={12} />
+                            {s.km.toFixed(1)}km · {s.minutes}분
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock size={12} />
+                            {s.arrival} 도착
+                          </span>
+                        </div>
+                      )}
+                      <div className="mt-3 flex items-center gap-2 pl-10 text-xs text-slate-500">
+                        <label className="whitespace-nowrap">
+                          체류 시간(분)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={cur.stays?.[idx] ?? 0}
+                          onChange={(e) => updateStay(idx, e.target.value)}
+                          className="h-9 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-sm text-slate-600 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      <AnimatePresence>
+        {searchContext && (
+          <motion.div
+            key={searchContext}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-40 flex flex-col bg-slate-950/95 backdrop-blur"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-xl shadow-2xl"
-            >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
-                <h3 className="font-semibold text-white">경유지 검색/추가</h3>
-                <button
-                  onClick={() => setSearchOpen(false)}
-                  className="p-1.5 text-slate-400 hover:bg-slate-700 rounded-full"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="p-4 space-y-3">
-                <PlaceSearchInput
-                  dark
-                  autoFocus
-                  value={""}
-                  onSelect={(p) => {
-                    updateCur({
-                      waypoints: [
-                        ...(cur.waypoints || []),
-                        { name: p.name, lat: p.lat, lng: p.lng },
-                      ],
-                    });
-                    setSearchOpen(false);
-                  }}
-                  placeholder="장소명을 입력하고 목록에서 선택"
-                />
-                <p className="text-xs text-slate-500">
-                  목록에서 항목을 선택하면 현재 활성화된 일차의 경유지로
-                  추가됩니다.
-                </p>
-              </div>
-            </motion.div>
+            <div className="flex items-center justify-between px-5 pt-6 pb-4">
+              <h3 className="text-lg font-semibold text-white">
+                {searchTitleMap[searchContext]}
+              </h3>
+              <button
+                onClick={closeSearch}
+                className="rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                aria-label="검색 닫기"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="px-5 pb-4">
+              <PlaceSearchInput
+                autoFocus
+                value=""
+                onSelect={handlePlaceSelect}
+                placeholder={`${searchTitleMap[searchContext]} 키워드를 입력하세요`}
+                className="w-full rounded-2xl border-none bg-white/90 px-4 py-3 text-base font-medium text-slate-900 shadow-lg focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 pb-10 text-sm text-slate-300">
+              <p>
+                검색된 목록에서 장소를 선택하면{" "}
+                {searchContext === "waypoint"
+                  ? "경유지가 추가됩니다."
+                  : searchContext === "start"
+                  ? "출발지가 설정됩니다."
+                  : "도착지가 설정됩니다."}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

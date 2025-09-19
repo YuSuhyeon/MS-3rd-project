@@ -2,6 +2,10 @@
   "dependencies": {
     "@azure/msal-browser": "^4.22.1",
     "@azure/msal-react": "^3.0.19",
-    "@react-oauth/google": "^0.12.2"
+    "@react-oauth/google": "^0.12.2",
+    "bootstrap": "^5.3.8",
+    "i18next": "^25.5.2",
+    "react-bootstrap": "^2.10.10",
+    "react-i18next": "^15.7.3"
   }
 }
