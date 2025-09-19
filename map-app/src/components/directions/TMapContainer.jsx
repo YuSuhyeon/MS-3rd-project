@@ -1,5 +1,59 @@
+// components/directions/TMapContainer.jsx
+
 import React, { useEffect, useRef } from "react";
-import { ensureTmap } from "integrations/tmapLoader";
+import ensureTmap from "integrations/tmapLoader";
+
+const escapeHtml = (value = "") =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const getDefaultStopLabel = (idx, total) => {
+  if (!Number.isFinite(total) || total <= 0) return "경유지";
+  if (idx === 0) return "출발지";
+  if (idx === total - 1) return "도착지";
+  return `경유지 ${idx}`;
+};
+
+const markerRoleColors = {
+  start: "#16a34a",
+  end: "#ef4444",
+  waypoint: "#2563eb",
+};
+
+const markerSvgCache = new Map();
+const buildMarkerIcon = (role = "waypoint", order = 1) => {
+  const normalizedRole = Object.prototype.hasOwnProperty.call(
+    markerRoleColors,
+    role
+  )
+    ? role
+    : "waypoint";
+  const numericOrder = Number(order);
+  const displayOrder =
+    Number.isFinite(numericOrder) && numericOrder > 0
+      ? numericOrder > 99
+        ? "99+"
+        : String(Math.round(numericOrder))
+      : "";
+  const cacheKey = `${normalizedRole}-${displayOrder}`;
+  if (markerSvgCache.has(cacheKey)) {
+    return markerSvgCache.get(cacheKey);
+  }
+  const fill = markerRoleColors[normalizedRole];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
+    <g fill="none" fill-rule="evenodd">
+      <path d="M20 1C10.059 1 2 9.059 2 19c0 10.132 9.05 20.17 16.31 30.447a2 2 0 0 0 3.38 0C28.95 39.17 38 29.132 38 19 38 9.059 29.941 1 20 1Z" fill="${fill}" stroke="#0f172a" stroke-width="1.5" />
+      <text x="20" y="22" font-size="14" font-family="Pretendard, 'Noto Sans KR', 'Apple SD Gothic Neo', Arial, sans-serif" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="middle">${displayOrder}</text>
+    </g>
+  </svg>`;
+  const uri = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  markerSvgCache.set(cacheKey, uri);
+  return uri;
+};
 
 /**
  * T Map 지도 컨테이너
@@ -11,102 +65,214 @@ export default function TMapContainer({ stops = [], path = [] }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const apiRef = useRef(null);
-  const overlaysRef = useRef({ markers: [], polylines: [] });
+  const overlaysRef = useRef({ markers: [], polylines: [], infoWindows: [] });
+  const mapClickListenerRef = useRef(null);
 
+  // 지도 초기화 useEffect
   useEffect(() => {
     let cancelled = false;
-    const overrideKey =
-      (typeof process !== 'undefined' && process.env && process.env.REACT_APP_TMAP_APP_KEY) ||
-      (typeof window !== 'undefined' && window.REACT_APP_TMAP_APP_KEY) ||
-      undefined;
-    ensureTmap(overrideKey).then((Tmapv2) => {
-      if (cancelled || !containerRef.current) return;
-      if (!Tmapv2) return; // API not ready, skip
-      const waitReady = () =>
-        typeof Tmapv2?.Map === 'function' && typeof Tmapv2?.LatLng === 'function';
-      let tries = 0;
-      const tick = () => {
-        if (cancelled) return;
-        if (waitReady()) {
-          const center = new Tmapv2.LatLng(37.5665, 126.9780);
-          const map = new Tmapv2.Map(containerRef.current, { center, zoom: 14 });
-          mapRef.current = map;
-          apiRef.current = Tmapv2;
-        } else if (tries++ < 100) {
-          setTimeout(tick, 100);
+
+    // ensureTmap 호출 방식을 API 키 없이
+    ensureTmap()
+      .then((Tmapv2) => {
+        // 컴포넌트가 언마운트되었거나, 컨테이너가 없거나, 지도가 이미 생성되었다면 중단
+        if (cancelled || !containerRef.current || mapRef.current) return;
+
+        apiRef.current = Tmapv2;
+        const center = new Tmapv2.LatLng(37.5665, 126.978);
+        const map = new Tmapv2.Map(containerRef.current, {
+          center,
+          zoom: 14,
+          width: "100%",
+          height: "100%",
+        });
+        mapRef.current = map;
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error("TMap 초기화 실패:", error);
         }
-      };
-      tick();
-    });
+      });
+
+    // Cleanup ??
     return () => {
       cancelled = true;
-      overlaysRef.current.markers.forEach((m) => m.setMap(null));
-      overlaysRef.current.polylines.forEach((p) => p.setMap(null));
-      overlaysRef.current = { markers: [], polylines: [] };
-      mapRef.current = null;
-      if (containerRef.current) containerRef.current.innerHTML = "";
+      if (mapRef.current) {
+        const Tmapv2 = apiRef.current;
+        if (mapClickListenerRef.current && Tmapv2?.Event?.removeListener) {
+          try {
+            Tmapv2.Event.removeListener(mapClickListenerRef.current);
+          } catch (error) {
+            console.warn("Failed to remove TMap click listener", error);
+          }
+          mapClickListenerRef.current = null;
+        }
+        overlaysRef.current.markers.forEach((m) => m.setMap(null));
+        overlaysRef.current.polylines.forEach((p) => p.setMap(null));
+        overlaysRef.current.infoWindows.forEach((info) => {
+          if (!info) return;
+          if (typeof info.close === "function") {
+            info.close();
+          } else if (typeof info.setMap === "function") {
+            info.setMap(null);
+          }
+        });
+
+        mapRef.current.destroy();
+        mapRef.current = null;
+        apiRef.current = null;
+        overlaysRef.current = { markers: [], polylines: [], infoWindows: [] };
+      }
     };
-  }, []);
+  }, []); // 컴포넌트 마운트 시 한 번만 실행
 
-  // 마커 및 경로 갱신
+  // stops 또는 path 변경 시 오버레이 갱신 useEffect
   useEffect(() => {
-    const Tmapv2 = apiRef.current || window.Tmapv2;
+    const Tmapv2 = apiRef.current;
     const map = mapRef.current;
-    if (!Tmapv2 || !map || typeof Tmapv2.LatLng !== 'function') return;
+    if (!Tmapv2 || !map || typeof Tmapv2.LatLng !== "function") return;
 
-    // cleanup
     overlaysRef.current.markers.forEach((m) => m.setMap(null));
     overlaysRef.current.polylines.forEach((p) => p.setMap(null));
-    overlaysRef.current = { markers: [], polylines: [] };
+    overlaysRef.current.infoWindows.forEach((info) => {
+      if (!info) return;
+      if (typeof info.setMap === "function") {
+        info.setMap(null);
+      } else if (typeof info.close === "function") {
+        info.close();
+      }
+    });
+    overlaysRef.current = { markers: [], polylines: [], infoWindows: [] };
 
+    if (mapClickListenerRef.current && Tmapv2?.Event?.removeListener) {
+      try {
+        Tmapv2.Event.removeListener(mapClickListenerRef.current);
+      } catch (error) {
+        console.warn("Failed to detach TMap map click listener", error);
+      }
+      mapClickListenerRef.current = null;
+    }
+
+    const closeInfoWindows = () => {
+      overlaysRef.current.infoWindows.forEach((info) => {
+        if (!info) return;
+        if (typeof info.setMap === "function") {
+          info.setMap(null);
+        } else if (typeof info.close === "function") {
+          info.close();
+        }
+      });
+    };
+
+    const safeStops = Array.isArray(stops) ? stops : [];
     const bounds = new Tmapv2.LatLngBounds();
+    const totalStops = safeStops.length;
 
-    // markers
-    (stops || []).forEach((s, idx) => {
-      if (typeof s?.lat !== "number" || typeof s?.lng !== "number") return;
-      const pos = new Tmapv2.LatLng(s.lat, s.lng);
-      const marker = new Tmapv2.Marker({ position: pos, map });
+    safeStops.forEach((s, idx) => {
+      const lat = Number(s?.lat);
+      const lng = Number(s?.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      const pos = new Tmapv2.LatLng(lat, lng);
+      const order = Number.isFinite(s?.order) ? s.order : idx + 1;
+      const role =
+        s?.role ||
+        (idx === 0 ? "start" : idx === totalStops - 1 ? "end" : "waypoint");
+      const iconUrl = buildMarkerIcon(role, order);
+      const marker = new Tmapv2.Marker({
+        position: pos,
+        map,
+        icon: iconUrl,
+        iconSize: new Tmapv2.Size(40, 52),
+      });
       overlaysRef.current.markers.push(marker);
       bounds.extend(pos);
-      // 간단한 텍스트 라벨
-      if (s?.name) {
-        const label = new Tmapv2.InfoWindow({
-          position: pos,
-          content: `<div style="padding:4px 6px;font-size:12px;background:#fff;border:1px solid #ddd;border-radius:6px;">${idx + 1}. ${s.name}</div>`,
-          type: 2, // DOM
-          map,
+
+      const label = s?.label || getDefaultStopLabel(idx, totalStops);
+      const safeHeader = escapeHtml(`${order}. ${label}`);
+      const safeName = escapeHtml(s?.name || label);
+      const displayAddress =
+        typeof s?.roadAddress === "string" && s.roadAddress.trim().length
+          ? s.roadAddress.trim()
+          : typeof s?.address === "string" && s.address.trim().length
+          ? s.address.trim()
+          : "주소 정보 없음";
+      const safeAddress = escapeHtml(displayAddress);
+      const info = new Tmapv2.InfoWindow({
+        position: pos,
+        content: `<div style="padding:8px 12px;font-size:13px;line-height:1.5;color:#0f172a;background:#fff;border:1px solid rgba(148,163,184,0.6);border-radius:10px;box-shadow:0 10px 24px rgba(15,23,42,0.18);white-space:nowrap;max-width:220px;"><strong style="display:block;margin-bottom:4px;">${safeHeader}</strong><div style="font-weight:600;margin-bottom:2px;">${safeName}</div><div style="font-size:11px;color:#475569;">${safeAddress}</div></div>`,
+        type: 2,
+        map: null,
+      });
+      overlaysRef.current.infoWindows.push(info);
+
+      if (Tmapv2?.Event?.addListener) {
+        Tmapv2.Event.addListener(marker, "click", () => {
+          closeInfoWindows();
+          if (typeof info.setMap === "function") {
+            info.setMap(map);
+          } else if (typeof info.open === "function") {
+            info.open(map, marker);
+          }
         });
-        overlaysRef.current.markers.push(label);
+      }
+
+      if (idx === 0) {
+        if (typeof info.setMap === "function") {
+          info.setMap(map);
+        } else if (typeof info.open === "function") {
+          info.open(map, marker);
+        }
       }
     });
 
-    // polyline path (좌표 배열 정규화)
     const normPath = [];
-    (path || []).forEach((pt) => {
-      if (Array.isArray(pt) && pt.length >= 2 && typeof pt[0] === "number" && typeof pt[1] === "number") {
-        // [lng, lat] 형태
-        normPath.push({ lat: pt[1], lng: pt[0] });
-      } else if (typeof pt?.lat === "number" && typeof pt?.lng === "number") {
-        normPath.push(pt);
-      }
+    (Array.isArray(path) ? path : []).forEach((pt) => {
+      const lat = Array.isArray(pt) ? Number(pt[1]) : Number(pt?.lat);
+      const lng = Array.isArray(pt) ? Number(pt[0]) : Number(pt?.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      normPath.push({ lat, lng });
     });
-    // Fallback: 경로 좌표가 없으면 정점(stops)으로 직선 연결
-    const pathToDraw = normPath.length >= 2 ? normPath : (
-      (stops || []).filter(s => typeof s?.lat === 'number' && typeof s?.lng === 'number')
-    );
+
+    const pathToDraw =
+      normPath.length >= 2
+        ? normPath
+        : safeStops
+            .map((s) => ({ lat: Number(s?.lat), lng: Number(s?.lng) }))
+            .filter(
+              (coord) =>
+                Number.isFinite(coord.lat) && Number.isFinite(coord.lng)
+            );
+
     if (pathToDraw.length >= 2) {
+      const linePath = pathToDraw.map((p) => new Tmapv2.LatLng(p.lat, p.lng));
       const line = new Tmapv2.Polyline({
-        path: pathToDraw.map((p) => new Tmapv2.LatLng(p.lat, p.lng)),
-        strokeColor: "#2563eb",
-        strokeWeight: 4,
+        path: linePath,
+        strokeColor: "#0ea5e9",
+        strokeWeight: 5,
+        strokeOpacity: 0.85,
         map,
       });
       overlaysRef.current.polylines.push(line);
-      pathToDraw.forEach((p) => bounds.extend(new Tmapv2.LatLng(p.lat, p.lng)));
+      linePath.forEach((point) => bounds.extend(point));
+    }
+
+    if (Tmapv2?.Event?.addListener) {
+      mapClickListenerRef.current = Tmapv2.Event.addListener(
+        map,
+        "click",
+        closeInfoWindows
+      );
     }
 
     if (!bounds.isEmpty()) {
-      map.fitBounds(bounds, 30);
+      map.panToBounds(bounds, true, 80);
+    } else if (safeStops[0]) {
+      const lat = Number(safeStops[0]?.lat);
+      const lng = Number(safeStops[0]?.lng);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        map.setCenter(new Tmapv2.LatLng(lat, lng));
+      }
     }
   }, [stops, path]);
 

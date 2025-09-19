@@ -56,10 +56,11 @@ export default function ItineraryView() {
     setLoadingPlans(false);
   }, []);
 
+
   const convertPlanToItinerary = useCallback((plan) => {
     if (!plan) {
       return {
-        itinerary_name: "경로 플랜",
+        itinerary_name: "Route Plan",
         destination: "",
         total_days: 0,
         travel_style: "CAR",
@@ -67,39 +68,108 @@ export default function ItineraryView() {
         days: [],
       };
     }
+
     const normalizedDays = (plan.days || []).map((day, dayIndex) => {
-      const timeline =
-        Array.isArray(day.timeline) && day.timeline.length
-          ? day.timeline
-          : [
-              {
-                idx: 1,
-                name: day.startLocation || `Day ${dayIndex + 1}`,
-                arrival: day.startTime || "09:00",
-                minutes: 0,
-                km: 0,
-              },
-            ];
+      const timeline = Array.isArray(day.timeline) ? day.timeline.filter(Boolean) : [];
+      const sanitizedTimeline = timeline.map((step, idx) => ({
+        idx: typeof step?.idx === "number" ? step.idx : idx + 1,
+        name: typeof step?.name === "string" ? step.name : "",
+        arrival: typeof step?.arrival === "string" ? step.arrival : null,
+        minutes: typeof step?.minutes === "number" ? step.minutes : 0,
+        km: typeof step?.km === "number" ? step.km : 0,
+      }));
+
+      const waypointStops = Array.isArray(day.waypoints)
+        ? day.waypoints.filter((wp) => typeof wp?.name === "string" && wp.name.trim().length > 0)
+        : [];
+
+      const orderedStops = [
+        day.startLocation ? { name: day.startLocation } : null,
+        ...waypointStops.map((wp) => ({ name: wp.name })),
+        day.endLocation ? { name: day.endLocation } : null,
+      ].filter(Boolean);
+
+      const ensureSteps = () => {
+        if (sanitizedTimeline.length >= orderedStops.length && sanitizedTimeline.length > 0) {
+          return sanitizedTimeline.map((step, idx) => ({
+            ...step,
+            idx: typeof step.idx === "number" ? step.idx : idx + 1,
+            name: step.name || orderedStops[idx]?.name || `Stop ${idx + 1}`,
+            arrival:
+              step.arrival ||
+              (idx === 0
+                ? day.startTime || "09:00"
+                : sanitizedTimeline[idx - 1]?.arrival || day.startTime || "09:00"),
+            minutes: typeof step.minutes === "number" ? step.minutes : 0,
+            km: typeof step.km === "number" ? step.km : 0,
+          }));
+        }
+
+        if (orderedStops.length > 0) {
+          return orderedStops.map((stop, idx) => {
+            const timelineStep = sanitizedTimeline[idx] || {};
+            const previousArrival =
+              idx === 0
+                ? day.startTime || "09:00"
+                : sanitizedTimeline[idx - 1]?.arrival || day.startTime || "09:00";
+            return {
+              idx: typeof timelineStep.idx === "number" ? timelineStep.idx : idx + 1,
+              name: timelineStep.name || stop.name || `Stop ${idx + 1}`,
+              arrival: timelineStep.arrival || previousArrival,
+              minutes: typeof timelineStep.minutes === "number" ? timelineStep.minutes : 0,
+              km: typeof timelineStep.km === "number" ? timelineStep.km : 0,
+            };
+          });
+        }
+
+        if (sanitizedTimeline.length > 0) {
+          return sanitizedTimeline.map((step, idx) => ({
+            ...step,
+            idx: typeof step.idx === "number" ? step.idx : idx + 1,
+            name: step.name || `Stop ${idx + 1}`,
+            arrival:
+              step.arrival ||
+              (idx === 0
+                ? day.startTime || "09:00"
+                : sanitizedTimeline[idx - 1]?.arrival || day.startTime || "09:00"),
+            minutes: typeof step.minutes === "number" ? step.minutes : 0,
+            km: typeof step.km === "number" ? step.km : 0,
+          }));
+        }
+
+        return [
+          {
+            idx: 1,
+            name: day.startLocation || day.title || `Day ${dayIndex + 1}`,
+            arrival: day.startTime || "09:00",
+            minutes: 0,
+            km: 0,
+          },
+        ];
+      };
+
+      const steps = ensureSteps();
       const stays = Array.isArray(day.stays) ? day.stays : [];
+
       return {
         day_number: dayIndex + 1,
         date: day.date || null,
-        activities: timeline.map((step, stepIdx) => {
-          const duration = Number(stays[stepIdx] || 0);
+        activities: steps.map((step, stepIdx) => {
+          const duration = typeof stays[stepIdx] === "number" ? stays[stepIdx] : 0;
           const details = [];
           if (typeof step.km === "number" && step.km > 0) {
             details.push(`${step.km.toFixed(1)}km`);
           }
-          if (step.minutes) {
-            details.push(`${step.minutes}분 이동`);
+          if (typeof step.minutes === "number" && step.minutes > 0) {
+            details.push(`${step.minutes} min travel`);
           }
           return {
             id: `${plan.id || "plan"}_${dayIndex}_${stepIdx}`,
             time: step.arrival || day.startTime || "09:00",
             duration,
-            place_name: step.name || `스톱 ${step.idx}`,
+            place_name: step.name || `Stop ${step.idx || stepIdx + 1}`,
             place_type: stepIdx === 0 ? "transport" : "activity",
-            description: details.join(" · "),
+            description: details.join(" / "),
             tips: "",
             cost_estimate: 0,
           };
@@ -108,7 +178,7 @@ export default function ItineraryView() {
     });
 
     return {
-      itinerary_name: plan.name || "경로 플랜",
+      itinerary_name: plan.name || "Route Plan",
       destination:
         (plan.days &&
           plan.days.length > 0 &&

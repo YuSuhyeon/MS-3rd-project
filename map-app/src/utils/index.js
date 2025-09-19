@@ -5,6 +5,7 @@ export function createPageUrl(name) {
     case "ResultDashboard":
       return "/result";
     case "DirectionsMantine":
+    case "DirectionsMantineImproved":
       return "/directions";
     case "DocentMantine":
       return "/docent";
