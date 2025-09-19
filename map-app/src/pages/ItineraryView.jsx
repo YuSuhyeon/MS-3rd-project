@@ -1,9 +1,35 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Itinerary } from "Entities/Itinerary";
 import { RoutePlan } from "Entities/RoutePlan";
-import { Card, CardContent } from "components/ui/card";
-import { Calendar, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+
+import {
+  Flex,
+  Paper,
+  Title,
+  Text,
+  Button,
+  Loader,
+  Center,
+  Stack,
+  Box,
+  AppShell,
+  Group,
+  Tabs,
+} from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import {
+  Sparkles,
+  Frown,
+  RefreshCw,
+  List,
+  Bookmark,
+  CalendarDays,
+  MapPin,
+  Car,
+  Pencil,
+} from "lucide-react";
 
 import TimelineDay from "components/itinerary/TimelineDay";
 import ActivityEditor from "components/itinerary/ActivityEditor";
@@ -11,17 +37,22 @@ import ItineraryHeader from "components/itinerary/ItineraryHeader";
 
 export default function ItineraryView() {
   const [itinerary, setItinerary] = useState(null);
+  const [localItinerary, setLocalItinerary] = useState(null);
   const [editingActivity, setEditingActivity] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [routePlans, setRoutePlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const hasChanges =
+    JSON.stringify(itinerary) !== JSON.stringify(localItinerary);
 
   const generateSampleItinerary = async () => {
     setIsGenerating(true);
     try {
       const sample = {
-        itinerary_name: "제주 2박 3일",
-        destination: "제주도",
+        itinerary_name: "서울 2박 3일",
+        destination: "서울시",
         total_days: 3,
         days: [
           { day_number: 1, date: new Date().toISOString(), activities: [] },
@@ -39,6 +70,7 @@ export default function ItineraryView() {
       };
       const newItinerary = await Itinerary.create(sample);
       setItinerary(newItinerary);
+      setLocalItinerary(JSON.parse(JSON.stringify(newItinerary)));
     } catch (e) {
       console.error(e);
     }
@@ -56,140 +88,61 @@ export default function ItineraryView() {
     setLoadingPlans(false);
   }, []);
 
-
   const convertPlanToItinerary = useCallback((plan) => {
     if (!plan) {
-      return {
-        itinerary_name: "Route Plan",
-        destination: "",
-        total_days: 0,
-        travel_style: "CAR",
-        source_plan_id: null,
-        days: [],
-      };
+      return null;
     }
 
-    const normalizedDays = (plan.days || []).map((day, dayIndex) => {
-      const timeline = Array.isArray(day.timeline) ? day.timeline.filter(Boolean) : [];
-      const sanitizedTimeline = timeline.map((step, idx) => ({
-        idx: typeof step?.idx === "number" ? step.idx : idx + 1,
-        name: typeof step?.name === "string" ? step.name : "",
-        arrival: typeof step?.arrival === "string" ? step.arrival : null,
-        minutes: typeof step?.minutes === "number" ? step.minutes : 0,
-        km: typeof step?.km === "number" ? step.km : 0,
-      }));
-
-      const waypointStops = Array.isArray(day.waypoints)
-        ? day.waypoints.filter((wp) => typeof wp?.name === "string" && wp.name.trim().length > 0)
-        : [];
-
-      const orderedStops = [
-        day.startLocation ? { name: day.startLocation } : null,
-        ...waypointStops.map((wp) => ({ name: wp.name })),
-        day.endLocation ? { name: day.endLocation } : null,
-      ].filter(Boolean);
-
-      const ensureSteps = () => {
-        if (sanitizedTimeline.length >= orderedStops.length && sanitizedTimeline.length > 0) {
-          return sanitizedTimeline.map((step, idx) => ({
-            ...step,
-            idx: typeof step.idx === "number" ? step.idx : idx + 1,
-            name: step.name || orderedStops[idx]?.name || `Stop ${idx + 1}`,
-            arrival:
-              step.arrival ||
-              (idx === 0
-                ? day.startTime || "09:00"
-                : sanitizedTimeline[idx - 1]?.arrival || day.startTime || "09:00"),
-            minutes: typeof step.minutes === "number" ? step.minutes : 0,
-            km: typeof step.km === "number" ? step.km : 0,
-          }));
-        }
-
-        if (orderedStops.length > 0) {
-          return orderedStops.map((stop, idx) => {
-            const timelineStep = sanitizedTimeline[idx] || {};
-            const previousArrival =
-              idx === 0
-                ? day.startTime || "09:00"
-                : sanitizedTimeline[idx - 1]?.arrival || day.startTime || "09:00";
-            return {
-              idx: typeof timelineStep.idx === "number" ? timelineStep.idx : idx + 1,
-              name: timelineStep.name || stop.name || `Stop ${idx + 1}`,
-              arrival: timelineStep.arrival || previousArrival,
-              minutes: typeof timelineStep.minutes === "number" ? timelineStep.minutes : 0,
-              km: typeof timelineStep.km === "number" ? timelineStep.km : 0,
-            };
-          });
-        }
-
-        if (sanitizedTimeline.length > 0) {
-          return sanitizedTimeline.map((step, idx) => ({
-            ...step,
-            idx: typeof step.idx === "number" ? step.idx : idx + 1,
-            name: step.name || `Stop ${idx + 1}`,
-            arrival:
-              step.arrival ||
-              (idx === 0
-                ? day.startTime || "09:00"
-                : sanitizedTimeline[idx - 1]?.arrival || day.startTime || "09:00"),
-            minutes: typeof step.minutes === "number" ? step.minutes : 0,
-            km: typeof step.km === "number" ? step.km : 0,
-          }));
-        }
-
-        return [
-          {
-            idx: 1,
-            name: day.startLocation || day.title || `Day ${dayIndex + 1}`,
-            arrival: day.startTime || "09:00",
-            minutes: 0,
-            km: 0,
-          },
-        ];
-      };
-
-      const steps = ensureSteps();
-      const stays = Array.isArray(day.stays) ? day.stays : [];
+    const days = (plan.days || []).map((day, dayIndex) => {
+      const activities = [];
+      if (day.startLocation) {
+        activities.push({
+          id: `${plan.id}_${dayIndex}_start`,
+          time: day.startTime || "09:00",
+          place_name: day.startLocation,
+          place_type: "transport",
+        });
+      }
+      (day.waypoints || []).forEach((wp, wpIndex) => {
+        activities.push({
+          id: `${plan.id}_${dayIndex}_wp_${wpIndex}`,
+          time: "09:00",
+          place_name: wp.name,
+          place_type: "activity",
+        });
+      });
+      if (
+        day.endLocation &&
+        (!day.startLocation || day.endLocation !== day.startLocation)
+      ) {
+        activities.push({
+          id: `${plan.id}_${dayIndex}_end`,
+          time: "09:00",
+          place_name: day.endLocation,
+          place_type: "activity",
+        });
+      }
 
       return {
         day_number: dayIndex + 1,
-        date: day.date || null,
-        activities: steps.map((step, stepIdx) => {
-          const duration = typeof stays[stepIdx] === "number" ? stays[stepIdx] : 0;
-          const details = [];
-          if (typeof step.km === "number" && step.km > 0) {
-            details.push(`${step.km.toFixed(1)}km`);
-          }
-          if (typeof step.minutes === "number" && step.minutes > 0) {
-            details.push(`${step.minutes} min travel`);
-          }
-          return {
-            id: `${plan.id || "plan"}_${dayIndex}_${stepIdx}`,
-            time: step.arrival || day.startTime || "09:00",
-            duration,
-            place_name: step.name || `Stop ${step.idx || stepIdx + 1}`,
-            place_type: stepIdx === 0 ? "transport" : "activity",
-            description: details.join(" / "),
-            tips: "",
-            cost_estimate: 0,
-          };
-        }),
+        date: null,
+        activities: activities.map((act) => ({
+          duration: 60,
+          description: "",
+          tips: "",
+          cost_estimate: 0,
+          ...act,
+        })),
       };
     });
 
     return {
-      itinerary_name: plan.name || "Route Plan",
-      destination:
-        (plan.days &&
-          plan.days.length > 0 &&
-          plan.days[plan.days.length - 1]?.endLocation) ||
-        plan.days?.[0]?.endLocation ||
-        plan.days?.[0]?.startLocation ||
-        "",
-      total_days: normalizedDays.length,
-      travel_style: plan.routeMode || "CAR",
+      itinerary_name: plan.name,
+      destination: plan.days?.[0]?.startLocation || "",
+      total_days: days.length,
+      travel_style: plan.routeMode,
       source_plan_id: plan.id,
-      days: normalizedDays,
+      days,
     };
   }, []);
 
@@ -198,27 +151,9 @@ export default function ItineraryView() {
       if (!plan) return;
       try {
         const converted = convertPlanToItinerary(plan);
-        const existingList = await Itinerary.list();
-        const existing = existingList.find(
-          (item) => item.source_plan_id === plan.id
-        );
-        if (existing) {
-          const updated = {
-            ...existing,
-            ...converted,
-            id: existing.id,
-            created_date: existing.created_date,
-            updated_from_plan_at: Date.now(),
-          };
-          await Itinerary.update(existing.id, updated);
-          setItinerary(updated);
-        } else {
-          const created = await Itinerary.create({
-            ...converted,
-            created_from_plan_at: Date.now(),
-          });
-          setItinerary(created);
-        }
+        const newItinerary = await Itinerary.create(converted);
+        setItinerary(newItinerary);
+        setLocalItinerary(JSON.parse(JSON.stringify(newItinerary)));
         setEditingActivity(null);
       } catch (e) {
         console.error(e);
@@ -238,146 +173,64 @@ export default function ItineraryView() {
       }
       try {
         await RoutePlan.remove(planId);
-        setRoutePlans((prev) => prev.filter((plan) => plan.id !== planId));
-        if (itinerary?.source_plan_id === planId) {
-          const remaining = await Itinerary.list("-created_date", 1);
+        await loadRoutePlans();
+        if (localItinerary?.source_plan_id === planId) {
+          const remaining = await Itinerary.list();
           setItinerary(remaining[0] || null);
+          setLocalItinerary(
+            remaining[0] ? JSON.parse(JSON.stringify(remaining[0])) : null
+          );
         }
       } catch (e) {
         console.error(e);
       }
     },
-    [itinerary]
+    [localItinerary, loadRoutePlans]
   );
 
-  const renderSavedPlans = () => {
-    return (
-      <div className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-amber-700">
-            저장된 경로 플랜
-          </h3>
-          <button
-            type="button"
-            onClick={loadRoutePlans}
-            className="text-sm text-amber-600 hover:text-amber-800 underline-offset-4 hover:underline"
-          >
-            새로고침
-          </button>
-        </div>
-        {loadingPlans ? (
-          <div className="text-sm text-amber-600 bg-white/70 border border-amber-100 rounded-lg px-4 py-6">
-            저장된 플랜을 불러오는 중입니다...
-          </div>
-        ) : routePlans.length ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {routePlans.map((plan) => {
-              const stopCount = (plan.days || []).reduce(
-                (acc, day) =>
-                  acc +
-                  (day.startLocation ? 1 : 0) +
-                  (Array.isArray(day.waypoints) ? day.waypoints.length : 0) +
-                  (day.endLocation ? 1 : 0),
-                0
-              );
-              const totalDistance = (plan.days || []).reduce(
-                (acc, day) => acc + (day.summary?.distance || 0),
-                0
-              );
-              const firstDay = plan.days?.[0];
-              const lastDay = plan.days?.[plan.days.length - 1];
-              return (
-                <div
-                  key={plan.id}
-                  className="bg-white/90 border border-amber-100 rounded-xl p-4 shadow-sm flex flex-col gap-3"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h4 className="text-base font-semibold text-amber-800">
-                        {plan.name}
-                      </h4>
-                      <p className="text-sm text-amber-600">
-                        {plan.days?.length || 0}일 · {stopCount}개 장소 ·{" "}
-                        {plan.routeMode || "CAR"}
-                      </p>
-                      <p className="text-xs text-amber-500 mt-1">
-                        {firstDay?.startLocation || "-"} →{" "}
-                        {lastDay?.endLocation || firstDay?.endLocation || "-"}
-                      </p>
-                      {totalDistance > 0 && (
-                        <p className="text-xs text-amber-500">
-                          총 이동거리 약 {totalDistance.toFixed(1)}km
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-xs text-amber-500">
-                      {plan.updatedAt
-                        ? new Date(plan.updatedAt).toLocaleDateString()
-                        : ""}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyRoutePlan(plan)}
-                      className="flex-1 inline-flex items-center justify-center rounded-lg bg-amber-500 text-white px-3 py-2 text-sm font-semibold hover:bg-amber-600 transition-colors"
-                    >
-                      플래너로 불러오기
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteRoutePlan(plan.id)}
-                      className="px-3 py-2 text-sm border border-amber-200 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-sm text-amber-600 bg-white/70 border border-dashed border-amber-200 rounded-lg px-4 py-6">
-            경로 편집 페이지에서 플랜을 저장하면 이곳에서 확인할 수 있습니다.
-          </div>
-        )}
-      </div>
-    );
+  const onDragEnd = async (result) => {
+    const { source, destination } = result;
+    if (
+      !destination ||
+      (source.droppableId === destination.droppableId &&
+        source.index === destination.index)
+    )
+      return;
+    setLocalItinerary((prev) => {
+      const newItinerary = JSON.parse(JSON.stringify(prev));
+      const sourceDayIndex = parseInt(source.droppableId.split("-")[1]);
+      const destDayIndex = parseInt(destination.droppableId.split("-")[1]);
+      const [movedActivity] = newItinerary.days[
+        sourceDayIndex
+      ].activities.splice(source.index, 1);
+      newItinerary.days[destDayIndex].activities.splice(
+        destination.index,
+        0,
+        movedActivity
+      );
+      return newItinerary;
+    });
   };
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const itineraries = await Itinerary.list("-created_date", 1);
-        if (itineraries.length > 0) setItinerary(itineraries[0]);
-        else generateSampleItinerary();
-      } catch (e) {
-        console.error(e);
+  const updateActivity = (dayIndex, activityId, updatedData) => {
+    setLocalItinerary((prev) => {
+      const newItinerary = JSON.parse(JSON.stringify(prev));
+      const day = newItinerary.days[dayIndex];
+      const activityIndex = day.activities.findIndex(
+        (a) => a.id === activityId
+      );
+      if (activityIndex !== -1) {
+        day.activities[activityIndex] = {
+          ...day.activities[activityIndex],
+          ...updatedData,
+        };
       }
-    })();
-  }, []);
-
-  useEffect(() => {
-    loadRoutePlans();
-  }, [loadRoutePlans]);
-
-  const updateActivity = async (dayIndex, activityId, updatedData) => {
-    const updatedItinerary = { ...itinerary };
-    const idx = updatedItinerary.days[dayIndex].activities.findIndex(
-      (a) => a.id === activityId
-    );
-    if (idx !== -1) {
-      updatedItinerary.days[dayIndex].activities[idx] = {
-        ...updatedItinerary.days[dayIndex].activities[idx],
-        ...updatedData,
-      };
-      await Itinerary.update(itinerary.id, updatedItinerary);
-      setItinerary(updatedItinerary);
-    }
+      return newItinerary;
+    });
     setEditingActivity(null);
   };
 
-  const addActivity = async (dayIndex) => {
+  const addActivity = async (dayIndex, insertIndex) => {
     const newActivity = {
       id: `activity_${Date.now()}`,
       time: "12:00",
@@ -388,104 +241,450 @@ export default function ItineraryView() {
       tips: "",
       cost_estimate: 0,
     };
-    const updatedItinerary = { ...itinerary };
-    updatedItinerary.days[dayIndex].activities.push(newActivity);
-    await Itinerary.update(itinerary.id, updatedItinerary);
-    setItinerary(updatedItinerary);
+    setLocalItinerary((prev) => {
+      const newItinerary = JSON.parse(JSON.stringify(prev));
+      newItinerary.days[dayIndex].activities.splice(
+        insertIndex,
+        0,
+        newActivity
+      );
+      return newItinerary;
+    });
+    setEditingActivity({ ...newActivity, dayIndex });
   };
 
   const deleteActivity = async (dayIndex, activityId) => {
-    const updatedItinerary = { ...itinerary };
-    updatedItinerary.days[dayIndex].activities = updatedItinerary.days[
-      dayIndex
-    ].activities.filter((a) => a.id !== activityId);
-    await Itinerary.update(itinerary.id, updatedItinerary);
-    setItinerary(updatedItinerary);
+    setLocalItinerary((prev) => {
+      const newItinerary = JSON.parse(JSON.stringify(prev));
+      newItinerary.days[dayIndex].activities = newItinerary.days[
+        dayIndex
+      ].activities.filter((a) => a.id !== activityId);
+      return newItinerary;
+    });
   };
 
-  if (isGenerating) {
+  const handleTitleChange = (newTitle) => {
+    setLocalItinerary((prev) => ({ ...prev, itinerary_name: newTitle }));
+  };
+  const handleDateChange = (dayIndex, newDate) => {
+    setLocalItinerary((prev) => {
+      const newItinerary = JSON.parse(JSON.stringify(prev));
+      newItinerary.days[dayIndex].date = newDate ? newDate.toISOString() : null;
+      return newItinerary;
+    });
+  };
+
+  const convertItineraryToPlan = (itineraryData, originalPlan) => {
+    const updatedPlan = JSON.parse(JSON.stringify(originalPlan));
+
+    updatedPlan.name = itineraryData.itinerary_name;
+    updatedPlan.routeMode = itineraryData.travel_style || "CAR";
+
+    updatedPlan.days = itineraryData.days.map((itineraryDay, index) => {
+      const originalDay = originalPlan.days[index] || {};
+      const activities = itineraryDay.activities || [];
+
+      const startLocation =
+        activities.length > 0 ? activities[0].place_name : "";
+      const endLocation =
+        activities.length > 1
+          ? activities[activities.length - 1].place_name
+          : startLocation;
+      const waypoints =
+        activities.length > 2
+          ? activities.slice(1, -1).map((act) => {
+              const originalWp = originalDay.waypoints?.find(
+                (w) => w.name === act.place_name
+              );
+              return originalWp || { name: act.place_name };
+            })
+          : [];
+
+      return {
+        ...originalDay,
+        startLocation,
+        endLocation,
+        waypoints,
+        startTime: activities[0]?.time || originalDay.startTime || "09:00",
+      };
+    });
+
+    return updatedPlan;
+  };
+
+  const handleSaveChanges = async () => {
+    if (!localItinerary) return;
+    setIsSaving(true);
+    try {
+      await Itinerary.update(localItinerary.id, localItinerary);
+      setItinerary(JSON.parse(JSON.stringify(localItinerary)));
+
+      if (localItinerary.source_plan_id) {
+        const originalPlan = await RoutePlan.get(localItinerary.source_plan_id);
+        if (originalPlan) {
+          const updatedPlanData = convertItineraryToPlan(
+            localItinerary,
+            originalPlan
+          );
+          await RoutePlan.save(updatedPlanData);
+          await loadRoutePlans();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to save changes:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDiscardChanges = () => {
+    setLocalItinerary(JSON.parse(JSON.stringify(itinerary)));
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const itineraries = await Itinerary.list();
+        if (itineraries.length > 0) {
+          setItinerary(itineraries[0]);
+          setLocalItinerary(JSON.parse(JSON.stringify(itineraries[0])));
+        } else {
+          generateSampleItinerary();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    loadRoutePlans();
+  }, [loadRoutePlans]);
+
+  const renderSavedPlans = () => {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
-        <Card className="max-w-md mx-auto text-center">
-          <CardContent className="p-8">
-            <div className="w-16 h-16 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mb-4 mx-auto"></div>
-            <h2 className="text-xl font-semibold mb-2">
+      <Stack>
+        <Flex justify="space-between" align="center">
+          <Title order={isDesktop ? 4 : 5} c="grape.3">
+            경로 플랜 가져오기
+          </Title>
+          <Button
+            variant="subtle"
+            size="xs"
+            color="grape"
+            onClick={loadRoutePlans}
+            leftSection={<RefreshCw size={14} />}
+          >
+            {" "}
+            새로고침
+          </Button>
+        </Flex>
+        {loadingPlans ? (
+          <Center h={100}>
+            <Loader color="grape" />
+          </Center>
+        ) : routePlans.length ? (
+          <Stack gap="md">
+            {routePlans.map((plan) => {
+              const stopCount = (plan.days || []).reduce((totalStops, day) => {
+                const waypointStops = Array.isArray(day.waypoints)
+                  ? day.waypoints.filter(
+                      (wp) =>
+                        typeof wp?.name === "string" &&
+                        wp.name.trim().length > 0
+                    )
+                  : [];
+                const orderedStops = [
+                  day.startLocation,
+                  ...waypointStops.map((wp) => wp.name),
+                  day.endLocation,
+                ].filter(Boolean);
+                return totalStops + new Set(orderedStops).size;
+              }, 0);
+              return (
+                <Paper
+                  key={plan.id}
+                  withBorder
+                  p="md"
+                  radius="md"
+                  bg="dark.7"
+                  style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
+                >
+                  <Stack gap="md">
+                    <Stack gap="xs">
+                      <Text fw={600} c="gray.1" size="lg" truncate>
+                        {plan.name}
+                      </Text>
+                      <Group gap="md" wrap="nowrap">
+                        {plan.updatedAt && (
+                          <Text
+                            size="xs"
+                            c="gray.5"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <Pencil size={14} />
+                            {new Date(plan.updatedAt)
+                              .toLocaleDateString("ko-KR", {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                              })
+                              .replace(/\.$/, "")}
+                          </Text>
+                        )}
+                        <Text
+                          size="xs"
+                          c="gray.5"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                        >
+                          <CalendarDays size={14} /> {plan.days?.length || 0}일
+                        </Text>
+                        <Text
+                          size="xs"
+                          c="gray.5"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                        >
+                          <MapPin size={14} /> {stopCount}개 장소
+                        </Text>
+                      </Group>
+                    </Stack>
+                    <Flex gap="sm">
+                      <Button
+                        fullWidth
+                        size="sm"
+                        variant="gradient"
+                        gradient={{ from: "grape", to: "pink" }}
+                        onClick={() => handleApplyRoutePlan(plan)}
+                      >
+                        불러오기
+                      </Button>
+                      <Button
+                        fullWidth
+                        variant="outline"
+                        color="gray.6"
+                        size="sm"
+                        onClick={() => handleDeleteRoutePlan(plan.id)}
+                      >
+                        삭제
+                      </Button>
+                    </Flex>
+                  </Stack>
+                </Paper>
+              );
+            })}
+          </Stack>
+        ) : (
+          <Center h={100}>
+            <Text size="sm" c="gray.6">
+              저장된 플랜이 없습니다.
+            </Text>
+          </Center>
+        )}
+      </Stack>
+    );
+  };
+
+  if (isGenerating || !localItinerary) {
+    return (
+      <Center h="100vh" bg="dark.9">
+        {" "}
+        {isGenerating ? (
+          <Stack align="center">
+            <Loader color="grape" size="xl" />
+            <Title order={3} mt="lg" c="gray.1">
               AI가 여행 일정을 생성 중입니다
-            </h2>
-            <p className="text-gray-600">잠시만 기다려주세요...</p>
-          </CardContent>
-        </Card>
-      </div>
+            </Title>
+            <Text c="gray.5">잠시만 기다려주세요...</Text>
+          </Stack>
+        ) : (
+          <Paper
+            shadow="md"
+            p="xl"
+            radius="md"
+            withBorder
+            bg="dark.8"
+            style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
+          >
+            <Stack align="center">
+              <Frown
+                size={48}
+                strokeWidth={1.5}
+                color="var(--mantine-color-grape-5)"
+              />
+              <Title order={3} c="gray.1">
+                일정이 없습니다
+              </Title>
+              <Text c="gray.5" ta="center" mb="lg">
+                새로운 여행 일정을 생성해보세요.
+              </Text>
+              <Button
+                onClick={generateSampleItinerary}
+                variant="gradient"
+                gradient={{ from: "grape", to: "pink" }}
+                leftSection={<Sparkles size={16} />}
+              >
+                일정 생성하기
+              </Button>
+            </Stack>
+          </Paper>
+        )}
+      </Center>
     );
   }
 
-  if (!itinerary) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-4 md:p-8">
-        <div className="max-w-6xl mx-auto space-y-8">
-          {renderSavedPlans()}
-          <Card className="max-w-md mx-auto text-center">
-            <CardContent className="p-8">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">일정이 없습니다</h2>
-              <p className="text-gray-600 mb-6">
-                새로운 여행 일정을 생성해보세요.
-              </p>
-              <button
-                onClick={generateSampleItinerary}
-                className="inline-flex items-center bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-md px-4 py-2"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                일정 생성하기
-              </button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  const itineraryContent = (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Stack gap="xl">
+        {localItinerary.days?.map((day, dayIndex) => (
+          <Droppable key={day.day_number} droppableId={`day-${dayIndex}`}>
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                <TimelineDay
+                  day={day}
+                  dayIndex={dayIndex}
+                  onDateChange={handleDateChange}
+                  onEditActivity={(activity) =>
+                    setEditingActivity({ ...activity, dayIndex })
+                  }
+                  onAddActivity={(insertIndex) =>
+                    addActivity(dayIndex, insertIndex)
+                  }
+                  onDeleteActivity={(activityId) =>
+                    deleteActivity(dayIndex, activityId)
+                  }
+                />
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        ))}
+      </Stack>
+    </DragDropContext>
+  );
+
+  const savedPlansContent = (
+    <Box>
+      <Title order={isDesktop ? 2 : 4} mb="xl" c="gray.1">
+        저장된 플랜
+      </Title>
+      {renderSavedPlans()}
+    </Box>
+  );
+
+  const DesktopLayout = () => (
+    <Flex h="100vh" bg="dark.9">
+      <Paper
+        w={400}
+        p="lg"
+        bg="dark.8"
+        withBorder
+        style={{
+          borderTop: 0,
+          borderBottom: 0,
+          borderLeft: 0,
+          borderColor: "rgba(192, 132, 252, 0.2)",
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Box
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            paddingRight: "var(--mantine-spacing-xs)",
+          }}
+        >
+          {savedPlansContent}
+        </Box>
+      </Paper>
+      <Box style={{ flex: 1, overflowY: "auto" }} p="xl">
+        <ItineraryHeader
+          itinerary={localItinerary}
+          onTitleChange={handleTitleChange}
+          onSave={handleSaveChanges}
+          onDiscard={handleDiscardChanges}
+          hasChanges={hasChanges}
+          isSaving={isSaving}
+        />
+        {itineraryContent}
+      </Box>
+    </Flex>
+  );
+
+  const MobileLayout = () => (
+    <AppShell header={{ height: 60 }} padding="md" bg="dark.9">
+      <AppShell.Header
+        bg="dark.8"
+        withBorder
+        style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
+      >
+        <Group h="100%" px="md" justify="space-between">
+          <Title order={4} c="grape.3">
+            여행 플래너
+          </Title>
+        </Group>
+      </AppShell.Header>
+      <AppShell.Main>
+        <ItineraryHeader
+          itinerary={localItinerary}
+          onTitleChange={handleTitleChange}
+          onSave={handleSaveChanges}
+          onDiscard={handleDiscardChanges}
+          hasChanges={hasChanges}
+          isSaving={isSaving}
+        />
+        <Tabs defaultValue="itinerary" color="grape" mt="lg">
+          <Tabs.List grow>
+            <Tabs.Tab value="itinerary" leftSection={<List size={16} />}>
+              일정
+            </Tabs.Tab>
+            <Tabs.Tab value="savedPlans" leftSection={<Bookmark size={16} />}>
+              저장된 플랜
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="itinerary" pt="lg">
+            {itineraryContent}
+          </Tabs.Panel>
+          <Tabs.Panel value="savedPlans" pt="lg">
+            {savedPlansContent}
+          </Tabs.Panel>
+        </Tabs>
+      </AppShell.Main>
+    </AppShell>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        {renderSavedPlans()}
-        <ItineraryHeader
-          itinerary={itinerary}
-          onRegenerate={generateSampleItinerary}
-          isGenerating={isGenerating}
-        />
-        <div className="space-y-12">
-          {itinerary.days?.map((day, dayIndex) => (
-            <TimelineDay
-              key={dayIndex}
-              day={day}
-              dayIndex={dayIndex}
-              onEditActivity={(activity) =>
-                setEditingActivity({ ...activity, dayIndex })
-              }
-              onAddActivity={() => addActivity(dayIndex)}
-              onDeleteActivity={(activityId) =>
-                deleteActivity(dayIndex, activityId)
-              }
-            />
-          ))}
-        </div>
-        <AnimatePresence>
-          {editingActivity && (
-            <ActivityEditor
-              activity={editingActivity}
-              onSave={(updatedData) =>
-                updateActivity(
-                  editingActivity.dayIndex,
-                  editingActivity.id,
-                  updatedData
-                )
-              }
-              onCancel={() => setEditingActivity(null)}
-            />
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+    <>
+      {isDesktop ? <DesktopLayout /> : <MobileLayout />}
+      <AnimatePresence>
+        {editingActivity && (
+          <ActivityEditor
+            activity={editingActivity}
+            opened={!!editingActivity}
+            onClose={() => setEditingActivity(null)}
+            onSave={(updatedData) =>
+              updateActivity(
+                editingActivity.dayIndex,
+                editingActivity.id,
+                updatedData
+              )
+            }
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

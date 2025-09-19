@@ -1,38 +1,136 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
-import { Button } from "components/ui/button";
-import { Calendar, MapPin, DollarSign, Sparkles, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  Paper,
+  Title,
+  Text,
+  Button,
+  Group,
+  Stack,
+  Badge,
+  Progress,
+  Box,
+} from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import {
+  Calendar,
+  MapPin,
+  DollarSign,
+  Sparkles,
+  Share2,
+  Save,
+} from "lucide-react";
 
-export default function ItineraryHeader({ itinerary, onRegenerate, isGenerating }) {
-  const totalCost = itinerary?.days?.reduce((total, day) => total + day.activities.reduce((d, a) => d + (a.cost_estimate || 0), 0), 0) || 0;
+export default function ItineraryHeader({
+  itinerary,
+  onRegenerate,
+  isGenerating,
+}) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const totalCost =
+    itinerary?.days?.reduce(
+      (total, day) =>
+        total + day.activities.reduce((d, a) => d + (a.cost_estimate || 0), 0),
+      0
+    ) || 0;
+  const activityCount =
+    itinerary?.days?.reduce((total, day) => total + day.activities.length, 0) ||
+    0;
 
   return (
-    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
-      <Card className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 shadow-xl">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-3xl font-bold mb-2">{itinerary.itinerary_name || "나의 여행 일정"}</CardTitle>
-              <div className="flex items-center gap-4 text-orange-100">
-                <div className="flex items-center gap-1"><MapPin className="w-4 h-4" /><span>{itinerary.destination || "목적지"}</span></div>
-                <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /><span>{itinerary.total_days || 0}일 여행</span></div>
-              </div>
-            </div>
-            <Button variant="ghost" onClick={onRegenerate} disabled={isGenerating} className="bg-white/20 hover:bg-white/30 text-white">
-              {isGenerating ? (<><RefreshCw className="w-4 h-4 mr-2 animate-spin" />생성 중...</>) : (<><Sparkles className="w-4 h-4 mr-2" />새 일정 생성</>)}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="bg-white/20 text-white border-white/30 rounded-md px-3 py-1 inline-flex items-center"><DollarSign className="w-3 h-3 mr-1" />예상 총 비용: {totalCost.toLocaleString()}원</div>
-            {itinerary.travel_style && (
-              <div className="bg-white/20 text-white border-white/30 rounded-md px-3 py-1 inline-flex items-center">여행 스타일: {itinerary.travel_style}</div>
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{
+        marginBottom: isMobile
+          ? "var(--mantine-spacing-md)"
+          : "var(--mantine-spacing-xl)",
+      }}
+    >
+      <Paper
+        shadow="md"
+        p={isMobile ? "md" : "xl"}
+        radius="md"
+        withBorder
+        bg="dark.7"
+        style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
+      >
+        <Stack>
+          <Group justify="space-between" align="start">
+            <Stack gap={4}>
+              <Title
+                order={isMobile ? 3 : 1}
+                variant="gradient"
+                gradient={{ from: "grape", to: "pink", deg: 45 }}
+              >
+                {itinerary.itinerary_name || "나의 여행 일정"}
+              </Title>
+              <Group mt="sm" gap="lg">
+                <Text
+                  c="gray.4"
+                  size="sm"
+                  style={{ display: "flex", alignItems: "center", gap: 6 }}
+                >
+                  <MapPin size={16} /> {itinerary.destination || "목적지"}
+                </Text>
+                {!isMobile && (
+                  <Text
+                    c="gray.4"
+                    size="sm"
+                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                  >
+                    <Calendar size={16} /> {itinerary.total_days || 0}일 여행
+                  </Text>
+                )}
+                <Badge
+                  variant="light"
+                  color="grape"
+                  leftSection={<Sparkles size={12} />}
+                >
+                  {activityCount}개 활동
+                </Badge>
+              </Group>
+            </Stack>
+            <Group>
+              <Button variant="default" p={isMobile ? 8 : undefined}>
+                <Share2 size={16} />{" "}
+                <Text visibleFrom="sm" ml={8}>
+                  공유
+                </Text>
+              </Button>
+              <Button
+                variant="gradient"
+                gradient={{ from: "grape", to: "pink" }}
+                p={isMobile ? 8 : undefined}
+              >
+                <Save size={16} />{" "}
+                <Text visibleFrom="sm" ml={8}>
+                  저장
+                </Text>
+              </Button>
+            </Group>
+          </Group>
+
+          <Box mt="md">
+            <Group justify="space-between">
+              <Text
+                size="sm"
+                fw={500}
+                c="gray.4"
+                style={{ display: "flex", alignItems: "center", gap: 6 }}
+              >
+                <DollarSign size={16} /> 예상 총 비용
+              </Text>
+              <Text fw={700} c="grape.2" size="lg">
+                {totalCost.toLocaleString()}원
+              </Text>
+            </Group>
+            {!isMobile && (
+              <Progress value={45} color="grape" mt={4} radius="sm" />
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </Box>
+        </Stack>
+      </Paper>
     </motion.div>
   );
 }

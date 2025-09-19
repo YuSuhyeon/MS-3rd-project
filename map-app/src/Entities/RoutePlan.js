@@ -67,7 +67,11 @@ export const RoutePlan = {
     return Promise.resolve(
       items
         .slice()
-        .sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
+        .sort(
+          (a, b) =>
+            (b.updatedAt || b.createdAt || 0) -
+            (a.updatedAt || a.createdAt || 0)
+        )
     );
   },
 
