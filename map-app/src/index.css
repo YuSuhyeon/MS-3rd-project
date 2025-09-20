@@ -17,3 +17,77 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.itinerary-marker {
+  background: rgba(124, 58, 237, 0.92);
+  color: #fff;
+  border-radius: 16px;
+  padding: 2px 10px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.itinerary-marker span {
+  display: block;
+  font-size: 13px;
+}
+
+.itinerary-marker-active {
+  background: rgba(236, 72, 153, 0.95);
+}
+
+.itinerary-place-input input {
+  width: 100%;
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-dark-4);
+  background-color: var(--mantine-color-dark-6);
+  color: var(--mantine-color-gray-1);
+  padding: 10px 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.itinerary-place-input input:focus {
+  outline: none;
+  border-color: var(--mantine-color-grape-5);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25);
+}
+
+.itinerary-place-input .absolute {
+  background-color: var(--mantine-color-dark-7);
+  border: 1px solid var(--mantine-color-dark-4);
+  color: var(--mantine-color-gray-1);
+}
+
+.itinerary-place-input button {
+  background: transparent;
+  color: var(--mantine-color-gray-1);
+}
+
+.itinerary-place-input button:hover {
+  background: rgba(129, 64, 246, 0.08);
+  color: var(--mantine-color-gray-0);
+}
+
+.itinerary-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(147, 51, 234, 0.45) transparent;
+}
+
+.itinerary-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.itinerary-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.itinerary-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(192, 132, 252, 0.9), rgba(147, 51, 234, 0.9));
+  border-radius: 999px;
+}
+
+.itinerary-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(192, 132, 252, 1), rgba(147, 51, 234, 1));
+}
