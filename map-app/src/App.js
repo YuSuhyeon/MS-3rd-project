@@ -29,6 +29,7 @@ function AppRoutes() {
       {/* 루트 경로는 Layout 없이 Home 페이지만 렌더링합니다. */}
       <Route path="/" element={<Home />} />
 
+      <Route path="/popular-places/:areaName" element={<PopularPlaces />} />
       {/* 그 외 모든 경로는 Layout 컴포넌트로 감싸서 렌더링합니다. */}
       <Route
         path="*"
@@ -56,6 +57,7 @@ function AppRoutes() {
                 path="/popular-places/:areaName"
                 element={<PopularPlaces />}
               />
+              <Route path="/tour/:id" element={<TourDetail />} />
               {/* 위 경로들과 일치하지 않으면 "/persona"로 리다이렉트합니다. */}
               <Route path="*" element={<Navigate to="/persona" replace />} />
             </Routes>

@@ -15,112 +15,14 @@ import {
   Filter,
   Eye,
 } from "lucide-react";
+
 // 목업 데이터 임포트
 import {
   tourProducts,
   tourInfoData,
   partnershipData,
 } from "../utils/mockTourData";
-// 웰컴 팝업
-{
-  /*
-const WelcomePopup = ({ isOpen, onClose }) => {
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: 50 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: 50 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-lg rounded-3xl p-8 max-w-md w-full mx-4 relative shadow-2xl border border-purple-500/30"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700/50 transition-colors group"
-            >
-              <X className="w-6 h-6 text-gray-400 group-hover:text-white" />
-            </button>
 
-            <div className="text-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring" }}
-                className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/25"
-              >
-                <Sparkles className="w-10 h-10 text-white" />
-              </motion.div>
-
-              <motion.img
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                src="https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400"
-                alt="K-Pop Tour"
-                className="w-full h-32 object-cover rounded-2xl mb-6 border border-purple-500/30"
-              />
-
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4"
-              >
-                Welcome to Your K-Pop Adventure!
-              </motion.h2>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-gray-300 mb-6 leading-relaxed"
-              >
-                You're about to explore the magical world of K-Pop! Get ready
-                for exclusive experiences and amazing photo opportunities.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="flex items-center justify-center gap-6 mb-6 text-sm text-gray-400"
-              >
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-blue-400" />
-                  <span>24+ joined today</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-yellow-400" />
-                  <span>4.8★ rating</span>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.7 }}
-              >
-                <NeonButton onClick={onClose} className="w-full py-4">
-                  Start the Journey
-                </NeonButton>
-              </motion.div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}; */
-}
 // NeonTheme 컴포넌트들
 const BackgroundEffect = ({ children, className = "" }) => {
   const canvasRef = useRef(null);
@@ -153,21 +55,21 @@ const BackgroundEffect = ({ children, className = "" }) => {
           amplitude: 40,
           frequency: 0.005,
           speed: 0.01,
-          color: "rgba(168, 85, 247, 0.1)", // purple
+          color: "rgba(168, 85, 247, 0.1)",
           yOffset: canvas.height * 0.3,
         },
         {
           amplitude: 60,
           frequency: 0.003,
           speed: 0.008,
-          color: "rgba(236, 72, 153, 0.08)", // pink
+          color: "rgba(236, 72, 153, 0.08)",
           yOffset: canvas.height * 0.5,
         },
         {
           amplitude: 30,
           frequency: 0.007,
           speed: 0.012,
-          color: "rgba(59, 130, 246, 0.06)", // blue
+          color: "rgba(59, 130, 246, 0.06)",
           yOffset: canvas.height * 0.7,
         },
       ];
@@ -415,7 +317,7 @@ const TourCard = ({ item, onDetailClick }) => {
       case "sports":
         return {
           emoji: "⚾",
-          label: "sports",
+          label: "Sports",
           gradient: "from-blue-500 to-pink-500",
         };
       case "beauty":
@@ -445,7 +347,7 @@ const TourCard = ({ item, onDetailClick }) => {
       default:
         return {
           emoji: "🎵",
-          label: "play",
+          label: "Play",
           gradient: "from-gray-500 to-gray-600",
         };
     }
@@ -507,14 +409,6 @@ const TourCard = ({ item, onDetailClick }) => {
       </div>
 
       <div className="p-6">
-        {/* <div className="flex items-center gap-2 mb-3">
-          {/* <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
-            {item.kpopGroup}
-          </span> 
-          <span className="text-gray-400">•</span>
-          <span className="text-sm text-gray-400">리뷰 {item.reviews}개</span>
-        </div> */}
-
         <h3 className="font-bold text-white text-lg mb-2 line-clamp-2">
           {item.title}
         </h3>
@@ -574,10 +468,6 @@ const TourCard = ({ item, onDetailClick }) => {
   );
 };
 
-//TourInfo 컴포넌트
-const TourInfoSection = () => {
-  return <NeonCard></NeonCard>;
-};
 // PartnershipSection 컴포넌트
 const PartnershipSection = () => {
   return (
@@ -688,41 +578,89 @@ export default function Tour() {
     <BackgroundEffect className="w-full min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
+        {/* 네비게이션 헤더 */}
+        <div className="relative z-20 bg-gray-900/50 backdrop-blur-sm border-b border-purple-500/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => navigate("/")}
+                  className="flex items-center gap-2 text-white hover:text-purple-300 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">K</span>
+                  </div>
+                  <span className="font-semibold">KTour</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigate("/")}
+                  className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors"
+                >
+                  홈
+                </button>
+                <button className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                  투어
+                </button>
+                <button className="px-4 py-2 text-sm bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all">
+                  로그인
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
-            <h1 className="text-4xl md:text-6xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4">
-              특별한 여행 경험을 만나보세요
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4 px-4">
+              한국의 숨겨진 매력을
+              <br className="sm:hidden" /> 발견하세요
             </h1>
 
-            {/* Search and Filter */}
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 max-w-2xl mx-auto">
-              <div className="relative">
-                <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <p className="text-gray-300 text-sm sm:text-base mb-2 sm:mb-3 px-4">
+              검증된 파트너사와의 독점 콜라보레이션으로 만든
+            </p>
+            <p className="text-lg sm:text-xl md:text-2xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 sm:mb-8 px-4">
+              프리미엄 한국 문화 체험 투어
+            </p>
+
+            {/* 통합 필터 - 모바일/데스크탑 모두 한 줄 */}
+            <div className="flex items-center justify-center gap-3 max-w-4xl mx-auto px-4">
+              <div className="relative flex-shrink-0">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="pl-12 pr-8 py-4 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white appearance-none cursor-pointer shadow-lg"
+                  className="pl-10 pr-6 py-3 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white appearance-none cursor-pointer shadow-lg text-sm"
                 >
-                  <option value="all">전체 </option>
-                  <option value="location">촬영지</option>
-                  <option value="goods">굿즈</option>
-                  <option value="experience">체험</option>
-                  <option value="food">먹방</option>
+                  <option value="all">전체</option>
+                  <option value="location">📍 촬영지</option>
+                  <option value="goods">🛍️ 굿즈</option>
+                  <option value="experience">🎭 체험</option>
+                  <option value="food">🍜 먹방</option>
+                  <option value="it">🖥️ IT</option>
+                  <option value="sports">⚾ 스포츠</option>
+                  <option value="beauty">💄 뷰티</option>
+                  <option value="culture">🏛️ 문화</option>
+                  <option value="adventure">🏔️ 어드벤처</option>
+                  <option value="entertainment">🎢 엔터테인먼트</option>
                 </select>
               </div>
-              <div className="relative flex-1 w-full">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="상품 검색..."
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white placeholder-gray-400 shadow-lg"
+                  placeholder="투어 검색..."
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white placeholder-gray-400 shadow-lg text-sm"
                 />
               </div>
             </div>
@@ -731,58 +669,114 @@ export default function Tour() {
       </section>
 
       {/* Main Content */}
-      <div className="w-full max-w-7xl mx-auto px-6 py-8">
-        {/* Tour Products Section */}
-        <NeonCard className="mb-8">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/25">
-              <Package className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
-                인기 투어 상품
-              </h2>
-              <p className="text-gray-300">
-                제휴된 파트너사와 함께하는 프리미엄 상품
-              </p>
-            </div>
-          </div>
-
-          {/* Tour Cards Grid */}
-          {filteredProducts.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 gap-8 mb-8">
-              <AnimatePresence>
-                {filteredProducts.map((item) => (
-                  <TourCard
-                    key={item.id}
-                    item={item}
-                    onDetailClick={handleDetailClick}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16 mb-8"
-            >
-              <div className="w-20 h-20 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-600/50">
-                <ShoppingBag className="w-10 h-10 text-gray-400" />
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        {/* 모바일 레이아웃 (768px 미만): 세로 스택 */}
+        <div className="block md:hidden space-y-6">
+          {/* Tour Products Section - Mobile */}
+          <NeonCard className="p-4">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/25">
+                <Package className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                검색 결과가 없습니다
-              </h3>
-              <p className="text-gray-300">
-                다른 검색어나 필터를 시도해보세요.
-              </p>
-            </motion.div>
-          )}
-        </NeonCard>
-        {/* TourInfo Section
-        <TourInfoSection /> */}
-        {/* Partnership Section */}
-        <PartnershipSection />
+              <div>
+                <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
+                  인기 투어 상품
+                </h2>
+                <p className="text-gray-300 text-sm">
+                  제휴된 파트너사와 함께하는 프리미엄 상품
+                </p>
+              </div>
+            </div>
+
+            {/* Tour Cards Grid - Mobile: 1열 */}
+            {filteredProducts.length > 0 ? (
+              <div className="space-y-6">
+                <AnimatePresence>
+                  {filteredProducts.map((item) => (
+                    <TourCard
+                      key={item.id}
+                      item={item}
+                      onDetailClick={handleDetailClick}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
+              >
+                <div className="w-16 h-16 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-600/50">
+                  <ShoppingBag className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  검색 결과가 없습니다
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  다른 검색어나 필터를 시도해보세요.
+                </p>
+              </motion.div>
+            )}
+          </NeonCard>
+
+          {/* Partnership Section - Mobile */}
+          <PartnershipSection />
+        </div>
+
+        {/* 데스크탑 레이아웃 (768px 이상): 기존 레이아웃 */}
+        <div className="hidden md:block">
+          {/* Tour Products Section - Desktop */}
+          <NeonCard className="mb-8">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-14 h-14 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/25">
+                <Package className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
+                  인기 투어 상품
+                </h2>
+                <p className="text-gray-300">
+                  제휴된 파트너사와 함께하는 프리미엄 상품
+                </p>
+              </div>
+            </div>
+
+            {/* Tour Cards Grid - Desktop: 3열 */}
+            {filteredProducts.length > 0 ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 mb-8">
+                <AnimatePresence>
+                  {filteredProducts.map((item) => (
+                    <TourCard
+                      key={item.id}
+                      item={item}
+                      onDetailClick={handleDetailClick}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-16 mb-8"
+              >
+                <div className="w-20 h-20 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-600/50">
+                  <ShoppingBag className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  검색 결과가 없습니다
+                </h3>
+                <p className="text-gray-300">
+                  다른 검색어나 필터를 시도해보세요.
+                </p>
+              </motion.div>
+            )}
+          </NeonCard>
+
+          {/* Partnership Section - Desktop */}
+          <PartnershipSection />
+        </div>
       </div>
     </BackgroundEffect>
   );

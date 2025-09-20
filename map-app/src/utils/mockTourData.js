@@ -58,8 +58,7 @@ export const tourProducts = [
     price: "₩100,000",
     category: "sports",
     kpopGroup: "LG 트윈스",
-    description:
-      "잠실야구장 프리미엄 관람 + 치킨맥주 + 스포츠 체험",
+    description: "잠실야구장 프리미엄 관람 + 치킨맥주 + 스포츠 체험",
     tags: ["Baseball", "Korean Food", "Sports", "Jamsil"],
     rating: 4.8,
     reviews: 445,
@@ -72,8 +71,7 @@ export const tourProducts = [
     price: "₩135,000",
     category: "beauty",
     kpopGroup: "올리브영",
-    description:
-      "피부과 케어 + K-뷰티 브랜드 체험 + 올리브영 쇼핑 + 한방 스파",
+    description: "피부과 케어 + K-뷰티 브랜드 체험 + 올리브영 쇼핑 + 한방 스파",
     tags: ["K-Beauty", "Skincare", "Wellness", "Premium", "Gangnam"],
     rating: 4.9,
     reviews: 428,
@@ -88,7 +86,13 @@ export const tourProducts = [
     kpopGroup: "경복궁",
     description:
       "AI 도슨트와 카카오프렌즈 캐릭터가 함께하는 재미있는 박물관 체험",
-    tags: ["Gyeongbokgung", "Tradition", "Hanbok", "Korean Street Food", "Culture"],
+    tags: [
+      "Gyeongbokgung",
+      "Tradition",
+      "Hanbok",
+      "Korean Street Food",
+      "Culture",
+    ],
     rating: 5.0,
     reviews: 285,
     location: "서울 종로구",
@@ -207,12 +211,12 @@ export const tourDetailData = {
     subtitle: "Netflix Original Series Filming Location Complete Tour",
     location: "Everland, Bukchon Hanok Village, Myeongdong",
     images: [
-      "/img/tour_mock_01.jpg",
+      "/img/kdh_video.mp4",
       "/img/tour_mock_02.jpg",
       "/img/tour_mock_03.jpg",
       "/img/seoul_trip_hunters.jpg",
     ],
-    price: "₩69,000",
+    price: "₩79,000",
     originalPrice: "₩89,000",
     discount: "22%",
     rating: 5.0,
@@ -261,17 +265,18 @@ export const tourDetailData = {
       {
         image: "/img/케데헌 낙산.png",
         title: "Date at Naksan Park in K-Pop Demon Hunters",
-        text: "Lumi and Jinwoo’s date takes place at Naksan Park, a scenic hillside spot in Seoul known for its panoramic city views. The park becomes a romantic backdrop in the story, blending real-world charm with the characters’ memorable moment."
+        text: "Lumi and Jinwoo’s date takes place at Naksan Park, a scenic hillside spot in Seoul known for its panoramic city views. The park becomes a romantic backdrop in the story, blending real-world charm with the characters’ memorable moment.",
       },
       {
         image: "/img/케데헌 남산.png",
         title: "Final Performance at N Seoul Tower in K-Pop Demon Hunters",
-        text: "N Seoul Tower, a landmark that has appeared in numerous films, sets the stage for the girl group Huntrix’s climactic final concert. Against the iconic Seoul skyline, the group wins fans’ hearts and defeats evil spirits, making the tower both a cultural and dramatic symbol in the story."
+        text: "N Seoul Tower, a landmark that has appeared in numerous films, sets the stage for the girl group Huntrix’s climactic final concert. Against the iconic Seoul skyline, the group wins fans’ hearts and defeats evil spirits, making the tower both a cultural and dramatic symbol in the story.",
       },
       {
         image: "/img/케데헌 국중박.png",
-        title: "Cultural Treasures at the National Museum of Korea in K-Pop Demon Hunters",
-        text: "Home to cultural treasures such as the gat, norigae, tiger-and-magpie paintings, and the royal folding screen, the National Museum of Korea also features the popular magpie-and-tiger badge inspired by the series’ beloved tiger character—a must-see for both local and international fans."
+        title:
+          "Cultural Treasures at the National Museum of Korea in K-Pop Demon Hunters",
+        text: "Home to cultural treasures such as the gat, norigae, tiger-and-magpie paintings, and the royal folding screen, the National Museum of Korea also features the popular magpie-and-tiger badge inspired by the series’ beloved tiger character—a must-see for both local and international fans.",
       },
     ],
     reviews: [
@@ -377,21 +382,21 @@ export const tourDetailData = {
         icon: Gift,
       },
     ],
-        detailSections: [
+    detailSections: [
       {
         image: "/img/mstour11.png",
         title: "Microsoft AI Conference 2025 - Agenda Highlights",
-        text: "Satya Nadella introduces the future of AI at the Microsoft AI Conference in Seoul. The agenda features a keynote session, 25 breakout sessions, and 12 hands-on workshops, offering deep insights into AI innovation and industry transformation."
+        text: "Satya Nadella introduces the future of AI at the Microsoft AI Conference in Seoul. The agenda features a keynote session, 25 breakout sessions, and 12 hands-on workshops, offering deep insights into AI innovation and industry transformation.",
       },
       {
         image: "/img/mstour22.png",
         title: "Learn and Connect at Microsoft AI Conference 2025",
-        text: "Satya Nadella introducesParticipants gain insights from industry leaders on AI innovation and explore the latest in cloud, AI, and security. The event also provides opportunities to connect with Microsoft executives, engage in one-on-one discussions with experts, and expand networks through dynamic community sessions."
+        text: "Satya Nadella introducesParticipants gain insights from industry leaders on AI innovation and explore the latest in cloud, AI, and security. The event also provides opportunities to connect with Microsoft executives, engage in one-on-one discussions with experts, and expand networks through dynamic community sessions.",
       },
       {
         image: "/img/mstour3.png",
         title: "Microsoft AI Conference - Live Session",
-        text: "At the Microsoft AI Conference, the audience gathers for a keynote on the future of AI."
+        text: "At the Microsoft AI Conference, the audience gathers for a keynote on the future of AI.",
       },
     ],
     reviews: [
@@ -444,12 +449,12 @@ export const tourDetailData = {
     subtitle: "한강을 따라 펼쳐지는 서울 대표 포토스팟 완전 정복",
     location: "한강공원 (여의도-잠실-반포-마포)",
     images: [
+      "/img/bus_8s.mp4",
       "/img/hangang_bus.jpg",
       "/img/hangang_bus_interior.jpg",
-      "/img/hangang_bus_route.jpg",
       "/img/banpo_rainbow.jpg",
     ],
-    price: "₩69,000",
+    price: "72,000",
     originalPrice: "₩85,000",
     discount: "19%",
     rating: 4.6,
@@ -500,21 +505,21 @@ export const tourDetailData = {
         icon: Gift,
       },
     ],
-        detailSections: [
+    detailSections: [
       {
         image: "/img/여의도한강.jpg",
         title: "여의도 한강공원 투어",
-        text: "서울 도심 속 휴식 공간, 여의도 한강공원에서 따릉이를 타고 강변을 따라 달리며 시원한 바람을 느껴보세요. 푸른 잔디밭 위에서 여유로운 피크닉을 즐기며 한강과 스카이라인이 어우러진 특별한 풍경을 감상할 수 있습니다."
+        text: "서울 도심 속 휴식 공간, 여의도 한강공원에서 따릉이를 타고 강변을 따라 달리며 시원한 바람을 느껴보세요. 푸른 잔디밭 위에서 여유로운 피크닉을 즐기며 한강과 스카이라인이 어우러진 특별한 풍경을 감상할 수 있습니다.",
       },
       {
         image: "/img/반포무지개분수.jpg",
         title: "반포 무지개 분수 투어",
-        text: "세계에서 가장 긴 교량분수로 기네스북에 등재된 반포 무지개 분수는 한강의 명소입니다. 낮에는 시원한 물줄기가, 밤에는 형형색색의 조명과 음악이 어우러져 로맨틱한 분위기를 선사하며, 서울의 야경을 즐기기에 최고의 장소로 손꼽힙니다."
+        text: "세계에서 가장 긴 교량분수로 기네스북에 등재된 반포 무지개 분수는 한강의 명소입니다. 낮에는 시원한 물줄기가, 밤에는 형형색색의 조명과 음악이 어우러져 로맨틱한 분위기를 선사하며, 서울의 야경을 즐기기에 최고의 장소로 손꼽힙니다.",
       },
       {
         image: "/img/세빛섬.jpg",
         title: "세빛둥둥섬 투어",
-        text: "세계 최초의 인공 부유섬인 세빛둥둥섬은 ‘가빛’, ‘채빛’, ‘솔빛’ 세 개의 섬으로 이루어진 복합 문화 공간입니다. 전시와 공연, 이벤트가 열리며, 레스토랑과 카페에서 한강을 바라보며 특별한 식사를 즐길 수 있습니다. 특히 밤이 되면 LED 조명이 섬 전체를 수놓아 서울의 대표적인 야경 명소로 손꼽히며, 요트와 보트 체험도 가능해 색다른 즐거움을 선사합니다."
+        text: "세계 최초의 인공 부유섬인 세빛둥둥섬은 ‘가빛’, ‘채빛’, ‘솔빛’ 세 개의 섬으로 이루어진 복합 문화 공간입니다. 전시와 공연, 이벤트가 열리며, 레스토랑과 카페에서 한강을 바라보며 특별한 식사를 즐길 수 있습니다. 특히 밤이 되면 LED 조명이 섬 전체를 수놓아 서울의 대표적인 야경 명소로 손꼽히며, 요트와 보트 체험도 가능해 색다른 즐거움을 선사합니다.",
       },
     ],
     reviews: [
@@ -572,8 +577,8 @@ export const tourDetailData = {
       "/img/korean_chicken_beer.jpg",
       "/img/lg_twins_merchandise.jpg",
     ],
-    price: "₩79,000",
-    originalPrice: "₩95,000",
+    price: "₩100,000",
+    originalPrice: "₩90,000",
     discount: "17%",
     rating: 4.7,
     reviewCount: 342,
@@ -611,16 +616,16 @@ export const tourDetailData = {
         icon: Camera,
       },
     ],
-        detailSections: [
+    detailSections: [
       {
         image: "/img/잠실.jpg",
         title: "잠실 야구 경기",
-        text: "서울의 대표적인 스포츠 명소, 잠실 야구 경기장은 LG 트윈스와 두산 베어스의 홈구장으로 국내 프로야구의 열기를 가장 가까이에서 느낄 수 있는 곳입니다. 3만 명 이상을 수용할 수 있는 대규모 구장에서 응원가와 응원봉이 만들어내는 독특한 분위기는 한국 프로야구만의 매력을 전합니다. 특히 LG 트윈스 팬들의 열정적인 응원전은 잠실 야구장을 찾는 이들에게 잊지 못할 경험을 선사합니다."
+        text: "서울의 대표적인 스포츠 명소, 잠실 야구 경기장은 LG 트윈스와 두산 베어스의 홈구장으로 국내 프로야구의 열기를 가장 가까이에서 느낄 수 있는 곳입니다. 3만 명 이상을 수용할 수 있는 대규모 구장에서 응원가와 응원봉이 만들어내는 독특한 분위기는 한국 프로야구만의 매력을 전합니다. 특히 LG 트윈스 팬들의 열정적인 응원전은 잠실 야구장을 찾는 이들에게 잊지 못할 경험을 선사합니다.",
       },
       {
         image: "/img/LG트윈스.png",
         title: "LG트윈스",
-        text: "서울에서 열린 LG 트윈스 야구 경기에서 외국인 관광객들이 열정적으로 응원하며 현장의 분위기를 즐기고 있습니다. 치어리더식 응원 문화와 함께하는 한국 프로야구는 이색적인 관광 코스로, 국제 관광객들에게 특별한 추억을 선사합니다."
+        text: "서울에서 열린 LG 트윈스 야구 경기에서 외국인 관광객들이 열정적으로 응원하며 현장의 분위기를 즐기고 있습니다. 치어리더식 응원 문화와 함께하는 한국 프로야구는 이색적인 관광 코스로, 국제 관광객들에게 특별한 추억을 선사합니다.",
       },
     ],
     reviews: [
@@ -731,21 +736,21 @@ export const tourDetailData = {
         gradient: "from-green-500 to-emerald-500",
       },
     ],
-        detailSections: [
+    detailSections: [
       {
         image: "/img/퍼컬.png",
         title: "K-뷰티 퍼스널 컬러 진단 체험",
-        text: "한국 뷰티 트렌드의 핵심, 퍼스널 컬러 진단을 통해 나만의 이미지에 가장 잘 어울리는 색상을 찾아보세요. 전문 컨설턴트가 피부 톤과 분위기에 맞는 컬러를 분석해주어, 메이크업과 패션 스타일링에 실질적인 도움을 받을 수 있습니다. 외국인 방문객에게는 특별히 한국 K-뷰티 문화를 직접 체험하고 자신만의 새로운 매력을 발견할 수 있는 특별한 시간이 됩니다."
+        text: "한국 뷰티 트렌드의 핵심, 퍼스널 컬러 진단을 통해 나만의 이미지에 가장 잘 어울리는 색상을 찾아보세요. 전문 컨설턴트가 피부 톤과 분위기에 맞는 컬러를 분석해주어, 메이크업과 패션 스타일링에 실질적인 도움을 받을 수 있습니다. 외국인 방문객에게는 특별히 한국 K-뷰티 문화를 직접 체험하고 자신만의 새로운 매력을 발견할 수 있는 특별한 시간이 됩니다.",
       },
       {
         image: "/img/올리브영쇼퍼.jpg",
         title: "K-뷰티 in 올리브영",
-        text: "K-뷰티에 관심 많은 외국인 관광객들을 위해 기획된 올리브영 쇼핑 체험 투어입니다. 단순한 매장 방문을 넘어, 트렌드를 가장 잘 아는 퍼스널 쇼퍼가 동행하여 맞춤형 쇼핑을 돕습니다. 글로벌 팬들에게 사랑받는 K-팝 아티스트 뷰티템, SNS에서 화제가 된 핫 아이템까지 현장에서 직접 추천받고 구매할 수 있습니다."
+        text: "K-뷰티에 관심 많은 외국인 관광객들을 위해 기획된 올리브영 쇼핑 체험 투어입니다. 단순한 매장 방문을 넘어, 트렌드를 가장 잘 아는 퍼스널 쇼퍼가 동행하여 맞춤형 쇼핑을 돕습니다. 글로벌 팬들에게 사랑받는 K-팝 아티스트 뷰티템, SNS에서 화제가 된 핫 아이템까지 현장에서 직접 추천받고 구매할 수 있습니다.",
       },
       {
         image: "/img/피부과.png",
         title: "한국 피부과",
-        text: "첨단 장비와 전문 의료진으로 유명한 한국 피부과는 미용·피부 치료 분야에서 세계적으로 인정받고 있습니다. 외국인 방문객은 여드름·잡티 관리부터 레이저 시술, 스킨케어 프로그램까지 개인 맞춤형 진료를 통해 K-뷰티의 의료 서비스를 직접 경험할 수 있습니다. 안전하고 세심한 진료와 함께, 한국만의 뷰티·헬스케어 문화를 체험할 수 있는 특별한 기회입니다."
+        text: "첨단 장비와 전문 의료진으로 유명한 한국 피부과는 미용·피부 치료 분야에서 세계적으로 인정받고 있습니다. 외국인 방문객은 여드름·잡티 관리부터 레이저 시술, 스킨케어 프로그램까지 개인 맞춤형 진료를 통해 K-뷰티의 의료 서비스를 직접 경험할 수 있습니다. 안전하고 세심한 진료와 함께, 한국만의 뷰티·헬스케어 문화를 체험할 수 있는 특별한 기회입니다.",
       },
     ],
     reviews: [
@@ -794,7 +799,8 @@ export const tourDetailData = {
   6: {
     id: 6,
     title: "서울 전통 문화 투어",
-    subtitle: "경복궁에서 한국의 왕실 문화를 느끼고, 인사동에서 다도로 전통의 멋을 체험한 뒤, 광장시장에서 현지 먹거리를 즐기는 특별한 하루",
+    subtitle:
+      "경복궁에서 한국의 왕실 문화를 느끼고, 인사동에서 다도로 전통의 멋을 체험한 뒤, 광장시장에서 현지 먹거리를 즐기는 특별한 하루",
     location: "서울 종로구 일대",
     images: [
       "/img/경복궁 여행스냅.jpg",
@@ -831,7 +837,8 @@ export const tourDetailData = {
       {
         time: "14:30",
         location: "인사동 다도 체험 & 전통 거리 산책",
-        description: "전통 찻집에서 다도 체험 및 전통 공예품, 도장, 한지 기념품 구경",
+        description:
+          "전통 찻집에서 다도 체험 및 전통 공예품, 도장, 한지 기념품 구경",
         icon: Camera,
       },
       {
@@ -847,21 +854,21 @@ export const tourDetailData = {
         icon: Gift,
       },
     ],
-        detailSections: [
+    detailSections: [
       {
         image: "/img/경복궁.png",
         title: "경복궁 여행스냅",
-        text: "서울을 대표하는 궁궐, 경복궁에서 전문 사진작가와 함께 여행스냅을 촬영해보세요. 한복을 입고 고궁의 웅장한 전각과 고즈넉한 정원을 배경으로 특별한 순간을 기록할 수 있습니다. 전통과 현대가 어우러진 경복궁의 매력은 잊지 못할 여행의 추억이 됩니다."
+        text: "서울을 대표하는 궁궐, 경복궁에서 전문 사진작가와 함께 여행스냅을 촬영해보세요. 한복을 입고 고궁의 웅장한 전각과 고즈넉한 정원을 배경으로 특별한 순간을 기록할 수 있습니다. 전통과 현대가 어우러진 경복궁의 매력은 잊지 못할 여행의 추억이 됩니다.",
       },
       {
         image: "/img/다도체험.png",
         title: "인사동 다도 체험",
-        text: "서울 전통 거리 인사동의 고즈넉한 찻집에서 한국식 다도를 체험해보세요. 전문가의 안내와 함께 전통 차와 다과를 맛보며 한국 차 문화의 깊이를 느낄 수 있습니다."
+        text: "서울 전통 거리 인사동의 고즈넉한 찻집에서 한국식 다도를 체험해보세요. 전문가의 안내와 함께 전통 차와 다과를 맛보며 한국 차 문화의 깊이를 느낄 수 있습니다.",
       },
       {
         image: "/img/광장투어.png",
         title: "광장시장 먹거리 투어",
-        text: "서울에서 가장 활기찬 전통시장 중 하나인 광장시장에서 한국의 대표 먹거리를 즐겨보세요. 바삭한 빈대떡, 마약김밥, 육회 등 현지인과 외국인 모두에게 사랑받는 다양한 길거리 음식을 맛볼 수 있습니다."
+        text: "서울에서 가장 활기찬 전통시장 중 하나인 광장시장에서 한국의 대표 먹거리를 즐겨보세요. 바삭한 빈대떡, 마약김밥, 육회 등 현지인과 외국인 모두에게 사랑받는 다양한 길거리 음식을 맛볼 수 있습니다.",
       },
     ],
     reviews: [
@@ -917,28 +924,28 @@ export const tourOffers = {
   1: {
     hasOffer: true,
     originalPrice: "₩89,000",
-    discountPrice: "₩69,000",
-    savings: "Save ₩20,000 per person!",
+    discountPrice: "₩79,000",
+    savings: "Save ₩10,000 per person!",
     description: "Get exclusive K-Pop photo cards + Everland tickets",
     title: "Netflix K-Pop Special Deal!",
-    image: "/img/tour_mock_01.jpg",
+    image: "/img/everland_kdh.jpg",
     urgencyText: "Limited K-Pop merchandise available!",
   },
   2: {
     hasOffer: true,
-    originalPrice: "₩55,000",
-    discountPrice: "₩45,000",
-    savings: "Save ₩10,000 per person!",
-    description: "Free Kakao Friends merchandise included",
-    title: "Kakao Friends Museum Deal!",
-    image: "/img/kakao_shop.jpg",
-    urgencyText: "Limited Kakao Friends items!",
+    originalPrice: "₩125,000",
+    discountPrice: "₩90,000",
+    savings: "Save ₩25,000 per person!",
+    description: "Free AI workshop materials included",
+    title: "Microsoft AI Bootcamp Deal!",
+    image: "/img/thumbnail_ms.jpg",
+    urgencyText: "Exclusive tech workshop access!",
   },
   3: {
     hasOffer: true,
-    originalPrice: "₩125,000",
-    discountPrice: "₩99,000",
-    savings: "Save ₩26,000 per person!",
+    originalPrice: "₩85,000",
+    discountPrice: "₩72,000",
+    savings: "Save ₩13,000 per person!",
     description: "Free AI workshop materials included",
     title: "Microsoft AI Bootcamp Deal!",
     image: "/img/thumbnail_ms.jpg",
@@ -946,8 +953,8 @@ export const tourOffers = {
   },
   4: {
     hasOffer: true,
-    originalPrice: "₩95,000",
-    discountPrice: "₩79,000",
+    originalPrice: "₩100,000",
+    discountPrice: "₩84,000",
     savings: "Save ₩16,000 per person!",
     description: "Premium stadium seats + unlimited chicken & beer",
     title: "Baseball Premium Deal!",
@@ -967,8 +974,8 @@ export const tourOffers = {
   6: {
     hasOffer: true,
     originalPrice: "₩85,000",
-    discountPrice: "₩69,000",
-    savings: "Save ₩16,000 per person!",
+    discountPrice: "₩72,000",
+    savings: "Save ₩13,000 per person!",
     description: "Professional photo editing + 20 high-res photos",
     title: "Instagram Hotspot Deal!",
     image: "/img/hangang_hotplace_tour.jpg",

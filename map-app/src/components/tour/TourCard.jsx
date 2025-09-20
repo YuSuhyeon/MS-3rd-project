@@ -108,7 +108,6 @@ const TourCard = ({ item, onDetailClick }) => {
 
       {/* 컨텐츠 섹션 */}
       <div className="p-6">
-        {/* K-pop 그룹과 리뷰 정보 */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             {item.kpopGroup}

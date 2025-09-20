@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -47,12 +47,10 @@ import {
   getTourOffer,
 } from "../utils/mockTourData";
 
-//discount 홍보 팝업 컴포넌트
+// 기존 할인 홍보 팝업 컴포넌트 (그대로 유지)
 const OfferPopup = ({ isOpen, onClose, tourId }) => {
   const [timeLeft, setTimeLeft] = useState({ minutes: 10, seconds: 0 });
   const [progress, setProgress] = useState(0);
-
-  console.log("OfferPopup tourId:", tourId);
 
   // mockTourData에서 투어별 할인 정보 가져오기
   const offerInfo = getTourOffer(tourId);
@@ -137,6 +135,52 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
     const today = new Date().toDateString();
     sessionStorage.setItem(`hide-offer-today-${tourId}`, today);
     onClose();
+  };
+
+  const filterMediaForDevice = (mediaList, isMobile = false) => {
+    if (!mediaList) return [];
+
+    return mediaList.filter((item) => {
+      if (typeof item === "string") {
+        // 문자열인 경우 확장자로 판단
+        const videoExtensions = [
+          ".mp4",
+          ".webm",
+          ".ogg",
+          ".avi",
+          ".mov",
+          ".wmv",
+        ];
+        const isVideo = videoExtensions.some((ext) =>
+          item.toLowerCase().includes(ext)
+        );
+        return isMobile ? !isVideo : true; // 모바일에서는 영상 제외
+      }
+
+      if (typeof item === "object" && item.type) {
+        // 객체인 경우 type 속성으로 판단
+        return isMobile ? item.type !== "video" : true;
+      }
+
+      return true; // 기본적으로 모든 항목 포함
+    });
+  };
+
+  // 모바일 감지 훅
+  const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+      const checkDevice = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+
+      checkDevice();
+      window.addEventListener("resize", checkDevice);
+      return () => window.removeEventListener("resize", checkDevice);
+    }, []);
+
+    return isMobile;
   };
 
   return (
@@ -280,7 +324,7 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
   );
 };
 
-// 탭 버튼
+// 기존 탭 버튼 (그대로 유지, 필요시 사용)
 const TabButton = ({ active, onClick, children }) => (
   <motion.button
     onClick={onClick}
@@ -296,9 +340,252 @@ const TabButton = ({ active, onClick, children }) => (
   </motion.button>
 );
 
+// 카드 컴포넌트
+const Card = ({ children, className = "" }) => (
+  <div
+    className={`bg-gray-800/30 rounded-2xl border border-gray-700/30 ${className}`}
+  >
+    {children}
+  </div>
+);
+
+const Tabs = ({ activeTab, onTabChange, children }) => {
+  const [tabPositions, setTabPositions] = useState({});
+  const tabRefs = useRef({});
+  const containerRef = useRef(null);
+
+  const tabs = [
+    { id: "overview", label: "일정" },
+    { id: "details", label: "상세정보" },
+    { id: "reviews", label: "리뷰" },
+  ];
+
+  // 탭 위치 계산
+  useEffect(() => {
+    const updateTabPositions = () => {
+      if (!containerRef.current) return;
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const positions = {};
+
+      tabs.forEach((tab) => {
+        if (tabRefs.current[tab.id]) {
+          const tabRect = tabRefs.current[tab.id].getBoundingClientRect();
+          positions[tab.id] = {
+            left: tabRect.left - containerRect.left,
+            width: tabRect.width,
+          };
+        }
+      });
+
+      setTabPositions(positions);
+    };
+
+    updateTabPositions();
+    window.addEventListener("resize", updateTabPositions);
+    return () => window.removeEventListener("resize", updateTabPositions);
+  }, []);
+
+  const currentTabPosition = tabPositions[activeTab];
+
+  return (
+    <Card className="p-6">
+      <div className="relative mb-6">
+        {/* 탭 버튼들 */}
+        <div
+          ref={containerRef}
+          className="flex justify-center md:justify-start"
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              ref={(el) => (tabRefs.current[tab.id] = el)}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex-1 md:flex-none px-6 py-3 text-center font-medium transition-colors whitespace-nowrap ${
+                activeTab === tab.id
+                  ? "text-white"
+                  : "text-gray-400 hover:text-gray-300"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* 정확한 위치의 움직이는 구분선 */}
+        <div className="relative mt-2 border-b border-gray-700/50">
+          {currentTabPosition && (
+            <motion.div
+              className="absolute bottom-0 h-0.5 bg-purple-500"
+              animate={{
+                left: currentTabPosition.left,
+                width: currentTabPosition.width,
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 30,
+                duration: 0.3,
+              }}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* 탭 내용 */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
+    </Card>
+  );
+};
+// 일정 탭 내용 (포함사항 2열 배치)
+const OverviewTab = ({ itinerary, included }) => (
+  <div className="space-y-8">
+    {/* 일정 */}
+    <div>
+      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <Clock className="w-5 h-5 text-purple-400" />
+        투어 일정
+      </h3>
+      <div className="space-y-4">
+        {itinerary?.map((item, index) => (
+          <div
+            key={index}
+            className="flex gap-4 p-4 bg-gray-800/30 rounded-xl border border-gray-700/30"
+          >
+            <div className="flex-shrink-0 text-center">
+              <div className="text-purple-400  text-center text-sm  mb-1 font-medium">
+                {item.time}
+              </div>
+            </div>
+            <div>
+              <h4 className="font-bold text-white  mb-1">{item.location}</h4>
+              <p className="text-gray-300 text-sm">{item.description}</p>
+            </div>
+          </div>
+        )) || (
+          <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
+            일정 정보가 준비 중입니다.
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* 포함사항 - 2열 배치 */}
+    <div>
+      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <CheckCircle className="w-5 h-5 text-green-400" />
+        포함 사항
+      </h3>
+      <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+          {included?.map((item, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+              <span className="text-gray-300 text-sm">{item}</span>
+            </div>
+          )) ||
+            [
+              "전문 가이드",
+              "점심 식사",
+              "기념품",
+              "교통비",
+              "체험 활동비",
+              "보험",
+            ].map((item, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                <span className="text-gray-300 text-sm">{item}</span>
+              </div>
+            ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// 상세정보 탭 내용
+const DetailsTab = ({ detailSections }) => (
+  <div className="space-y-6">
+    {detailSections?.map((section, index) => (
+      <div key={index} className="overflow-hidden rounded-xl">
+        <img
+          src={section.image}
+          alt={section.title}
+          className="w-full h-48 object-cover rounded-t-xl"
+        />
+        <div className="p-4 bg-gray-800/30 rounded-b-xl border border-gray-600/30 border-t-0">
+          <h4 className="text-lg font-bold text-white mb-2">{section.title}</h4>
+          <p className="text-gray-300 text-sm">{section.text}</p>
+        </div>
+      </div>
+    )) || (
+      <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
+        상세 정보가 준비 중입니다.
+      </div>
+    )}
+  </div>
+);
+
+// 리뷰 탭 내용
+const ReviewsTab = ({ reviews }) => (
+  <div className="space-y-4">
+    {reviews?.map((review, index) => (
+      <div
+        key={review.id}
+        className="p-4 bg-gradient-to-r from-gray-800/50 to-gray-900/80 rounded-xl border border-gray-600/30"
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <div
+            className={`w-10 h-10 bg-gradient-to-r ${
+              review.gradient || "from-purple-600 to-pink-600"
+            } rounded-full flex items-center justify-center text-white font-bold shadow-lg text-sm`}
+          >
+            {review.avatar || review.name?.charAt(0) || "U"}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div className="font-bold text-white text-sm">{review.name}</div>
+              <div className="text-xs text-gray-400">{review.date}</div>
+            </div>
+            <div className="flex items-center gap-1 mt-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-3 h-3 ${
+                    i < (review.rating || 5)
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-500"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <p className="text-gray-200 text-sm leading-relaxed">
+          {review.content}
+        </p>
+      </div>
+    )) || (
+      <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
+        리뷰가 아직 없습니다.
+      </div>
+    )}
+  </div>
+);
+
+// 메인 TourDetail 컴포넌트
 export default function TourDetail({ onBack }) {
   const { id } = useParams();
-
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedImage, setSelectedImage] = useState(0);
@@ -306,21 +593,18 @@ export default function TourDetail({ onBack }) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showOfferPopup, setShowOfferPopup] = useState(false);
 
-  // URL에서 가져온 id를 숫자로 변환, 없으면 1을 기본값으로 사용
   const tourId = parseInt(id) || 1;
 
   // 팝업 로직
   useEffect(() => {
-    // 먼저 해당 투어에 할인 정보가 있는지 확인
     const offerInfo = getTourOffer(tourId);
     console.log(`Tour ${tourId} offer info:`, offerInfo);
 
     if (!offerInfo.hasOffer) {
       console.log(`Tour ${tourId} has no offer, skipping popup`);
-      return; // 할인 정보가 없으면 팝업을 표시하지 않음
+      return;
     }
 
-    // 오늘 하루 팝업을 보지 않겠다는 설정이 있는지 확인 (tourId별로)
     const today = new Date().toDateString();
     const hideToday = sessionStorage.getItem(`hide-offer-today-${tourId}`);
     console.log(
@@ -331,7 +615,6 @@ export default function TourDetail({ onBack }) {
     );
 
     if (hideToday !== today) {
-      // 오늘 처음이거나 다른 날이면 팝업 표시
       console.log(`Showing popup for tour ${tourId}`);
       setShowOfferPopup(true);
     } else {
@@ -339,22 +622,19 @@ export default function TourDetail({ onBack }) {
     }
   }, [tourId]);
 
-  // 팝업 닫기 함수
   const closeOfferPopup = () => {
     console.log(`Closing popup for tour ${tourId}`);
     setShowOfferPopup(false);
   };
 
-  // 뒤로가기
   const handleBack = () => {
     if (onBack && typeof onBack === "function") {
       onBack();
     } else {
-      navigate("/tour"); // 투어 목록 페이지로 이동
+      navigate("/tour");
     }
   };
 
-  // tourId를 사용해서 해당 투어 데이터 가져오기
   const tourData = tourDetailData[tourId];
 
   if (!tourData) {
@@ -381,194 +661,20 @@ export default function TourDetail({ onBack }) {
     );
   }
 
+  // 탭 컨텐츠 렌더링
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
         return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-8"
-          >
-            <NeonCard>
-              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-white" />
-                </div>
-                <GradientText variant="secondary" size="2xl">
-                  투어 일정
-                </GradientText>
-              </h3>
-              <div className="space-y-6">
-                {tourData.itinerary.map((item, index) => {
-                  const Icon = item.icon;
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex gap-6 p-6 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-2xl border border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300"
-                    >
-                      <div className="flex flex-col items-center flex-shrink-0">
-                        <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg mb-2">
-                          <Icon className="w-6 h-6 text-white" />
-                        </div>
-                        <GradientText
-                          variant="primary"
-                          size="lg"
-                          className="font-bold"
-                        >
-                          {item.time}
-                        </GradientText>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white mb-2 text-lg">
-                          {item.location}
-                        </h4>
-                        <p className="text-gray-300 leading-relaxed">
-                          {item.description}
-                        </p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </NeonCard>
-
-            <NeonCard variant="success">
-              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-white" />
-                </div>
-                <GradientText variant="success" size="2xl">
-                  포함 사항
-                </GradientText>
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  {["전문 가이드", "점심 식사", "기념품"].map((item, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-xl border border-green-500/30"
-                    >
-                      <CheckCircle className="w-5 h-5 text-green-400" />
-                      <span className="font-medium text-white">{item}</span>
-                    </motion.div>
-                  ))}
-                </div>
-                <div className="space-y-4">
-                  {["교통비", "체험 활동비", "보험"].map((item, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-xl border border-green-500/30"
-                    >
-                      <CheckCircle className="w-5 h-5 text-green-400" />
-                      <span className="font-medium text-white">{item}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </NeonCard>
-          </motion.div>
+          <OverviewTab
+            itinerary={tourData.itinerary}
+            included={tourData.included}
+          />
         );
-      //상품 상세 사항 들어갈 내용
-      case "detail":
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-8"
-          >
-            {tourData.detailSections.map((section, index) => (
-              <NeonCard key={index} className="overflow-hidden">
-                <img
-                  src={section.image}
-                  alt={section.title}
-                  className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover"
-                />
-                <div className="p-6 space-y-3">
-                  <h4 className="text-xl font-bold text-white">
-                    {section.title}
-                  </h4>
-                  <p className="text-gray-300">{section.text}</p>
-                </div>
-              </NeonCard>
-            ))}
-          </motion.div>
-        );
+      case "details":
+        return <DetailsTab detailSections={tourData.detailSections} />;
       case "reviews":
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <NeonCard variant="warning">
-              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                  <Star className="w-5 h-5 text-white" />
-                </div>
-                <GradientText variant="warning" size="2xl">
-                  고객 리뷰
-                </GradientText>
-              </h3>
-              <div className="space-y-6">
-                {tourData.reviews.map((review, index) => (
-                  <motion.div
-                    key={review.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="p-6 bg-gradient-to-r from-gray-800/50 to-gray-900/80 rounded-2xl border border-gray-600/30 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      <div
-                        className={`w-12 h-12 bg-gradient-to-r ${review.gradient} rounded-full flex items-center justify-center text-white font-bold shadow-lg`}
-                      >
-                        {review.avatar}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="font-bold text-white">
-                            {review.name}
-                          </div>
-                          <div className="text-sm text-gray-400">
-                            {review.date}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i < review.rating
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-gray-500"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-gray-200 leading-relaxed">
-                      {review.content}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </NeonCard>
-          </motion.div>
-        );
-
+        return <ReviewsTab reviews={tourData.reviews} />;
       default:
         return null;
     }
@@ -581,8 +687,10 @@ export default function TourDetail({ onBack }) {
         onClose={closeOfferPopup}
         tourId={tourId}
       />
+
+      {/* Header */}
       <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <motion.button
             onClick={handleBack}
             whileHover={{ scale: 1.02 }}
@@ -592,278 +700,625 @@ export default function TourDetail({ onBack }) {
             <div className="w-10 h-10 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-xl flex items-center justify-center group-hover:from-purple-600/40 group-hover:to-pink-600/40 transition-all duration-300 border border-purple-500/30">
               <ArrowLeft className="w-5 h-5" />
             </div>
-            {/* <span className="font-semibold">투어 목록으로 돌아가기</span> */}
           </motion.button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <NeonCard className="overflow-hidden">
-                <div className="relative group">
-                  <img
-                    src={tourData.images[selectedImage]}
-                    alt={tourData.title}
-                    className="w-full h-96 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                  {/* 북마크 버튼 */}
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <motion.button
-                      onClick={() => setIsBookmarked(!isBookmarked)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`p-3 rounded-full backdrop-blur-sm transition-all duration-200 border ${
-                        isBookmarked
-                          ? "bg-yellow-500 text-white shadow-lg border-yellow-400/50"
-                          : "bg-gray-900/50 text-white hover:bg-gray-800/60 border-gray-600/50"
-                      }`}
-                    >
-                      <Bookmark className="w-5 h-5" />
-                    </motion.button>
-                  </div>
-
-                  {/* 이전 이미지 버튼 - 조건 제거하고 항상 표시 */}
-                  <motion.button
-                    onClick={() =>
-                      setSelectedImage(
-                        selectedImage === 0
-                          ? tourData.images.length - 1
-                          : selectedImage - 1
-                      )
-                    }
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200 opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronLeft className="w-6 h-6" />
-                  </motion.button>
-
-                  {/* 다음 이미지 버튼 - 조건 제거하고 항상 표시 */}
-                  <motion.button
-                    onClick={() =>
-                      setSelectedImage(
-                        selectedImage === tourData.images.length - 1
-                          ? 0
-                          : selectedImage + 1
-                      )
-                    }
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200 opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronRight className="w-6 h-6" />
-                  </motion.button>
-
-                  {/* 이미지 인덱스 표시 */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
-                    {selectedImage + 1} / {tourData.images.length}
-                  </div>
-
-                  {/* 이미지 도트 인디케이터 (선택사항) */}
-                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-                    {tourData.images.map((_, index) => (
-                      <motion.button
-                        key={index}
-                        onClick={() => setSelectedImage(index)}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.8 }}
-                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                          selectedImage === index
-                            ? "bg-purple-500 scale-125"
-                            : "bg-white/50 hover:bg-white/70"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </NeonCard>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <NeonCard className="p-8">
-                <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
-                  <TabButton
-                    active={activeTab === "overview"}
-                    onClick={() => setActiveTab("overview")}
-                  >
-                    상품 일정
-                  </TabButton>
-                  <TabButton
-                    active={activeTab === "detail"}
-                    onClick={() => setActiveTab("detail")}
-                  >
-                    상품 상세 사항
-                  </TabButton>
-                  <TabButton
-                    active={activeTab === "reviews"}
-                    onClick={() => setActiveTab("reviews")}
-                  >
-                    고객 리뷰
-                  </TabButton>
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {renderTabContent()}
-                </AnimatePresence>
-              </NeonCard>
-            </motion.div>
-          </div>
-
-          <div className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="sticky top-24"
-            >
-              <NeonCard className="p-8">
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="px-3 py-1 bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 text-sm rounded-full font-semibold border border-purple-500/30">
+      {/* Main Content - 완전한 반응형 레이아웃 */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        {/* 모바일 레이아웃 (768px 미만): 세로 스택 */}
+        <div className="block md:hidden space-y-6">
+          {/* 1. 투어 정보 (모바일에서 상단) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <NeonCard className="p-4">
+              <div className="mb-4">
+                {tourData.partnership && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-1 bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 text-xs rounded-full font-semibold border border-purple-500/30">
                       {tourData.partnership.primary} ×{" "}
                       {tourData.partnership.secondary}
                     </span>
                   </div>
-                  <h1 className="text-3xl font-bold text-white mb-3 leading-tight">
-                    {tourData.title}
-                  </h1>
-                  <p className="text-gray-300 leading-relaxed">
-                    {tourData.subtitle}
-                  </p>
-                </div>
+                )}
+                <h1 className="text-xl font-bold text-white mb-2 leading-tight">
+                  {tourData.title}
+                </h1>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  {tourData.subtitle}
+                </p>
+              </div>
+              {/* 2. 이미지 갤러리 - 모바일용 (비디오 필터링) */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <div className="overflow-hidden rounded-2xl">
+                  <div className="relative group">
+                    {(() => {
+                      // 모바일에서 비디오 필터링
+                      const filteredImages =
+                        tourData.images?.filter((media) => {
+                          const isVideo =
+                            typeof media === "string"
+                              ? [
+                                  ".mp4",
+                                  ".webm",
+                                  ".ogg",
+                                  ".avi",
+                                  ".mov",
+                                  ".wmv",
+                                ].some((ext) =>
+                                  media.toLowerCase().includes(ext)
+                                )
+                              : media?.type === "video";
+                          return !isVideo; // 비디오 제외
+                        }) || [];
 
-                <div className="flex items-center gap-2 mb-4">
-                  <MapPin className="w-5 h-5 text-gray-400" />
-                  <span className="text-gray-300 font-medium">
-                    {tourData.location}
-                  </span>
-                </div>
+                      // 필터링된 배열에서 현재 이미지 선택
+                      // selectedImage가 필터링된 배열 범위를 벗어나면 0으로 리셋
+                      const safeSelectedImage =
+                        selectedImage >= filteredImages.length
+                          ? 0
+                          : selectedImage;
+                      const currentImage =
+                        filteredImages[safeSelectedImage] ||
+                        "../img/photoism_kdh_frame.jpg";
 
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-bold text-lg text-white">
-                      {tourData.rating}
-                    </span>
-                    <span className="text-gray-400">
-                      ({tourData.reviewCount}개 리뷰)
-                    </span>
+                      return (
+                        <img
+                          src={
+                            typeof currentImage === "string"
+                              ? currentImage
+                              : currentImage.src || currentImage
+                          }
+                          alt={tourData.title}
+                          className="w-full h-64 object-cover"
+                        />
+                      );
+                    })()}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                    {/* 이미지 네비게이션 - 필터링된 배열 기준 */}
+                    {(() => {
+                      const filteredImages =
+                        tourData.images?.filter((media) => {
+                          const isVideo =
+                            typeof media === "string"
+                              ? [
+                                  ".mp4",
+                                  ".webm",
+                                  ".ogg",
+                                  ".avi",
+                                  ".mov",
+                                  ".wmv",
+                                ].some((ext) =>
+                                  media.toLowerCase().includes(ext)
+                                )
+                              : media?.type === "video";
+                          return !isVideo;
+                        }) || [];
+
+                      if (filteredImages.length <= 1) return null;
+
+                      return (
+                        <>
+                          <motion.button
+                            onClick={() => {
+                              const safeSelectedImage =
+                                selectedImage >= filteredImages.length
+                                  ? 0
+                                  : selectedImage;
+                              setSelectedImage(
+                                safeSelectedImage === 0
+                                  ? filteredImages.length - 1
+                                  : safeSelectedImage - 1
+                              );
+                            }}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </motion.button>
+
+                          <motion.button
+                            onClick={() => {
+                              const safeSelectedImage =
+                                selectedImage >= filteredImages.length
+                                  ? 0
+                                  : selectedImage;
+                              setSelectedImage(
+                                safeSelectedImage === filteredImages.length - 1
+                                  ? 0
+                                  : safeSelectedImage + 1
+                              );
+                            }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </motion.button>
+
+                          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+                            {filteredImages.map((_, index) => (
+                              <motion.button
+                                key={index}
+                                onClick={() => setSelectedImage(index)}
+                                className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                  (selectedImage >= filteredImages.length
+                                    ? 0
+                                    : selectedImage) === index
+                                    ? "bg-purple-500 scale-125"
+                                    : "bg-white/50 hover:bg-white/70"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
+              </motion.div>
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-300 text-sm">
+                  {tourData.location}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mb-4">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-bold text-white text-sm">
+                  {tourData.rating}
+                </span>
+                <span className="text-gray-400 text-xs">
+                  ({tourData.reviewCount}개 리뷰)
+                </span>
+              </div>
 
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl border border-purple-500/30">
-                    <Clock className="w-5 h-5 text-purple-400" />
-                    <span className="font-medium text-white">
+              {/* 투어 정보를 하나의 컨테이너에 통합 */}
+              <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 border border-purple-500/30 mb-4">
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-4 h-4 text-purple-400" />
+                    <span className="text-white text-sm font-medium">
                       {tourData.duration}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl border border-purple-500/30">
-                    <Users className="w-5 h-5 text-purple-400" />
-                    <span className="font-medium text-white">
+
+                    <Users className="w-4 h-4 text-purple-400" />
+                    <span className="text-white text-sm font-medium">
                       {tourData.groupSize}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl border border-purple-500/30">
-                    <Calendar className="w-5 h-5 text-purple-400" />
-                    <span className="font-medium text-white">
+
+                    <Calendar className="w-4 h-4 text-purple-400" />
+                    <span className="text-white text-sm font-medium">
                       {tourData.language}
                     </span>
                   </div>
                 </div>
+              </div>
 
-                <div className="border-t border-gray-600/50 pt-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <GradientText
-                          variant="primary"
-                          size="3xl"
-                          className="font-bold"
-                        >
-                          {tourData.price}
-                        </GradientText>
-                        <span className="text-xl text-gray-500 line-through">
+              {/* 가격 및 액션 버튼 */}
+              <div className="border-t border-gray-600/50 pt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <GradientText
+                        variant="primary"
+                        size="xl"
+                        className="font-bold"
+                      >
+                        {tourData.price}
+                      </GradientText>
+                      {tourData.originalPrice && (
+                        <span className="text-sm text-gray-500 line-through">
                           {tourData.originalPrice}
                         </span>
-                      </div>
+                      )}
+                    </div>
+                    {tourData.discount && (
                       <GradientText
                         variant="success"
-                        size="sm"
+                        size="xs"
                         className="font-bold"
                       >
                         {tourData.discount} 할인
                       </GradientText>
-                    </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
                     <motion.button
                       onClick={() => setIsLiked(!isLiked)}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      className={`p-3 rounded-2xl transition-all duration-200 border ${
+                      className={`p-2 rounded-xl transition-all duration-200 border ${
                         isLiked
                           ? "bg-red-500/20 text-red-400 shadow-lg border-red-500/50"
                           : "hover:bg-gray-800/50 text-gray-400 border-gray-600/50"
                       }`}
                     >
                       <Heart
-                        className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`}
+                        className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`}
                       />
                     </motion.button>
                   </div>
+                </div>
 
-                  <div className="space-y-4 mb-8">
-                    <NeonButton
-                      className="w-full py-4 font-bold"
-                      onClick={() =>
-                        window.open(
-                          tourData.bookingUrl || "#", // 각 투어의 고유 예약 URL 사용
-                          "_blank"
-                        )
-                      }
-                    >
-                      지금 예약하기
-                    </NeonButton>
-                    <NeonButton
-                      variant="secondary"
-                      className="w-full py-4 font-semibold flex items-center justify-center gap-2"
-                    >
-                      <Share2 className="w-5 h-5" />
-                      공유하기
-                    </NeonButton>
+                <div className="space-y-2">
+                  <NeonButton
+                    className="w-full py-3 font-bold text-sm"
+                    onClick={() =>
+                      window.open(tourData.bookingUrl || "#", "_blank")
+                    }
+                  >
+                    지금 예약하기
+                  </NeonButton>
+                </div>
+              </div>
+            </NeonCard>
+          </motion.div>
+
+          {/* 3. 탭 컨텐츠 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Tabs activeTab={activeTab} onTabChange={setActiveTab}>
+              {renderTabContent()}
+            </Tabs>
+          </motion.div>
+        </div>
+        {/* 데스크탑 레이아웃 (768px 이상): 좌우 분할 * */}
+        <div className="hidden md:block">
+          <NeonCard className="mb-8">
+            <div className="grid md:grid-cols-2 xl:grid-cols-2 gap-8">
+              {/* 왼쪽: 이미지 및 탭 컨텐츠 */}
+              <div className="space-y-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <div className="overflow-hidden rounded-2xl">
+                    <div className="relative group">
+                      {/* 현재 미디어가 비디오인지 확인 */}
+                      {(() => {
+                        const currentMedia =
+                          tourData.images?.[selectedImage] ||
+                          tourData.images?.[0] ||
+                          "../img/photoism_kdh_frame.jpg";
+                        const isVideo =
+                          typeof currentMedia === "string"
+                            ? [
+                                ".mp4",
+                                ".webm",
+                                ".ogg",
+                                ".avi",
+                                ".mov",
+                                ".wmv",
+                              ].some((ext) =>
+                                currentMedia.toLowerCase().includes(ext)
+                              )
+                            : currentMedia?.type === "video";
+
+                        if (isVideo) {
+                          return (
+                            <div className="relative overflow-hidden rounded-2xl">
+                              <video
+                                key={selectedImage}
+                                className="w-full h-96 rounded-2xl"
+                                controls
+                                controlsList="nodownload"
+                                loop
+                                muted
+                                playsInline
+                                preload="metadata"
+                                poster={
+                                  typeof currentMedia === "object"
+                                    ? currentMedia.poster
+                                    : undefined
+                                }
+                                onLoadStart={() =>
+                                  console.log("Video loading started")
+                                }
+                                onError={(e) =>
+                                  console.error("Video error:", e)
+                                }
+                                onCanPlay={() => console.log("Video can play")}
+                                style={{
+                                  position: "relative",
+                                  zIndex: 1,
+                                  objectFit: "cover",
+                                  objectPosition: "center center",
+                                }}
+                              >
+                                <source
+                                  src={
+                                    typeof currentMedia === "string"
+                                      ? currentMedia
+                                      : currentMedia.src
+                                  }
+                                  type={
+                                    typeof currentMedia === "string"
+                                      ? currentMedia
+                                          .toLowerCase()
+                                          .includes(".webm")
+                                        ? "video/webm"
+                                        : currentMedia
+                                            .toLowerCase()
+                                            .includes(".ogg")
+                                        ? "video/ogg"
+                                        : "video/mp4"
+                                      : currentMedia.mimeType || "video/mp4"
+                                  }
+                                />
+                                비디오를 재생할 수 없습니다. 브라우저가 이
+                                형식을 지원하지 않습니다.
+                              </video>
+                              {/* 비디오 표시 아이콘 오버레이 */}
+                              <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2 z-10">
+                                <Play className="w-4 h-4 text-white" />
+                              </div>
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <img
+                              src={
+                                typeof currentMedia === "string"
+                                  ? currentMedia
+                                  : currentMedia.src || currentMedia
+                              }
+                              alt={tourData.title}
+                              className="w-full h-96 object-cover"
+                            />
+                          );
+                        }
+                      })()}
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                      {/* 이미지 네비게이션 버튼들 */}
+                      {tourData.images?.length > 1 && (
+                        <>
+                          <motion.button
+                            onClick={() =>
+                              setSelectedImage(
+                                selectedImage === 0
+                                  ? tourData.images.length - 1
+                                  : selectedImage - 1
+                              )
+                            }
+                            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                          >
+                            <ChevronLeft className="w-6 h-6" />
+                          </motion.button>
+
+                          <motion.button
+                            onClick={() =>
+                              setSelectedImage(
+                                selectedImage === tourData.images.length - 1
+                                  ? 0
+                                  : selectedImage + 1
+                              )
+                            }
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                          >
+                            <ChevronRight className="w-6 h-6" />
+                          </motion.button>
+
+                          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+                            {tourData.images.map((media, index) => {
+                              const isVideoThumb =
+                                typeof media === "string"
+                                  ? [
+                                      ".mp4",
+                                      ".webm",
+                                      ".ogg",
+                                      ".avi",
+                                      ".mov",
+                                      ".wmv",
+                                    ].some((ext) =>
+                                      media.toLowerCase().includes(ext)
+                                    )
+                                  : media?.type === "video";
+
+                              return (
+                                <motion.button
+                                  key={index}
+                                  onClick={() => setSelectedImage(index)}
+                                  className={`relative w-3 h-3 rounded-full transition-all duration-200 ${
+                                    selectedImage === index
+                                      ? "bg-purple-500 scale-125"
+                                      : "bg-white/50 hover:bg-white/70"
+                                  }`}
+                                >
+                                  {/* 비디오 표시 아이콘 */}
+                                  {isVideoThumb && (
+                                    <Play
+                                      className="absolute inset-0 w-2 h-2 text-white/80"
+                                      style={{
+                                        left: "50%",
+                                        top: "50%",
+                                        transform: "translate(-50%, -50%)",
+                                        fontSize: "8px",
+                                      }}
+                                    />
+                                  )}
+                                </motion.button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
+                </motion.div>
 
-                  <div className="pt-6 border-t border-gray-600/50">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-xl border border-gray-600/30">
-                        <Phone className="w-5 h-5 text-gray-400" />
-                        <span className="text-gray-300 font-medium">
-                          02-1234-5678
+                {/* 탭 컨텐츠 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  <Tabs activeTab={activeTab} onTabChange={setActiveTab}>
+                    {renderTabContent()}
+                  </Tabs>
+                </motion.div>
+              </div>
+
+              {/* 오른쪽: 투어 정보 및 예약 (Sticky 사이드바) */}
+              <div className="space-y-6">
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="sticky top-24"
+                >
+                  <div className="p-6 bg-gray-800/30 rounded-2xl border border-gray-600/30">
+                    <div className="mb-6">
+                      {tourData.partnership && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="px-3 py-1 bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 text-sm rounded-full font-semibold border border-purple-500/30">
+                            {tourData.partnership.primary} ×{" "}
+                            {tourData.partnership.secondary}
+                          </span>
+                        </div>
+                      )}
+                      <h1 className="text-2xl font-bold text-white mb-3 leading-tight">
+                        {tourData.title}
+                      </h1>
+                      <p className="text-gray-300 leading-relaxed text-sm">
+                        {tourData.subtitle}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-4">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-300 text-sm font-medium">
+                        {tourData.location}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="flex items-center gap-2">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-bold text-white">
+                          {tourData.rating}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-xl border border-gray-600/30">
-                        <Mail className="w-5 h-5 text-gray-400" />
-                        <span className="text-gray-300 font-medium">
-                          tour@example.com
+                        <span className="text-gray-400 text-sm">
+                          ({tourData.reviewCount}개 리뷰)
                         </span>
                       </div>
                     </div>
+
+                    {/* 투어 정보를 하나의 컨테이너에 통합 */}
+                    <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 border border-purple-500/30 mb-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Clock className="w-4 h-4 text-purple-400" />
+                          <span className="text-white text-sm font-medium">
+                            {tourData.duration}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Users className="w-4 h-4 text-purple-400" />
+                          <span className="text-white text-sm font-medium">
+                            {tourData.groupSize}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-4 h-4 text-purple-400" />
+                          <span className="text-white text-sm font-medium">
+                            {tourData.language}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-600/50 pt-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <GradientText
+                              variant="primary"
+                              size="2xl"
+                              className="font-bold"
+                            >
+                              {tourData.price}
+                            </GradientText>
+                            {tourData.originalPrice && (
+                              <span className="text-lg text-gray-500 line-through">
+                                {tourData.originalPrice}
+                              </span>
+                            )}
+                          </div>
+                          {tourData.discount && (
+                            <GradientText
+                              variant="success"
+                              size="sm"
+                              className="font-bold"
+                            >
+                              {tourData.discount} 할인
+                            </GradientText>
+                          )}
+                        </div>
+                        <motion.button
+                          onClick={() => setIsLiked(!isLiked)}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          className={`p-3 rounded-2xl transition-all duration-200 border ${
+                            isLiked
+                              ? "bg-red-500/20 text-red-400 shadow-lg border-red-500/50"
+                              : "hover:bg-gray-800/50 text-gray-400 border-gray-600/50"
+                          }`}
+                        >
+                          <Heart
+                            className={`w-5 h-5 ${
+                              isLiked ? "fill-current" : ""
+                            }`}
+                          />
+                        </motion.button>
+                      </div>
+
+                      <div className="space-y-3 mb-6">
+                        <NeonButton
+                          className="w-full py-3 font-bold text-sm"
+                          onClick={() =>
+                            window.open(tourData.bookingUrl || "#", "_blank")
+                          }
+                        >
+                          지금 예약하기
+                        </NeonButton>
+                        {/* <NeonButton
+                          variant="secondary"
+                          className="w-full py-3 font-semibold flex items-center justify-center gap-2 text-sm"
+                          onClick={() => {
+                            if (navigator.share) {
+                              navigator.share({
+                                title: tourData.title,
+                                text: tourData.subtitle,
+                                url: window.location.href,
+                              });
+                            } else {
+                              navigator.clipboard.writeText(
+                                window.location.href
+                              );
+                              alert("링크가 복사되었습니다!");
+                            }
+                          }}
+                        ></NeonButton> */}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </NeonCard>
-            </motion.div>
-          </div>
+                </motion.div>
+              </div>
+            </div>
+          </NeonCard>
         </div>
       </div>
     </BackgroundEffect>

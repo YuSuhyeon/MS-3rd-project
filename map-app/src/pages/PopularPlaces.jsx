@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-//import Menu from "components/ui/Menu";
+import Menu from "components/ui/Menu";
 import {
   motion,
   AnimatePresence,
@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 
 import {
-  ArrowUp, // ArrowLeft 대신 ArrowUp 사용
+  ArrowUp,
   Loader,
   AlertTriangle,
   Users,
@@ -451,7 +451,9 @@ const PopularPlaces = () => {
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
               <div className="flex items-center justify-between h-10">
-                <div className="flex items-center h-10"></div>
+                <div className="flex items-center h-10">
+                  <Menu />
+                </div>
                 <div className="flex items-center gap-3 h-10">
                   <div className="h-10 flex items-center">
                     <div className="h-10 flex items-center justify-center">
