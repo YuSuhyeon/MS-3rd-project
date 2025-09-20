@@ -355,7 +355,7 @@ const TrendingBar = ({
               >
                 {showType === "tags"
                   ? "🔥 실시간 인기 태그"
-                  : "🌟 실시간 인기 글"}
+                  : " 실시간 인기 글"}
               </span>
             </div>
 
@@ -425,10 +425,10 @@ const TrendingBar = ({
                           <span className="truncate">
                             {post.title || "제목 없음"}
                           </span>
-                          <Heart className="w-2 h-2 flex-shrink-0" />
+                          {/* <Heart className="w-2 h-2 flex-shrink-0" />
                           <span className="text-xs">
                             {post.likes_count || 0}
-                          </span>
+                          </span> */}
                         </span>
                       </motion.button>
                     ))}
@@ -1404,73 +1404,57 @@ export default function CommunitySocial() {
         <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
           {/* 왼쪽 메인 콘텐츠 */}
           <div className="flex-1">
-            {/* 게시판 헤더 - 모바일 최적화 */}
-            <div
-              className={`mb-6 ${
-                isMobile ? "space-y-4" : "flex items-center justify-between"
-              }`}
-            >
-              <div className={isMobile ? "text-center" : ""}>
+            {/* 게시판 헤더 */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
                 <GradientText
                   variant="primary"
-                  size={isMobile ? "2xl" : "3xl"}
+                  size="3xl"
                   className="font-bold"
                 >
-                  🌟 커뮤니티 게시판
+                  커뮤니티 게시판
                 </GradientText>
-                <p
-                  className={`text-white/70 mt-2 ${isMobile ? "text-sm" : ""}`}
-                >
-                  생생한 여행 후기를 공유해보세요!
+                <p className="text-white/70 mt-2">
+                  생생한 여행 후기와 정보를 알려드립니다!
                 </p>
               </div>
 
-              {/* 로그인 상태 + 글쓰기 버튼 */}
-              <div
-                className={`flex items-center gap-2 ${
-                  isMobile ? "justify-center flex-wrap" : "gap-4"
-                }`}
-              >
+              <div className="flex items-center gap-4">
                 {/* 로그인 상태 표시 */}
                 {profile ? (
-                  <div
-                    className={`flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg border border-purple-400/30 ${
-                      isMobile ? "flex-1 min-w-0" : ""
-                    }`}
-                  >
+                  <div className="flex items-center gap-3 px-4 py-2 bg-white/10 rounded-lg border border-purple-400/30">
                     <img
                       src={profile.picture || "/img/default_profile_img.png"}
                       alt="프로필"
-                      className="w-6 h-6 rounded-full border border-purple-400 flex-shrink-0"
+                      className="w-8 h-8 rounded-full border border-purple-400"
                       onError={(e) => {
                         e.target.src = "/img/default_profile_img.png";
                       }}
                     />
-                    <div className={`${isMobile ? "min-w-0 flex-1" : ""}`}>
-                      <p
-                        className={`text-white font-medium truncate ${
-                          isMobile ? "text-sm" : ""
-                        }`}
-                      >
+                    <div className="text-sm">
+                      <p className="text-white font-medium">
                         {profile.name || profile.nickname || "사용자"}님
                       </p>
-                      {!isMobile && (
-                        <p className="text-green-400 text-xs">로그인됨</p>
-                      )}
+                      <p className="text-green-400 text-xs">로그인됨</p>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="p-1 text-gray-400 hover:text-red-400 transition-colors flex-shrink-0"
+                      className="p-1 text-gray-400 hover:text-red-400 transition-colors"
                       title="로그아웃"
                     >
-                      <LogOut className="w-3 h-3" />
+                      <LogOut className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="px-4 py-2 bg-white/5 rounded-lg border border-gray-600">
+                      <p className="text-gray-400 text-sm">
+                        로그인이 필요합니다
+                      </p>
+                    </div>
                     <NeonButton
                       onClick={() => setShowLoginModal(true)}
-                      //variant="secondary"
+                      variant="secondary"
                       size="sm"
                     >
                       로그인
@@ -1482,13 +1466,13 @@ export default function CommunitySocial() {
                 <NeonButton
                   onClick={handleCreatePostClick}
                   variant="primary"
-                  size={isMobile ? "sm" : "base"}
-                  className="flex items-center gap-1 flex-shrink-0"
+                  size="base"
+                  className="flex items-center gap-2"
                   disabled={!profile}
                   title={!profile ? "로그인이 필요합니다" : ""}
                 >
-                  <Plus className={`${isMobile ? "w-4 h-4" : "w-5 h-5"}`} />
-                  {isMobile ? "글쓰기" : "글쓰기"}
+                  <Plus className="w-5 h-5" />
+                  글쓰기
                 </NeonButton>
               </div>
             </div>
@@ -1499,9 +1483,9 @@ export default function CommunitySocial() {
               <div className="flex justify-start gap-6">
                 <button
                   onClick={() => handleTabChange("all")}
-                  className={`${
+                  className={`rounded-lg font-medium transition-all ${
                     selectedTab === "all"
-                      ? "text-purple-300 "
+                      ? "bg-purple-500/20 text-purple-300 border border-purple-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
@@ -1509,9 +1493,9 @@ export default function CommunitySocial() {
                 </button>
                 <button
                   onClick={() => handleTabChange("travel")}
-                  className={`${
+                  className={` rounded-lg font-medium transition-all ${
                     selectedTab === "travel"
-                      ? "text-purple-300 "
+                      ? "bg-purple-500/20 text-purple-300 border border-purple-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
@@ -1519,9 +1503,9 @@ export default function CommunitySocial() {
                 </button>
                 <button
                   onClick={() => handleTabChange("official")}
-                  className={` ${
+                  className={` rounded-lg font-medium  ${
                     selectedTab === "official"
-                      ? "text-purple-300 "
+                      ? "text-purple-300 border"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
@@ -1529,7 +1513,7 @@ export default function CommunitySocial() {
                 </button>
               </div>
 
-              {/* 컴팩트 검색 */}
+              {/*검색 */}
               <div className="flex items-center gap-2">
                 <form
                   onSubmit={(e) => {
@@ -1553,9 +1537,15 @@ export default function CommunitySocial() {
                     />
                     <Search className="w-4 h-4 text-purple-400 absolute left-2.5 top-2.5" />
                   </div>
+                  <button
+                    type="submit"
+                    className="ml-2 px-3 py-2 bg-purple-500/20 text-purple-300 rounded-lg hover:bg-purple-500/30 transition-colors text-sm"
+                  >
+                    검색
+                  </button>
                 </form>
 
-                {(currentSearchTerm ||
+                {/* {(currentSearchTerm ||
                   Object.values(searchFilters).some((f) => f)) && (
                   <button
                     onClick={() => {
@@ -1567,7 +1557,7 @@ export default function CommunitySocial() {
                   >
                     전체
                   </button>
-                )}
+                )} */}
               </div>
             </div>
 
@@ -1655,9 +1645,7 @@ export default function CommunitySocial() {
                         ? "text-gray-500 cursor-not-allowed"
                         : "text-white hover:bg-white/10"
                     }`}
-                  >
-                    이전
-                  </button>
+                  ></button>
 
                   {/* 페이지 번호들 */}
                   {[...Array(pagination.totalPages)].map((_, index) => {
@@ -1709,17 +1697,15 @@ export default function CommunitySocial() {
                         ? "text-gray-500 cursor-not-allowed"
                         : "text-white hover:bg-white/10"
                     }`}
-                  >
-                    다음
-                  </button>
+                  ></button>
 
-                  {/* 페이지 정보 표시 */}
+                  {/* 페이지 정보 표시 
                   <div className="ml-4 text-sm text-gray-400">
-                    {pagination.currentPage} / {pagination.totalPages}
+                    {pagination.curren총tPage} / {pagination.totalPages}
                     <span className="ml-2 text-xs">
                       (총 {pagination.totalCount}개)
                     </span>
-                  </div>
+                  </div>*/}
                 </>
               )}
             </div>

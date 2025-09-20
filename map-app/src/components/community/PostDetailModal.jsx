@@ -216,13 +216,44 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
 
     try {
       const method = isLiked ? "DELETE" : "POST";
-      const response = await fetch(`${API_BASE_URL}/boards/${postId}/like`, {
+
+      // 토큰 확인
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+      console.log("🔑 사용할 토큰:", token ? "있음" : "없음");
+
+      const fetchOptions = {
         method: method,
-        headers: {
+        credentials: "include",
+      };
+
+      // POST 요청일 때만 JSON 헤더와 body 추가
+      if (method === "POST") {
+        fetchOptions.headers = {
           "Content-Type": "application/json",
-        },
-        credentials: "include", // 세션 쿠키 포함
-      });
+        };
+
+        // 토큰이 있으면 Authorization 헤더 추가
+        if (token) {
+          fetchOptions.headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        fetchOptions.body = JSON.stringify({});
+      } else {
+        // DELETE 요청에도 Authorization 헤더가 필요할 수 있음
+        if (token) {
+          fetchOptions.headers = {
+            Authorization: `Bearer ${token}`,
+          };
+        }
+      }
+
+      console.log("📤 요청 옵션:", fetchOptions);
+
+      const response = await fetch(
+        `${API_BASE_URL}/boards/${postId}/like`,
+        fetchOptions
+      );
 
       console.log("📡 PostDetailModal 좋아요 API 응답 상태:", response.status);
 
@@ -237,7 +268,10 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
           throw new Error(data.error || "좋아요 처리에 실패했습니다.");
         }
       } else {
-        throw new Error("좋아요 처리에 실패했습니다.");
+        // 에러 응답의 내용도 확인
+        const errorData = await response.json().catch(() => ({}));
+        console.log("❌ 에러 응답 데이터:", errorData);
+        throw new Error(errorData.error || "좋아요 처리에 실패했습니다.");
       }
     } catch (error) {
       console.error("💥 PostDetailModal 좋아요 처리 실패:", error);
@@ -246,7 +280,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
       setIsLiked(originalLiked);
       setLikesCount(originalCount);
 
-      alert("좋아요 처리에 실패했습니다.");
+      alert(`좋아요 처리에 실패했습니다: ${error.message}`);
     }
   };
 
@@ -371,10 +405,10 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                     <h3 className="text-white font-semibold">
                       {post.user_name}
                     </h3>
-                    <div className="flex items-center gap-1 text-gray-400 text-sm">
+                    {/* <div className="flex items-center gap-1 text-gray-400 text-sm">
                       <Calendar className="w-4 h-4" />
                       <span>{new Date(post.created_at).toLocaleString()}</span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
@@ -466,10 +500,10 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                     <span>{comments.length}</span>
                   </div>
 
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                  {/* <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
                     <Share2 className="w-5 h-5" />
                     <span>공유</span>
-                  </button>
+                  </button> */}
                 </div>
 
                 {/* 댓글 섹션 */}

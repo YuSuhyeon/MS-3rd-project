@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 from flask import Blueprint, jsonify, redirect, request, session
+from ..services import persona_service , community_service,community_social, storage_service
 
-
-from ..services import persona_service , community_service
 import os
 from flask import Blueprint, jsonify, redirect, request, session
 from flask_cors import cross_origin 
 from pathlib import Path
-from ..services import persona_service , community_service , community_social
+
 import csv
 import math
 import time
@@ -563,108 +561,6 @@ def _sections_path_to_kakao_roads(sections: list):
     return out
 
 
-
-def _epsg3857_to_wgs84(x, y):
-    try:
-        x_val = float(x)
-        y_val = float(y)
-    except (TypeError, ValueError):
-        return None
-    origin_shift = 20037508.34
-    lon = (x_val / origin_shift) * 180.0
-    lat = (y_val / origin_shift) * 180.0
-    lat = 180.0 / math.pi * (
-        2.0 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2.0
-    )
-    return lon, lat
-
-
-def _tmap_pedestrian_leg(start: dict, end: dict, app_key: str):
-    url = "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json"
-    payload = {
-        "startX": str(start.get("x")),
-        "startY": str(start.get("y")),
-        "endX": str(end.get("x")),
-        "endY": str(end.get("y")),
-        "reqCoordType": "WGS84GEO",
-        "resCoordType": "EPSG3857",
-    }
-    if start.get("name"):
-        payload["startName"] = str(start.get("name"))
-    if end.get("name"):
-        payload["endName"] = str(end.get("name"))
-
-    res = requests.post(
-        url,
-        headers={"appKey": app_key, "Content-Type": "application/x-www-form-urlencoded"},
-        data=payload,
-        timeout=20,
-    )
-    res.raise_for_status()
-    data = res.json()
-    features = data.get("features") or []
-
-    path_points = []
-    distance = 0
-    duration = 0
-
-    for feature in features:
-        props = feature.get("properties") or {}
-        geom = feature.get("geometry") or {}
-
-        dist_val = props.get("totalDistance")
-        if dist_val is not None:
-            try:
-                distance = max(distance, int(float(dist_val)))
-            except (TypeError, ValueError):
-                pass
-        time_val = props.get("totalTime")
-        if time_val is not None:
-            try:
-                duration = max(duration, int(float(time_val)))
-            except (TypeError, ValueError):
-                pass
-
-        if geom.get("type") != "LineString":
-            continue
-        for coord in geom.get("coordinates") or []:
-            if not isinstance(coord, (list, tuple)) or len(coord) < 2:
-                continue
-            converted = _epsg3857_to_wgs84(coord[0], coord[1])
-            if not converted:
-                continue
-            lon, lat = converted
-            path_points.append([lon, lat])
-
-    if not path_points:
-        return None
-
-    if distance <= 0:
-        try:
-            distance = int(
-                round(
-                    _haversine(
-                        float(start.get("y")),
-                        float(start.get("x")),
-                        float(end.get("y")),
-                        float(end.get("x")),
-                    )
-                    * 1000
-                )
-            )
-        except Exception:
-            distance = 0
-
-    if duration <= 0 and distance > 0:
-        duration = int((distance / 1000.0) / 4.5 * 3600)
-
-    return {
-        "summary": {"distance": distance, "duration": duration},
-        "path": path_points,
-    }
-
-
-
 @api_bp.route('/tmap/route', methods=['POST'])
 def tmap_route():
     try:
@@ -679,33 +575,12 @@ def tmap_route():
             for s in stops:
                 if 'x' not in s or 'y' not in s:
                     return jsonify({ 'error': 'invalid_coordinates' }), 400
-            app_key = (
-                os.getenv('REACT_APP_TMAP_APP_KEY')
-                or os.getenv('TMAP_APP_KEY')
-                or os.getenv('TMAP_APPKEY')
-            )
-
             sections = []
             total_dist = 0
             total_dur = 0
-            for i in range(len(stops) - 1):
-                start = stops[i]
-                end = stops[i + 1]
-                section = None
-                if app_key:
-                    try:
-                        section = _tmap_pedestrian_leg(start, end, app_key)
-                    except Exception:
-                        section = None
-                if section:
-                    summary = section.get('summary') or {}
-                    total_dist += int(summary.get('distance') or 0)
-                    total_dur += int(summary.get('duration') or 0)
-                    sections.append(section)
-                    continue
-
-                sx = float(start['x']); sy = float(start['y'])
-                gx = float(end['x']); gy = float(end['y'])
+            for i in range(len(stops)-1):
+                sx = float(stops[i]['x']); sy = float(stops[i]['y'])
+                gx = float(stops[i+1]['x']); gy = float(stops[i+1]['y'])
                 leg, err = _naver_leg('walking', (sx, sy), (gx, gy))
                 if leg:
                     sections.append({ 'summary': leg['summary'], 'path': leg['path'] })
@@ -792,31 +667,18 @@ def persona_courses():
 
         items = []
         for r in rows:
-            if len(r) < 7:
-                continue
+            if len(r) < 7: continue
             try:
-                persona_id = int(str(r[0]).strip())
-                course_no = int(str(r[1]).strip())
-                course_code = str(r[2]).strip()
-                order_no = int(str(r[3]).strip())
-                name = str(r[4]).strip()
-                lat = float(str(r[5]).strip())
-                lng = float(str(r[6]).strip())
-            except Exception:
-                continue
-            address = str(r[7]).strip() if len(r) > 7 else ''
-            road_address = str(r[8]).strip() if len(r) > 8 else ''
-            items.append({
-                'personaId': persona_id,
-                'courseNo': course_no,
-                'courseCode': course_code,
-                'order': order_no,
-                'name': name,
-                'lat': lat,
-                'lng': lng,
-                'address': address,
-                'roadAddress': road_address,
-            })
+                items.append({
+                    'personaId': int(str(r[0]).strip()),
+                    'courseNo': int(str(r[1]).strip()),
+                    'courseCode': str(r[2]).strip(),
+                    'order': int(str(r[3]).strip()),
+                    'name': str(r[4]).strip(),
+                    'lat': float(str(r[5]).strip()),
+                    'lng': float(str(r[6]).strip()),
+                })
+            except Exception: continue
         
         pid_q = request.args.get('pid')
         ptype_q = request.args.get('ptype')
@@ -840,30 +702,14 @@ def persona_courses():
             out = []
             for key, stops in grouped.items():
                 stops_sorted = sorted(stops, key=lambda x: x['order'])
-                if not stops_sorted:
-                    continue
-                first_stop = stops_sorted[0]
-                last_stop = stops_sorted[-1]
-                if first_stop['name'] and last_stop['name'] and first_stop['name'] != last_stop['name']:
-                    title = f"{first_stop['name']} → {last_stop['name']}"
-                else:
-                    title = first_stop['name']
+                # BUG FIX: '??' -> ' 등'
+                title = f"{stops_sorted[0]['name']} 등" if stops_sorted else ''
                 out.append({
                     'key': key,
                     'code': key.split('__')[1] if '__' in key else '',
-                    'personaId': first_stop['personaId'],
+                    'personaId': stops_sorted[0]['personaId'] if stops_sorted else None,
                     'title': title,
-                    'stops': [
-                        {
-                            'name': s['name'],
-                            'lat': s['lat'],
-                            'lng': s['lng'],
-                            'address': s.get('address', ''),
-                            'roadAddress': s.get('roadAddress', ''),
-                            'order': s['order'],
-                        }
-                        for s in stops_sorted
-                    ],
+                    'stops': [ { 'name': s['name'], 'lat': s['lat'], 'lng': s['lng'] } for s in stops_sorted ]
                 })
             return jsonify({ 'items': out })
         return jsonify({ 'items': items })
@@ -892,31 +738,18 @@ def persona_courses2():
 
         items = []
         for r in rows:
-            if len(r) < 7:
-                continue
+            if len(r) < 7: continue
             try:
-                persona_id = int(str(r[0]).strip())
-                course_no = int(str(r[1]).strip())
-                course_code = str(r[2]).strip()
-                order_no = int(str(r[3]).strip())
-                name = str(r[4]).strip()
-                lat = float(str(r[5]).strip())
-                lng = float(str(r[6]).strip())
-            except Exception:
-                continue
-            address = str(r[7]).strip() if len(r) > 7 else ''
-            road_address = str(r[8]).strip() if len(r) > 8 else ''
-            items.append({
-                'personaId': persona_id,
-                'courseNo': course_no,
-                'courseCode': course_code,
-                'order': order_no,
-                'name': name,
-                'lat': lat,
-                'lng': lng,
-                'address': address,
-                'roadAddress': road_address,
-            })
+                items.append({
+                    'personaId': int(str(r[0]).strip()),
+                    'courseNo': int(str(r[1]).strip()),
+                    'courseCode': str(r[2]).strip(),
+                    'order': int(str(r[3]).strip()),
+                    'name': str(r[4]).strip(),
+                    'lat': float(str(r[5]).strip()),
+                    'lng': float(str(r[6]).strip()),
+                })
+            except Exception: continue
 
         pid_q = request.args.get('pid')
         ptype_q = request.args.get('ptype')
@@ -932,7 +765,7 @@ def persona_courses2():
                 items = [x for x in items if x['personaId'] == pid_v]
             except Exception: pass
 
-        if request.args.get('grouped') in ('1', 'true', 'yes'):
+        if request.args.get('grouped') in ('1','true','yes'):
             grouped = {}
             for it in items:
                 key = f"{it['personaId']}__{it['courseCode']}"
@@ -940,32 +773,20 @@ def persona_courses2():
             out = []
             for key, stops in grouped.items():
                 stops_sorted = sorted(stops, key=lambda x: x['order'])
-                if not stops_sorted:
-                    continue
-                first_stop = stops_sorted[0]
-                last_stop = stops_sorted[-1]
-                if first_stop['name'] and last_stop['name'] and first_stop['name'] != last_stop['name']:
-                    title = f"{first_stop['name']} → {last_stop['name']}"
-                else:
-                    title = first_stop['name']
+                if not stops_sorted: continue
+                pid_v = stops_sorted[0]['personaId']
+                # BUG FIX: '??' -> ' 등'
+                title = f"{stops_sorted[0]['name']} 등"
                 out.append({
                     'key': key,
                     'code': key.split('__')[1] if '__' in key else '',
-                    'personaId': first_stop['personaId'],
+                    'personaId': pid_v,
+                    'personaType': k6_id2label.get(pid_v),
                     'title': title,
-                    'stops': [
-                        {
-                            'name': s['name'],
-                            'lat': s['lat'],
-                            'lng': s['lng'],
-                            'address': s.get('address', ''),
-                            'roadAddress': s.get('roadAddress', ''),
-                            'order': s['order'],
-                        }
-                        for s in stops_sorted
-                    ],
+                    'stops': [ { 'name': s['name'], 'lat': s['lat'], 'lng': s['lng'] } for s in stops_sorted ]
                 })
             return jsonify({ 'items': out })
+
         return jsonify({ 'items': items })
     except Exception as e:
         return jsonify({ 'error': 'courses2_failed', 'detail': str(e) }), 500
@@ -1655,16 +1476,106 @@ def logout():
 # ========================Social 게시판 CRUD=====================================
 #  Create 
 # 게시글 작성 --------------------------------
+# @api_bp.route('/boards', methods=['POST'])
+# def create_board():
+#     try:       
+#         try:
+            
+#             data = request.get_json()
+#         except Exception as e:
+#             return jsonify({
+#                 'success': False,
+#                 'error': '잘못된 데이터 형식입니다'
+#             }), 400
+        
+#         # JWT 토큰 또는 세션에서 사용자 ID 가져오기
+#         auth_header = request.headers.get('Authorization')        
+#         current_user_id = get_user_from_token(auth_header)      
+          
+#         if not current_user_id:
+#             return jsonify({
+#                 'success': False,
+#                 'error': '로그인이 필요합니다'
+#             }), 401        
+
+#         title = data.get('title', '').strip()
+#         content = data.get('content', '').strip()
+#         tags = data.get('tags', '').strip()
+   
+#         if not title:
+#             return jsonify({
+#                 'success': False,
+#                 'error': '제목은 필수입니다'
+#             }), 400
+            
+#         if not content:
+#             return jsonify({
+#                 'success': False,
+#                 'error': '내용은 필수입니다'
+#             }), 400
+        
+#         # BoardService의 create_post 메서드 호출
+#         result = board_service.create_post(
+#             user_id=current_user_id,
+#             title=title,
+#             content=content,
+#             images=None
+#         )
+                
+#         if result['success']:
+#             return jsonify({
+#                 'success': True,
+#                 'board_id': result['board_id'],
+#                 'message': result['message']
+#             }), 201
+#         else:
+#             return jsonify({
+#                 'success': False,
+#                 'error': result['error']
+#             }), 500
+            
+#     except Exception as e:
+
+#         import traceback
+#         traceback.print_exc()
+#         return jsonify({
+#             'success': False,
+#             'error': str(e)
+#         }), 500
+# 게시글 작성 --------------------------------
 @api_bp.route('/boards', methods=['POST'])
 def create_board():
     try:       
-        try:
-            data = request.get_json()
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': '잘못된 데이터 형식입니다'
-            }), 400
+        print("=== 게시글 작성 요청 시작 ===")
+        print("Content-Type:", request.content_type)
+        
+        # FormData로 받는 경우 (이미지가 있을 때)
+        if 'multipart/form-data' in str(request.content_type):
+            print("FormData 처리")
+            print("받은 폼 데이터:", request.form.to_dict())
+            print("받은 파일:", list(request.files.keys()))
+            
+            title = request.form.get('title', '').strip()
+            content = request.form.get('content', '').strip()
+            tags = request.form.get('tags', '').strip()
+            
+        # JSON으로 받는 경우 (이미지가 없을 때)
+        else:
+            print("JSON 처리")
+            try:
+                data = request.get_json()
+                print("받은 JSON 데이터:", data)
+                
+                title = data.get('title', '').strip()
+                content = data.get('content', '').strip()
+                tags = data.get('tags', '').strip()
+                
+            except Exception as e:
+                print(f"JSON 파싱 오류: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': '잘못된 데이터 형식입니다'
+                }), 400
         
         # JWT 토큰 또는 세션에서 사용자 ID 가져오기
         auth_header = request.headers.get('Authorization')        
@@ -1676,10 +1587,6 @@ def create_board():
                 'error': '로그인이 필요합니다'
             }), 401        
 
-        title = data.get('title', '').strip()
-        content = data.get('content', '').strip()
-        tags = data.get('tags', '').strip()
-   
         if not title:
             return jsonify({
                 'success': False,
@@ -1692,12 +1599,39 @@ def create_board():
                 'error': '내용은 필수입니다'
             }), 400
         
+        # 이미지 업로드 처리
+        uploaded_image_urls = []
+        
+        if 'multipart/form-data' in str(request.content_type):
+            # 이미지 파일들 처리
+            for key in request.files:
+                if key.startswith('image'):  # image0, image1, image2 등
+                    file = request.files[key]
+                    if file and file.filename:
+                        print(f"이미지 업로드 시작: {file.filename}")
+                        
+                        # Azure Blob Storage에 업로드
+            
+                        upload_result = storage_service.upload_image(file)
+                        
+                        if upload_result['success']:
+                            uploaded_image_urls.append(upload_result['url'])
+                            print(f"이미지 업로드 성공: {upload_result['url']}")
+                        else:
+                            print(f"이미지 업로드 실패: {upload_result['error']}")
+                            return jsonify({
+                                'success': False,
+                                'error': f"이미지 업로드 실패: {upload_result['error']}"
+                            }), 500
+        
+        print(f"업로드된 이미지 URLs: {uploaded_image_urls}")
+        
         # BoardService의 create_post 메서드 호출
         result = board_service.create_post(
             user_id=current_user_id,
             title=title,
             content=content,
-            images=None
+            images=uploaded_image_urls if uploaded_image_urls else None
         )
                 
         if result['success']:
@@ -1713,14 +1647,13 @@ def create_board():
             }), 500
             
     except Exception as e:
-
+        print(f"게시글 작성 에러 상세: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
-
 # 댓글 작성 --------------------------------
 @api_bp.route('/boards/<int:board_id>/comments', methods=['POST'])
 def create_comment(board_id):
@@ -1851,7 +1784,6 @@ def update_board(board_id):
 @api_bp.route('/comments/<int:comment_id>', methods=['PUT'])
 def update_comment(comment_id):
     try:
-        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
         auth_header = request.headers.get('Authorization')
         current_user_id = get_user_from_token(auth_header)
         
@@ -1900,7 +1832,6 @@ def update_comment(comment_id):
 def delete_comment(comment_id):
 
     try:
-        # JWT 토큰 또는 세션에서 사용자 ID 가져오기
         auth_header = request.headers.get('Authorization')
         current_user_id = get_user_from_token(auth_header)
         
@@ -1972,43 +1903,64 @@ def delete_board(board_id):
 @api_bp.route('/boards/<int:board_id>/like', methods=['POST'])
 def add_like(board_id):
     try:
+        print(f"=== 좋아요 요청 시작: board_id={board_id} ===")
+        
         auth_header = request.headers.get('Authorization')
+        print(f"Authorization 헤더: {auth_header}")
+        
         current_user_id = get_user_from_token(auth_header)
+        print(f"현재 사용자 ID: {current_user_id}")
         
         if not current_user_id:
+            print("인증 실패: 로그인이 필요합니다")
             return jsonify({
                 'success': False,
                 'error': '로그인이 필요합니다'
             }), 401
         
-
-        data = request.get_json() if request.is_json else {}
+        # JSON 파싱 안전하게 처리
+        try:
+            data = request.get_json() if request.is_json else {}
+            print(f"요청 데이터: {data}")
+        except Exception as json_error:
+            print(f"JSON 파싱 에러: {json_error}")
+            data = {}
         
+        print(f"board_service.add_like 호출: board_id={board_id}, user_id={current_user_id}")
         result = board_service.add_like(board_id, current_user_id)
+        print(f"board_service.add_like 결과: {result}")
         
         if result['success']:
-            return jsonify({
+            response_data = {
                 'success': True,
                 'likes_count': result['likes_count'],
                 'is_liked': True,
                 'message': '좋아요를 추가했습니다'
-            }), 201
+            }
+            print(f"성공 응답: {response_data}")
+            return jsonify(response_data), 201
         else:
             # 이미 좋아요를 눌렀거나 다른 에러
             status_code = 409 if '이미' in result['error'] else 500
-            return jsonify({
+            error_response = {
                 'success': False,
                 'error': result['error']
-            }), status_code
+            }
+            print(f"실패 응답: {error_response}, 상태코드: {status_code}")
+            return jsonify(error_response), status_code
             
     except Exception as e:
-        print(f"Error in POST /boards/{board_id}/like: {e}")
+        print(f"=== 예외 발생 in POST /boards/{board_id}/like ===")
+        print(f"예외 타입: {type(e)}")
+        print(f"예외 메시지: {str(e)}")
+        import traceback
+        print(f"스택 트레이스: {traceback.format_exc()}")
+        
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': f'서버 내부 오류: {str(e)}'
         }), 500
 
-#좋아요 취소
 @api_bp.route('/boards/<int:board_id>/like', methods=['DELETE'])
 def remove_like(board_id):
     try:
@@ -2021,33 +1973,31 @@ def remove_like(board_id):
                 'error': '로그인이 필요합니다'
             }), 401
         
-        # ✅ remove_like 메서드 호출 (add_like가 아님!)
+        # toggle_like이 아니라 remove_like 호출
         result = board_service.remove_like(board_id, current_user_id)
         
         if result['success']:
             return jsonify({
                 'success': True,
                 'likes_count': result['likes_count'],
-                'is_liked': False,
-                'message': result['message']
-            }), 200
+                'is_liked': False  # DELETE는 항상 False
+            })
         else:
-            status_code = 404 if '누르지' in result['error'] else 400
             return jsonify({
                 'success': False,
                 'error': result['error']
-            }), status_code
+            }), 500
             
     except Exception as e:
         print(f"Error in DELETE /boards/{board_id}/like: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)
+        }), 500
+         
             
-        }),500
-#=================================================================
+
+# =================================================================
 # 인기 태그 
 # =================================================================
 @api_bp.route('/boards/trending/tags', methods=['GET'])
@@ -2126,8 +2076,16 @@ def search_boards():
 @api_bp.route('/boards/<int:board_id>', methods=['GET'])
 def get_board_detail(board_id):
     try:
-        # 현재 사용자 ID 가져오기 (로그인하지 않은 경우 None)  
-        current_user_id = session.get('user_id')        
+        
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
+        
+        if not current_user_id:
+            return jsonify({
+                'success': False,
+                'error': '로그인이 필요합니다'
+            }), 401
+     
         result = board_service.get_post_detail(board_id, current_user_id)
         
         if result['success']:
@@ -2151,7 +2109,7 @@ def get_board_detail(board_id):
         }), 500
         
 # =================================================================
-# 사용자별 게시글 조회 :  특정 사용자의 게시글 목록을 조회
+# 특정 사용자의 게시글 목록을 조회
 # =================================================================
 @api_bp.route('/users/<int:user_id>/boards', methods=['GET'])
 def get_user_boards(user_id):  

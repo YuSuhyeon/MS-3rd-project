@@ -3,6 +3,7 @@ from mysql.connector import Error
 import os
 import json
 from datetime import datetime
+SAS_TOKEN = os.getenv("AZURE_SAS_TOKEN")
 
 class BoardService:
     def __init__(self):
@@ -700,7 +701,22 @@ class BoardService:
             """
             cursor.execute(picture_query, (board_id,))
             pictures = cursor.fetchall()
-            post['pictures'] = [pic['image_url'] for pic in pictures]
+
+            # SAS 토큰을 포함한 URL로 변경
+            sas_pictures = []
+            for pic in pictures:
+                original_url = pic['image_url']
+                
+                # SAS 토큰 추가
+                if SAS_TOKEN and original_url:
+                    # URL에 이미 파라미터가 있는지 확인
+                    separator = '&' if '?' in original_url else '?'
+                    sas_url = f"{original_url}{separator}{SAS_TOKEN}"
+                    sas_pictures.append(sas_url)
+                else:
+                    sas_pictures.append(original_url)
+
+            post['pictures'] = sas_pictures
             
             # 태그 조회
             try:
@@ -1110,164 +1126,161 @@ class BoardService:
 #========================================
 #Likes 기능 
 
-# =================================================================
-# 좋아요 기능 (REST API 설계 원칙에 따라 분리)
-# =================================================================
 
-#좋아요 상태 조회
-def get_like_status(self, board_id, user_id):
-    connection = None
-    try:
-        connection = self.get_connection()
-        if not connection:
-            return {'success': False, 'error': '데이터베이스 연결 실패'}
-        
-        cursor = connection.cursor(dictionary=True)
-        
-        # 게시글 존재 여부와 좋아요 수 확인
-        board_query = "SELECT likes_count FROM boards WHERE id = %s AND deleted_at IS NULL"
-        cursor.execute(board_query, (board_id,))
-        board = cursor.fetchone()
-        
-        if not board:
-            return {'success': False, 'error': '존재하지 않는 게시글입니다'}
-        
-        # 현재 사용자의 좋아요 상태 확인
-        like_query = "SELECT 1 FROM likes WHERE board_id = %s AND user_id = %s"
-        cursor.execute(like_query, (board_id, user_id))
-        is_liked = cursor.fetchone() is not None
-        
-        return {
-            'success': True,
-            'is_liked': is_liked,
-            'likes_count': board['likes_count']
-        }
-        
-    except Error as e:
-        print(f"좋아요 상태 조회 중 오류: {e}")
-        return {'success': False, 'error': str(e)}
-    finally:
-        if connection and connection.is_connected():
-            cursor.close()
-            connection.close()
+    #좋아요 상태 조회
+    def get_like_status(self, board_id, user_id):
+        connection = None
+        try:
+            connection = self.get_connection()
+            if not connection:
+                return {'success': False, 'error': '데이터베이스 연결 실패'}
+            
+            cursor = connection.cursor(dictionary=True)
+            
+            # 게시글 존재 여부와 좋아요 수 확인
+            board_query = "SELECT likes_count FROM boards WHERE id = %s AND deleted_at IS NULL"
+            cursor.execute(board_query, (board_id,))
+            board = cursor.fetchone()
+            
+            if not board:
+                return {'success': False, 'error': '존재하지 않는 게시글입니다'}
+            
+            # 현재 사용자의 좋아요 상태 확인
+            like_query = "SELECT 1 FROM likes WHERE board_id = %s AND user_id = %s"
+            cursor.execute(like_query, (board_id, user_id))
+            is_liked = cursor.fetchone() is not None
+            
+            return {
+                'success': True,
+                'is_liked': is_liked,
+                'likes_count': board['likes_count']
+            }
+            
+        except Error as e:
+            print(f"좋아요 상태 조회 중 오류: {e}")
+            return {'success': False, 'error': str(e)}
+        finally:
+            if connection and connection.is_connected():
+                cursor.close()
+                connection.close()
 
 
-                    
-#좋아요 생성
-def add_like(self, board_id, user_id):
+                        
+    #좋아요 생성
+    def add_like(self, board_id, user_id):
 
-    connection = None
-    try:
-        connection = self.get_connection()
-        if not connection:
-            return {'success': False, 'error': '데이터베이스 연결 실패'}
-        
-        connection.start_transaction()
-        cursor = connection.cursor(dictionary=True)
-        
-        # 게시글 존재 여부 확인
-        check_board_query = "SELECT id FROM boards WHERE id = %s AND deleted_at IS NULL"
-        cursor.execute(check_board_query, (board_id,))
-        if not cursor.fetchone():
-            return {'success': False, 'error': '존재하지 않는 게시글입니다'}
-        
-        # 이미 좋아요가 있는지 확인
-        check_like_query = "SELECT 1 FROM likes WHERE board_id = %s AND user_id = %s"
-        cursor.execute(check_like_query, (board_id, user_id))
-        if cursor.fetchone():
-            return {'success': False, 'error': '이미 좋아요를 누르셨습니다'}
-        
-        # 좋아요 추가
-        insert_query = "INSERT INTO likes (board_id, user_id) VALUES (%s, %s)"
-        cursor.execute(insert_query, (board_id, user_id))
-        
-        # 게시글의 좋아요 수 업데이트 
-        update_query = """
-            UPDATE boards 
-            SET likes_count = (
-                SELECT COUNT(*) FROM likes WHERE board_id = %s
-            ) 
-            WHERE id = %s
-        """
-        cursor.execute(update_query, (board_id, board_id))
-        
-        # 현재 좋아요 수 조회
-        cursor.execute("SELECT likes_count FROM boards WHERE id = %s", (board_id,))
-        likes_count = cursor.fetchone()['likes_count']
-        
-        connection.commit()
-        
-        return {
-            'success': True,
-            'likes_count': likes_count,
-            'message': '좋아요를 추가했습니다'
-        }
-        
-    except Error as e:
-        if connection:
-            connection.rollback()
-        print(f"좋아요 추가 중 오류: {e}")
-        return {'success': False, 'error': str(e)}
-    finally:
-        if connection and connection.is_connected():
-            cursor.close()
-            connection.close()
+        connection = None
+        try:
+            connection = self.get_connection()
+            if not connection:
+                return {'success': False, 'error': '데이터베이스 연결 실패'}
+            
+            connection.start_transaction()
+            cursor = connection.cursor(dictionary=True)
+            
+            # 게시글 존재 여부 확인
+            check_board_query = "SELECT id FROM boards WHERE id = %s AND deleted_at IS NULL"
+            cursor.execute(check_board_query, (board_id,))
+            if not cursor.fetchone():
+                return {'success': False, 'error': '존재하지 않는 게시글입니다'}
+            
+            # 이미 좋아요가 있는지 확인
+            check_like_query = "SELECT 1 FROM likes WHERE board_id = %s AND user_id = %s"
+            cursor.execute(check_like_query, (board_id, user_id))
+            if cursor.fetchone():
+                return {'success': False, 'error': '이미 좋아요를 누르셨습니다'}
+            
+            # 좋아요 추가
+            insert_query = "INSERT INTO likes (board_id, user_id) VALUES (%s, %s)"
+            cursor.execute(insert_query, (board_id, user_id))
+            
+            # 게시글의 좋아요 수 업데이트 
+            update_query = """
+                UPDATE boards 
+                SET likes_count = (
+                    SELECT COUNT(*) FROM likes WHERE board_id = %s
+                ) 
+                WHERE id = %s
+            """
+            cursor.execute(update_query, (board_id, board_id))
+            
+            # 현재 좋아요 수 조회
+            cursor.execute("SELECT likes_count FROM boards WHERE id = %s", (board_id,))
+            likes_count = cursor.fetchone()['likes_count']
+            
+            connection.commit()
+            
+            return {
+                'success': True,
+                'likes_count': likes_count,
+                'message': '좋아요를 추가했습니다'
+            }
+            
+        except Error as e:
+            if connection:
+                connection.rollback()
+            print(f"좋아요 추가 중 오류: {e}")
+            return {'success': False, 'error': str(e)}
+        finally:
+            if connection and connection.is_connected():
+                cursor.close()
+                connection.close()
 
-#좋아요 delete
-def remove_like(self, board_id, user_id):
-    connection = None
-    try:
-        connection = self.get_connection()
-        if not connection:
-            return {'success': False, 'error': '데이터베이스 연결 실패'}
-        
-        connection.start_transaction()
-        cursor = connection.cursor(dictionary=True)
-        
-        # 게시글 존재 여부 확인
-        check_board_query = "SELECT id FROM boards WHERE id = %s AND deleted_at IS NULL"
-        cursor.execute(check_board_query, (board_id,))
-        if not cursor.fetchone():
-            return {'success': False, 'error': '존재하지 않는 게시글입니다'}
-        
-        # 좋아요가 있는지 확인
-        check_like_query = "SELECT 1 FROM likes WHERE board_id = %s AND user_id = %s"
-        cursor.execute(check_like_query, (board_id, user_id))
-        if not cursor.fetchone():
-            return {'success': False, 'error': '좋아요를 누르지 않으셨습니다'}
-        
-        # 좋아요 삭제
-        delete_query = "DELETE FROM likes WHERE board_id = %s AND user_id = %s"
-        cursor.execute(delete_query, (board_id, user_id))
-        
-        # 게시글의 좋아요 수 업데이트 
-        update_query = """
-            UPDATE boards 
-            SET likes_count = (
-                SELECT COUNT(*) FROM likes WHERE board_id = %s
-            ) 
-            WHERE id = %s
-        """
-        cursor.execute(update_query, (board_id, board_id))
-        
-        # 현재 좋아요 수 조회
-        cursor.execute("SELECT likes_count FROM boards WHERE id = %s", (board_id,))
-        likes_count = cursor.fetchone()['likes_count']
-        
-        connection.commit()
-        
-        return {
-            'success': True,
-            'likes_count': likes_count,
-            'message': '좋아요를 취소했습니다'
-        }
-        
-    except Error as e:  
-        if connection:
-            connection.rollback()
-        print(f"좋아요 취소 중 오류: {e}")
-        return {'success': False, 'error': str(e)}
-    finally:
-        if connection and connection.is_connected():
-            cursor.close()
-            connection.close()
+    #좋아요 delete
+    def remove_like(self, board_id, user_id):
+        connection = None
+        try:
+            connection = self.get_connection()
+            if not connection:
+                return {'success': False, 'error': '데이터베이스 연결 실패'}
+            
+            connection.start_transaction()
+            cursor = connection.cursor(dictionary=True)
+            
+            # 게시글 존재 여부 확인
+            check_board_query = "SELECT id FROM boards WHERE id = %s AND deleted_at IS NULL"
+            cursor.execute(check_board_query, (board_id,))
+            if not cursor.fetchone():
+                return {'success': False, 'error': '존재하지 않는 게시글입니다'}
+            
+            # 좋아요가 있는지 확인
+            check_like_query = "SELECT 1 FROM likes WHERE board_id = %s AND user_id = %s"
+            cursor.execute(check_like_query, (board_id, user_id))
+            if not cursor.fetchone():
+                return {'success': False, 'error': '좋아요를 누르지 않으셨습니다'}
+            
+            # 좋아요 삭제
+            delete_query = "DELETE FROM likes WHERE board_id = %s AND user_id = %s"
+            cursor.execute(delete_query, (board_id, user_id))
+            
+            # 게시글의 좋아요 수 업데이트 
+            update_query = """
+                UPDATE boards 
+                SET likes_count = (
+                    SELECT COUNT(*) FROM likes WHERE board_id = %s
+                ) 
+                WHERE id = %s
+            """
+            cursor.execute(update_query, (board_id, board_id))
+            
+            # 현재 좋아요 수 조회
+            cursor.execute("SELECT likes_count FROM boards WHERE id = %s", (board_id,))
+            likes_count = cursor.fetchone()['likes_count']
+            
+            connection.commit()
+            
+            return {
+                'success': True,
+                'likes_count': likes_count,
+                'message': '좋아요를 취소했습니다'
+            }
+            
+        except Error as e:  
+            if connection:
+                connection.rollback()
+            print(f"좋아요 취소 중 오류: {e}")
+            return {'success': False, 'error': str(e)}
+        finally:
+            if connection and connection.is_connected():
+                cursor.close()
+                connection.close()

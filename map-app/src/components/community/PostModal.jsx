@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { X, Plus, Edit } from "lucide-react";
+import { X, Plus, Edit, Image as ImageIcon } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
@@ -9,6 +9,8 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
     content: "",
     tags: "",
   });
+  const [images, setImages] = useState([]); // ⭐ 추가: 선택된 이미지 파일 상태
+  const [imagePreviews, setImagePreviews] = useState([]); // ⭐ 추가: 이미지 미리보기 URL 상태
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { profile } = useAuth();
@@ -21,106 +23,89 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
         content: post.content || "",
         tags: Array.isArray(post.tags) ? post.tags.join(", ") : post.tags || "",
       });
+      // 수정 모드에서는 기존 이미지 URL을 미리보기로 설정
+      if (post.pictures) {
+        setImagePreviews(post.pictures.map((p) => p.image_url));
+      }
     }
   }, [mode, post]);
 
+  // 이미지 선택 핸들러
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setImages(files);
+
+    // 파일 미리보기 URL 생성
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setImagePreviews(previews);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("폼 데이터:", formData);
-    console.log("모드:", mode);
-    console.log("게시글 ID:", post?.id || post?.board_id);
 
-    // HTML5 유효성 검사 활용
     if (!e.target.checkValidity()) {
       setError("모든 필수 항목을 입력해주세요.");
       return;
     }
 
-    if (!profile) return;
-
-    // 클라이언트 측 유효성 검사 강화
     const titleTrimmed = formData.title.trim();
     const contentTrimmed = formData.content.trim();
 
-    if (!titleTrimmed) {
-      setError("제목을 입력해주세요.");
+    if (!titleTrimmed || !contentTrimmed) {
+      setError("제목과 내용을 모두 입력해주세요.");
       return;
     }
-
-    if (!contentTrimmed) {
-      setError("내용을 입력해주세요.");
-      return;
-    }
-
-    console.log("유효성 검사 통과:", {
-      title: titleTrimmed,
-      content: contentTrimmed,
-      titleLength: titleTrimmed.length,
-      contentLength: contentTrimmed.length,
-    });
 
     setLoading(true);
     setError("");
 
     try {
       let url, method;
+      const data = new FormData(); // ⭐ 수정: FormData 객체 생성
 
       if (mode === "edit" && post) {
         // update
         const postId = post.id || post.board_id;
         url = `/api/boards/${postId}`;
         method = "PUT";
+
+        // PUT 요청은 multipart/form-data를 백엔드가 지원해야 함
+        // 여기서는 예시로 PUT도 FormData로 보냅니다.
       } else {
-        //create
+        // create
         url = "/api/boards";
         method = "POST";
       }
 
-      console.log("🍪 현재 쿠키:", document.cookie);
+      // 텍스트 데이터 추가
+      data.append("title", titleTrimmed);
+      data.append("content", contentTrimmed);
+      data.append("tags", formData.tags.trim());
 
+      // ⭐ 이미지 파일 추가
+      images.forEach((file, index) => {
+        data.append(`image${index}`, file);
+      });
+      console.log("=== 프론트엔드 전송 데이터 ===");
+      console.log("선택된 이미지 개수:", images.length);
+      console.log("FormData 내용:");
+      for (let [key, value] of data.entries()) {
+        console.log(key, value);
+      }
       const response = await fetch(url, {
         method: method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // 세션 쿠키 포함
-        body: JSON.stringify({
-          title: formData.title.trim(),
-          content: formData.content.trim(),
-          tags: formData.tags.trim(),
-        }),
+        // ⭐ Content-Type 헤더는 FormData가 자동으로 설정하므로 명시하지 않음
+        credentials: "include",
+        body: data, // ⭐ 수정: FormData 객체 전달
       });
-
-      console.log("response.status:", response.status);
-      console.log(
-        "response.header ===========================:",
-        Object.fromEntries(response.headers.entries())
-      );
 
       if (response.ok) {
         const result = await response.json();
-        console.log(" 성공:", result);
-
-        // 성공 시 업데이트된 게시글 정보를 부모 컴포넌트에 전달
-        if (mode === "edit" && result.post) {
-          onSuccess(result.post);
-        } else {
-          onSuccess(result);
-        }
+        onSuccess(result);
         onClose();
       } else {
         const errorData = await response.text();
-        console.error("서버 응답:", errorData);
-
-        if (response.status === 403) {
-          setError("수정 권한이 없습니다.");
-        } else if (response.status === 404) {
-          setError("게시글을 찾을 수 없습니다.");
-        } else {
-          setError(
-            `${mode === "edit" ? "수정" : "작성"}에 실패했습니다: ${errorData}`
-          );
-        }
+        setError(`실패: ${errorData}`);
       }
     } catch (error) {
       console.error("네트워크 오류:", error);
@@ -148,7 +133,6 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-
       <motion.div
         className="relative bg-gray-900 border border-white/20 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl"
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -156,7 +140,6 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 헤더 */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
@@ -183,7 +166,6 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
           </button>
         </div>
 
-        {/* 에러 메시지 */}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -194,7 +176,6 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
           </motion.div>
         )}
 
-        {/* 폼 */}
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -226,6 +207,41 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
             />
           </div>
 
+          {/* ⭐ 추가된 사진 업로드 섹션 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              사진 (선택사항)
+            </label>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {imagePreviews.map((preview, index) => (
+                <div
+                  key={index}
+                  className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-600"
+                >
+                  <img
+                    src={preview}
+                    alt={`미리보기 ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+              <label
+                htmlFor="image-upload"
+                className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors"
+              >
+                <ImageIcon className="w-8 h-8 text-gray-400" />
+                <input
+                  id="image-upload"
+                  type="file"
+                  multiple
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               태그 (선택사항)
@@ -243,7 +259,6 @@ const PostModal = ({ mode = "create", post = null, onClose, onSuccess }) => {
             </p>
           </div>
 
-          {/* 하단 버튼 */}
           <div className="flex gap-3 pt-6">
             <button
               type="button"
