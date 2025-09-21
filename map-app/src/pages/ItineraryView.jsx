@@ -342,7 +342,6 @@ export default function ItineraryView() {
     setIsSaving(true);
     try {
       const updated = await Itinerary.update(localItinerary.id, localItinerary);
-      const updated = await Itinerary.update(localItinerary.id, localItinerary);
       setItinerary(deepClone(updated));
       await synchronizeRoutePlan(localItinerary);
       setLastSavedAt(Date.now());
@@ -521,10 +520,6 @@ export default function ItineraryView() {
           destination.droppableId.split("-")[1],
           10
         );
-        const destDayIndex = parseInt(
-          destination.droppableId.split("-")[1],
-          10
-        );
         const [movedActivity] = draft.days[sourceDayIndex].activities.splice(
           source.index,
           1
@@ -561,10 +556,6 @@ export default function ItineraryView() {
           typeof insertIndex === "number"
             ? insertIndex
             : draft.days[dayIndex].activities.length;
-        const index =
-          typeof insertIndex === "number"
-            ? insertIndex
-            : draft.days[dayIndex].activities.length;
         draft.days[dayIndex].activities.splice(index, 0, newActivity);
         return draft;
       });
@@ -594,9 +585,6 @@ export default function ItineraryView() {
     (dayIndex, activityId) => {
       setLocalItinerary((prev) => {
         const draft = deepClone(prev);
-        draft.days[dayIndex].activities = draft.days[
-          dayIndex
-        ].activities.filter((activity) => activity.id !== activityId);
         draft.days[dayIndex].activities = draft.days[
           dayIndex
         ].activities.filter((activity) => activity.id !== activityId);
@@ -653,12 +641,6 @@ export default function ItineraryView() {
             <Text c="gray.6" size="xs">
               경로 편집에서 플랜을 저장하면 이곳에 나타납니다.
             </Text>
-            <Text c="gray.5" size="sm">
-              저장된 플랜이 없습니다.
-            </Text>
-            <Text c="gray.6" size="xs">
-              경로 편집에서 플랜을 저장하면 이곳에 나타납니다.
-            </Text>
           </Stack>
         </Center>
       );
@@ -687,11 +669,6 @@ export default function ItineraryView() {
                       <Text
                         size="xs"
                         c="gray.5"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
                         style={{
                           display: "flex",
                           alignItems: "center",

@@ -30,8 +30,7 @@ import {
 import CoursePreviewModal from "components/result/CoursePreviewModal";
 import AnalysisSummaryPanel from "components/result/AnalysisSummaryPanel";
 
-// 1. 동적 효과 컴포넌트를 파일 내부에 직접 정의합니다.
-// [수정] z-index를 조정하여 다른 레이어 위에 위치할 수 있도록 준비합니다.
+// 동적 효과 컴포넌트 (파일 내부에 직접 정의)
 const WaveAndParticleEffect = () => {
   const canvasRef = useRef(null);
 
@@ -117,7 +116,6 @@ const WaveAndParticleEffect = () => {
   }, []);
 
   return (
-    // [수정] z-index를 -10(뒤)에서 10(중간)으로 변경합니다.
     <div aria-hidden="true" className="fixed inset-0 pointer-events-none z-10">
       <canvas ref={canvasRef} className="absolute inset-0 opacity-60" />
       <div className="absolute inset-0 opacity-30">
@@ -467,7 +465,7 @@ export default function ResultDashboard() {
 
   if (!profile?.analysis_result) {
     return (
-      <div className="relative min-h-screen neon-scrollbar px-4 py-12 flex items-center justify-center bg-gradient-to-b from-[#1a0b2e] to-[#3a186a]">
+      <div className="relative min-h-screen neon-scrollbar px-4 py-12 flex items-center justify-center bg-[#1a0b2e]/90">
         <WaveAndParticleEffect />
         <NeonScrollbarStyles />
         <div className="relative z-20">
@@ -498,17 +496,13 @@ export default function ResultDashboard() {
 
   return (
     <div className="neon-scrollbar text-white bg-black">
-      {" "}
-      {/* [수정] 기본 배경색을 추가하여 깜빡임 방지 */}
-      <WaveAndParticleEffect /> {/* ✨ 동적 효과 레이어 (z-10) */}
+      <WaveAndParticleEffect />
       <NeonScrollbarStyles />
-      {/* [수정] 전체 구조를 relative로 감싸 z-index 컨텍스트를 만듭니다. */}
       <div className="relative">
-        {/* 섹션 1: 상단 배경 (z-0, 기본값) */}
-        <div className="overflow-hidden bg-gradient-to-b from-gray-950 via-[#1a0b2e] to-[#3a186a]">
-          {/* 콘텐츠 레이어 (z-20) */}
-          <div className="relative z-20 px-4 pt-8 md:px-10 md:pt-12">
-            <div className="max-w-6xl mx-auto space-y-16">
+        {/* 섹션 1: 상단 (페르소나 결과 카드) */}
+        <div className="overflow-hidden bg-gradient-to-b from-[#1a0b2e]/90 to-[#2c134d]/90">
+          <div className="relative z-20 px-4 pt-8 pb-1 md:px-10 md:pt-12 md:pb-1">
+            <div className="max-w-6xl mx-auto">
               <Section>
                 <div className="relative overflow-hidden rounded-3xl border border-purple-500/40 bg-black/60 backdrop-blur-xl p-1 shadow-[0_0_40px_-15px_rgba(168,85,247,0.6)]">
                   <div className="relative rounded-[22px] overflow-hidden">
@@ -547,6 +541,14 @@ export default function ResultDashboard() {
                   </div>
                 </div>
               </Section>
+            </div>
+          </div>
+        </div>
+
+        {/* 섹션 2: 중간 (나의 여행 페르소나 분석 패널) */}
+        <div className="overflow-hidden bg-[#3f2261]/90">
+          <div className="relative z-20 px-4 md:px-10">
+            <div className="max-w-6xl mx-auto">
               <Divider />
               <Section title="나의 여행 페르소나">
                 <AnalysisSummaryPanel
@@ -563,11 +565,11 @@ export default function ResultDashboard() {
           </div>
         </div>
 
-        {/* 섹션 2: 하단 배경 (z-0, 기본값) */}
-        <div className="overflow-hidden bg-[#3a186a]">
-          {/* 콘텐츠 레이어 (z-20) */}
-          <div className="relative z-20 px-4 py-8 md:px-10 md:py-12">
-            <div className="max-w-6xl mx-auto space-y-16">
+        {/* 섹션 3: 하단 (추천 스팟, 추천 코스) */}
+        <div className="overflow-hidden bg-[#2c134d]/90">
+          <div className="relative z-20 px-4 md:px-10">
+            <div className="max-w-6xl mx-auto">
+              <Divider />
               <Section
                 title="맞춤 추천 스팟"
                 description="페르소나에 맞는 서울의 장소들을 랜덤으로 골라 보여드릴게요."
@@ -580,8 +582,7 @@ export default function ResultDashboard() {
                     onClick={refetchSpots}
                     disabled={loadingSpots}
                   >
-                    <RotateCcw className="w-4 h-4" />
-                    새로고침
+                    <RotateCcw className="w-4 h-4" /> 새로고침
                   </NeonButton>
                   <NeonButton
                     size="sm"
@@ -590,8 +591,7 @@ export default function ResultDashboard() {
                     onClick={() => reshuffleSpots()}
                     disabled={loadingSpots}
                   >
-                    <RefreshCw className="w-4 h-4" />
-                    재배열
+                    <RefreshCw className="w-4 h-4" /> 재배열
                   </NeonButton>
                 </div>
                 {loadingSpots ? (
@@ -652,6 +652,7 @@ export default function ResultDashboard() {
               <Section
                 title={
                   <>
+                    {" "}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                       {analysis.persona_type}
                     </span>{" "}
@@ -761,6 +762,7 @@ export default function ResultDashboard() {
           </div>
         </div>
       </div>
+
       <ScrollTopButton />
       <CoursePreviewModal
         open={!!previewCourse}
