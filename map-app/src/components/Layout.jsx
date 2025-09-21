@@ -1513,6 +1513,8 @@ export default function Layout({ children }) {
             <div className="flex-1 flex flex-col">{children}</div>
           </div>
         </motion.main>
+        {/* 플로팅 챗봇 */}
+        <FloatingChatbot selectedLang={selectedLang} />
       </div>
     </>
   );

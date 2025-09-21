@@ -35,6 +35,8 @@ import {
   NeonScrollbarStyles,
 } from "../components/ui/NeonTheme";
 import PostDetailModal from "../components/community/PostDetailModal";
+import mockInfoData from "../utils/mockInfoData";
+import { getInfoPosts } from "../utils/mockInfoData";
 
 // 모바일 감지 Hook
 const useMediaQuery = (query) => {
@@ -56,6 +58,30 @@ const useMediaQuery = (query) => {
 const API_BASE_URL = "/api";
 
 const fetchPosts = async (page = 1, limit = 4, searchParams = {}) => {
+  // "정보" 탭(official)일 때는 목업 데이터 사용
+  if (searchParams.category === "official") {
+    console.log("📋 목업 데이터 사용 (정보 탭)");
+
+    try {
+      const result = getInfoPosts(page, limit, searchParams.query || "");
+
+      // API 지연 시뮬레이션 (선택사항)
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      return {
+        posts: result.posts,
+        totalCount: result.totalCount,
+        totalPages: result.totalPages,
+        currentPage: result.currentPage,
+        hasNext: result.hasNext,
+        hasPrev: result.hasPrev,
+      };
+    } catch (error) {
+      console.error("❌ 목업 데이터 처리 실패:", error);
+      throw error; // loadPosts의 error handling으로 전달
+    }
+  }
+
   console.log("?? API 호출 시도:", `${API_BASE_URL}/boards`);
 
   try {
@@ -1136,7 +1162,6 @@ export default function CommunitySocial() {
   const currentUserId = profile?.sub || profile?.id || profile?.user_id;
 
   const loadPosts = async (searchParams = {}, category = "all", page = 1) => {
-    console.log("?? 백엔드 연결 테스트 시작...");
     setLoading(true);
     setError(null);
 
@@ -1147,7 +1172,6 @@ export default function CommunitySocial() {
 
     try {
       const result = await fetchPosts(page, 4, newSearchParams);
-      console.log("?? 받은 데이터:", result);
 
       setPosts(result.posts);
       setPagination({
@@ -1544,22 +1568,16 @@ export default function CommunitySocial() {
                     검색
                   </button>
                 </form>
-
-                {/* {(currentSearchTerm ||
-                  Object.values(searchFilters).some((f) => f)) && (
-                  <button
-                    onClick={() => {
-                      setCurrentSearchTerm("");
-                      setSearchFilters({});
-                      handleSearch({});
-                    }}
-                    className="px-2 py-1 text-xs text-gray-400 hover:text-white border border-gray-600 hover:border-purple-400 rounded transition-colors"
-                  >
-                    전체
-                  </button>
-                )} */}
               </div>
             </div>
+            {/* 실시간 트렌드 바  */}
+            <TrendingBar
+              trendingTags={trendingTags}
+              trendingPosts={trendingPosts}
+              onTagClick={handleTagClick}
+              onPostClick={handleTrendPostClick}
+              isMobile={isMobile}
+            />
 
             {/* 게시글 목록 - 반응형 */}
             <motion.section
@@ -1709,15 +1727,6 @@ export default function CommunitySocial() {
                 </>
               )}
             </div>
-
-            {/* 실시간 트렌드 바 - 하단 */}
-            <TrendingBar
-              trendingTags={trendingTags}
-              trendingPosts={trendingPosts}
-              onTagClick={handleTagClick}
-              onPostClick={handleTrendPostClick}
-              isMobile={isMobile}
-            />
           </div>
 
           {/* 사이드바 제거됨 - 로그인 상태만 필요한 경우 별도 처리 */}
