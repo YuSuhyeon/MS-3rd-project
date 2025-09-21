@@ -23,6 +23,71 @@ import {
   partnershipData,
 } from "../utils/mockTourData";
 
+// localStorage 서비스 (가장 상단에 위치)
+const LikedProductsService = {
+  STORAGE_KEY: 'liked_travel_products',
+  
+  getLikedProducts() {
+    try {
+      const saved = localStorage.getItem(this.STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('좋아요한 상품 로드 오류:', error);
+      return [];
+    }
+  },
+  
+  addLikedProduct(product) {
+    try {
+      const likedProducts = this.getLikedProducts();
+      const isAlreadyLiked = likedProducts.some(p => p.id === product.id);
+      
+      if (!isAlreadyLiked) {
+        likedProducts.push(product);
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(likedProducts));
+        
+        // 다른 창/탭에 변경사항 알림
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: this.STORAGE_KEY,
+          newValue: JSON.stringify(likedProducts),
+          oldValue: JSON.stringify(likedProducts.slice(0, -1))
+        }));
+        
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('좋아요 추가 오류:', error);
+      return false;
+    }
+  },
+  
+  removeLikedProduct(productId) {
+    try {
+      const likedProducts = this.getLikedProducts();
+      const filteredProducts = likedProducts.filter(p => p.id !== productId);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredProducts));
+      
+      // 다른 창/탭에 변경사항 알림
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: this.STORAGE_KEY,
+        newValue: JSON.stringify(filteredProducts),
+        oldValue: JSON.stringify(likedProducts)
+      }));
+      
+      return true;
+    } catch (error) {
+      console.error('좋아요 제거 오류:', error);
+      return false;
+    }
+  },
+  
+  isLiked(productId) {
+    const likedProducts = this.getLikedProducts();
+    return likedProducts.some(p => p.id === productId);
+  }
+};
+
 // NeonTheme 컴포넌트들
 const BackgroundEffect = ({ children, className = "" }) => {
   const canvasRef = useRef(null);
@@ -277,10 +342,34 @@ const NeonButton = ({
   );
 };
 
-// TourCard 컴포넌트 (네온 테마 적용)
+// TourCard 컴포넌트 (완전히 수정된 버전)
 const TourCard = ({ item, onDetailClick }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+
+  // 컴포넌트 마운트 시 좋아요 상태 확인
+  useEffect(() => {
+    setIsLiked(LikedProductsService.isLiked(item.id));
+  }, [item.id]);
+
+  // 좋아요 클릭 핸들러
+  const handleLikeClick = (e) => {
+    e.stopPropagation();
+    
+    if (isLiked) {
+      // 좋아요 취소
+      if (LikedProductsService.removeLikedProduct(item.id)) {
+        setIsLiked(false);
+        console.log('좋아요 취소:', item.title);
+      }
+    } else {
+      // 좋아요 추가
+      if (LikedProductsService.addLikedProduct(item)) {
+        setIsLiked(true);
+        console.log('좋아요 추가:', item.title);
+      }
+    }
+  };
 
   const getCategoryInfo = (category) => {
     switch (category) {
@@ -440,16 +529,15 @@ const TourCard = ({ item, onDetailClick }) => {
             {item.price}
           </span>
           <div className="flex items-center gap-2">
+            {/* 수정된 좋아요 버튼 */}
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsLiked(!isLiked);
-              }}
+              onClick={handleLikeClick}
               className={`p-2 rounded-xl transition-all duration-200 border ${
                 isLiked
                   ? "bg-red-500/20 text-red-400 shadow-md border-red-500/50"
                   : "hover:bg-gray-800/50 text-gray-400 border-gray-600/50"
               }`}
+              title={isLiked ? "좋아요 취소" : "좋아요"}
             >
               <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
             </button>
