@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { detectLanguage, translateText } from "../../integrations/translator";
 import { speakText, stopTTS } from "../../integrations/tts";
 import { startSpeechRecognition, stopSTT } from "../../integrations/stt";
-import { NeonCard, NeonButton, GradientText } from "../ui/NeonTheme";
+import { NeonCard } from "../ui/NeonTheme";
 import { useTranslation } from "react-i18next";
 
 export default function QuickTranslator() {
   const { t, i18n } = useTranslation("QuickTranslator");
+
+  // Input
+  const [inputText, setInputText] = useState("");
 
   // TTS
   const [playingAudio, setPlayingAudio] = useState(null);
@@ -23,15 +26,10 @@ export default function QuickTranslator() {
   // Translate
   const [translationResults, setTranslationResults] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [translatedText, setTranslatedText] = useState("");
 
-  // Input
-  const [inputText, setInputText] = useState("");
-
+  // Category
   const [selectedCategory, setSelectedCategory] = useState(t("all"));
-
-  const isTranslatingRef = useRef(false);
-  const translationCompleteRef = useRef(false);
-  const lastInputTextRef = useRef("");
 
   // 자주 쓰는 표현 데이터
   const quickPhrases = [
@@ -134,45 +132,43 @@ export default function QuickTranslator() {
 
   // Detect
   useEffect(() => {
-    // 번역 중이면 언어 감지 중단
-    if (isTranslating || isTranslatingRef.current) {
-      return;
-    }
-
     // 입력 창이 비어있으면, 모두 초기화.
     if (!inputText.trim()) {
       setDetectedLanguage(null);
       setIsDetecting(false);
       setDetectionError("");
       setTranslationResults(null);
-      translationCompleteRef.current = false;
-      lastInputTextRef.current = "";
+      setTranslatedText("");
       return;
     }
 
-    // 번역 완료 후 텍스트 변화가 없으면 언어 감지 중단
-    if (translationCompleteRef.current) {
+    // 번역 중이면 언어 감지 중단
+    if (isTranslating) {
+      setIsDetecting(false);
       return;
     }
 
-    // 번역 완료 후 텍스트가 변경되었으면 언어 감지 재개 및 이전 번역 결과 제거
-    if (
-      translationCompleteRef.current &&
-      inputText !== lastInputTextRef.current
-    ) {
-      translationCompleteRef.current = false;
-      // setTranslationResults(null); // 이전 번역 결과 제거
+    // 번역 결과가 있지만 텍스트가 변경되었으면 번역 결과 초기화
+    if (translationResults && inputText.trim() !== translatedText) {
+      setTranslationResults(null);
+      setTranslatedText("");
     }
 
-    // 입력하자마자 즉시 감지 상태 표시 및 이전 번역 결과 제거
+    // 번역 결과가 있고 텍스트가 동일하면 언어 감지 중단
+    if (translationResults && inputText.trim() === translatedText) {
+      return;
+    }
+
     setIsDetecting(true);
-    setDetectionError("");
-
     const timeoutId = setTimeout(async () => {
       try {
+        if (isTranslating) {
+          setIsDetecting(false);
+          return;
+        }
+        setDetectionError("");
         const detection = await detectLanguage(inputText);
         setDetectedLanguage(detection);
-        lastInputTextRef.current = inputText;
       } catch (error) {
         setDetectionError(t("language_detection_error"));
         console.error("Language detection error:", error);
@@ -182,15 +178,11 @@ export default function QuickTranslator() {
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [inputText, isTranslating]);
+  }, [inputText, isTranslating, translationResults, translatedText, t]);
 
   // 번역
   const handleTranslate = async () => {
     if (!inputText.trim()) return;
-
-    if (!translationCompleteRef.current) {
-      translationCompleteRef.current = true;
-    }
 
     setTranslationResults(null);
 
@@ -225,11 +217,8 @@ export default function QuickTranslator() {
             sourceLanguage: detectedLanguage.language,
           });
         }
+        setTranslatedText(inputText.trim());
         setIsTranslating(false);
-        isTranslatingRef.current = false;
-
-        // 번역 완료 후 언어 감지 완전 차단
-        translationCompleteRef.current = true;
       }
     } catch (error) {
       console.error("Translation error:", error);
@@ -237,7 +226,6 @@ export default function QuickTranslator() {
         error: "번역 중 오류가 발생했습니다.",
       });
       setIsTranslating(false);
-      isTranslatingRef.current = false;
     }
   };
 
@@ -251,10 +239,7 @@ export default function QuickTranslator() {
     setDetectedLanguage(null);
     setIsDetecting(false);
     setDetectionError("");
-
-    // 언어 감지 재개
-    translationCompleteRef.current = false;
-    lastInputTextRef.current = "";
+    setTranslatedText("");
 
     setIsListening(true);
     setIsProcessing(false);
@@ -385,7 +370,7 @@ export default function QuickTranslator() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    translationCompleteRef.current = true; // 번역 완료 후 언어 감지 차단
+                    setIsTranslating(true);
                     handleTranslate();
                   }
                 }}
@@ -402,7 +387,7 @@ export default function QuickTranslator() {
             </div>
 
             {/* 언어 감지 상태 표시 */}
-            {isDetecting && !isListening && !isProcessing && (
+            {!isTranslating && isDetecting && !isListening && !isProcessing && (
               <div className="flex items-center gap-3 mt-3 px-3 py-2 bg-gray-800/30 border border-gray-600/30 rounded-lg">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
@@ -452,13 +437,11 @@ export default function QuickTranslator() {
 
           <button
             onClick={() => {
-              // ref를 사용하여 즉시 언어 감지 차단
-              isTranslatingRef.current = true;
+              setIsDetecting(false);
               setIsTranslating(true);
-              translationCompleteRef.current = true; // 번역 완료 후 언어 감지 차단
               handleTranslate();
             }}
-            disabled={!inputText.trim() || isTranslating || isDetecting}
+            disabled={!inputText.trim() || isTranslating}
             className={`w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 transform ${
               !inputText.trim() || isTranslating || isDetecting
                 ? "bg-gray-600/30 text-gray-400 cursor-not-allowed"

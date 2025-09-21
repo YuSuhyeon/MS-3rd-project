@@ -99,6 +99,12 @@ const UI = {
       landmark: "랜드마크",
       historic: "역사적 장소",
     },
+    allTourismSpots: "전체 관광지",
+    detailedInfo: "상세 정보",
+    tourismList: "관광지 목록",
+    locationTracking: "위치 추적",
+    location: "위치",
+    voiceGuide: "음성 안내",
   },
   en: {
     title: "AI Docent",
@@ -136,6 +142,12 @@ const UI = {
       landmark: "Landmark",
       historic: "Historic",
     },
+    allTourismSpots: "All Tourism Spots",
+    detailedInfo: "Detailed Information",
+    tourismList: "Tourism List",
+    locationTracking: "Location Tracking",
+    location: "Location",
+    voiceGuide: "Voice Guide",
   },
   ja: {
     title: "AI ドーセント",
@@ -173,6 +185,12 @@ const UI = {
       landmark: "ランドマーク",
       historic: "歴史的な場所",
     },
+    allTourismSpots: "全観光スポット",
+    detailedInfo: "詳細情報",
+    tourismList: "観光地リスト",
+    locationTracking: "位置追跡",
+    location: "位置",
+    voiceGuide: "音声ガイド",
   },
   zh: {
     title: "AI 讲解",
@@ -209,6 +227,12 @@ const UI = {
       landmark: "地标",
       historic: "历史遗址",
     },
+    allTourismSpots: "全部景点",
+    detailedInfo: "详细信息",
+    tourismList: "景点列表",
+    locationTracking: "位置追踪",
+    location: "位置",
+    voiceGuide: "语音导览",
   },
 };
 // ── 라벨 정규화/허용 목록
@@ -300,11 +324,21 @@ const FixedChatbot = ({
   }, [ui.chatbotInitialMessage]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }
   }, [messages, isProcessing]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }
   };
   useEffect(scrollToBottom, [messages, isProcessing]);
 
@@ -683,10 +717,16 @@ const FixedChatbot = ({
       className={`${chatHeight} w-full bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-lg border-t border-purple-500/30`}
     >
       <div
-        className={`flex flex-col ${chatHeight}  p-4 transition-all duration-300`}
+        className={`flex flex-col ${chatHeight} ${
+          isMobile ? "p-2" : "p-4"
+        } transition-all duration-300`}
       >
         {/* 메시지 영역 */}
-        <div className="flex-1 overflow-y-auto neon-scrollbar space-y-4">
+        <div
+          className={`${
+            isMobile && !expanded ? "hidden" : "flex-1"
+          } overflow-y-auto neon-scrollbar space-y-4 pb-2`}
+        >
           <AnimatePresence>
             {messages.map((message) => (
               <motion.div
@@ -766,10 +806,15 @@ const FixedChatbot = ({
               </div>
             </motion.div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* 입력 영역 */}
-        <div className="border-t border-purple-500/30 pt-3 mt-3">
+        <div
+          className={`border-t border-purple-500/30 pt-3 ${
+            isMobile && !expanded ? "mt-0" : "mt-3"
+          } flex-shrink-0 bg-gray-900/95 backdrop-blur-sm`}
+        >
           <div className="flex items-center gap-2">
             {/* 파일 업로드 (갤러리) */}
             <input
@@ -793,7 +838,12 @@ const FixedChatbot = ({
             <NeonButton
               size="icon"
               variant="ghost"
-              onClick={() => cameraInputRef.current?.click()}
+              onClick={() => {
+                if (!expanded) {
+                  setExpanded(true);
+                }
+                cameraInputRef.current?.click();
+              }}
               disabled={isProcessing}
               className="p-2"
               title="카메라(촬영)"
@@ -804,7 +854,12 @@ const FixedChatbot = ({
             <NeonButton
               size="icon"
               variant="ghost"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => {
+                if (!expanded) {
+                  setExpanded(true);
+                }
+                fileInputRef.current?.click();
+              }}
               disabled={isProcessing}
               title="파일에서 선택"
               className="p-2"
@@ -820,7 +875,12 @@ const FixedChatbot = ({
             <NeonButton
               size="icon"
               variant="ghost"
-              onClick={handleVoiceRecording}
+              onClick={() => {
+                if (!expanded) {
+                  setExpanded(true);
+                }
+                handleVoiceRecording();
+              }}
               className={isRecording ? "bg-red-100 text-red-600" : ""}
               disabled={isProcessing}
             >
@@ -837,8 +897,13 @@ const FixedChatbot = ({
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleTextSend()}
+                onFocus={() => {
+                  if (!expanded) {
+                    setExpanded(true);
+                  }
+                }}
                 placeholder={ui.chatbotPlaceholder}
-                className="w-full px-4 py-2 border border-purple-500/30 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-sm bg-gray-800/50 text-white placeholder-gray-400 backdrop-blur-sm"
+                className="w-full px-4 py-2.5 border border-purple-500/30 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-sm bg-gray-800/70 text-white placeholder-gray-400 backdrop-blur-sm shadow-lg"
                 disabled={isProcessing}
               />
             </div>
@@ -858,7 +923,12 @@ const FixedChatbot = ({
             {/* 전송 */}
             <NeonButton
               size="icon"
-              onClick={handleTextSend}
+              onClick={() => {
+                if (!expanded) {
+                  setExpanded(true);
+                }
+                handleTextSend();
+              }}
               disabled={!inputMessage.trim() || isProcessing}
               className="rounded-full p-2"
             >
@@ -1138,7 +1208,11 @@ export default function DocentMantine() {
             key={key}
             size="sm"
             variant={category === key ? "primary" : "outline"}
-            onClick={() => setCategory(key)}
+            onClick={() => {
+              setCategory(key);
+              setExpanded(false); // 카테고리 변경 시 챗봇창 축소
+              setSelectedPOI(null); // 카테고리 변경 시 상세정보 닫기
+            }}
             className={`rounded-full transition-all duration-300 ${
               isMobile
                 ? `px-2 py-1 text-xs ${
@@ -1167,7 +1241,10 @@ export default function DocentMantine() {
     return (
       <BackgroundEffect>
         <NeonScrollbarStyles />
-        <div className="h-screen flex flex-col">
+        <div
+          className="h-screen flex flex-col"
+          style={{ height: "calc(100vh - 75px)" }}
+        >
           {/* 헤더 */}
           <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-3 py-2 shadow-lg flex-shrink-0">
             <div className="flex items-center justify-between">
@@ -1211,7 +1288,9 @@ export default function DocentMantine() {
                     onCheckedChange={toggleLocationTracking}
                     className="data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:bg-gradient-to-r scale-75"
                   />
-                  <span className="text-xs text-gray-300">위치</span>
+                  <span className="text-xs text-gray-300">
+                    {ui?.location || "위치"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1233,9 +1312,13 @@ export default function DocentMantine() {
                 userLocation={userLocation}
                 pois={mapPoisMobile}
                 selectedPOI={selectedPOI}
-                onSelectPOI={setSelectedPOI}
+                onSelectPOI={(poi) => {
+                  setSelectedPOI(poi);
+                  setExpanded(false); // POI 선택 시 챗봇창 축소
+                }}
                 showSelectedPopup
                 directionsLabel={ui.directions}
+                selectedLang={selectedLang}
               />
             </div>
 
@@ -1244,8 +1327,10 @@ export default function DocentMantine() {
               <NeonCardJHMobile className="m-2 ">
                 <div className="p-3 pb-1 flex flex-col h-full">
                   <h3 className="text-lg font-semibold text-white mb-3 flex-shrink-0">
-                    {category === "all"
-                      ? "전체 관광지"
+                    {selectedPOI
+                      ? ui?.detailedInfo || "상세 정보"
+                      : category === "all"
+                      ? ui?.allTourismSpots || "전체 관광지"
                       : ui?.categories?.[category] || category}
                   </h3>
                   <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
@@ -1257,6 +1342,9 @@ export default function DocentMantine() {
                           speakText(translatedDesc, selectedLang)
                         }
                         isDocentActive={isDocentActive}
+                        isMobile={isMobile}
+                        ui={ui}
+                        selectedLang={selectedLang}
                       />
                     ) : (
                       <POIListJH
@@ -1265,7 +1353,10 @@ export default function DocentMantine() {
                         selectedPOI={selectedPOI}
                         nearbyPOIs={[]}
                         userLocation={userLocation}
-                        onSelectPOI={setSelectedPOI}
+                        onSelectPOI={(poi) => {
+                          setSelectedPOI(poi);
+                          setExpanded(false); // 카드 선택 시 챗봇창 축소
+                        }}
                         isDocentActive={isDocentActive}
                         isPlaying={isPlaying}
                       />
@@ -1278,7 +1369,7 @@ export default function DocentMantine() {
             {/* 하단 고정 챗봇 */}
             <div
               className={`transition-[height] duration-300 ease-in-out ${
-                expanded ? "h-[60%]" : "h-[10%]"
+                expanded ? "h-[50%]" : "h-[10%]"
               } flex-shrink-0`}
             >
               <FixedChatbot
@@ -1360,7 +1451,7 @@ export default function DocentMantine() {
                   onCheckedChange={toggleLocationTracking}
                 />
                 <span className="data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:bg-gradient-to-r">
-                  위치 추적
+                  {ui?.locationTracking || "위치 추적"}
                 </span>
               </div>
               {isPlaying && (
@@ -1388,7 +1479,7 @@ export default function DocentMantine() {
               <NeonCardJH className="h-full overflow-hidden">
                 <div className="p-3 pb-1 h-full flex flex-col">
                   <h3 className="text-lg font-semibold text-white mb-3">
-                    관광지 목록
+                    {ui?.tourismList || "관광지 목록"}
                   </h3>
                   <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
                     <POIListJH
@@ -1397,7 +1488,10 @@ export default function DocentMantine() {
                       selectedPOI={selectedPOI}
                       nearbyPOIs={[]}
                       userLocation={userLocation}
-                      onSelectPOI={setSelectedPOI}
+                      onSelectPOI={(poi) => {
+                        setSelectedPOI(poi);
+                        setExpanded(false); // 카드 선택 시 챗봇창 축소
+                      }}
                       isDocentActive={isDocentActive}
                       isPlaying={isPlaying}
                     />
@@ -1416,9 +1510,13 @@ export default function DocentMantine() {
                   userLocation={userLocation}
                   pois={mapPoisDesktop}
                   selectedPOI={selectedPOI}
-                  onSelectPOI={setSelectedPOI}
+                  onSelectPOI={(poi) => {
+                    setSelectedPOI(poi);
+                    setExpanded(false); // POI 선택 시 챗봇창 축소
+                  }}
                   showSelectedPopup
-                  directionsLabel={ui.directions} // ← 추가
+                  directionsLabel={ui.directions}
+                  selectedLang={selectedLang}
                 />
               </div>
             </div>
@@ -1428,7 +1526,7 @@ export default function DocentMantine() {
               <NeonCardJH className="h-full">
                 <div className="p-3 pb-0 h-full">
                   <h3 className="text-lg font-semibold text-white mb-3">
-                    상세 정보
+                    {ui?.detailedInfo || "상세 정보"}
                   </h3>
 
                   {/* 강제 높이 제한으로 스크롤 보장 */}
@@ -1451,6 +1549,8 @@ export default function DocentMantine() {
                           speakText(translatedDesc, selectedLang)
                         }
                         isDocentActive={isDocentActive}
+                        ui={ui}
+                        selectedLang={selectedLang}
                       />
                     </div>
                   </div>
@@ -1505,7 +1605,7 @@ export default function DocentMantine() {
           {/* 하단 챗봇 영역 (40%) */}
           <div
             className={`transition-[height] duration-300 ease-in-out ${
-              expanded ? "h-[70%]" : "h-[40%]"
+              expanded ? "h-[60%]" : "h-[40%]"
             } flex-shrink-0`}
           >
             <FixedChatbot

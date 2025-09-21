@@ -228,10 +228,7 @@ export default function ItineraryView() {
     if (!localItinerary) return;
     setIsSaving(true);
     try {
-      const updated = await Itinerary.update(
-        localItinerary.id,
-        localItinerary
-      );
+      const updated = await Itinerary.update(localItinerary.id, localItinerary);
       setItinerary(deepClone(updated));
       await synchronizeRoutePlan(localItinerary);
       setLastSavedAt(Date.now());
@@ -257,7 +254,13 @@ export default function ItineraryView() {
     } finally {
       setIsSaving(false);
     }
-  }, [localItinerary, setItinerary, setIsSaving, synchronizeRoutePlan, setLastSavedAt]);
+  }, [
+    localItinerary,
+    setItinerary,
+    setIsSaving,
+    synchronizeRoutePlan,
+    setLastSavedAt,
+  ]);
 
   const handleDiscardChanges = useCallback(() => {
     if (!itinerary) return;
@@ -317,7 +320,13 @@ export default function ItineraryView() {
     };
 
     runAutoSave();
-  }, [debouncedItinerary, setItinerary, synchronizeRoutePlan, setIsSaving, setLastSavedAt]);
+  }, [
+    debouncedItinerary,
+    setItinerary,
+    synchronizeRoutePlan,
+    setIsSaving,
+    setLastSavedAt,
+  ]);
 
   const handleApplyRoutePlan = useCallback(
     async (plan) => {
@@ -402,7 +411,10 @@ export default function ItineraryView() {
       setLocalItinerary((prev) => {
         const draft = deepClone(prev);
         const sourceDayIndex = parseInt(source.droppableId.split("-")[1], 10);
-        const destDayIndex = parseInt(destination.droppableId.split("-")[1], 10);
+        const destDayIndex = parseInt(
+          destination.droppableId.split("-")[1],
+          10
+        );
         const [movedActivity] = draft.days[sourceDayIndex].activities.splice(
           source.index,
           1
@@ -437,9 +449,10 @@ export default function ItineraryView() {
 
       setLocalItinerary((prev) => {
         const draft = deepClone(prev);
-        const index = typeof insertIndex === "number"
-          ? insertIndex
-          : draft.days[dayIndex].activities.length;
+        const index =
+          typeof insertIndex === "number"
+            ? insertIndex
+            : draft.days[dayIndex].activities.length;
         draft.days[dayIndex].activities.splice(index, 0, newActivity);
         return draft;
       });
@@ -472,9 +485,9 @@ export default function ItineraryView() {
     (dayIndex, activityId) => {
       setLocalItinerary((prev) => {
         const draft = deepClone(prev);
-        draft.days[dayIndex].activities = draft.days[dayIndex].activities.filter(
-          (activity) => activity.id !== activityId
-        );
+        draft.days[dayIndex].activities = draft.days[
+          dayIndex
+        ].activities.filter((activity) => activity.id !== activityId);
         return draft;
       });
     },
@@ -533,8 +546,12 @@ export default function ItineraryView() {
       return (
         <Center h={120}>
           <Stack align="center" gap={4}>
-            <Text c="gray.5" size="sm">저장된 플랜이 없습니다.</Text>
-            <Text c="gray.6" size="xs">경로 편집에서 플랜을 저장하면 이곳에 나타납니다.</Text>
+            <Text c="gray.5" size="sm">
+              저장된 플랜이 없습니다.
+            </Text>
+            <Text c="gray.6" size="xs">
+              경로 편집에서 플랜을 저장하면 이곳에 나타납니다.
+            </Text>
           </Stack>
         </Center>
       );
@@ -567,7 +584,11 @@ export default function ItineraryView() {
                       <Text
                         size="xs"
                         c="gray.5"
-                        style={{ display: "flex", alignItems: "center", gap: 4 }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
                       >
                         <CalendarDays size={14} />
                         {new Date(plan.updatedAt).toLocaleDateString("ko-KR")}
@@ -722,9 +743,18 @@ export default function ItineraryView() {
           flexDirection: "column",
         }}
       >
-        <Box className="itinerary-scroll" style={{ flex: 1, overflowY: "auto" }}>{savedPlansContent}</Box>
+        <Box
+          className="itinerary-scroll"
+          style={{ flex: 1, overflowY: "auto" }}
+        >
+          {savedPlansContent}
+        </Box>
       </Paper>
-      <Box className="itinerary-scroll" style={{ flex: 1, overflowY: "auto" }} p="xl">
+      <Box
+        className="itinerary-scroll"
+        style={{ flex: 1, overflowY: "auto" }}
+        p="xl"
+      >
         <ItineraryHeader
           itinerary={localItinerary}
           hasChanges={hasChanges}
@@ -748,9 +778,13 @@ export default function ItineraryView() {
         style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
       >
         <Group h="100%" px="md" justify="space-between">
-          <Title order={4} c="grape.3">여행 플래너</Title>
+          <Title order={4} c="grape.3">
+            여행 플래너
+          </Title>
           {(isSaving || autoSaving) && (
-            <Text size="xs" c="grape.3">저장 중...</Text>
+            <Text size="xs" c="grape.3">
+              저장 중...
+            </Text>
           )}
         </Group>
       </AppShell.Header>

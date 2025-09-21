@@ -21,6 +21,15 @@ import {
   Droplets,
   Wind,
   X,
+  MessageCircle,
+  Send,
+  Camera,
+  Image as ImageIcon,
+  Mic,
+  MicOff,
+  ArrowUp,
+  Minimize2,
+  Maximize2,
 } from "lucide-react";
 
 const getNavigationItems = (t) => [
@@ -28,37 +37,666 @@ const getNavigationItems = (t) => [
   { title: t("result_dashboard"), url: "/result" },
   { title: t("itinerary_planner"), url: "/itinerary" },
   { title: t("ai_docent"), url: "/docent" },
-  { title: t("community"), url: "/social" }, //community main 에서 social로 이동
+  { title: t("community"), url: "/social" }, //community main 에서 social로 이동 0921진희
   { title: t("tour"), url: "/tour" },
-  { title: t("survival"), url: "/community" }, //서바이벌 키트
+  { title: t("survival"), url: "/community" }, //서바이벌 키트 0921진희
   { title: t("mypage"), url: "/mypage" },
 ];
+// 챗봇 관련 상수들
+const YOLO_API = "https://your-yolo-api-endpoint.com";
+const TAG_ALIASES = {
+  gyeongbokgung: "경복궁",
+  changdeokgung: "창덕궁",
+  bukchon: "북촌한옥마을",
+  // 필요한 태그 별칭들 추가
+};
+const ALLOWED_POIS = new Set([
+  "경복궁",
+  "창덕궁",
+  "북촌한옥마을",
+  "명동",
+  "동대문",
+  "남대문",
+  "인사동",
+  "홍대",
+  "강남",
+  "이태원",
+]);
+
+// 번역 함수 (실제 구현에 맞게 수정)
+const translateText = async (text, targetLang) => {
+  // 실제 번역 API 호출 로직
+  return text; // 임시로 원본 반환
+};
+
+const prettyPct = (conf) => `${Math.round(conf * 100)}%`;
+
+// 플로팅 챗봇 컴포넌트
+const FloatingChatbot = ({ selectedLang = "ko" }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  // const [isRecording, setIsRecording] = useState(false);
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // 반응형 체크
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // 언어별 UI 텍스트
+  const getUITexts = (lang) => ({
+    ko: {
+      title: "AI 도슨트",
+      subtitle: "실시간 위치 기반 가이드",
+      aiDocent: "AI 도슨트",
+      stopVoice: "음성 중지",
+      current: "현재 위치",
+      directions: "길찾기",
+      chatbot: "관광 챗봇",
+      askQuestion: "궁금한 것을 물어보세요",
+      send: "전송",
+      examples: {
+        title: "예시 질문:",
+        items: [
+          "케이팝 데몬 헌터스 촬영지",
+          "명동 맛집 추천",
+          "북촌한옥마을 정보",
+        ],
+      },
+      chatbotPlaceholder: "궁금한 것을 물어보세요...",
+      chatbotInitialMessage:
+        "안녕하세요! 저는 당신의 AI 여행 도슨트입니다. 궁금한 장소나 여행 정보를 물어보세요. 사진을 보내주시면 그 장소에 대한 자세한 설명도 드릴 수 있어요!",
+      imageQueryText: "이 장소에 대해 알려주세요",
+      voiceRecStart: "음성 녹음을 시작합니다...",
+      voiceRecResult: "음성 인식 결과:",
+      voiceRecStop: "음성 녹음을 중지합니다.",
+      errorReply:
+        "죄송합니다. 답변을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      filePick: "파일",
+      categories: {
+        all: "전체",
+        museum: "미술관&박물관",
+        palace: "고궁",
+        landmark: "랜드마크",
+        historic: "역사적 장소",
+      },
+    },
+    en: {
+      title: "AI Docent",
+      subtitle: "Real-time location guide",
+      aiDocent: "AI Docent",
+      stopVoice: "Stop voice",
+      current: "Current location",
+      directions: "Directions",
+      chatbot: "Tourism Chatbot",
+      askQuestion: "Ask me anything",
+      send: "Send",
+      examples: {
+        title: "Example questions:",
+        items: [
+          "K-pop Demon Hunters filming locations",
+          "Myeongdong restaurant recommendations",
+          "Bukchon Hanok Village info",
+          "Squid Game filming locations",
+        ],
+      },
+      chatbotPlaceholder: "Ask me anything...",
+      chatbotInitialMessage:
+        "Hello! I am your AI travel docent. Ask me about places or travel information. You can also send a photo for a detailed explanation of the location!",
+      imageQueryText: "Tell me about this place",
+      voiceRecStart: "Starting voice recording...",
+      voiceRecResult: "Voice recognition result:",
+      voiceRecStop: "Stopping voice recording.",
+      errorReply:
+        "Sorry, an error occurred while generating a response. Please try again later.",
+      filePick: "File",
+      categories: {
+        all: "All",
+        museum: "Museum",
+        palace: "Palace",
+        landmark: "Landmark",
+        historic: "Historic",
+      },
+    },
+    ja: {
+      title: "AI ドーセント",
+      subtitle: "リアルタイム位置ガイド",
+      aiDocent: "AI ドーセント",
+      stopVoice: "音声停止",
+      current: "現在地",
+      directions: "経路検索",
+      chatbot: "観光チャットボット",
+      askQuestion: "何でもお聞きください",
+      send: "送信",
+      examples: {
+        title: "質問例:",
+        items: [
+          "ケイポップデーモンハンターズ撮影地",
+          "明洞グルメ推薦",
+          "北村韓屋村情報",
+          "イカゲーム撮影地",
+        ],
+      },
+      chatbotPlaceholder: "ご質問をどうぞ...",
+      chatbotInitialMessage:
+        "こんにちは！私はあなたのAI旅行ドーセントです。場所や旅行情報について何でも尋ねてください。写真を送ってください。その場所について詳しく説明します！",
+      imageQueryText: "この場所について教えてください",
+      voiceRecStart: "音声録音を開始します...",
+      voiceRecResult: "音声認識結果:",
+      voiceRecStop: "音声録音を停止します。",
+      errorReply:
+        "申し訳ありませんが、応答の生成中にエラーが発生しました。後でもう一度お試しください。",
+      filePick: "ファイル",
+      categories: {
+        all: "すべて",
+        museum: "美術館＆博物館",
+        palace: "古宮",
+        landmark: "ランドマーク",
+        historic: "歴史的な場所",
+      },
+    },
+    zh: {
+      title: "AI 讲解",
+      subtitle: "实时位置导览",
+      aiDocent: "AI 讲解",
+      stopVoice: "停止语音",
+      current: "当前位置",
+      directions: "路线",
+      chatbot: "旅游聊天机器人",
+      askQuestion: "请问您想了解什么",
+      send: "发送",
+      examples: {
+        title: "示例问题:",
+        items: [
+          "K-pop恶魔猎人拍摄地",
+          "明洞美食推荐",
+          "北村韩屋村信息",
+          "鱿鱼游戏拍摄地",
+        ],
+      },
+      chatbotPlaceholder: "请输入您的问题...",
+      chatbotInitialMessage:
+        "您好！我是您的AI旅行讲解员。您可以询问任何关于地点或旅行信息的问题。您也可以发送照片，我会为您提供该地点的详细说明！",
+      imageQueryText: "请介绍一下这个地方",
+      voiceRecStart: "开始录音...",
+      voiceRecResult: "语音识别结果：",
+      voiceRecStop: "停止录音。",
+      errorReply: "抱歉，生成回复时出错。请稍后再试。",
+      filePick: "文件",
+      categories: {
+        all: "全部",
+        museum: "美术馆&博物馆",
+        palace: "故宫",
+        landmark: "地标",
+        historic: "历史遗址",
+      },
+    },
+  });
+
+  const ui = getUITexts(selectedLang);
+
+  // 초기 메시지 설정
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([
+        {
+          id: "initial",
+          type: "ai",
+          content: ui.chatbotInitialMessage,
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  }, [ui.chatbotInitialMessage]);
+
+  // 메시지 스크롤
+  useEffect(() => {
+    if (isOpen && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isProcessing, isOpen]);
+
+  // API 호출 함수들
+  const callTourismAPI = async (userQuery) => {
+    const functionUrl =
+      "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/tourismqnaapi?code=BcqZANgpmolF-eQNAkdB4BgrhINolY8tLktSFVRHhaGhAzFu3b1_Tw==";
+    try {
+      const response = await fetch(functionUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: userQuery, location: "Seoul,KR" }),
+      });
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      return result.answer || JSON.stringify(result);
+    } catch (error) {
+      console.error("API 호출 오류:", error);
+      throw error;
+    }
+  };
+
+  const normalizeLabel = (raw) => {
+    if (!raw) return null;
+    const canon = TAG_ALIASES[raw] || String(raw);
+    return ALLOWED_POIS.has(canon) ? canon : null;
+  };
+
+  const callYOLO = async (file) => {
+    const fd = new FormData();
+    fd.append("file", file, file.name);
+    fd.append("conf", "0.2");
+    fd.append("imgsz", "640");
+    const resp = await fetch(`${YOLO_API}/detect`, {
+      method: "POST",
+      body: fd,
+    });
+    if (!resp.ok) throw new Error(`YOLO HTTP ${resp.status}`);
+    const js = await resp.json();
+    const dets = (js?.detections || [])
+      .map((d) => ({ label: String(d.name ?? d.cls ?? ""), conf: d.conf ?? 0 }))
+      .sort((a, b) => (b.conf || 0) - (a.conf || 0));
+    return dets;
+  };
+
+  // 텍스트 메시지 처리
+  const handleSendMessage = async (content, attachments) => {
+    if (!content.trim() && !attachments) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      type: "user",
+      content,
+      timestamp: new Date(),
+      attachments,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsProcessing(true);
+
+    try {
+      const toKo = async (t) =>
+        selectedLang === "ko" ? t : await translateText(t, "ko");
+      const fromKo = async (t) =>
+        selectedLang === "ko" ? t : await translateText(t, selectedLang);
+
+      const koQuery = await toKo(content || "");
+      const koResult = await callTourismAPI(koQuery);
+      const result = await fromKo(koResult);
+
+      const aiMessage = {
+        id: (Date.now() + 1).toString(),
+        type: "ai",
+        content: result,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          type: "ai",
+          content: ui.errorReply,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // 이미지 처리
+  const processImage = async (file) => {
+    if (!file) return;
+    const imageUrl = URL.createObjectURL(file);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: String(Date.now()),
+        type: "user",
+        content: ui.imageQueryText,
+        attachments: [{ type: "image", url: imageUrl, caption: file.name }],
+        timestamp: new Date(),
+      },
+    ]);
+    setIsProcessing(true);
+
+    try {
+      const dets = await callYOLO(file);
+
+      if (!dets.length) {
+        const fallbackQuery =
+          "이 이미지의 장소에 대해 알려주세요. 관광 정보를 제공해 주세요.";
+        const ragResponse = await callTourismAPI(fallbackQuery);
+        const fallbackMessage =
+          selectedLang === "ko"
+            ? "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?"
+            : await translateText(
+                "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?",
+                selectedLang
+              );
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: String(Date.now() + 1),
+            type: "ai",
+            content: fallbackMessage,
+            timestamp: new Date(),
+          },
+        ]);
+        return;
+      }
+
+      const allowed = dets
+        .map((d) => ({ ...d, canon: normalizeLabel(d.label) }))
+        .filter((d) => !!d.canon);
+
+      if (!allowed.length) {
+        const tops = dets
+          .slice(0, 3)
+          .map((d) => `${d.label}(${prettyPct(d.conf)})`)
+          .join(", ");
+        const unsupportedMessage =
+          selectedLang === "ko"
+            ? `지원 라벨만 제공 중입니다.\n감지: ${tops}`
+            : await translateText(
+                `지원 라벨만 제공 중입니다.\n감지: ${tops}`,
+                selectedLang
+              );
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: String(Date.now() + 2),
+            type: "ai",
+            content: unsupportedMessage,
+            timestamp: new Date(),
+          },
+        ]);
+        return;
+      }
+
+      const uniqueNames = Array.from(
+        new Set(allowed.map((d) => d.canon))
+      ).slice(0, 3);
+      const ragQuery = `${uniqueNames.join(", ")}`;
+      const ragResponse = await callTourismAPI(ragQuery);
+      const translatedResponse =
+        selectedLang === "ko"
+          ? ragResponse
+          : await translateText(ragResponse, selectedLang);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: String(Date.now() + 3),
+          type: "ai",
+          content: translatedResponse,
+          timestamp: new Date(),
+        },
+      ]);
+    } catch (err) {
+      console.error(err);
+      const errorMessage =
+        selectedLang === "ko"
+          ? `오류가 발생했어요: ${String(err?.message || err)}`
+          : await translateText(
+              `오류가 발생했어요: ${String(err?.message || err)}`,
+              selectedLang
+            );
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: String(Date.now() + 999),
+          type: "ai",
+          content: errorMessage,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsProcessing(false);
+      setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
+    }
+  };
+
+  const handleImageFromGallery = (event) => {
+    const f = event.target.files?.[0];
+    if (f) processImage(f);
+    event.target.value = "";
+  };
+
+  const handleImageFromCamera = (event) => {
+    const f = event.target.files?.[0];
+    if (f) processImage(f);
+    event.target.value = "";
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(inputMessage);
+    }
+  };
+
+  // 상단으로 스크롤
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <>
+      {/* 플로팅 버튼들 */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        {/* 챗봇 버튼 */}
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-300"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+        </motion.button>
+      </div>
+
+      {/* 챗봇 창 */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className={`fixed z-40 bg-gray-900/95 backdrop-blur-lg border border-purple-500/30 rounded-2xl shadow-2xl ${
+              isMobile
+                ? isMinimized
+                  ? "bottom-20 right-4 w-80 h-16"
+                  : "bottom-20 right-4 w-80 h-96"
+                : isMinimized
+                ? "bottom-24 right-6 w-96 h-16"
+                : "bottom-24 right-6 w-96 h-[500px]"
+            }`}
+          >
+            {/* 헤더 */}
+            <div className="flex items-center justify-between p-4 border-b border-purple-500/20">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-white font-medium text-sm">
+                  {ui.chatbot}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsMinimized(!isMinimized)}
+                  className="p-1 text-gray-400 hover:text-white transition-colors"
+                >
+                  {isMinimized ? (
+                    <Maximize2 size={16} />
+                  ) : (
+                    <Minimize2 size={16} />
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {!isMinimized && (
+              <>
+                {/* 메시지 영역 */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-80">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${
+                        message.type === "user"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[80%] p-3 rounded-xl text-sm ${
+                          message.type === "user"
+                            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                            : "bg-gray-800 text-gray-100 border border-gray-700"
+                        }`}
+                      >
+                        {message.attachments?.map((attachment, idx) => (
+                          <div key={idx} className="mb-2">
+                            {attachment.type === "image" && (
+                              <img
+                                src={attachment.url}
+                                alt={attachment.caption}
+                                className="w-full h-32 object-cover rounded-lg"
+                              />
+                            )}
+                          </div>
+                        ))}
+                        <p className="whitespace-pre-wrap">{message.content}</p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {isProcessing && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-800 border border-gray-700 p-3 rounded-xl">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                          <div
+                            className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* 입력 영역 */}
+                <div className="p-4 border-t border-purple-500/20">
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                      title={ui.gallery}
+                    >
+                      <ImageIcon size={16} className="text-purple-400" />
+                    </button>
+                    <button
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                      title={ui.camera}
+                    >
+                      <Camera size={16} className="text-purple-400" />
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <textarea
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder={ui.typePlaceholder}
+                      className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-purple-500"
+                      rows="1"
+                      disabled={isProcessing}
+                    />
+                    <button
+                      onClick={() => handleSendMessage(inputMessage)}
+                      disabled={!inputMessage.trim() || isProcessing}
+                      className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Send size={16} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* 숨겨진 파일 입력들 */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageFromGallery}
+              className="hidden"
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleImageFromCamera}
+              className="hidden"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
 
 const BannerWidget = () => {
   const banners = [
     {
       id: 1,
       image: "../../img/seoul_kdh_policies.jpg",
-      // title: "배너타이틀",
-      //  subtitle: "배너 테스트",
     },
     {
       id: 2,
       image: "../../img/seoul_kdh_policies_1.jpg",
-      // title: "배너타이틀1",
-      // subtitle: "배너 테스트1",
     },
     {
       id: 3,
       image: "../../img/seoul_kdh_policies_2.jpg",
-      //title: "배너타이틀2",
-      // subtitle: "배너 테스트2",
     },
     {
       id: 4,
       image: "../../img/seoul_kdh_policies_3.jpg",
-      // title: "배너타이틀3",
-      // subtitle: "배너 테스트3",
     },
   ];
 
@@ -345,7 +983,6 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
             onClick={fetchRealData}
             disabled={loading}
             className="p-1.5 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors disabled:opacity-50"
-            //title={`${t("refresh_data")} (${getUpdateStatus()})`}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -457,12 +1094,14 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
 export default function Layout({ children }) {
   const location = useLocation();
   const { profile, login, logout } = useAuth();
-  const { t } = useTranslation("Navigation");
+  //const { t } = useTranslation("Navigation"); //0921주영 주석처리하고 아래에 i18n추가
+  const { t, i18n } = useTranslation("Navigation");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLiveInfoCollapsed, setIsLiveInfoCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const navigationItems = getNavigationItems(t);
-
+  // 현재 선택된 언어
+  const selectedLang = i18n.language || "ko"; //0921주영
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -481,7 +1120,6 @@ export default function Layout({ children }) {
     );
   };
 
-  // 사이드바 애니메이션 variants
   const sidebarVariants = {
     closed: {
       x: "-100%",
@@ -501,7 +1139,6 @@ export default function Layout({ children }) {
     },
   };
 
-  // 오버레이 애니메이션
   const overlayVariants = {
     closed: {
       opacity: 0,
@@ -660,19 +1297,6 @@ export default function Layout({ children }) {
         .neon-menu-item:hover .neon-border {
           width: 100%;
         }
-
-        // .close-button {
-        //   background: rgba(239, 68, 68, 0.1);
-        //   border: 1px solid rgba(239, 68, 68, 0.3);
-        //   border-radius: 8px;
-        //   width: 32px;
-        //   height: 32px;
-        //   display: flex;
-        //   align-items: center;
-        //   justify-content: center;
-        //   color: #ef4444;
-        //   cursor: pointer;
-        // }
 
         .language-buttons-container {
           padding: 12px 20px;
@@ -875,8 +1499,12 @@ export default function Layout({ children }) {
             damping: 40,
           }}
         >
-          {/* ✅ 프레이머가 건드리지 않는 내부 래퍼 */}
-          <div className="main-content content-shift">
+          <div
+            className="main-content content-shift"
+            style={{
+              ...(isMobile ? { height: "100vh", overflow: "auto" } : {}),
+            }}
+          >
             <div className="flex gap-4 w-full">
               <div className="flex-[1.2] min-w-0">{/* 관광지 목록 */}</div>
               <div className="flex-[2] min-w-0">{/* 지도 */}</div>

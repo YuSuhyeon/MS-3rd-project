@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   createKakaoMap,
   addKakaoMarkers,
   showKakaoInfoWindow,
   drawCircle,
 } from "../../kakaoMap";
+import { translateText } from "../../integrations/translator";
 
 export default function LocationMap({
   pois = [],
@@ -13,49 +14,151 @@ export default function LocationMap({
   userLocation,
   showSelectedPopup = false,
   directionsLabel = "길찾기",
+  selectedLang = "ko",
 }) {
   const mapRef = useRef(null);
   const markersRef = useRef(new Map()); // key(id) -> marker
   const infoWindowRef = useRef(null); // 열린 InfoWindow
   const circleRef = useRef(null);
+  const [translatedContent, setTranslatedContent] = useState(new Map()); // 번역된 내용 캐시
+  const [currentPOI, setCurrentPOI] = useState(null); // 현재 선택된 POI 추적
 
   const KAKAO_JS_KEY = process.env.REACT_APP_KAKAO_API_KEY;
   const MARKER_IMG = process.env.PUBLIC_URL + "/img/card_blue.png";
 
+  // 번역된 내용 가져오기
+  const getTranslatedContent = (key) => {
+    if (selectedLang === "ko" || !key) {
+      return key;
+    }
+    // 번역된 내용이 있으면 사용, 없으면 원본 사용
+    return translatedContent.get(key) || key;
+  };
+
   // 팝업 HTML (가독성 색상 inline)
-  const buildInfoContent = (name = "", address = "") => `
-    <div style="
-      padding:8px 10px;
-      max-width:260px;
-      font-size:13px;
-      line-height:1.45;
-      color:var(--map-popup-text, #0f172a);
-    ">
+  const buildInfoContent = (name = "", address = "") => {
+    const translatedName = getTranslatedContent(name);
+    const translatedAddress = getTranslatedContent(address);
+    const translatedDirectionsLabel = getTranslatedContent(directionsLabel);
+    
+    return `
       <div style="
-        color:var(--map-popup-title, #1b243a);
-        font-weight:800;
-        letter-spacing:.2px;
-        margin-bottom:4px;
-      ">${name}</div>
-
-      <div style="
-        color:var(--map-popup-text, #27324d);
-        margin-bottom:8px;
-      ">${address}</div>
-
-      <button type="button" class="map-popup-btn" style="
-        color:var(--map-popup-btn, #0b1220);
-        font-weight:700;
-        border:1px solid #cbd5e1;
-        border-radius:6px;
-        padding:6px 10px;
-        background:#fff;
-        cursor:pointer;
+        padding:8px 10px;
+        max-width:260px;
+        font-size:13px;
+        line-height:1.45;
+        color:var(--map-popup-text, #0f172a);
       ">
-        ${directionsLabel}
-      </button>
-    </div>
-  `;
+        <div style="
+          color:var(--map-popup-title, #1b243a);
+          font-weight:800;
+          letter-spacing:.2px;
+          margin-bottom:4px;
+        ">${translatedName}</div>
+
+        <div style="
+          color:var(--map-popup-text, #27324d);
+          margin-bottom:8px;
+        ">${translatedAddress}</div>
+
+        <button type="button" class="map-popup-btn" style="
+          color:var(--map-popup-btn, #0b1220);
+          font-weight:700;
+          border:1px solid #cbd5e1;
+          border-radius:6px;
+          padding:6px 10px;
+          background:#fff;
+          cursor:pointer;
+        ">
+          ${translatedDirectionsLabel}
+        </button>
+      </div>
+    `;
+  };
+
+  // 번역 처리
+  useEffect(() => {
+    const translateContent = async () => {
+      if (selectedLang === "ko") {
+        // 한국어인 경우 원본 그대로 사용
+        setTranslatedContent(new Map());
+        return;
+      }
+
+      const newTranslatedContent = new Map();
+      
+      // directionsLabel 번역
+      if (directionsLabel) {
+        try {
+          const translated = await translateText(directionsLabel, selectedLang);
+          newTranslatedContent.set(directionsLabel, translated);
+        } catch (error) {
+          console.error("Directions label translation error:", error);
+          newTranslatedContent.set(directionsLabel, directionsLabel);
+        }
+      }
+
+      // POI 이름과 주소 번역
+      const allTexts = new Set();
+      pois.forEach(poi => {
+        if (poi.name) allTexts.add(poi.name);
+        if (poi.address) allTexts.add(poi.address);
+      });
+      
+      for (const text of allTexts) {
+        try {
+          const translated = await translateText(text, selectedLang);
+          newTranslatedContent.set(text, translated);
+        } catch (error) {
+          console.error("POI content translation error:", error);
+          newTranslatedContent.set(text, text);
+        }
+      }
+
+      setTranslatedContent(newTranslatedContent);
+    };
+
+    translateContent();
+  }, [selectedLang, directionsLabel, pois]);
+
+  // 통합된 팝업 관리 로직
+  useEffect(() => {
+    const updatePopup = () => {
+      if (!mapRef.current || !currentPOI?.location) return;
+      
+      const key = currentPOI.id || `${currentPOI.location.lat},${currentPOI.location.lng}`;
+      const marker = markersRef.current.get(key);
+      
+      if (marker) {
+        // 기존 팝업 닫기
+        if (infoWindowRef.current) {
+          infoWindowRef.current.close();
+          infoWindowRef.current = null;
+        }
+        
+        // 새 팝업 표시 (번역된 내용 포함)
+        infoWindowRef.current = showKakaoInfoWindow({
+          map: mapRef.current,
+          marker,
+          contentHtml: buildInfoContent(
+            currentPOI.name || "",
+            currentPOI.address || ""
+          ),
+        });
+      }
+    };
+
+    if (currentPOI) {
+      updatePopup();
+    }
+  }, [currentPOI, translatedContent]);
+
+  // selectedPOI 변경 시 currentPOI 업데이트
+  useEffect(() => {
+    if (selectedPOI) {
+      setCurrentPOI(selectedPOI);
+    }
+  }, [selectedPOI]);
 
   // 1) 최초 지도 생성
   useEffect(() => {
@@ -119,9 +222,17 @@ export default function LocationMap({
           address: row.address,
           location: { lat: parseFloat(row.lat), lng: parseFloat(row.lon) },
         };
+        
+        // 현재 POI 업데이트
+        setCurrentPOI(sel);
         onSelectPOI?.(sel);
 
-        // 팝업 열기
+        // 팝업 열기 (즉시 표시)
+        if (infoWindowRef.current) {
+          infoWindowRef.current.close();
+          infoWindowRef.current = null;
+        }
+        
         infoWindowRef.current = showKakaoInfoWindow({
           map,
           marker,
@@ -201,32 +312,7 @@ export default function LocationMap({
       setTimeout(() => {
         map.relayout(); // 지도 크기 재계산
 
-        // 팝업이 표시되어야 하는 경우에만 팝업 표시
-        if (showSelectedPopup) {
-          const key =
-            selectedPOI.id ??
-            (selectedPOI.location
-              ? `${selectedPOI.location.lat},${selectedPOI.location.lng}`
-              : undefined);
-          const marker = key ? markersRef.current.get(key) : null;
-
-          if (marker) {
-            // 기존 팝업 닫기
-            infoWindowRef.current?.close?.();
-
-            // 새로운 팝업 표시 (약간의 지연을 두어 안정성 확보)
-            setTimeout(() => {
-              infoWindowRef.current = showKakaoInfoWindow({
-                map,
-                marker,
-                contentHtml: buildInfoContent(
-                  selectedPOI.name || "",
-                  selectedPOI.address || ""
-                ),
-              });
-            }, 100);
-          }
-        }
+        // 팝업은 통합된 로직에서 처리되므로 여기서는 제거
 
         // 중심 재조정
         map.setCenter(moveLatLng);

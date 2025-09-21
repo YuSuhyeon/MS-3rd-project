@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 
-function useIsMobile() {
+function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const ua = navigator.userAgent.toLowerCase();
-    const isMobileUA = /android|iphone|ipad|ipod/i.test(ua);
-    setIsMobile(isMobileUA);
-  }, []);
+    const checkIsMobile = () => {
+      if (typeof window !== "undefined") {
+        const width = window.innerWidth;
+        setIsMobile(width < breakpoint);
+      }
+    };
+
+    checkIsMobile();
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", checkIsMobile);
+      return () => window.removeEventListener("resize", checkIsMobile);
+    }
+  }, [breakpoint]);
 
   return isMobile;
 }

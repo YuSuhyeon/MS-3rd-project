@@ -7,8 +7,10 @@
     "@react-oauth/google": "^0.12.2",
     "bootstrap": "^5.3.8",
     "dayjs": "^1.11.18",
+    "i18next": "^25.5.2",
     "react-beautiful-dnd": "^13.1.1",
     "react-bootstrap": "^2.10.10",
+    "react-i18next": "^15.7.3",
     "zustand": "^5.0.8"
   }
 }
