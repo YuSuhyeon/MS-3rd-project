@@ -148,7 +148,7 @@ export default function SurvivalKit() {
     <div className="space-y-6 relative">
       {/* 네온 섹션 네비게이션 */}
       <NeonCard className="p-1">
-        <div className="flex gap-1">
+        <div className="flex gap-1" style={{ overflow: "auto" }}>
           {[
             {
               id: "menu",
@@ -172,12 +172,12 @@ export default function SurvivalKit() {
             <NeonButton
               key={id}
               variant={activeSection === id ? variant : "secondary"}
-              size="md"
+              size="sm"
               onClick={() => setActiveSection(id)}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-4"
+              className="flex-1 flex items-center justify-center gap-1 py-2 px-2 min-w-0"
             >
               {icon}
-              <span className="font-medium">{label}</span>
+              <span className="font-medium text-xs text-center leading-tight">{label}</span>
             </NeonButton>
           ))}
         </div>

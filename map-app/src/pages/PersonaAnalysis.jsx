@@ -311,6 +311,7 @@ export default function PersonaAnalysis() {
   const [[page, direction], setPage] = useState([0, 0]);
   const [answers, setAnswers] = useState({});
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // 컴포넌트 마운트 시 백엔드에서 질문 목록을 가져옵니다.
@@ -478,9 +479,11 @@ export default function PersonaAnalysis() {
   }
 
   return (
-    <BackgroundEffect className="neon-scrollbar px-4 pt-6 pb-28 md:px-8 md:py-12">
-      <NeonScrollbarStyles />
-      <div className="max-w-3xl mx-auto relative z-10 space-y-12">
+    <div className="min-h-screen bg-slate-900 text-white p-4 md:p-8 overflow-hidden relative">
+      <div className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3 w-[800px] h-[800px] bg-indigo-900/40 rounded-full blur-3xl opacity-50" />
+      <div className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3 w-[600px] h-[600px] bg-fuchsia-900/30 rounded-full blur-3xl opacity-50" />
+
+      <div className="max-w-2xl mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

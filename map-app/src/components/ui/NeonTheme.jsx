@@ -1,9 +1,33 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 // 1. 메인 배경 (물결 효과 추가)
 export const BackgroundEffect = ({ children, className = "" }) => {
   const canvasRef = useRef(null);
+
+  const useIsMobile = (breakpoint = 768) => {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+      const checkIsMobile = () => {
+        if (typeof window !== "undefined") {
+          const width = window.innerWidth;
+          setIsMobile(width < breakpoint);
+        }
+      };
+
+      checkIsMobile();
+
+      if (typeof window !== "undefined") {
+        window.addEventListener("resize", checkIsMobile);
+        return () => window.removeEventListener("resize", checkIsMobile);
+      }
+    }, [breakpoint]);
+
+    return isMobile;
+  };
+
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -103,77 +127,157 @@ export const BackgroundEffect = ({ children, className = "" }) => {
     };
   }, []);
 
-  return (
-    <div
-      className={`relative min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 text-white overflow-hidden ${className}`}
-    >
-      {/* 물결 캔버스 */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 pointer-events-none opacity-60"
-        style={{ zIndex: 1 }}
-      />
-
-      {/* 기존 별 배경 효과 */}
+  if (isMobile) {
+    return (
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
-        style={{ zIndex: 2 }}
+        className={`relative bg-gradient-to-br from-purple-900 via-black to-pink-900 text-white overflow-hidden ${className}`}
       >
-        {[...Array(50)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              opacity: [0, 1, 0],
-              scale: [0, 1, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
+        {/* 물결 캔버스 */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 pointer-events-none opacity-60"
+          style={{ zIndex: 1 }}
+        />
 
-      {/* 추가 파티클 효과 */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 2 }}>
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={`particle-${i}`}
-            className="absolute w-2 h-2 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              background: `linear-gradient(45deg, 
-                rgba(168, 85, 247, 0.6), 
-                rgba(236, 72, 153, 0.4)
-              )`,
-              filter: "blur(1px)",
-            }}
-            animate={{
-              y: [-20, -100],
-              opacity: [0, 1, 0],
-              scale: [0.5, 1.2, 0.5],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 3,
-              repeat: Infinity,
-              delay: Math.random() * 4,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
+        {/* 기존 별 배경 효과 */}
+        <div
+          className="fixed inset-0 opacity-30 pointer-events-none"
+          style={{ zIndex: 2 }}
+        >
+          {[...Array(50)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
 
-      {/* 컨텐츠 */}
-      <div className="relative z-10">{children}</div>
-    </div>
-  );
+        {/* 추가 파티클 효과 */}
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{ zIndex: 2 }}
+        >
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={`particle-${i}`}
+              className="absolute w-2 h-2 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                background: `linear-gradient(45deg, 
+                  rgba(168, 85, 247, 0.6), 
+                  rgba(236, 72, 153, 0.4)
+                )`,
+                filter: "blur(1px)",
+              }}
+              animate={{
+                y: [-20, -100],
+                opacity: [0, 1, 0],
+                scale: [0.5, 1.2, 0.5],
+              }}
+              transition={{
+                duration: 4 + Math.random() * 3,
+                repeat: Infinity,
+                delay: Math.random() * 4,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 컨텐츠 */}
+        <div className="relative z-10">{children}</div>
+      </div>
+    );
+  } else {
+    return (
+      <div
+        className={`relative min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 text-white overflow-hidden ${className}`}
+      >
+        {/* 물결 캔버스 */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 pointer-events-none opacity-60"
+          style={{ zIndex: 1 }}
+        />
+
+        {/* 기존 별 배경 효과 */}
+        <div
+          className="fixed inset-0 opacity-30 pointer-events-none"
+          style={{ zIndex: 2 }}
+        >
+          {[...Array(50)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 추가 파티클 효과 */}
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{ zIndex: 2 }}
+        >
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={`particle-${i}`}
+              className="absolute w-2 h-2 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                background: `linear-gradient(45deg, 
+                  rgba(168, 85, 247, 0.6), 
+                  rgba(236, 72, 153, 0.4)
+                )`,
+                filter: "blur(1px)",
+              }}
+              animate={{
+                y: [-20, -100],
+                opacity: [0, 1, 0],
+                scale: [0.5, 1.2, 0.5],
+              }}
+              transition={{
+                duration: 4 + Math.random() * 3,
+                repeat: Infinity,
+                delay: Math.random() * 4,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 컨텐츠 */}
+        <div className="relative z-10">{children}</div>
+      </div>
+    );
+  }
 };
 
 // 물결 효과만 따로 사용할 수 있는 컴포넌트

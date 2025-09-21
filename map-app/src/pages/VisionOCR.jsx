@@ -57,6 +57,7 @@ function VisionOCR() {
   // 다국어 지원 및 모바일 감지
   const { t } = useTranslation("VisionOCR");
   const isMobile = useMediaQuery("(max-width: 768px)");
+
   const { language } = useLanguage();
 
   // 언어 코드 매핑
@@ -180,7 +181,7 @@ function VisionOCR() {
 
   // 한국음식정보 영문 데이터 로딩 (CSV 파일)
   useEffect(() => {
-    fetch("/한국국제교류재단_한국음식정보_영문_20240215.csv")
+    fetch("/menuInfoEN_20240215.csv")
       .then((res) => res.text())
       .then((csvText) => {
         Papa.parse(csvText, {
@@ -388,12 +389,12 @@ function VisionOCR() {
       endsWithCandidates.sort(
         (a, b) => b["음식명"].length - a["음식명"].length
       );
-      if (endsWithCandidates[0]["음식설명"]) return endsWithCandidates[0];
+      if (endsWithCandidates["음식설명"]) return endsWithCandidates;
     }
 
     if (candidates.length > 0) {
       candidates.sort((a, b) => b["음식명"].length - a["음식명"].length);
-      if (candidates[0]["음식설명"]) return candidates[0];
+      if (candidates["음식설명"]) return candidates;
     }
 
     return null;
@@ -417,7 +418,7 @@ function VisionOCR() {
       candidates.sort(
         (a, b) => b.menu_information.ko.length - a.menu_information.ko.length
       );
-      return candidates[0].menu_information;
+      return candidates.menu_information;
     }
     return null;
   }

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
+import useIsMobile from "../../pages/useIsMobile";
 
 const LanguageButtons = ({ className = "" }) => {
   const { language, changeLanguage } = useLanguage();
@@ -83,7 +84,9 @@ const LanguageButtons = ({ className = "" }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.1 }}
-            className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-purple-500/20 shadow-2xl ring-1 ring-black ring-opacity-5 z-50"
+            className={`absolute ${
+              useIsMobile ? "" : "right-0"
+            } mt-2 w-48 origin-top-right rounded-xl border border-purple-500/20 shadow-2xl ring-1 ring-black ring-opacity-5 z-50`}
             style={{
               background:
                 "linear-gradient(180deg, rgba(12, 12, 12, 0.95) 0%, rgba(26, 10, 46, 0.95) 100%)",
