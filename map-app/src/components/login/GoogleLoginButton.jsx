@@ -1,4 +1,3 @@
-// src/components/login/GoogleLoginButton.jsx
 import React from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../../context/AuthContext";

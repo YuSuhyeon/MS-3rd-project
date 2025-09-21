@@ -1,38 +1,402 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
-// 1. 메인 배경
-export const BackgroundEffect = ({ children, className = "" }) => (
-  <div
-    className={`min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 text-white ${className}`}
-  >
-    {/* 별 배경 효과 */}
-    <div className="fixed inset-0 opacity-30 pointer-events-none">
-      {[...Array(50)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-white rounded-full"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-          animate={{
-            opacity: [0, 1, 0],
-            scale: [0, 1, 0],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            delay: Math.random() * 2,
-          }}
-        />
-      ))}
-    </div>
+// 1. 메인 배경 (물결 효과 추가)
+export const BackgroundEffect = ({ children, className = "" }) => {
+  const canvasRef = useRef(null);
 
-    {/* 컨텐츠 */}
-    <div className="relative z-10">{children}</div>
-  </div>
-);
+  const useIsMobile = (breakpoint = 768) => {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+      const checkIsMobile = () => {
+        if (typeof window !== "undefined") {
+          const width = window.innerWidth;
+          setIsMobile(width < breakpoint);
+        }
+      };
+
+      checkIsMobile();
+
+      if (typeof window !== "undefined") {
+        window.addEventListener("resize", checkIsMobile);
+        return () => window.removeEventListener("resize", checkIsMobile);
+      }
+    }, [breakpoint]);
+
+    return isMobile;
+  };
+
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    let animationId;
+    let time = 0;
+    let mouseX = 0;
+    let mouseY = 0;
+
+    // 캔버스 크기 설정
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    // 마우스 위치 추적
+    const handleMouseMove = (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    };
+
+    // 물결 애니메이션 함수
+    const drawWaves = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 다중 물결 레이어
+      const waves = [
+        {
+          amplitude: 40,
+          frequency: 0.005,
+          speed: 0.01,
+          color: "rgba(168, 85, 247, 0.1)", // purple
+          yOffset: canvas.height * 0.3,
+        },
+        {
+          amplitude: 60,
+          frequency: 0.003,
+          speed: 0.008,
+          color: "rgba(236, 72, 153, 0.08)", // pink
+          yOffset: canvas.height * 0.5,
+        },
+        {
+          amplitude: 30,
+          frequency: 0.007,
+          speed: 0.012,
+          color: "rgba(59, 130, 246, 0.06)", // blue
+          yOffset: canvas.height * 0.7,
+        },
+      ];
+
+      waves.forEach((wave, index) => {
+        ctx.beginPath();
+        ctx.fillStyle = wave.color;
+
+        // 마우스 인터랙션 효과
+        const mouseInfluence = Math.sin(mouseX * 0.001) * 20;
+        const mouseVertical = (mouseY / canvas.height - 0.5) * 100;
+
+        // 물결 경로 생성
+        ctx.moveTo(0, canvas.height);
+
+        for (let x = 0; x <= canvas.width; x += 5) {
+          const y =
+            wave.yOffset +
+            Math.sin(x * wave.frequency + time * wave.speed) * wave.amplitude +
+            Math.sin(x * 0.01 + time * 0.005) * 15 +
+            mouseInfluence * Math.sin(x * 0.002) +
+            mouseVertical * 0.1;
+
+          ctx.lineTo(x, y);
+        }
+
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      time += 1;
+      animationId = requestAnimationFrame(drawWaves);
+    };
+
+    // 초기화
+    resizeCanvas();
+    drawWaves();
+
+    // 이벤트 리스너
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("mousemove", handleMouseMove);
+
+    // 클린업
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
+  if (isMobile) {
+    return (
+      <div
+        className={`relative bg-gradient-to-br from-purple-900 via-black to-pink-900 text-white overflow-hidden ${className}`}
+      >
+        {/* 물결 캔버스 */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 pointer-events-none opacity-60"
+          style={{ zIndex: 1 }}
+        />
+
+        {/* 기존 별 배경 효과 */}
+        <div
+          className="fixed inset-0 opacity-30 pointer-events-none"
+          style={{ zIndex: 2 }}
+        >
+          {[...Array(50)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 추가 파티클 효과 */}
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{ zIndex: 2 }}
+        >
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={`particle-${i}`}
+              className="absolute w-2 h-2 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                background: `linear-gradient(45deg, 
+                  rgba(168, 85, 247, 0.6), 
+                  rgba(236, 72, 153, 0.4)
+                )`,
+                filter: "blur(1px)",
+              }}
+              animate={{
+                y: [-20, -100],
+                opacity: [0, 1, 0],
+                scale: [0.5, 1.2, 0.5],
+              }}
+              transition={{
+                duration: 4 + Math.random() * 3,
+                repeat: Infinity,
+                delay: Math.random() * 4,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 컨텐츠 */}
+        <div className="relative z-10">{children}</div>
+      </div>
+    );
+  } else {
+    return (
+      <div
+        className={`relative min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 text-white overflow-hidden ${className}`}
+      >
+        {/* 물결 캔버스 */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 pointer-events-none opacity-60"
+          style={{ zIndex: 1 }}
+        />
+
+        {/* 기존 별 배경 효과 */}
+        <div
+          className="fixed inset-0 opacity-30 pointer-events-none"
+          style={{ zIndex: 2 }}
+        >
+          {[...Array(50)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 추가 파티클 효과 */}
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{ zIndex: 2 }}
+        >
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={`particle-${i}`}
+              className="absolute w-2 h-2 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                background: `linear-gradient(45deg, 
+                  rgba(168, 85, 247, 0.6), 
+                  rgba(236, 72, 153, 0.4)
+                )`,
+                filter: "blur(1px)",
+              }}
+              animate={{
+                y: [-20, -100],
+                opacity: [0, 1, 0],
+                scale: [0.5, 1.2, 0.5],
+              }}
+              transition={{
+                duration: 4 + Math.random() * 3,
+                repeat: Infinity,
+                delay: Math.random() * 4,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 컨텐츠 */}
+        <div className="relative z-10">{children}</div>
+      </div>
+    );
+  }
+};
+
+// 물결 효과만 따로 사용할 수 있는 컴포넌트
+export const WaveEffect = ({
+  className = "",
+  waveColors = [
+    "rgba(168, 85, 247, 0.1)", // purple
+    "rgba(236, 72, 153, 0.08)", // pink
+    "rgba(59, 130, 246, 0.06)", // blue
+  ],
+  interactive = true,
+}) => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    let animationId;
+    let time = 0;
+    let mouseX = 0;
+    let mouseY = 0;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    const handleMouseMove = (e) => {
+      if (!interactive) return;
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    };
+
+    const drawWaves = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const waves = [
+        {
+          amplitude: 50,
+          frequency: 0.004,
+          speed: 0.015,
+          color: waveColors,
+          yOffset: canvas.height * 0.2,
+        },
+        {
+          amplitude: 70,
+          frequency: 0.003,
+          speed: 0.01,
+          color: waveColors[1],
+          yOffset: canvas.height * 0.4,
+        },
+        {
+          amplitude: 40,
+          frequency: 0.006,
+          speed: 0.018,
+          color: waveColors[2],
+          yOffset: canvas.height * 0.6,
+        },
+      ];
+
+      waves.forEach((wave) => {
+        ctx.beginPath();
+        ctx.fillStyle = wave.color;
+
+        const mouseInfluence = interactive
+          ? Math.sin(mouseX * 0.001 + time * 0.01) * 25
+          : 0;
+        const mouseVertical = interactive
+          ? (mouseY / canvas.height - 0.5) * 80
+          : 0;
+
+        ctx.moveTo(0, canvas.height);
+
+        for (let x = 0; x <= canvas.width; x += 3) {
+          const y =
+            wave.yOffset +
+            Math.sin(x * wave.frequency + time * wave.speed) * wave.amplitude +
+            Math.sin(x * 0.008 + time * 0.003) * 20 +
+            mouseInfluence * Math.sin(x * 0.003) +
+            mouseVertical * Math.sin(x * 0.001) * 0.2;
+
+          ctx.lineTo(x, y);
+        }
+
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      time += 1;
+      animationId = requestAnimationFrame(drawWaves);
+    };
+
+    resizeCanvas();
+    drawWaves();
+
+    window.addEventListener("resize", resizeCanvas);
+    if (interactive) {
+      window.addEventListener("mousemove", handleMouseMove);
+    }
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", resizeCanvas);
+      if (interactive) {
+        window.removeEventListener("mousemove", handleMouseMove);
+      }
+    };
+  }, [waveColors, interactive]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className={`absolute inset-0 pointer-events-none ${className}`}
+    />
+  );
+};
 
 // 2. 카드
 export const NeonCard = ({
@@ -42,6 +406,7 @@ export const NeonCard = ({
   delay = 0.2,
   className = "",
   variant = "default", // default, primary, success, warning, danger
+  ...props
 }) => {
   const variants = {
     default:
@@ -73,6 +438,7 @@ export const NeonCard = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay, duration: 0.5, ease: "easeOut" }}
       whileHover={{ y: -5, scale: 1.02 }}
+      {...props}
     >
       {/* 네온 글로우 효과 */}
       <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-2xl blur-xl" />
@@ -102,12 +468,166 @@ export const NeonCard = ({
             )}
           </motion.div>
         )}
+        {/* 내용 */}
         <div className="space-y-2 text-gray-100">{children}</div>
       </div>
     </motion.div>
   );
 };
 
+// 2. 네온 카드_jh
+export const NeonCardJH = ({
+  icon,
+  title,
+  children,
+  delay = 0.2,
+  className = "",
+  variant = "default", // default, primary, success, warning, danger
+  ...props
+}) => {
+  const variants = {
+    default:
+      "border-purple-500/30 hover:border-pink-500/50 hover:shadow-pink-500/20",
+    primary:
+      "border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20",
+    success:
+      "border-green-500/30 hover:border-emerald-500/50 hover:shadow-emerald-500/20",
+    warning:
+      "border-yellow-500/30 hover:border-orange-500/50 hover:shadow-orange-500/20",
+    danger:
+      "border-red-500/30 hover:border-rose-500/50 hover:shadow-rose-500/20",
+  };
+
+  const iconVariants = {
+    default: "from-purple-500 to-pink-500",
+    primary: "from-blue-500 to-cyan-500",
+    success: "from-green-500 to-emerald-500",
+    warning: "from-yellow-500 to-orange-500",
+    danger: "from-red-500 to-rose-500",
+  };
+
+  return (
+    <motion.div
+      className={`relative bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg pb-0
+                  border ${variants[variant]} rounded-2xl p-6 shadow-2xl
+                  hover:shadow-2xl transition-all duration-300 ${className}`}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+      whileHover={{ y: -5, scale: 1.02 }}
+      {...props}
+    >
+      {/* 네온 글로우 효과 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-2xl blur-xl" />
+
+      <div className="relative z-10 h-full">
+        {(icon || title) && (
+          <motion.div
+            className="flex items-center gap-3 mb-4"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: delay + 0.2 }}
+          >
+            {icon && (
+              <div
+                className={`p-2 rounded-lg bg-gradient-to-r ${iconVariants[variant]}`}
+              >
+                {React.cloneElement(icon, {
+                  className: "text-white",
+                  size: 20,
+                })}
+              </div>
+            )}
+            {title && (
+              <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                {title}
+              </h2>
+            )}
+          </motion.div>
+        )}
+        {/* 내용 */}
+        <div className="space-y-2 text-gray-100 h-full">{children}</div>
+      </div>
+    </motion.div>
+  );
+};
+
+// 2. 네온 카드_jh mobile
+export const NeonCardJHMobile = ({
+  icon,
+  title,
+  children,
+  delay = 0.2,
+  className = "",
+  variant = "default", // default, primary, success, warning, danger
+  ...props
+}) => {
+  const variants = {
+    default:
+      "border-purple-500/30 hover:border-pink-500/50 hover:shadow-pink-500/20",
+    primary:
+      "border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20",
+    success:
+      "border-green-500/30 hover:border-emerald-500/50 hover:shadow-emerald-500/20",
+    warning:
+      "border-yellow-500/30 hover:border-orange-500/50 hover:shadow-orange-500/20",
+    danger:
+      "border-red-500/30 hover:border-rose-500/50 hover:shadow-rose-500/20",
+  };
+
+  const iconVariants = {
+    default: "from-purple-500 to-pink-500",
+    primary: "from-blue-500 to-cyan-500",
+    success: "from-green-500 to-emerald-500",
+    warning: "from-yellow-500 to-orange-500",
+    danger: "from-red-500 to-rose-500",
+  };
+
+  return (
+    <motion.div
+      className={`relative bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg
+                  border ${variants[variant]} rounded-2xl p-6 shadow-2xl
+                  hover:shadow-2xl transition-all duration-300 h-full ${className}`}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+      whileHover={{ y: -5, scale: 1.02 }}
+      {...props}
+    >
+      {/* 네온 글로우 효과 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-2xl blur-xl" />
+
+      <div className="relative z-10 h-full">
+        {(icon || title) && (
+          <motion.div
+            className="flex items-center gap-3 mb-4"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: delay + 0.2 }}
+          >
+            {icon && (
+              <div
+                className={`p-2 rounded-lg bg-gradient-to-r ${iconVariants[variant]}`}
+              >
+                {React.cloneElement(icon, {
+                  className: "text-white",
+                  size: 20,
+                })}
+              </div>
+            )}
+            {title && (
+              <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                {title}
+              </h2>
+            )}
+          </motion.div>
+        )}
+        {/* 내용 */}
+        <div className="space-y-2 text-gray-100 h-full">{children}</div>
+      </div>
+    </motion.div>
+  );
+};
 // 3. 그라데이션 텍스트 효과
 export const GradientText = ({
   children,
@@ -285,7 +805,7 @@ export const NeonScrollbarStyles = () => (
       height: 4px;
     }
     .neon-scrollbar::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(109, 109, 109, 0.2);
       border-radius: 2px;
     }
     .neon-scrollbar::-webkit-scrollbar-thumb {
@@ -299,7 +819,7 @@ export const NeonScrollbarStyles = () => (
     /* Firefox */
     .neon-scrollbar {
       scrollbar-width: thin;
-      scrollbar-color: #a855f7 rgba(0, 0, 0, 0.2);
+      scrollbar-color: #a855f7 rgba(109, 109, 109, 0.2);
     }
   `}</style>
 );

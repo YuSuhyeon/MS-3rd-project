@@ -1,4 +1,4 @@
-/* Directions timeline styles inspired by myro layout */
+﻿/* Directions timeline styles inspired by myro layout */
 .timeline {
   display: grid;
   gap: 12px;
@@ -30,9 +30,10 @@
 /* Myro-like layout for directions */
 .directions-wrapper {
   display: grid;
-  grid-template-columns: 84px 1fr 1fr; /* left rail + content + map (≈ 50/50) */
+  grid-template-columns: 84px 1fr 1fr; /* left rail + content + map (??50/50) */
   gap: 0;
-  height: calc(100vh - 48px);
+  height: auto;
+  min-height: calc(100vh - 96px);
 }
 .directions-leftbar {
   background: transparent;
@@ -61,7 +62,22 @@
   border-right: 1px solid #e5e7eb;
   overflow: auto;
 }
-.directions-mapbox { background: #f9fafb; }
+.directions-mapbox { height: 100%; display: flex; min-height: 480px; }
+.directions-mapbox > div { flex: 1 1 auto; min-height: 100%; }
+.directions-footerbar {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  z-index: 20;
+}
+/* Make map column consume full available height */
+.directions-mapbox { height: 100%; display: flex; }
+.directions-mapbox > div { flex: 1 1 auto; }
 
 /* Day columns grid similar to reference */
 .day-columns {
@@ -71,7 +87,7 @@
 }
 .day-card { min-width: 0; border-radius: 14px; }
 
-/* Travel separator row (이동 시간) */
+/* Travel separator row (?대룞 ?쒓컙) */
 .travel-chip {
   display: flex;
   align-items: center;
@@ -84,7 +100,7 @@
   padding: 6px 8px;
 }
 
-/* Bottom action bar (취소/적용/저장) */
+/* Bottom action bar (痍⑥냼/?곸슜/??? */
 .directions-actionbar {
   position: sticky;
   left: 0;
@@ -109,6 +125,9 @@
   font-size: 12px;
 }
 
+/* Hide legacy leftbar bottom action set; we use footerbar instead */
+.directions-leftbar .directions-actionbar:last-of-type { display: none; }
+
 /* Day quick nav (left rail) */
 .day-nav { display: grid; gap: 8px; margin: 12px 4px; }
 .day-nav-btn {
@@ -125,6 +144,9 @@
   font-size: 12px;
 }
 .day-nav-btn.active { border-color: #6366f1; box-shadow: 0 0 0 2px #eef2ff inset; color: #4338ca; }
+
+/* Ensure button labels never wrap within Directions page */
+.directions-wrapper button { white-space: nowrap; }
 
 /* Date range modal */
 .date-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
@@ -144,3 +166,16 @@
 .calendar .day.in-range { background: #e2e8f0; color: #0f172a; border-radius: 8px; }
 .date-modal .foot { display: flex; justify-content: flex-end; padding: 12px 16px 16px; }
 .date-modal .apply { background: #0f172a; color: #fff; border-radius: 10px; padding: 10px 16px; font-weight: 700; }
+
+/* Category chip for place tags */
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  font-size: 10px;
+  font-weight: 700;
+}

@@ -92,7 +92,7 @@ const TourCard = ({ item, onDetailClick }) => {
           </button>
         </div>
 
-        {/* 파트너십 & 평점 */}
+        {/* 파트너십 & 평점 
         <div className="absolute bottom-4 left-4 right-4">
           <div className="flex items-center justify-between">
             <span className="px-3 py-1 bg-white/20 text-white text-xs rounded-full backdrop-blur-sm font-medium">
@@ -103,12 +103,11 @@ const TourCard = ({ item, onDetailClick }) => {
               <span className="font-semibold">{item.rating}</span>
             </div>
           </div>
-        </div>
+        </div>*/}
       </div>
 
       {/* 컨텐츠 섹션 */}
       <div className="p-6">
-        {/* K-pop 그룹과 리뷰 정보 */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             {item.kpopGroup}
@@ -135,7 +134,7 @@ const TourCard = ({ item, onDetailClick }) => {
           </div>
         )}
 
-        {/* 비즈니스 성과 메트릭 */}
+        {/* 비즈니스 성과 메트릭 
         <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100">
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-1">ROI</div>
@@ -153,7 +152,7 @@ const TourCard = ({ item, onDetailClick }) => {
               {item.brandValue}
             </div>
           </div>
-        </div>
+        </div>*/}
 
         {/* 태그 */}
         <div className="flex flex-wrap gap-2 mb-4">

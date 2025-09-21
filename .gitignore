@@ -39,3 +39,7 @@ __pycache__/
 Thumbs.db
 
 map-app/public/merged_annotations_merged.json
+
+backend/models/*.pt
+backend/models/*.pth
+backend/models/*.onnx

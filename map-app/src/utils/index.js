@@ -5,6 +5,7 @@ export function createPageUrl(name) {
     case "ResultDashboard":
       return "/result";
     case "DirectionsMantine":
+    case "DirectionsMantineImproved":
       return "/directions";
     case "DocentMantine":
       return "/docent";
@@ -20,12 +21,12 @@ export function createPageUrl(name) {
       return "/itinerary";
     case "CommunityMain":
       return "/community";
-    case "VisionOCR":
-      return "/visionocr";
     case "Tour":
       return "/tour";
     case "TourDetail":
       return "/tour/:id";
+    case "CommunitySocial":
+      return "/social";
     default:
       return "/";
   }

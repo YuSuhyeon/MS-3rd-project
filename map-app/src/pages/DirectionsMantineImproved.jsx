@@ -1,9 +1,8 @@
 // pages/DirectionsMantineImproved.jsx
 
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import PlaceSearchInput from "components/directions/PlaceSearchInput";
 import TMapContainer from "components/directions/TMapContainer";
 import ensureTmap from "integrations/tmapLoader";
@@ -26,8 +25,6 @@ import {
   Train,
 } from "lucide-react";
 import { Reorder, motion, AnimatePresence } from "framer-motion";
-
-console.log("React App이 인식하는 환경 변수:", process.env);
 
 let kakaoSdkPromise = null;
 const ensureKakao = () => {
@@ -61,19 +58,19 @@ export default function DirectionsMantineImproved() {
   const location = useLocation();
 
   const makeEmptyDay = (idx = 0) => ({
-    id: `day-${idx + 1}`,
-    title: `Day ${idx + 1}`,
+    id: `day-${Date.now()}-${idx}`,
+    title: `${idx + 1}일차`,
     startLocation: "",
     startCoords: null,
     endLocation: "",
     endCoords: null,
-    waypoints: [], // [{ name, lat?, lng? }]
+    waypoints: [],
     priority: "RECOMMEND",
     startTime: "09:00",
-    stays: [], // minutes per stop index (start, wps..., end)
+    stays: [],
     timeline: [],
     summary: null,
-    lastRoutes: null, // raw routes from Kakao for redraw on tab switch
+    lastRoutes: null,
   });
 
   const [days, setDays] = useState([makeEmptyDay(0)]);
@@ -95,6 +92,13 @@ export default function DirectionsMantineImproved() {
   const markerRefs = useRef([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const [addDayMenuOpen, setAddDayMenuOpen] = useState(false);
+  const addDayMenuRef = useRef(null);
+  const [coursePickerOpen, setCoursePickerOpen] = useState(false);
+  const [recommendedCourses, setRecommendedCourses] = useState([]);
+  const [recommendedLoading, setRecommendedLoading] = useState(false);
+  const [recommendedError, setRecommendedError] = useState(null);
+  const [personaCourseId, setPersonaCourseId] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -110,6 +114,32 @@ export default function DirectionsMantineImproved() {
     };
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    if (!addDayMenuOpen) return;
+    const handleClick = (event) => {
+      if (
+        addDayMenuRef.current &&
+        !addDayMenuRef.current.contains(event.target)
+      ) {
+        setAddDayMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [addDayMenuOpen]);
+
+  useEffect(() => {
+    if (!coursePickerOpen) return;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setCoursePickerOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [coursePickerOpen]);
+
+  // ▼▼▼▼▼ ensureTmap 호출 방식을 API 키 없이 변경 ▼▼▼▼▼
   useEffect(() => {
     let cancelled = false;
 
@@ -158,11 +188,18 @@ export default function DirectionsMantineImproved() {
 
   useEffect(() => {
     if (mapProvider !== "KAKAO") {
+      if (mapObjRef.current) {
+        mapObjRef.current = null;
+      }
+      if (mapElRef.current) {
+        mapElRef.current.innerHTML = "";
+      }
       return;
     }
     const mapContainer = mapElRef.current;
     if (!mapContainer) return;
     let mapInstance = null;
+    let observer = null;
     const initMap = async () => {
       try {
         const kakao = await ensureKakao();
@@ -171,6 +208,14 @@ export default function DirectionsMantineImproved() {
         const options = { center, level: 7 };
         mapInstance = new kakao.maps.Map(mapContainer, options);
         mapObjRef.current = mapInstance;
+        observer = new ResizeObserver(() => {
+          setTimeout(() => {
+            if (mapObjRef.current) {
+              mapObjRef.current.relayout();
+            }
+          }, 0);
+        });
+        observer.observe(mapContainer);
       } catch (error) {
         console.error("카카오맵 초기화 실패:", error);
         setToast({
@@ -182,6 +227,10 @@ export default function DirectionsMantineImproved() {
     };
     initMap();
     return () => {
+      if (observer && mapContainer) {
+        observer.unobserve(mapContainer);
+        observer.disconnect();
+      }
       mapObjRef.current = null;
       if (mapContainer) mapContainer.innerHTML = "";
     };
@@ -189,62 +238,74 @@ export default function DirectionsMantineImproved() {
 
   useEffect(() => {
     try {
-      const preset = location.state && location.state.presetCourse;
-      if (preset && Array.isArray(preset.stops) && preset.stops.length >= 2) {
+      let preset = location.state?.presetCourse || null;
+      if (!preset) {
+        const raw = sessionStorage.getItem("routePreset");
+        if (raw) preset = JSON.parse(raw);
+      }
+      if (preset?.personaId !== undefined && preset.personaId !== null) {
+        setPersonaCourseId(preset.personaId);
+      }
+      if (preset?.stops?.length >= 2) {
         setDays((prev) => {
           const next = [...prev];
           const d0 = { ...next[0] };
-          d0.startLocation = preset.stops[0].name || "";
-          d0.endLocation = preset.stops[preset.stops.length - 1].name || "";
-          d0.waypoints = preset.stops.slice(1, -1).map((s) => ({ name: s.name || "" }));
+          const first = preset.stops[0];
+          const last = preset.stops[preset.stops.length - 1];
+          d0.startLocation = first?.name || "";
+          d0.endLocation = last?.name || "";
+          d0.startCoords =
+            first?.lat && first?.lng
+              ? { lat: first.lat, lng: first.lng }
+              : null;
+          d0.endCoords =
+            last?.lat && last?.lng ? { lat: last.lat, lng: last.lng } : null;
+          d0.waypoints = preset.stops
+            .slice(1, -1)
+            .map((s) => ({ name: s?.name || "", lat: s?.lat, lng: s?.lng }));
           next[0] = d0;
           return next;
         });
+        presetAppliedRef.current = true;
+        sessionStorage.removeItem("routePreset");
       }
     } catch {}
   }, [location.state]);
 
-  // Load draft from localStorage
   useEffect(() => {
+    if (
+      presetAppliedRef.current ||
+      location.state?.presetCourse ||
+      sessionStorage.getItem("routePreset")
+    )
+      return;
     try {
       const raw = localStorage.getItem("routePlanDraft");
       if (raw) {
         const j = JSON.parse(raw);
-        if (Array.isArray(j.days) && j.days.length) {
+        if (j?.days?.length) {
           setDays(j.days);
           setActiveDay(j.activeDay || 0);
         }
       }
     } catch {}
-  }, []);
+  }, [location.state]);
 
-  // Save draft
   useEffect(() => {
     try {
-      localStorage.setItem("routePlanDraft", JSON.stringify({ days, activeDay }));
+      localStorage.setItem(
+        "routePlanDraft",
+        JSON.stringify({ days, activeDay })
+      );
     } catch {}
   }, [days, activeDay]);
 
   const cur = days[activeDay] || makeEmptyDay(activeDay);
 
-  const updateCur = (patch) => {
-    setDays((prev) => {
-      const next = [...prev];
-      next[activeDay] = { ...next[activeDay], ...patch };
-      return next;
-    });
-  };
-
-  const haversine = (a, b) => {
-    const R = 6371;
-    const toRad = (d) => (d * Math.PI) / 180;
-    const dLat = toRad(b.lat - a.lat),
-      dLng = toRad(b.lng - a.lng);
-    const s =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
-    return 2 * R * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
-  };
+  const updateCur = (patch) =>
+    setDays((prev) =>
+      prev.map((day, i) => (i === activeDay ? { ...day, ...patch } : day))
+    );
 
   const geocode = (name) =>
     new Promise((resolve, reject) => {
@@ -317,7 +378,6 @@ export default function DirectionsMantineImproved() {
     });
   };
 
-  // Redraw when tab switches
   useEffect(() => {
     const currentDay = days[activeDay];
     const lastRoutes = currentDay?.lastRoutes;
@@ -369,45 +429,37 @@ export default function DirectionsMantineImproved() {
     return path;
   }, [cur.lastRoutes]);
 
-  const recomputeTimelineWithStays = ({ stops, sections, startTime, stays }) => {
+  const recomputeTimelineWithStays = ({
+    stops,
+    sections,
+    startTime,
+    stays,
+  }) => {
     const steps = [];
-    const toMinutes = (hhmm) => {
-      const [h, m] = String(hhmm || "0:0").split(":");
-      return parseInt(h || "0", 10) * 60 + parseInt(m || "0", 10);
-    };
-    let accMin = toMinutes(startTime || "09:00");
-    const map = mapObjRef.current;
-    if (map) {
-      markerRefs.current.forEach((m) => m.setMap && m.setMap(null));
-      markerRefs.current = [];
-    }
+    let accMin =
+      parseInt(String(startTime).split(":")[0] || "0") * 60 +
+      parseInt(String(startTime).split(":")[1] || "0");
     for (let i = 0; i < stops.length; i++) {
-      const curS = stops[i];
-      const prevS = i > 0 ? stops[i - 1] : null;
       let km = 0,
-        minutes = 0,
-        roadName = "";
-      if (prevS && sections && sections[i - 1] && sections[i - 1].summary) {
+        minutes = 0;
+      if (i > 0) {
         const sec = sections[i - 1];
-        const dist = sec.summary.distance || 0;
-        const dur = sec.summary.duration || 0;
-        km = dist / 1000;
-        minutes = Math.round(dur / 60);
-        const r0 = (sec.roads || []).find((r) => r && (r.name || r.road_name));
-        roadName = (r0 && (r0.name || r0.road_name)) || "";
+        if (sec?.summary) {
+          km = sec.summary.distance / 1000;
+          minutes = Math.round(sec.summary.duration / 60);
+        }
+        accMin += minutes;
       }
-      if (i > 0) accMin += minutes; // travel from prev -> current
-      const hh = Math.floor(accMin / 60)
-        .toString()
-        .padStart(2, "0");
-      const mm = (accMin % 60).toString().padStart(2, "0");
-      steps.push({ idx: i + 1, name: curS.name, km, minutes, roadName, arrival: `${hh}:${mm}` });
-      if (map && typeof curS.lat === "number" && typeof curS.lng === "number") {
-        const marker = new window.kakao.maps.Marker({ position: new window.kakao.maps.LatLng(curS.lat, curS.lng), map });
-        markerRefs.current.push(marker);
-      }
-      const stay = Array.isArray(stays) && typeof stays[i] === "number" ? stays[i] : 0;
-      accMin += i < stops.length - 1 ? stay : 0; // dwell before next leg
+      const hh = String(Math.floor(accMin / 60)).padStart(2, "0");
+      const mm = String(accMin % 60).padStart(2, "0");
+      steps.push({
+        idx: i + 1,
+        name: stops[i].name,
+        km,
+        minutes,
+        arrival: `${hh}:${mm}`,
+      });
+      if (i < stops.length - 1) accMin += stays[i] || 0;
     }
     return steps;
   };
@@ -416,66 +468,87 @@ export default function DirectionsMantineImproved() {
     if (!cur.startLocation || !cur.endLocation) return;
     setIsCalculating(true);
     try {
-      // Resolve coordinates (prefer user-selected coords, fallback to geocoding)
-      const start = cur.startCoords && cur.startCoords.lat && cur.startCoords.lng
-        ? { name: cur.startLocation, lat: cur.startCoords.lat, lng: cur.startCoords.lng }
-        : await geocode(cur.startLocation);
-      const end = cur.endCoords && cur.endCoords.lat && cur.endCoords.lng
-        ? { name: cur.endLocation, lat: cur.endCoords.lat, lng: cur.endCoords.lng }
-        : await geocode(cur.endLocation);
-      const mids = [];
-      for (const w of cur.waypoints || []) {
-        if (w && typeof w.lat === "number" && typeof w.lng === "number") {
-          mids.push({ name: w.name, lat: w.lat, lng: w.lng });
-        } else if (w && w.name) {
-          try {
-            const p = await geocode(w.name);
-            mids.push(p);
-          } catch {}
-        }
+      const start = cur.startCoords || (await geocode(cur.startLocation));
+      const end = cur.endCoords || (await geocode(cur.endLocation));
+      const mids = await Promise.all(
+        (cur.waypoints || []).map((w) =>
+          w.lat ? Promise.resolve(w) : geocode(w.name).catch(() => null)
+        )
+      );
+      const validMids = mids.filter(Boolean);
+      let res;
+      if (mapProvider === "TMAP") {
+        const api = routeMode === "TRANSIT" ? "tmap/transit" : "tmap/route";
+        res = await fetch(`/api/${api}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            origin: {
+              x: String(start.lng),
+              y: String(start.lat),
+              name: cur.startLocation,
+            },
+            destination: {
+              x: String(end.lng),
+              y: String(end.lat),
+              name: cur.endLocation,
+            },
+            waypoints: validMids.map((m) => ({
+              x: String(m.lng),
+              y: String(m.lat),
+            })),
+            mode: routeMode,
+            priority: cur.priority,
+          }),
+        });
+      } else {
+        res = await fetch("/api/kakao-waypoints", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            origin: { x: String(start.lng), y: String(start.lat) },
+            destination: { x: String(end.lng), y: String(end.lat) },
+            waypoints: validMids.map((m) => ({
+              x: String(m.lng),
+              y: String(m.lat),
+            })),
+            priority: cur.priority,
+          }),
+        });
       }
-
-      const payload = {
-        origin: { x: String(start.lng), y: String(start.lat) },
-        destination: { x: String(end.lng), y: String(end.lat) },
-        waypoints: mids.map((m) => ({ x: String(m.lng), y: String(m.lat) })),
-        priority: cur.priority || "RECOMMEND",
-      };
-      const r = await fetch("/api/kakao-waypoints", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const j = await res.json();
+      if (!res.ok || !j.routes) throw new Error("경로 API 요청 실패");
+      const stops = [
+        { ...start, name: cur.startLocation },
+        ...validMids,
+        { ...end, name: cur.endLocation },
+      ];
+      const stays = Array.from(
+        { length: stops.length },
+        (_, i) => cur.stays?.[i] || 0
+      );
+      const timeline = recomputeTimelineWithStays({
+        stops,
+        sections: j.routes[0]?.sections || [],
+        startTime: cur.startTime,
+        stays,
       });
-      const j = await r.json();
-      if (!r.ok || !j.routes) {
-        alert("경로 요청 실패");
-        return;
-      }
-      const route = (j.routes && j.routes[0]) || null;
-      drawPolylines(j.routes);
-
-      // Build timeline using Kakao sections (per-leg accuracy)
-      const stops = [start, ...mids, end];
-      const sections = route && Array.isArray(route.sections) ? route.sections : [];
-      // Normalize stays length
-      const stays = Array.isArray(cur.stays) ? [...cur.stays] : [];
-      const needLen = stops.length;
-      while (stays.length < needLen) stays.push(0);
-      const steps = recomputeTimelineWithStays({ stops, sections, startTime: cur.startTime, stays });
-
-      const totalKm = route?.summary?.distance ? route.summary.distance / 1000 : steps.reduce((s, x) => s + (x.idx > 1 ? x.km : 0), 0);
-      const totalMin = route?.summary?.duration ? Math.round(route.summary.duration / 60) : steps.reduce((s, x) => s + (x.idx > 1 ? x.minutes : 0), 0);
-
+      const summary = {
+        distance: j.routes[0].summary.distance / 1000,
+        duration: Math.round(j.routes[0].summary.duration / 60),
+      };
       updateCur({
-        timeline: steps,
-        summary: { distance: totalKm, duration: totalMin },
+        timeline,
+        summary,
         lastRoutes: j.routes,
         stays,
-        startCoords: { lat: start.lat, lng: start.lng },
-        endCoords: { lat: end.lat, lng: end.lng },
+        startCoords: start,
+        endCoords: end,
+        waypoints: validMids,
       });
     } catch (e) {
       console.error(e);
+      alert(e.message);
     } finally {
       setIsCalculating(false);
     }
@@ -502,6 +575,63 @@ export default function DirectionsMantineImproved() {
     }
   };
 
+  const makeDayFromCourse = (course, idx) => {
+    if (!course || !Array.isArray(course.stops)) return null;
+    const stops = course.stops
+      .map((stop) => {
+        const lat = Number(stop?.lat);
+        const lng = Number(stop?.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        return {
+          ...stop,
+          lat,
+          lng,
+        };
+      })
+      .filter(Boolean);
+    if (stops.length < 2) return null;
+
+    const formatAddress = (stop) => {
+      const road =
+        typeof stop?.roadAddress === "string" ? stop.roadAddress.trim() : "";
+      const addr =
+        typeof stop?.address === "string" ? stop.address.trim() : "";
+      return {
+        address: road || addr,
+        roadAddress: road,
+      };
+    };
+
+    const first = stops[0];
+    const last = stops[stops.length - 1];
+    const base = makeEmptyDay(idx);
+
+    const firstAddr = formatAddress(first);
+    const lastAddr = formatAddress(last);
+
+    return {
+      ...base,
+      startLocation: first?.name || "",
+      startCoords: { lat: first.lat, lng: first.lng },
+      startAddress: firstAddr.address,
+      startRoadAddress: firstAddr.roadAddress,
+      endLocation: last?.name || "",
+      endCoords: { lat: last.lat, lng: last.lng },
+      endAddress: lastAddr.address,
+      endRoadAddress: lastAddr.roadAddress,
+      waypoints: stops.slice(1, -1).map((stop) => {
+        const info = formatAddress(stop);
+        return {
+          name: stop?.name || "",
+          lat: stop.lat,
+          lng: stop.lng,
+          address: info.address,
+          roadAddress: info.roadAddress,
+        };
+      }),
+    };
+  };
+
   const addDay = () => {
     setDays((prev) => {
       const next = [...prev, makeEmptyDay(prev.length)];
@@ -510,10 +640,83 @@ export default function DirectionsMantineImproved() {
     });
   };
 
+  const loadRecommendedCourses = useCallback(async () => {
+    setRecommendedLoading(true);
+    setRecommendedError(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("grouped", "1");
+      if (personaCourseId !== null && personaCourseId !== undefined) {
+        params.set("pid", String(personaCourseId));
+      }
+      const response = await fetch(`/api/persona/courses2?${params.toString()}`, {
+        cache: "no-cache",
+      });
+      if (!response.ok) {
+        throw new Error("추천 코스를 불러오지 못했습니다.");
+      }
+      const data = await response.json();
+      const items = Array.isArray(data?.items) ? data.items : [];
+      setRecommendedCourses(items);
+    } catch (error) {
+      console.error(error);
+      setRecommendedError(
+        error?.message || "추천 코스를 불러오지 못했습니다."
+      );
+    } finally {
+      setRecommendedLoading(false);
+    }
+  }, [personaCourseId]);
+
+  const handleSelectRecommendedCourse = (course) => {
+    if (!course) return;
+    const nextIndex = days.length;
+    const newDay = makeDayFromCourse(course, nextIndex);
+    if (!newDay) {
+      setToast({
+        id: Date.now(),
+        message: "코스 정보를 적용할 수 없습니다.",
+        tone: "error",
+      });
+      return;
+    }
+    if (
+      personaCourseId === null &&
+      course?.personaId !== undefined &&
+      course.personaId !== null
+    ) {
+      setPersonaCourseId(course.personaId);
+    }
+    setDays((prev) => [...prev, newDay]);
+    setActiveDay(nextIndex);
+    setCoursePickerOpen(false);
+    setToast({
+      id: Date.now(),
+      message: `${nextIndex + 1}일차에 추천 코스를 추가했어요.`,
+      tone: "success",
+    });
+  };
+
+  const handleAddRecommendedDay = () => {
+    setAddDayMenuOpen(false);
+    setCoursePickerOpen(true);
+    if (!recommendedCourses.length && !recommendedLoading) {
+      loadRecommendedCourses();
+    }
+  };
+
   const removeDay = (idx) => {
+    if (days.length <= 1) return;
+    const target = days[idx];
+    const label = target?.title || `${idx + 1}일차`;
+    const shouldRemove =
+      typeof window === "undefined"
+        ? true
+        : window.confirm(`${label} 일정을 삭제하시겠어요?`);
+    if (!shouldRemove) return;
+
     setDays((prev) => {
-      if (prev.length <= 1) return prev;
-      const next = prev
+      const filtered = prev
         .filter((_, i) => i !== idx)
         .map((d, i) => ({ ...d, title: `${i + 1}일차` }));
       setActiveDay((prevActive) => {
@@ -529,18 +732,18 @@ export default function DirectionsMantineImproved() {
 
   const duplicateDay = (idx) => {
     setDays((prev) => {
-      const src = prev[idx];
-      const copy = {
-        ...src,
-        id: `day-${prev.length + 1}`,
-        title: `Day ${prev.length + 1}`,
-        lastRoutes: null,
+      const clone = {
+        ...prev[idx],
+        id: `day-${Date.now()}`,
+        title: `${prev.length + 1}일차`,
         timeline: [],
         summary: null,
+        lastRoutes: null,
       };
-      return [...prev, copy];
+      const next = [...prev, clone];
+      setActiveDay(next.length - 1);
+      return next;
     });
-    setActiveDay(days.length);
   };
 
   const saveToBackend = async () => {
@@ -976,14 +1179,48 @@ export default function DirectionsMantineImproved() {
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={addDay}
-                    className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <div className="relative" ref={addDayMenuRef}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        setAddDayMenuOpen((prev) => !prev)
+                      }
+                      className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600"
+                      aria-label="일차 추가 메뉴"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <AnimatePresence>
+                      {addDayMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                          transition={{ duration: 0.12 }}
+                          className="absolute right-0 top-full z-10 mt-2 w-44 origin-top-right rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              addDay();
+                              setAddDayMenuOpen(false);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                          >
+                            새 일차 추가
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleAddRecommendedDay}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-indigo-600 hover:bg-indigo-50"
+                          >
+                            추천 코스 추가
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
 
@@ -1222,6 +1459,85 @@ export default function DirectionsMantineImproved() {
       </motion.div>
 
       <AnimatePresence>
+        {coursePickerOpen && (
+          <motion.div
+            key="coursePicker"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur"
+          >
+            <div className="flex items-center justify-between px-5 pt-6 pb-4">
+              <h3 className="text-lg font-semibold text-white">추천 코스 불러오기</h3>
+              <button
+                onClick={() => setCoursePickerOpen(false)}
+                className="rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                aria-label="추천 코스 선택 닫기"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="px-5 pb-4 text-sm text-slate-300">
+              <p>추가하고 싶은 코스를 선택하면 새 일차로 준비됩니다.</p>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 pb-10 space-y-3">
+              {recommendedLoading ? (
+                <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                  추천 코스를 불러오는 중입니다...
+                </div>
+              ) : recommendedError ? (
+                <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-6 text-sm text-rose-100">
+                  <p className="font-semibold">불러오기 실패</p>
+                  <p className="mt-2 text-xs text-rose-100/80">{recommendedError}</p>
+                  <button
+                    type="button"
+                    onClick={loadRecommendedCourses}
+                    className="mt-4 inline-flex items-center justify-center rounded-full border border-rose-300/40 px-4 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-400/20"
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              ) : recommendedCourses.length === 0 ? (
+                <div className="rounded-2xl border border-slate-700 bg-slate-800/70 px-4 py-6 text-center text-sm text-slate-300">
+                  사용할 수 있는 추천 코스가 없습니다.
+                </div>
+              ) : (
+                recommendedCourses.map((course) => {
+                  const stopNames = Array.isArray(course.stops)
+                    ? course.stops
+                        .map((stop) => stop?.name)
+                        .filter(Boolean)
+                    : [];
+                  return (
+                    <button
+                      key={course.key || course.code || course.title}
+                      type="button"
+                      onClick={() => handleSelectRecommendedCourse(course)}
+                      className="w-full rounded-2xl border border-slate-700 bg-slate-800/80 px-4 py-4 text-left shadow-lg transition hover:border-indigo-400 hover:bg-slate-800"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-semibold text-white">
+                          {course.title || (`코스 ${course.code || ""}`).trim()}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {Array.isArray(course.stops) ? `${course.stops.length}곳` : ''}
+                        </span>
+                      </div>
+                      {stopNames.length > 0 && (
+                        <p className="mt-2 text-xs text-slate-400 line-clamp-2">
+                          {stopNames.join(' · ')}
+                        </p>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {searchContext && (
           <motion.div
             key={searchContext}
@@ -1267,4 +1583,3 @@ export default function DirectionsMantineImproved() {
     </div>
   );
 }
-

@@ -1,82 +1,271 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
-import { Button } from "components/ui/button";
-import { Input } from "components/ui/input";
-import { Textarea } from "components/ui/textarea";
-import { Label } from "components/ui/label";
-import { X, Save, Clock, MapPin, DollarSign } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Modal,
+  TextInput,
+  Textarea,
+  NumberInput,
+  SimpleGrid,
+  Group,
+  Stack,
+  Title,
+  Divider,
+  Text,
+  Input,
+} from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import { Save, Clock, DollarSign, Info } from "lucide-react";
+import PlaceSearchInput from "../directions/PlaceSearchInput";
+import { NeonButton, GradientText } from "components/ui/NeonTheme";
 
-export default function ActivityEditor({ activity, onSave, onCancel }) {
-  const [formData, setFormData] = useState({
-    time: activity.time || "12:00",
-    duration: activity.duration || 60,
-    place_name: activity.place_name || "",
-    place_type: activity.place_type || "attraction",
-    description: activity.description || "",
-    tips: activity.tips || "",
-    cost_estimate: activity.cost_estimate || 0,
-    image_url: activity.image_url || ""
-  });
+const categoryCodeMap = {
+  FD6: "restaurant",
+  CE7: "cafe",
+  AT4: "attraction",
+  AD5: "transport",
+  HP8: "accommodation",
+  MT1: "shopping",
+};
 
-  const handleSave = () => { onSave(formData); };
+const deepClone = (value) => {
+  if (typeof structuredClone === "function") {
+    return structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value));
+};
+
+export default function ActivityEditor({ activity, opened, onClose, onSave }) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [formData, setFormData] = useState(activity);
+  const [placeQuery, setPlaceQuery] = useState(activity?.place_name || "");
+
+  useEffect(() => {
+    if (activity) {
+      setFormData(deepClone(activity));
+      setPlaceQuery(activity.place_name || "");
+    }
+  }, [activity]);
+
+  const handleSave = () => {
+    onSave(formData);
+    onClose();
+  };
+  const handleChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+  const handlePlaceSelect = (place) => {
+    if (!place) return;
+    setPlaceQuery(place.name || "");
+    setFormData((prev) => ({
+      ...prev,
+      place_name: place.name || prev.place_name,
+      address: place.address || prev.address || "",
+      roadAddress: place.roadAddress || prev.roadAddress || "",
+      lat: typeof place.lat === "number" ? place.lat : prev.lat ?? null,
+      lng: typeof place.lng === "number" ? place.lng : prev.lng ?? null,
+      place_type:
+        prev.place_type && prev.place_type.trim().length > 0
+          ? prev.place_type
+          : categoryCodeMap[place.categoryGroupCode] || "activity",
+    }));
+  };
+
+  const neonInputStyles = useMemo(
+    () => ({
+      label: {
+        color: "#d1d5db",
+        marginBottom: "4px",
+        fontSize: "var(--mantine-font-size-sm)",
+      },
+      input: {
+        backgroundColor: "rgba(10, 5, 20, 0.7)",
+        borderColor: "rgba(168, 85, 247, 0.3)",
+        color: "#f9fafb",
+        transition: "border-color 200ms ease, box-shadow 200ms ease",
+        "&:focus": {
+          borderColor: "rgba(236, 72, 153, 0.8)",
+          boxShadow: "0 0 8px rgba(236, 72, 153, 0.5)",
+        },
+      },
+      icon: { color: "#9ca3af" },
+    }),
+    []
+  );
+
+  if (!activity) return null;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <Card className="shadow-2xl">
-          <CardHeader className="border-b">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl">활동 편집</CardTitle>
-              <Button variant="ghost" size="icon" onClick={onCancel}><X className="w-4 h-4" /></Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="flex items-center gap-2 mb-2"><Clock className="w-4 h-4" />시간</Label>
-                <Input type="time" value={formData.time} onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))} />
-              </div>
-              <div>
-                <Label className="mb-2 block">소요시간 (분)</Label>
-                <Input type="number" value={formData.duration} onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))} min="15" step="15" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="flex items-center gap-2 mb-2"><MapPin className="w-4 h-4" />장소명</Label>
-                <Input value={formData.place_name} onChange={(e) => setFormData(prev => ({ ...prev, place_name: e.target.value }))} placeholder="장소명을 입력하세요" />
-              </div>
-              <div>
-                <Label className="mb-2 block">장소 유형</Label>
-                <Input value={formData.place_type} onChange={(e) => setFormData(prev => ({ ...prev, place_type: e.target.value }))} placeholder="attraction / restaurant ..." />
-              </div>
-            </div>
-            <div>
-              <Label className="mb-2 block">설명</Label>
-              <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} rows={3} />
-            </div>
-            <div>
-              <Label className="mb-2 block">팁</Label>
-              <Textarea value={formData.tips} onChange={(e) => setFormData(prev => ({ ...prev, tips: e.target.value }))} rows={2} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="flex items-center gap-2 mb-2"><DollarSign className="w-4 h-4" />예상 비용 (원)</Label>
-                <Input type="number" value={formData.cost_estimate} onChange={(e) => setFormData(prev => ({ ...prev, cost_estimate: parseInt(e.target.value) || 0 }))} min="0" />
-              </div>
-              <div>
-                <Label className="mb-2 block">이미지 URL</Label>
-                <Input value={formData.image_url} onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))} placeholder="이미지 URL (선택사항)" />
-              </div>
-            </div>
-            <div className="flex gap-3 pt-4">
-              <Button variant="outline" onClick={onCancel} className="flex-1">취소</Button>
-              <Button onClick={handleSave} className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500"><Save className="w-4 h-4 mr-2" />저장</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </motion.div>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={<GradientText size="xl">활동 편집</GradientText>}
+      size="xl"
+      radius="md"
+      fullScreen={isMobile}
+      centered={!isMobile}
+      overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
+      styles={{
+        content: {
+          backgroundColor: "rgba(10, 5, 20, 0.8)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(168, 85, 247, 0.3)",
+        },
+        header: {
+          backgroundColor: "transparent",
+          borderBottom: "1px solid rgba(168, 85, 247, 0.2)",
+        },
+      }}
+    >
+      <Stack gap="xl" pt="md">
+        <Stack gap="md">
+          <Divider
+            label={
+              <Text size="xs" fw={500} c="grape.3">
+                시간 정보
+              </Text>
+            }
+            labelPosition="left"
+            styles={{ label: { color: "#d8b4fe" } }}
+          />
+          <SimpleGrid cols={isMobile ? 1 : 2}>
+            <TextInput
+              label="시간"
+              type="time"
+              value={formData.time || ""}
+              onChange={(e) => handleChange("time", e.currentTarget.value)}
+              leftSection={<Clock size={16} />}
+              styles={neonInputStyles}
+            />
+            <NumberInput
+              label="체류 시간 (분)"
+              value={formData.duration ?? 60}
+              onChange={(val) => handleChange("duration", Number(val) || 0)}
+              min={0}
+              step={15}
+              styles={neonInputStyles}
+            />
+          </SimpleGrid>
+        </Stack>
+        <Stack gap="md">
+          <Divider
+            label={
+              <Text size="xs" fw={500} c="grape.3">
+                장소 정보
+              </Text>
+            }
+            labelPosition="left"
+            styles={{ label: { color: "#d8b4fe" } }}
+          />
+          <Input.Wrapper label="장소명" styles={neonInputStyles}>
+            <PlaceSearchInput
+              value={placeQuery}
+              onChange={(value) => {
+                setPlaceQuery(value);
+                handleChange("place_name", value);
+                if (!value) {
+                  handleChange("lat", null);
+                  handleChange("lng", null);
+                  handleChange("address", "");
+                  handleChange("roadAddress", "");
+                }
+              }}
+              onSelect={handlePlaceSelect}
+              placeholder="검색어를 입력하면 장소를 추천해드려요"
+              className="itinerary-place-input"
+            />
+          </Input.Wrapper>
+          <SimpleGrid cols={isMobile ? 1 : 2}>
+            <TextInput
+              label="장소 유형"
+              placeholder="attraction / restaurant ..."
+              value={formData.place_type || ""}
+              onChange={(e) =>
+                handleChange("place_type", e.currentTarget.value)
+              }
+              leftSection={<Info size={16} />}
+              styles={neonInputStyles}
+            />
+            <TextInput
+              label="도로명 주소"
+              value={formData.roadAddress || ""}
+              onChange={(e) =>
+                handleChange("roadAddress", e.currentTarget.value)
+              }
+              styles={neonInputStyles}
+            />
+          </SimpleGrid>
+          <TextInput
+            label="지번 주소"
+            value={formData.address || ""}
+            onChange={(e) => handleChange("address", e.currentTarget.value)}
+            styles={neonInputStyles}
+          />
+          <SimpleGrid cols={isMobile ? 1 : 2}>
+            <TextInput
+              label="위도"
+              value={
+                typeof formData.lat === "number" ? formData.lat.toFixed(6) : ""
+              }
+              onChange={(e) =>
+                handleChange(
+                  "lat",
+                  e.currentTarget.value ? Number(e.currentTarget.value) : null
+                )
+              }
+              styles={neonInputStyles}
+            />
+            <TextInput
+              label="경도"
+              value={
+                typeof formData.lng === "number" ? formData.lng.toFixed(6) : ""
+              }
+              onChange={(e) =>
+                handleChange(
+                  "lng",
+                  e.currentTarget.value ? Number(e.currentTarget.value) : null
+                )
+              }
+              styles={neonInputStyles}
+            />
+          </SimpleGrid>
+        </Stack>
+        <Stack gap="md">
+          <Divider
+            label={
+              <Text size="xs" fw={500} c="grape.3">
+                추가 정보
+              </Text>
+            }
+            labelPosition="left"
+            styles={{ label: { color: "#d8b4fe" } }}
+          />
+          <Textarea
+            label="설명"
+            placeholder="활동과 관련된 메모를 입력하세요"
+            value={formData.description || ""}
+            onChange={(e) => handleChange("description", e.currentTarget.value)}
+            autosize
+            minRows={2}
+            styles={neonInputStyles}
+          />
+          <NumberInput
+            label="예상 비용 (원)"
+            value={formData.cost_estimate || 0}
+            onChange={(val) => handleChange("cost_estimate", Number(val) || 0)}
+            min={0}
+            step={1000}
+            leftSection={<DollarSign size={16} />}
+            styles={neonInputStyles}
+          />
+        </Stack>
+        <Group justify="flex-end" mt="xl">
+          <NeonButton variant="secondary" onClick={onClose}>
+            취소
+          </NeonButton>
+          <NeonButton onClick={handleSave} leftSection={<Save size={16} />}>
+            저장
+          </NeonButton>
+        </Group>
+      </Stack>
+    </Modal>
   );
 }

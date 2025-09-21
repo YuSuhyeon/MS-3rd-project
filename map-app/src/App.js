@@ -2,6 +2,9 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "./components/Layout";
+import { AuthProvider } from "./context/AuthContext";
+import { LanguageProvider } from "./context/LanguageContext";
+import "./i18n"; // i18n 초기화
 import "./styles/layout.css";
 
 import Home from "./pages/Home";
@@ -9,7 +12,6 @@ import ResultDashboard from "./pages/ResultDashboard";
 import PersonaAnalysis from "./pages/PersonaAnalysis";
 import ItineraryView from "./pages/ItineraryView";
 import DocentMantine from "./pages/DocentMantine";
-import DirectionsMyro from "./pages/DirectionsMyro";
 import DirectionsMantineImproved from "./pages/DirectionsMantineImproved";
 import VisionOCR from "./pages/VisionOCR";
 import DocentVision from "./pages/DocentVision";
@@ -17,6 +19,9 @@ import CommunityMain from "./pages/CommunityMain";
 import Tour from "./pages/Tour";
 import TourDetail from "./pages/TourDetail";
 import PopularPlaces from "./pages/PopularPlaces";
+import CommunitySocial from "./pages/CommunitySocial";
+
+import Mypage from "./pages/Mypage";
 
 function AppRoutes() {
   return (
@@ -24,6 +29,7 @@ function AppRoutes() {
       {/* 루트 경로는 Layout 없이 Home 페이지만 렌더링합니다. */}
       <Route path="/" element={<Home />} />
 
+      <Route path="/popular-places/:areaName" element={<PopularPlaces />} />
       {/* 그 외 모든 경로는 Layout 컴포넌트로 감싸서 렌더링합니다. */}
       <Route
         path="*"
@@ -38,17 +44,20 @@ function AppRoutes() {
                 element={<DirectionsMantineImproved />}
               />
               <Route path="/itinerary" element={<ItineraryView />} />
-              {/* community 경로를 Layout 안으로 이동 */}
               <Route path="/community" element={<CommunityMain />} />
               <Route path="/community/*" element={<CommunityMain />} />
+              <Route path="/social" element={<CommunitySocial />} />
               <Route path="/visionocr" element={<VisionOCR />} />
               <Route path="/vision" element={<DocentVision />} />
               <Route path="/tour" element={<Tour />} />
+              <Route path="/social" element={<CommunitySocial />} />
               <Route path="/tour/:id" element={<TourDetail />} />
+              <Route path="/mypage" element={<Mypage />} />
               <Route
                 path="/popular-places/:areaName"
                 element={<PopularPlaces />}
               />
+              <Route path="/tour/:id" element={<TourDetail />} />
               {/* 위 경로들과 일치하지 않으면 "/persona"로 리다이렉트합니다. */}
               <Route path="*" element={<Navigate to="/persona" replace />} />
             </Routes>
@@ -61,8 +70,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <AuthProvider>
+      <LanguageProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </LanguageProvider>
+    </AuthProvider>
   );
 }

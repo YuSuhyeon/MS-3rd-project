@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'itineraries';
+const STORAGE_KEY = "itineraries";
 
 function readAll() {
   try {
@@ -14,18 +14,20 @@ function writeAll(items) {
 }
 
 export const Itinerary = {
-  async list(sort = '-created_date', limit = 100) {
+  async list(sort = "-created_date", limit = 100) {
     const items = readAll();
-    const sorted = items.sort((a, b) => (b.created_date || 0) - (a.created_date || 0));
+    const sorted = items.sort(
+      (a, b) => (b.created_date || 0) - (a.created_date || 0)
+    );
     const sliced = sorted.slice(0, limit);
     return Promise.resolve(sliced);
   },
   async create(data) {
     const items = readAll();
     const item = {
+      ...data,
       id: `itinerary_${Date.now()}`,
       created_date: Date.now(),
-      ...data,
     };
     items.unshift(item);
     writeAll(items);
@@ -33,11 +35,12 @@ export const Itinerary = {
   },
   async update(id, updated) {
     const items = readAll();
-    const idx = items.findIndex(i => i.id === id);
+    const idx = items.findIndex((i) => i.id === id);
     if (idx !== -1) {
-      items[idx] = { ...items[idx], ...updated };
+      items[idx] = { ...items[idx], ...updated, updated_at: Date.now() };
       writeAll(items);
+      return Promise.resolve(items[idx]);
     }
-    return Promise.resolve(items[idx]);
-  }
+    return Promise.reject(new Error(`Itinerary with id ${id} not found.`));
+  },
 };
