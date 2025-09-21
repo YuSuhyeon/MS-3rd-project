@@ -478,83 +478,81 @@ export default function PersonaAnalysis() {
   }
 
   return (
-    <BackgroundEffect className="h-screen overflow-hidden flex flex-col neon-scrollbar">
+    <BackgroundEffect className="neon-scrollbar px-4 pt-6 pb-28 md:px-8 md:py-12">
       <NeonScrollbarStyles />
-      <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full relative z-10 p-4 md:p-6">
-        <div className="space-y-6 md:space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center space-y-2 md:space-y-4"
-          >
-            <div className="inline-block relative p-0.5 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 shadow-lg shadow-fuchsia-500/30">
-              <div className="bg-black/60 p-3 rounded-[14px]">
-                <Sparkles className="w-8 h-8 text-pink-300" />
-              </div>
+      <div className="max-w-3xl mx-auto relative z-10 space-y-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-4"
+        >
+          <div className="inline-block relative p-0.5 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 shadow-lg shadow-fuchsia-500/30">
+            <div className="bg-black/60 p-3 rounded-[14px]">
+              <Sparkles className="w-8 h-8 text-pink-300" />
             </div>
-            <h1 className="mb-2">
-              <GradientText
-                size={isMobile ? "3xl" : "4xl"}
-                className="block leading-tight text-center"
-              >
-                당신만의 여행 페르소나 찾기
-              </GradientText>
-            </h1>
-            <p className="text-base md:text-lg text-slate-200/80 max-w-xl mx-auto">
-              몇 가지 질문에 답하면 AI가 당신의 여행 스타일에 맞는 코스를 추천해
-              드릴게요.
-            </p>
-          </motion.div>
+          </div>
+          <h1 className="mb-4">
+            <GradientText
+              size={isMobile ? "3xl" : "5xl"}
+              className="block leading-tight text-center"
+            >
+              당신만의 여행 페르소나 찾기
+            </GradientText>
+          </h1>
+          <p className="text-lg text-slate-200/80 max-w-xl mx-auto">
+            몇 가지 질문에 답하면 AI가 당신의 여행 스타일에 맞는 코스를 추천해
+            드릴게요.
+          </p>
+        </motion.div>
 
-          <NeonCard className="backdrop-blur-xl border-purple-500/30">
-            <div className="space-y-6">
-              <ProgressIndicator
-                currentStep={currentStep}
-                totalSteps={questions.length}
-              />
+        <NeonCard className="backdrop-blur-xl border-purple-500/30">
+          <div className="space-y-6">
+            <ProgressIndicator
+              currentStep={currentStep}
+              totalSteps={questions.length}
+            />
 
-              <div className="relative">
-                <AnimatePresence initial={false} custom={direction}>
-                  <motion.div
-                    key={page}
-                    custom={direction}
-                    variants={questionVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                      x: { type: "spring", stiffness: 300, damping: 30 },
-                      opacity: { duration: 0.2 },
-                    }}
-                    className="absolute w-full top-0"
-                  >
-                    <QuestionCard
-                      question={questions[currentStep]}
-                      answer={answers[questions[currentStep]?.id]}
-                      onAnswer={handleAnswer}
-                    />
-                  </motion.div>
-                </AnimatePresence>
-                <div className="h-[420px]" />
-              </div>
+            <div className="relative">
+              {/* 질문 카드를 렌더링하고 애니메이션을 적용하는 컨테이너 */}
+              <AnimatePresence initial={false} custom={direction}>
+                <motion.div
+                  key={page}
+                  custom={direction}
+                  variants={questionVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 },
+                  }}
+                  className="absolute w-full top-0"
+                >
+                  <QuestionCard
+                    question={questions[currentStep]}
+                    answer={answers[questions[currentStep]?.id]}
+                    onAnswer={handleAnswer}
+                  />
+                </motion.div>
+              </AnimatePresence>
+              {/* QuestionCard의 높이만큼 공간을 차지하여 레이아웃이 깨지지 않도록 함 */}
+              <div className="h-[420px]" />
             </div>
-          </NeonCard>
-        </div>
-      </div>
+          </div>
+        </NeonCard>
 
-      <motion.div
-        className="relative z-20 w-full max-w-3xl mx-auto p-4 md:p-6 pt-0 md:pt-0"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <div className="flex items-center justify-between gap-4">
+        <motion.div
+          className="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-between gap-4 border-t border-slate-800 bg-slate-950/70 p-4 backdrop-blur-sm sm:relative sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
           <NeonButton
             onClick={() => paginate(-1)}
             disabled={currentStep === 0}
             variant="secondary"
             size="lg"
-            className="flex-1 flex items-center justify-center gap-2"
+            className="flex flex-1 items-center justify-center gap-2 sm:flex-none"
           >
             <ChevronLeft className="w-4 h-4" />
             이전
@@ -566,7 +564,7 @@ export default function PersonaAnalysis() {
               disabled={!isStepComplete()}
               variant="primary"
               size="lg"
-              className="flex-1 flex items-center justify-center gap-2"
+              className="flex flex-1 items-center justify-center gap-2 sm:flex-none"
             >
               다음
               <ChevronRight className="w-4 h-4" />
@@ -577,7 +575,7 @@ export default function PersonaAnalysis() {
               disabled={!isStepComplete() || isAnalyzing}
               variant="primary"
               size="lg"
-              className="flex-1 flex items-center justify-center gap-2"
+              className="flex flex-1 items-center justify-center gap-2 sm:flex-none"
             >
               {isAnalyzing ? (
                 <>
@@ -588,8 +586,8 @@ export default function PersonaAnalysis() {
               )}
             </NeonButton>
           )}
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </BackgroundEffect>
   );
 }
