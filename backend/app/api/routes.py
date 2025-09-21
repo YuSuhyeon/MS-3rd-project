@@ -2290,3 +2290,46 @@ def auth_status():
             'error': str(e),
             'is_logged_in': False
         }), 500
+
+
+# 사용자가 좋아요한 게시글 목록 조회
+@api_bp.route('/user/liked-posts', methods=['GET'])
+def get_user_liked_posts():
+    try:
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
+        
+        if not current_user_id:
+            return jsonify({
+                'success': False,
+                'error': '로그인이 필요합니다'
+            }), 401
+        
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        
+        result = board_service.get_user_liked_posts(current_user_id, page=page, limit=limit)
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'posts': result['posts'],
+                'pagination': result['pagination']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error']
+            }), 500
+            
+    except ValueError:
+        return jsonify({
+            'success': False,
+            'error': 'page와 limit은 숫자여야 합니다'
+        }), 400
+    except Exception as e:
+        print(f"Error in /user/liked-posts: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
