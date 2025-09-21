@@ -40,7 +40,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
   // Mock 데이터인지 확인하는 함수
   const isMockData = (id) => {
     const numericId = parseInt(id);
-    return numericId >= 1000 && numericId < 2000; // 1000번대는 mock 데이터
+    return numericId >= 1000; // 1000번대 이상은 모두 mock 데이터로 처리
   };
 
   // 게시글 상세 조회
@@ -49,13 +49,10 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
     setError(null);
 
     try {
-      // 목업 데이터 ID인지 확인 (1000번대 숫자인 경우)
+      // 목업 데이터 ID인지 확인
       if (postId && isMockData(postId)) {
-        console.log("📋 목업 데이터에서 상세 조회:", postId);
-
         // 목업 데이터에서 조회
         const mockPost = getInfoPostById(postId);
-
         if (mockPost) {
           // 목업 데이터를 API 응답 형태로 변환
           setPost({
@@ -208,7 +205,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
     }
   };
 
-  // 댓글 삭제 시작
+  // 댓글 삭제
   const handleDeleteComment = async (commentId) => {
     if (window.confirm("정말로 이 댓글을 삭제하시겠습니까?")) {
       try {
@@ -396,7 +393,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
         >
           {/* 헤더 */}
           <div className="flex items-center justify-between p-6 border-b border-white/10">
-            <h2 className="text-xl font-bold text-white">게시글 상세</h2>
+            <h2 className="text-xl font-bold text-white"></h2>
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -486,11 +483,14 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                   <div className="p-6 space-y-6">
                     {/* 작성자 정보 */}
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-br  rounded-full flex items-center justify-center">
                         {post.user_profile_image ? (
                           <img
-                            src={post.user_profile_image}
-                            alt={post.user_name}
+                            src={
+                              post.user_profile_image ||
+                              "/img/default_profile_img.png"
+                            }
+                            alt={post.user_name || post.author}
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
@@ -501,12 +501,12 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                         <h3 className="text-white font-semibold">
                           {post.user_name}
                         </h3>
-                        <div className="flex items-center gap-1 text-gray-400 text-sm">
+                        {/* <div className="flex items-center gap-1 text-gray-400 text-sm">
                           <Calendar className="w-4 h-4" />
                           <span>
                             {new Date(post.created_at).toLocaleString()}
                           </span>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
 
@@ -550,182 +550,210 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                         <span>{likesCount}</span>
                       </button>
 
-                      <div className="flex items-center gap-2 text-gray-400">
-                        <MessageCircle className="w-5 h-5" />
-                        <span>{comments.length}</span>
-                      </div>
+                      {/* 공지글이 아닐 때만 댓글 수 표시 */}
+                      {post.priority !== "notice" && (
+                        <div className="flex items-center gap-2 text-gray-400">
+                          <MessageCircle className="w-5 h-5" />
+                          <span>{comments.length}</span>
+                        </div>
+                      )}
                     </div>
+                    {/* 댓글 섹션 - 공지글이 아닐 때만 표시 */}
+                    {post.priority !== "notice" ? (
+                      <div className="pt-6 border-t border-white/10">
+                        <h4 className="text-lg font-semibold text-white mb-4">
+                          댓글 {comments.length}개
+                        </h4>
 
-                    {/* 댓글 섹션 */}
-                    <div className="pt-6 border-t border-white/10">
-                      <h4 className="text-lg font-semibold text-white mb-4">
-                        댓글 {comments.length}개
-                      </h4>
-
-                      {/* 댓글 작성 */}
-                      {currentUserId && (
-                        <div className="mb-6">
-                          <div className="flex gap-3">
-                            <div className="flex-1 relative">
-                              <input
-                                type="text"
-                                value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
-                                onKeyPress={(e) => {
-                                  if (e.key === "Enter") {
-                                    handleCommentSubmit(e);
+                        {/* 댓글 작성 */}
+                        {currentUserId && (
+                          <div className="mb-6">
+                            <div className="flex gap-3">
+                              <div className="flex-1 relative">
+                                <input
+                                  type="text"
+                                  value={newComment}
+                                  onChange={(e) =>
+                                    setNewComment(e.target.value)
                                   }
-                                }}
-                                placeholder="댓글을 입력하세요..."
-                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400"
-                              />
-                            </div>
-                            <button
-                              onClick={handleCommentSubmit}
-                              disabled={!newComment.trim()}
-                              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                            >
-                              <Send className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {!currentUserId && (
-                        <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                          <p className="text-yellow-400 text-sm">
-                            댓글을 작성하려면 로그인이 필요합니다.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* 댓글 목록 */}
-                      <div className="space-y-4 max-h-96 overflow-y-auto">
-                        {comments.map((comment) => (
-                          <motion.div
-                            key={comment.comment_id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="flex gap-3 p-4 bg-white/5 rounded-lg relative"
-                          >
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                              {comment.user_profile_image ? (
-                                <img
-                                  src={comment.user_profile_image}
-                                  alt={comment.user_name}
-                                  className="w-full h-full rounded-full object-cover"
-                                />
-                              ) : (
-                                <User className="w-4 h-4 text-white" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-white font-medium text-sm">
-                                  {comment.user_name}
-                                </span>
-                                <span className="text-gray-400 text-xs">
-                                  {new Date(
-                                    comment.created_at
-                                  ).toLocaleString()}
-                                </span>
-                              </div>
-
-                              {editingCommentId === comment.comment_id ? (
-                                <div className="space-y-2">
-                                  <textarea
-                                    value={editingContent}
-                                    onChange={(e) =>
-                                      setEditingContent(e.target.value)
+                                  onKeyPress={(e) => {
+                                    if (e.key === "Enter") {
+                                      handleCommentSubmit(e);
                                     }
-                                    className="w-full p-2 bg-white/10 border border-white/20 rounded text-white text-sm resize-none"
-                                    rows="2"
-                                  />
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() =>
-                                        handleUpdateComment(comment.comment_id)
-                                      }
-                                      className="px-3 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
-                                    >
-                                      저장
-                                    </button>
-                                    <button
-                                      onClick={handleCancelEdit}
-                                      className="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
-                                    >
-                                      취소
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <p className="text-gray-300 text-sm leading-relaxed">
-                                  {comment.content}
-                                </p>
-                              )}
-                            </div>
-
-                            {/* 댓글 수정/삭제 버튼 */}
-                            {currentUserId && comment.can_edit && (
-                              <div className="relative">
-                                <button
-                                  onClick={() =>
-                                    toggleCommentOptions(comment.comment_id)
-                                  }
-                                  className="p-1 text-gray-400 hover:text-white transition-colors"
-                                >
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </button>
-
-                                <AnimatePresence>
-                                  {showCommentOptions[comment.comment_id] && (
-                                    <motion.div
-                                      initial={{
-                                        opacity: 0,
-                                        scale: 0.95,
-                                        y: -10,
-                                      }}
-                                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                      className="absolute right-0 top-6 bg-gray-800 border border-gray-600 rounded-lg shadow-xl py-1 min-w-[80px] z-50"
-                                    >
-                                      <button
-                                        onClick={() => {
-                                          handleEditComment(comment);
-                                          setShowCommentOptions({});
-                                        }}
-                                        className="w-full px-3 py-1 text-left text-xs text-gray-300 hover:bg-gray-700 flex items-center gap-2"
-                                      >
-                                        <Edit className="w-3 h-3" />
-                                        수정
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          handleDeleteComment(
-                                            comment.comment_id
-                                          );
-                                          setShowCommentOptions({});
-                                        }}
-                                        className="w-full px-3 py-1 text-left text-xs text-red-400 hover:bg-gray-700 flex items-center gap-2"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                        삭제
-                                      </button>
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
+                                  }}
+                                  placeholder="댓글을 입력하세요..."
+                                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400"
+                                />
                               </div>
-                            )}
-                          </motion.div>
-                        ))}
-
-                        {comments.length === 0 && (
-                          <div className="text-center text-gray-400 py-8">
-                            첫 번째 댓글을 작성해보세요!
+                              <button
+                                onClick={handleCommentSubmit}
+                                disabled={!newComment.trim()}
+                                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                              >
+                                <Send className="w-5 h-5" />
+                              </button>
+                            </div>
                           </div>
                         )}
+
+                        {!currentUserId && (
+                          <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                            <p className="text-yellow-400 text-sm">
+                              댓글을 작성하려면 로그인이 필요합니다.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* 댓글 목록 */}
+                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                          {comments.map((comment) => (
+                            <motion.div
+                              key={comment.comment_id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex gap-3 p-4 bg-white/5 rounded-lg relative"
+                            >
+                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <img
+                                  src={
+                                    comment.user_profile_image ||
+                                    "/img/default_profile_img.png"
+                                  }
+                                  alt={comment.user_name}
+                                  className="w-full h-full rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.target.src =
+                                      "/img/default_profile_img.png";
+                                  }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-white font-medium text-sm">
+                                    {comment.user_name}
+                                  </span>
+                                  <span className="text-gray-400 text-xs">
+                                    {new Date(
+                                      comment.created_at
+                                    ).toLocaleString()}
+                                  </span>
+                                </div>
+
+                                {editingCommentId === comment.comment_id ? (
+                                  <div className="space-y-2">
+                                    <textarea
+                                      value={editingContent}
+                                      onChange={(e) =>
+                                        setEditingContent(e.target.value)
+                                      }
+                                      className="w-full p-2 bg-white/10 border border-white/20 rounded text-white text-sm resize-none"
+                                      rows="2"
+                                    />
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() =>
+                                          handleUpdateComment(
+                                            comment.comment_id
+                                          )
+                                        }
+                                        className="px-3 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
+                                      >
+                                        저장
+                                      </button>
+                                      <button
+                                        onClick={handleCancelEdit}
+                                        className="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
+                                      >
+                                        취소
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-gray-300 text-sm leading-relaxed">
+                                    {comment.content}
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* 댓글 수정/삭제 버튼 */}
+                              {currentUserId && comment.can_edit && (
+                                <div className="relative">
+                                  <button
+                                    onClick={() =>
+                                      toggleCommentOptions(comment.comment_id)
+                                    }
+                                    className="p-1 text-gray-400 hover:text-white transition-colors"
+                                  >
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </button>
+
+                                  <AnimatePresence>
+                                    {showCommentOptions[comment.comment_id] && (
+                                      <motion.div
+                                        initial={{
+                                          opacity: 0,
+                                          scale: 0.95,
+                                          y: -10,
+                                        }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{
+                                          opacity: 0,
+                                          scale: 0.95,
+                                          y: -10,
+                                        }}
+                                        className="absolute right-0 top-6 bg-gray-800 border border-gray-600 rounded-lg shadow-xl py-1 min-w-[80px] z-50"
+                                      >
+                                        <button
+                                          onClick={() => {
+                                            handleEditComment(comment);
+                                            setShowCommentOptions({});
+                                          }}
+                                          className="w-full px-3 py-1 text-left text-xs text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+                                        >
+                                          <Edit className="w-3 h-3" />
+                                          수정
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            handleDeleteComment(
+                                              comment.comment_id
+                                            );
+                                            setShowCommentOptions({});
+                                          }}
+                                          className="w-full px-3 py-1 text-left text-xs text-red-400 hover:bg-gray-700 flex items-center gap-2"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                          삭제
+                                        </button>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              )}
+                            </motion.div>
+                          ))}
+
+                          {comments.length === 0 && (
+                            <div className="text-center text-gray-400 py-8">
+                              첫 번째 댓글을 작성해보세요!
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* 공지글일 때 댓글 비활성화 안내 */
+                      <div className="pt-6 border-t border-white/10">
+                        <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-center">
+                          <p className="text-yellow-400 text-sm font-medium">
+                            📢 공지사항은 댓글을 작성할 수 없습니다.
+                          </p>
+                          <p className="text-gray-400 text-xs mt-1">
+                            공지사항에 대한 문의는 관리자에게 별도로
+                            연락해주세요.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

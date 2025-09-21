@@ -1,17 +1,26 @@
 export const mockInfoPosts = [
   // 고정 공지글 3개 (priority: "notice")
   {
-    id: "notice_001",
-    board_id: "notice_001",
-    title: "[공지] 서울 지하철 2025년 마지막 연장운행 안내",
-    content:
-      "새해 첫날을 맞아 서울지하철 1-9호선이 오전 2시까지 연장 운행합니다. 종각, 을지로입구, 명동, 홍대입구 등 주요 역에서는 새해맞이 행사가 진행되니 참고하시기 바랍니다. 연장운행 구간과 시간표는 서울교통공사 홈페이지에서 확인 가능합니다.",
-    user_name: "서울관광청",
-    user_profile_image: "/img/seoul_tourism.jpg",
+    id: "10001",
+    board_id: "10001",
+    title: "🌟 서울 지하철 2025년 추석 단축 운영",
+    content: `민족 대명절 추석을 맞아 서울지하철 1-9호선이 오후 11시까지 단축 운행합니다.
+
+📍 주요 행사 진행지:
+- 종각역
+- 을지로입구역  
+- 명동역
+- 홍대입구역
+
+🕒 운행 시간: 오후 11시까지 단축 운행
+
+📋 자세한 시간표는 서울교통공사 홈페이지에서 확인하실 수 있습니다.`,
+    user_name: "서울시",
+    user_profile_image: "/img/seoul_CI.png",
     user_id: "seoul_admin",
-    tags: "지하철,연장운행,새해,교통정보",
+    tags: "지하철,단축 운행,추석,교통정보",
     likes_count: 156,
-    comments_count: 28,
+    //comments_count: 28,
     views: 1245,
     is_liked: false,
     category: "official",
@@ -22,7 +31,11 @@ export const mockInfoPosts = [
   {
     id: "1001",
     board_id: "1001",
-    title: "케이팝 데몬 헌터스 성지순례 - 3일 서울 여행 코스",
+    author: "su hyeon",
+    user_name: "Su Hyeon",
+
+    title: "케이팝 데몬 헌터스- 3일 서울 여행 코스",
+    created_at: "2025-09-17",
     content: ` '케이팝 데몬 헌터스'의 배경이 된 서울 명소들을 3일에 걸쳐 돌아보는 성지순례 코스를 소개합니다!
 
 **Day 1: K-POP 아이돌의 낮과 밤 (강남/삼성)**
@@ -44,10 +57,7 @@ export const mockInfoPosts = [
 - 교통: 지하철 2호선, 5호선 적극 활용
 - 인증샷: 웹툰 속 포즈와 대사로 진짜 성지순례 인증!`,
 
-    tags: "케이팝데몬헌터스,성지순례,웹툰여행,서울여행코스,K-POP명소",
-    likes_count: 245,
-    comments_count: 67,
-    views: 1834,
+    tags: "케이팝데몬헌터스,서울여행코스",
     is_liked: false,
     category: "official",
     priority: "normal",

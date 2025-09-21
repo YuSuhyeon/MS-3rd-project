@@ -21,12 +21,14 @@ import {
   Eye,
   ArrowUp,
   ArrowDown,
+  Pin,
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "../components/community/LoginModal";
 import PostModal from "../components/community/PostModal";
 import TrendModal from "../components/community/TrendModal";
+import useIsMobile from "./useIsMobile";
 import {
   BackgroundEffect,
   NeonCard,
@@ -60,8 +62,6 @@ const API_BASE_URL = "/api";
 const fetchPosts = async (page = 1, limit = 4, searchParams = {}) => {
   // "정보" 탭(official)일 때는 목업 데이터 사용
   if (searchParams.category === "official") {
-    console.log("📋 목업 데이터 사용 (정보 탭)");
-
     try {
       const result = getInfoPosts(page, limit, searchParams.query || "");
 
@@ -82,8 +82,6 @@ const fetchPosts = async (page = 1, limit = 4, searchParams = {}) => {
     }
   }
 
-  console.log("?? API 호출 시도:", `${API_BASE_URL}/boards`);
-
   try {
     const headers = { "Content-Type": "application/json" };
 
@@ -92,9 +90,6 @@ const fetchPosts = async (page = 1, limit = 4, searchParams = {}) => {
       limit: limit.toString(),
       ...searchParams,
     });
-
-    console.log("?? 검색 파라미터:", searchParams);
-    console.log("?? 요청 URL:", `${API_BASE_URL}/boards?${params}`);
 
     const response = await fetch(`${API_BASE_URL}/boards?${params}`, {
       headers,
@@ -124,7 +119,6 @@ const fetchPosts = async (page = 1, limit = 4, searchParams = {}) => {
       hasPrev: data.pagination?.has_prev || false,
     };
   } catch (error) {
-    console.error("?? 게시글 가져오기 실패:", error);
     return {
       posts: [],
       totalCount: 0,
@@ -205,7 +199,7 @@ const toggleLike = async (postId, isLiked) => {
     throw error;
   }
 };
-
+//게시글 삭제
 const deletePost = async (postId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/boards/${postId}`, {
@@ -223,7 +217,6 @@ const deletePost = async (postId) => {
     throw error;
   }
 };
-
 // 검색 헤더 컴포넌트
 const SearchHeader = ({
   onSearch,
@@ -379,9 +372,7 @@ const TrendingBar = ({
                   isMobile ? "text-xs" : "text-sm"
                 }`}
               >
-                {showType === "tags"
-                  ? "🔥 실시간 인기 태그"
-                  : " 실시간 인기 글"}
+                {showType === "tags" ? "실시간 인기 태그" : "실시간 인기 글"}
               </span>
             </div>
 
@@ -603,21 +594,24 @@ const MobilePostCard = ({
             <img
               src={post.user_profile_image || "/img/default_profile_img.png"}
               alt="프로필"
-              className="w-10 h-10 rounded-full border-2 border-purple-400"
+              className={`w-10 h-10 rounded-full border-2 transition-colors ${
+                isOwner ? "border-purple-300" : "border-purple-400"
+              }`}
               onError={(e) => {
                 e.target.src = "/img/default_profile_img.png";
               }}
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-white text-sm">
+                <span
+                  className={`font-bold text-sm ${
+                    isOwner
+                      ? "bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                      : "text-white"
+                  }`}
+                >
                   {post.user_name || post.author || "익명"}
                 </span>
-                {isOwner && (
-                  <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">
-                    내 글
-                  </span>
-                )}
                 {post.created_at &&
                   new Date() - new Date(post.created_at) <
                     24 * 60 * 60 * 1000 && (
@@ -626,13 +620,8 @@ const MobilePostCard = ({
                     </span>
                   )}
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <Clock className="w-3 h-3" />
-                <span>{formatDate(post.created_at)}</span>
-              </div>
             </div>
           </div>
-
           {/* 옵션 메뉴 (작성자만) */}
           {isOwner && (
             <div className="relative">
@@ -666,13 +655,18 @@ const MobilePostCard = ({
                       수정
                     </button>
                     <button
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        if (
-                          window.confirm("정말로 이 게시글을 삭제하시겠습니까?")
-                        ) {
-                          onPostDelete &&
-                            onPostDelete(post.id || post.board_id);
+                        if (window.confirm("게시글을 삭제하시겠습니까?")) {
+                          try {
+                            await deletePost(post.id || post.board_id);
+                            onPostDelete &&
+                              onPostDelete(post.id || post.board_id);
+                            alert("게시글이 삭제되었습니다.");
+                          } catch (error) {
+                            console.error("삭제 실패:", error);
+                            alert("삭제에 실패했습니다.");
+                          }
                         }
                         setShowOptionsMenu(false);
                       }}
@@ -685,7 +679,7 @@ const MobilePostCard = ({
                 )}
               </AnimatePresence>
             </div>
-          )}
+          )}{" "}
         </div>
 
         {/* 제목 */}
@@ -739,11 +733,6 @@ const MobilePostCard = ({
               <MessageCircle className="w-4 h-4" />
               <span>{post.comments_count || 0}</span>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <Eye className="w-4 h-4" />
-            <span>{post.views || 0}</span>
           </div>
         </div>
 
@@ -836,7 +825,6 @@ const PostRow = ({
         }
       }
     } catch (error) {
-      console.error("?? 좋아요 처리 실패:", error);
       setIsLiked(originalLiked);
       setLikesCount(originalCount);
 
@@ -855,6 +843,7 @@ const PostRow = ({
     if (window.confirm("정말로 이 게시글을 삭제하시겠습니까?")) {
       try {
         await deletePost(post.id || post.board_id);
+
         onPostDelete && onPostDelete(post.id || post.board_id);
       } catch (error) {
         alert("삭제에 실패했습니다.");
@@ -957,17 +946,17 @@ const PostRow = ({
                 e.target.src = "/img/default_profile_img.png";
               }}
             />
-            <span className="text-white text-sm">
+            <span
+              className={`text-sm font-medium ${
+                isOwner
+                  ? "bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                  : "text-white"
+              }`}
+            >
               {post.user_name || post.author || "익명"}
             </span>
-            {isOwner && (
-              <span className="px-1 py-0.5 bg-purple-500/20 text-purple-300 rounded-full text-xs">
-                내글
-              </span>
-            )}
           </div>
         </td>
-
         {/* 작성일 */}
         <td className="px-4 py-4 text-center text-gray-400 text-sm w-20">
           {formatDate(post.created_at)}
@@ -1058,6 +1047,7 @@ const PostRow = ({
 };
 
 // 게시판 테이블 컴포넌트
+
 const PostTable = ({ posts, ...props }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
@@ -1072,13 +1062,15 @@ const PostTable = ({ posts, ...props }) => {
   return (
     <NeonCard variant="primary" className="overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full table-fixed">
+          {/* table-fixed 추가 */}
           <thead>
             <tr className="border-b border-white/20 bg-white/5">
               <th className="px-4 py-3 text-left text-gray-300 text-sm font-medium w-16">
                 번호
               </th>
-              <th className="px-4 py-3 text-left text-gray-300 text-sm font-medium">
+              <th className="px-4 py-3 text-left text-gray-300 text-sm font-medium w-96">
+                {/* 고정 너비 설정 */}
                 제목
               </th>
               <th className="px-4 py-3 text-center text-gray-300 text-sm font-medium w-24">
@@ -1131,10 +1123,10 @@ const PostTable = ({ posts, ...props }) => {
   );
 };
 
-// 메인 컴포넌트
 export default function CommunitySocial() {
   const { profile, logout } = useAuth();
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  //  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
 
   const [posts, setPosts] = useState([]);
   const [pagination, setPagination] = useState({
@@ -1237,8 +1229,6 @@ export default function CommunitySocial() {
   }, [profile]);
 
   const handleSearch = (searchParams) => {
-    console.log("?? 받은 검색 파라미터:", searchParams);
-
     setSearchFilters(searchParams);
 
     if (!searchParams.query || searchParams.query.trim() === "") {
@@ -1332,6 +1322,7 @@ export default function CommunitySocial() {
   };
 
   const handlePostCreate = (newPost) => {
+    // 현재 선택된 탭 유지
     loadPosts(searchFilters, selectedTab, 1);
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
@@ -1341,10 +1332,12 @@ export default function CommunitySocial() {
     setShowPostDetailModal(true);
   };
 
+  //닫고나서 해당 탭에 그대로 상태 유지하고 새로고침할수있도록
   const handleClosePostDetailModal = () => {
     setShowPostDetailModal(false);
     setSelectedPostId(null);
-    loadPosts(searchFilters);
+    // 현재 탭과 페이지를 유지하면서 새로고침
+    loadPosts(searchFilters, selectedTab, pagination.currentPage);
   };
 
   const handleTrendPostClick = (postId) => {
@@ -1425,11 +1418,11 @@ export default function CommunitySocial() {
 
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 p-6">
-        <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
+        <div className="flex gap-6 flex-col lg:flex-row">
           {/* 왼쪽 메인 콘텐츠 */}
           <div className="flex-1">
             {/* 게시판 헤더 */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
               <div>
                 <GradientText
                   variant="primary"
@@ -1439,14 +1432,14 @@ export default function CommunitySocial() {
                   커뮤니티 게시판
                 </GradientText>
                 <p className="text-white/70 mt-2">
-                  생생한 여행 후기와 정보를 알려드립니다!
+                  서울과 함께한 우리들의 이야기
                 </p>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 {/* 로그인 상태 표시 */}
                 {profile ? (
-                  <div className="flex items-center gap-3 px-4 py-2 bg-white/10 rounded-lg border border-purple-400/30">
+                  <div className="flex items-center gap-3 px-4 py-2 bg-white/10 rounded-lg border border-purple-400/30 w-full sm:w-auto">
                     <img
                       src={profile.picture || "/img/default_profile_img.png"}
                       alt="프로필"
@@ -1455,8 +1448,14 @@ export default function CommunitySocial() {
                         e.target.src = "/img/default_profile_img.png";
                       }}
                     />
-                    <div className="text-sm">
+                    {/* <div className="text-sm flex-1">
                       <p className="text-white font-medium">
+                        {profile.name || profile.nickname || "사용자"}님
+                      </p>
+                      <p className="text-green-400 text-xs">로그인됨</p>
+                    </div> */}
+                    <div className="text-sm flex-1">
+                      <p className="font-medium bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                         {profile.name || profile.nickname || "사용자"}님
                       </p>
                       <p className="text-green-400 text-xs">로그인됨</p>
@@ -1470,44 +1469,27 @@ export default function CommunitySocial() {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
-                    <div className="px-4 py-2 bg-white/5 rounded-lg border border-gray-600">
-                      <p className="text-gray-400 text-sm">
-                        로그인이 필요합니다
-                      </p>
-                    </div>
+                  <div className="flex items-center justify-end w-full sm:w-auto">
                     <NeonButton
                       onClick={() => setShowLoginModal(true)}
-                      variant="secondary"
+                      variant="primary"
                       size="sm"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
                     >
-                      로그인
+                      <User className="w-4 h-4 mr-2" />
                     </NeonButton>
                   </div>
                 )}
-
-                {/* 글쓰기 버튼 */}
-                <NeonButton
-                  onClick={handleCreatePostClick}
-                  variant="primary"
-                  size="base"
-                  className="flex items-center gap-2"
-                  disabled={!profile}
-                  title={!profile ? "로그인이 필요합니다" : ""}
-                >
-                  <Plus className="w-5 h-5" />
-                  글쓰기
-                </NeonButton>
               </div>
             </div>
 
             {/* 탭 메뉴 + 검색 */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               {/* 탭 메뉴 */}
-              <div className="flex justify-start gap-6">
+              <div className="flex justify-start gap-2 sm:gap-6 w-full sm:w-auto">
                 <button
                   onClick={() => handleTabChange("all")}
-                  className={`rounded-lg font-medium transition-all ${
+                  className={`px-3 py-2 rounded-lg font-medium transition-all flex-1 sm:flex-none ${
                     selectedTab === "all"
                       ? "bg-purple-500/20 text-purple-300 border border-purple-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -1517,7 +1499,7 @@ export default function CommunitySocial() {
                 </button>
                 <button
                   onClick={() => handleTabChange("travel")}
-                  className={` rounded-lg font-medium transition-all ${
+                  className={`px-3 py-2 rounded-lg font-medium transition-all flex-1 sm:flex-none ${
                     selectedTab === "travel"
                       ? "bg-purple-500/20 text-purple-300 border border-purple-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -1527,9 +1509,9 @@ export default function CommunitySocial() {
                 </button>
                 <button
                   onClick={() => handleTabChange("official")}
-                  className={` rounded-lg font-medium  ${
+                  className={`px-3 py-2 rounded-lg font-medium transition-all flex-1 sm:flex-none ${
                     selectedTab === "official"
-                      ? "text-purple-300 border"
+                      ? "bg-purple-500/20 text-purple-300 border border-purple-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
@@ -1537,39 +1519,82 @@ export default function CommunitySocial() {
                 </button>
               </div>
 
-              {/*검색 */}
-              <div className="flex items-center gap-2">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const searchQuery = e.target.search.value.trim();
-                    if (!searchQuery) {
-                      handleSearch({});
-                      return;
-                    }
-                    handleSearch({ query: searchQuery });
-                  }}
-                  className="flex items-center"
-                >
-                  <div className="relative">
-                    <input
-                      name="search"
-                      type="text"
-                      placeholder="검색..."
-                      defaultValue={currentSearchTerm}
-                      className="w-48 bg-white/10 text-white placeholder-white/50 px-3 py-2 pl-8 rounded-lg border border-white/20 focus:outline-none focus:border-purple-400 text-sm"
-                    />
-                    <Search className="w-4 h-4 text-purple-400 absolute left-2.5 top-2.5" />
-                  </div>
-                  <button
-                    type="submit"
-                    className="ml-2 px-3 py-2 bg-purple-500/20 text-purple-300 rounded-lg hover:bg-purple-500/30 transition-colors text-sm"
+              {/* 검색 + 글쓰기 버튼 */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {/* 실시간 검색 입력창 */}
+                <div className="relative flex-1 sm:flex-none">
+                  <input
+                    type="text"
+                    placeholder="검색..."
+                    value={currentSearchTerm}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCurrentSearchTerm(value);
+
+                      // 디바운스 효과를 위해 기존 타이머 클리어
+                      if (window.searchTimeout) {
+                        clearTimeout(window.searchTimeout);
+                      }
+
+                      // 500ms 후에 검색 실행
+                      window.searchTimeout = setTimeout(() => {
+                        if (value.trim()) {
+                          handleSearch({ query: value.trim() });
+                        } else {
+                          handleSearch({});
+                        }
+                      }, 500);
+                    }}
+                    className={`w-full ${
+                      profile ? "sm:w-40" : "sm:w-48"
+                    } bg-white/10 text-white placeholder-white/50 px-3 py-2 pl-8 rounded-lg border border-white/20 focus:outline-none focus:border-purple-400 text-sm`}
+                  />
+                  <Search className="w-4 h-4 text-purple-400 absolute left-2.5 top-2.5" />
+                </div>
+
+                {/* 모바일 글쓰기 버튼  */}
+                {/* {profile && (
+                  <motion.div
+                    className="block sm:hidden"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
                   >
-                    검색
-                  </button>
-                </form>
+                    <NeonButton
+                      onClick={handleCreatePostClick}
+                      variant="primary"
+                      size="sm"
+                      className="flex items-center gap-1 px-3 py-2 whitespace-nowrap"
+                    >
+                      <Plus className="w-4 h-4" />
+                      글쓰기
+                    </NeonButton>
+                  </motion.div>
+                )} */}
+                {/* 모바일 글쓰기 버튼 (검색창 옆에 배치) */}
+                {profile && selectedTab !== "official" && (
+                  <motion.div
+                    className="block sm:hidden"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  >
+                    <NeonButton
+                      onClick={handleCreatePostClick}
+                      variant="primary"
+                      size="sm"
+                      className="flex items-center gap-1 px-3 py-2 whitespace-nowrap"
+                    >
+                      <Plus className="w-4 h-4" />
+                      글쓰기
+                    </NeonButton>
+                  </motion.div>
+                )}
               </div>
             </div>
+
             {/* 실시간 트렌드 바  */}
             <TrendingBar
               trendingTags={trendingTags}
@@ -1585,7 +1610,130 @@ export default function CommunitySocial() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
             >
-              {posts.length > 0 ? (
+              {selectedTab === "official" ? (
+                // 정보 탭일 때는 공지사항을 구분해서 표시
+                posts.length > 0 ? (
+                  <div className="space-y-6">
+                    {/* 공지사항 섹션 */}
+                    {posts.filter((post) => post.priority === "notice").length >
+                      0 && (
+                      <div className="bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm border border-yellow-400/30">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Pin className="w-5 h-5 text-yellow-400" />
+                          <h3 className="text-lg font-semibold text-white">
+                            공지사항
+                          </h3>
+                        </div>
+
+                        <div className="space-y-3">
+                          {posts
+                            .filter((post) => post.priority === "notice")
+                            .map((post, index) => (
+                              <div
+                                key={post.id || post.board_id}
+                                className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-4"
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <h4
+                                        className="text-white font-medium hover:text-purple-300 transition-colors cursor-pointer"
+                                        onClick={() =>
+                                          handlePostClick(
+                                            post.id || post.board_id
+                                          )
+                                        }
+                                      >
+                                        {post.title}
+                                      </h4>
+                                    </div>
+                                    <p className="text-gray-300 text-sm line-clamp-2 mb-3">
+                                      {post.content?.substring(0, 100)}...
+                                    </p>
+                                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                                      <span>{post.user_name}</span>
+                                      <span>👀 {post.likes_count || 0}</span>
+                                      <span>❤️ {post.comments_count || 0}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 일반 정보 게시글 */}
+                    {posts.filter((post) => post.priority !== "notice").length >
+                      0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                          <Hash className="w-5 h-5 text-purple-400" />
+                          Editor Su Hyeon's Pick!
+                        </h3>
+
+                        {/* 모바일: 카드 형식 */}
+                        <div className="block md:hidden">
+                          {posts
+                            .filter((post) => post.priority !== "notice")
+                            .map((post, index) => (
+                              <MobilePostCard
+                                key={post.id || post.board_id}
+                                post={post}
+                                index={index}
+                                onLikeUpdate={handleLikeUpdate}
+                                onPostUpdate={handlePostUpdate}
+                                onPostDelete={handlePostDelete}
+                                onPostClick={handlePostClick}
+                                currentUserId={currentUserId}
+                                onEditPost={handleEditPost}
+                              />
+                            ))}
+                        </div>
+
+                        {/* 데스크톱: 테이블 형식 */}
+                        <div className="hidden md:block">
+                          <PostTable
+                            posts={posts.filter(
+                              (post) => post.priority !== "notice"
+                            )}
+                            onLikeUpdate={handleLikeUpdate}
+                            onPostUpdate={handlePostUpdate}
+                            onPostDelete={handlePostDelete}
+                            onPostClick={handlePostClick}
+                            currentUserId={currentUserId}
+                            onEditPost={handleEditPost}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <NeonCard
+                    variant="warning"
+                    className="text-center py-16"
+                    delay={0.5}
+                  >
+                    <Sparkles className="w-16 h-16 mx-auto mb-6 text-yellow-400" />
+                    <GradientText
+                      variant="warning"
+                      size="2xl"
+                      className="block mb-4"
+                    >
+                      {isSearchMode
+                        ? error || "검색 결과가 없습니다"
+                        : "정보 게시글이 없습니다"}
+                    </GradientText>
+                    <p className="text-white/70 mb-6">
+                      {isSearchMode
+                        ? "다른 검색어로 시도해보세요!"
+                        : "정보성 게시글을 확인해보세요!"}
+                    </p>
+                    {/* 정보 탭에서는 글쓰기 버튼 제거 */}
+                  </NeonCard>
+                )
+              ) : // 다른 탭일 때는 기존 로직
+              posts.length > 0 ? (
                 <>
                   {/* 모바일: 카드 형식 */}
                   <div className="block md:hidden">
@@ -1663,7 +1811,9 @@ export default function CommunitySocial() {
                         ? "text-gray-500 cursor-not-allowed"
                         : "text-white hover:bg-white/10"
                     }`}
-                  ></button>
+                  >
+                    이전
+                  </button>
 
                   {/* 페이지 번호들 */}
                   {[...Array(pagination.totalPages)].map((_, index) => {
@@ -1715,35 +1865,15 @@ export default function CommunitySocial() {
                         ? "text-gray-500 cursor-not-allowed"
                         : "text-white hover:bg-white/10"
                     }`}
-                  ></button>
-
-                  {/* 페이지 정보 표시 
-                  <div className="ml-4 text-sm text-gray-400">
-                    {pagination.curren총tPage} / {pagination.totalPages}
-                    <span className="ml-2 text-xs">
-                      (총 {pagination.totalCount}개)
-                    </span>
-                  </div>*/}
+                  >
+                    다음
+                  </button>
                 </>
               )}
             </div>
           </div>
-
-          {/* 사이드바 제거됨 - 로그인 상태만 필요한 경우 별도 처리 */}
         </div>
       </div>
-
-      {/* 모바일 글쓰기 버튼 */}
-      {isMobile && (
-        <motion.button
-          onClick={handleCreatePostClick}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg flex items-center justify-center z-50 transition-all duration-300 hover:scale-110"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <Plus className="w-6 h-6" />
-        </motion.button>
-      )}
 
       {/* 모달들 */}
       <AnimatePresence>
