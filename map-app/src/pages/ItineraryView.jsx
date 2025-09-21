@@ -10,13 +10,11 @@ import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import {
   AppShell,
   Box,
-  Button,
   Center,
   Flex,
   Group,
   Loader,
   Paper,
-  Skeleton,
   Stack,
   Tabs,
   Text,
@@ -26,39 +24,167 @@ import { useDebouncedValue, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
   Bookmark,
-  CalendarDays,
   Check,
   Frown,
   List,
-  MapPin,
   Sparkles,
-  Trash2,
   XCircle,
+  CalendarDays,
+  MapPin,
+  Trash2,
 } from "lucide-react";
 
-import TimelineDay from "components/itinerary/TimelineDay";
-import ActivityEditor from "components/itinerary/ActivityEditor";
-import ItineraryHeader from "components/itinerary/ItineraryHeader";
+import {
+  NeonButton,
+  GradientText,
+  NeonScrollbarStyles,
+} from "../components/ui/NeonTheme";
+import ActivityEditor from "../components/itinerary/ActivityEditor";
+import ItineraryHeader from "../components/itinerary/ItineraryHeader";
+import TimelineDay from "../components/itinerary/TimelineDay";
 
-import { Itinerary } from "Entities/Itinerary";
-import { RoutePlan } from "Entities/RoutePlan";
+import { Itinerary } from "../Entities/Itinerary";
+import { RoutePlan } from "../Entities/RoutePlan";
 import {
   useItineraryStore,
   convertPlanToItinerary,
   convertItineraryToPlan,
-} from "store/useItineraryStore";
+} from "../store/useItineraryStore";
+
+const WaveAndParticleEffect = () => {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let animationId;
+    let time = 0;
+    let mouseX = 0;
+    let mouseY = 0;
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    const handleMouseMove = (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    };
+    const drawWaves = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const waves = [
+        {
+          amplitude: 40,
+          frequency: 0.005,
+          speed: 0.01,
+          color: "rgba(168, 85, 247, 0.1)",
+          yOffset: canvas.height * 0.3,
+        },
+        {
+          amplitude: 60,
+          frequency: 0.003,
+          speed: 0.008,
+          color: "rgba(236, 72, 153, 0.08)",
+          yOffset: canvas.height * 0.5,
+        },
+        {
+          amplitude: 30,
+          frequency: 0.007,
+          speed: 0.012,
+          color: "rgba(59, 130, 246, 0.06)",
+          yOffset: canvas.height * 0.7,
+        },
+      ];
+      waves.forEach((wave) => {
+        ctx.beginPath();
+        ctx.fillStyle = wave.color;
+        const mouseInfluence = Math.sin(mouseX * 0.001) * 20;
+        const mouseVertical = (mouseY / canvas.height - 0.5) * 100;
+        ctx.moveTo(0, canvas.height);
+        for (let x = 0; x <= canvas.width; x += 5) {
+          const y =
+            wave.yOffset +
+            Math.sin(x * wave.frequency + time * wave.speed) * wave.amplitude +
+            Math.sin(x * 0.01 + time * 0.005) * 15 +
+            mouseInfluence * Math.sin(x * 0.002) +
+            mouseVertical * 0.1;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+      });
+      time += 1;
+      animationId = requestAnimationFrame(drawWaves);
+    };
+    resizeCanvas();
+    drawWaves();
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+  return (
+    <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10">
+      <canvas ref={canvasRef} className="absolute inset-0 opacity-60" />
+      <div className="absolute inset-0 opacity-30">
+        {[...Array(50)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{ opacity: [0, 1, 0], scale: [0, 1, 0] }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+      <div className="absolute inset-0">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={`particle-${i}`}
+            className="absolute w-2 h-2 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              background: `linear-gradient(45deg, rgba(168, 85, 247, 0.6), rgba(236, 72, 153, 0.4))`,
+              filter: "blur(1px)",
+            }}
+            animate={{
+              y: [-20, -100],
+              opacity: [0, 1, 0],
+              scale: [0.5, 1.2, 0.5],
+            }}
+            transition={{
+              duration: 4 + Math.random() * 3,
+              repeat: Infinity,
+              delay: Math.random() * 4,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const deepClone = (value) => {
   if (value == null) return value;
-  if (typeof structuredClone === "function") {
-    return structuredClone(value);
-  }
+  if (typeof structuredClone === "function") return structuredClone(value);
   return JSON.parse(JSON.stringify(value));
 };
 
 export default function ItineraryView() {
   const isDesktop = useMediaQuery("(min-width: 992px)");
-
   const {
     itinerary,
     localItinerary,
@@ -86,12 +212,10 @@ export default function ItineraryView() {
     setIsSaving: state.setIsSaving,
     setLastSavedAt: state.setLastSavedAt,
   }));
-
   const [editingActivity, setEditingActivity] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [autoSaving, setAutoSaving] = useState(false);
-
   const itineraryFingerprint = useMemo(
     () => (itinerary ? JSON.stringify(itinerary) : null),
     [itinerary]
@@ -103,21 +227,15 @@ export default function ItineraryView() {
   const hasChanges = Boolean(
     itinerary && localItinerary && itineraryFingerprint !== localFingerprint
   );
-
   const [debouncedItinerary] = useDebouncedValue(localItinerary, 2000);
   const autoReadyRef = useRef(false);
   const lastSerializedRef = useRef(localFingerprint);
 
   useEffect(() => {
-    if (!localItinerary?.days?.length) {
-      setActiveDayIndex(0);
-      return;
-    }
     setActiveDayIndex((prev) =>
-      Math.min(prev, Math.max(localItinerary.days.length - 1, 0))
+      Math.min(prev, Math.max((localItinerary?.days?.length || 1) - 1, 0))
     );
   }, [localItinerary?.days?.length]);
-
   const loadRoutePlans = useCallback(async () => {
     setLoadingPlans(true);
     try {
@@ -135,7 +253,6 @@ export default function ItineraryView() {
       setLoadingPlans(false);
     }
   }, [setLoadingPlans, setRoutePlans]);
-
   const generateSampleItinerary = useCallback(async () => {
     setIsGenerating(true);
     try {
@@ -174,7 +291,6 @@ export default function ItineraryView() {
       setIsGenerating(false);
     }
   }, [setItinerary, setLocalItinerary]);
-
   useEffect(() => {
     (async () => {
       try {
@@ -197,11 +313,9 @@ export default function ItineraryView() {
       }
     })();
   }, [generateSampleItinerary, setItinerary, setLocalItinerary]);
-
   useEffect(() => {
     loadRoutePlans();
   }, [loadRoutePlans]);
-
   const synchronizeRoutePlan = useCallback(
     async (itineraryData) => {
       if (!itineraryData?.source_plan_id) return;
@@ -223,15 +337,11 @@ export default function ItineraryView() {
     },
     [loadRoutePlans]
   );
-
   const handleSaveChanges = useCallback(async () => {
     if (!localItinerary) return;
     setIsSaving(true);
     try {
-      const updated = await Itinerary.update(
-        localItinerary.id,
-        localItinerary
-      );
+      const updated = await Itinerary.update(localItinerary.id, localItinerary);
       setItinerary(deepClone(updated));
       await synchronizeRoutePlan(localItinerary);
       setLastSavedAt(Date.now());
@@ -257,8 +367,13 @@ export default function ItineraryView() {
     } finally {
       setIsSaving(false);
     }
-  }, [localItinerary, setItinerary, setIsSaving, synchronizeRoutePlan, setLastSavedAt]);
-
+  }, [
+    localItinerary,
+    setItinerary,
+    setIsSaving,
+    synchronizeRoutePlan,
+    setLastSavedAt,
+  ]);
   const handleDiscardChanges = useCallback(() => {
     if (!itinerary) return;
     setLocalItinerary(deepClone(itinerary));
@@ -273,7 +388,6 @@ export default function ItineraryView() {
       message: "이전으로 돌아갔습니다.",
     });
   }, [itinerary, setLocalItinerary]);
-
   useEffect(() => {
     if (!debouncedItinerary) return;
     if (!autoReadyRef.current) {
@@ -282,7 +396,6 @@ export default function ItineraryView() {
     }
     const serialized = JSON.stringify(debouncedItinerary);
     if (serialized === lastSerializedRef.current) return;
-
     const runAutoSave = async () => {
       setAutoSaving(true);
       setIsSaving(true);
@@ -315,10 +428,14 @@ export default function ItineraryView() {
         setIsSaving(false);
       }
     };
-
     runAutoSave();
-  }, [debouncedItinerary, setItinerary, synchronizeRoutePlan, setIsSaving, setLastSavedAt]);
-
+  }, [
+    debouncedItinerary,
+    setItinerary,
+    synchronizeRoutePlan,
+    setIsSaving,
+    setLastSavedAt,
+  ]);
   const handleApplyRoutePlan = useCallback(
     async (plan) => {
       if (!plan) return;
@@ -348,7 +465,6 @@ export default function ItineraryView() {
     },
     [setItinerary, setLocalItinerary]
   );
-
   const handleDeleteRoutePlan = useCallback(
     async (planId) => {
       if (!planId) return;
@@ -387,7 +503,6 @@ export default function ItineraryView() {
     },
     [loadRoutePlans, localItinerary, setItinerary, setLocalItinerary]
   );
-
   const onDragEnd = useCallback(
     (result) => {
       const { source, destination } = result;
@@ -398,11 +513,13 @@ export default function ItineraryView() {
       ) {
         return;
       }
-
       setLocalItinerary((prev) => {
         const draft = deepClone(prev);
         const sourceDayIndex = parseInt(source.droppableId.split("-")[1], 10);
-        const destDayIndex = parseInt(destination.droppableId.split("-")[1], 10);
+        const destDayIndex = parseInt(
+          destination.droppableId.split("-")[1],
+          10
+        );
         const [movedActivity] = draft.days[sourceDayIndex].activities.splice(
           source.index,
           1
@@ -417,7 +534,6 @@ export default function ItineraryView() {
     },
     [setLocalItinerary]
   );
-
   const addActivity = useCallback(
     (dayIndex, insertIndex) => {
       const newActivity = {
@@ -434,21 +550,19 @@ export default function ItineraryView() {
         address: "",
         roadAddress: "",
       };
-
       setLocalItinerary((prev) => {
         const draft = deepClone(prev);
-        const index = typeof insertIndex === "number"
-          ? insertIndex
-          : draft.days[dayIndex].activities.length;
+        const index =
+          typeof insertIndex === "number"
+            ? insertIndex
+            : draft.days[dayIndex].activities.length;
         draft.days[dayIndex].activities.splice(index, 0, newActivity);
         return draft;
       });
-
       setEditingActivity({ ...newActivity, dayIndex });
     },
     [setLocalItinerary]
   );
-
   const updateActivity = useCallback(
     (dayIndex, activityId, updatedData) => {
       setLocalItinerary((prev) => {
@@ -467,30 +581,24 @@ export default function ItineraryView() {
     },
     [setLocalItinerary]
   );
-
   const deleteActivity = useCallback(
     (dayIndex, activityId) => {
       setLocalItinerary((prev) => {
         const draft = deepClone(prev);
-        draft.days[dayIndex].activities = draft.days[dayIndex].activities.filter(
-          (activity) => activity.id !== activityId
-        );
+        draft.days[dayIndex].activities = draft.days[
+          dayIndex
+        ].activities.filter((activity) => activity.id !== activityId);
         return draft;
       });
     },
     [setLocalItinerary]
   );
-
   const handleTitleChange = useCallback(
     (newTitle) => {
-      setLocalItinerary((prev) => ({
-        ...prev,
-        itinerary_name: newTitle,
-      }));
+      setLocalItinerary((prev) => ({ ...prev, itinerary_name: newTitle }));
     },
     [setLocalItinerary]
   );
-
   const handleDateChange = useCallback(
     (dayIndex, newDate) => {
       setLocalItinerary((prev) => {
@@ -503,7 +611,13 @@ export default function ItineraryView() {
   );
 
   const renderSavedPlans = useCallback(() => {
-    if (loadingPlans) {
+    const neonPaperStyle = {
+      backgroundColor: "rgba(10, 5, 20, 0.6)",
+      borderColor: "rgba(168, 85, 247, 0.3)",
+      backdropFilter: "blur(12px)",
+      boxShadow: "0 0 15px rgba(168, 85, 247, 0.1)",
+    };
+    if (loadingPlans)
       return (
         <Stack gap="md">
           {Array.from({ length: 3 }).map((_, idx) => (
@@ -512,50 +626,38 @@ export default function ItineraryView() {
               withBorder
               radius="md"
               p="md"
-              bg="dark.7"
-              style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
-            >
-              <Stack gap="sm">
-                <Skeleton height={18} radius="sm" width="70%" />
-                <Skeleton height={12} radius="sm" width="55%" />
-                <Group gap="sm">
-                  <Skeleton height={32} radius="md" width="45%" />
-                  <Skeleton height={32} radius="md" width="45%" />
-                </Group>
-              </Stack>
-            </Paper>
+              style={neonPaperStyle}
+            />
           ))}
         </Stack>
       );
-    }
-
-    if (!routePlans.length) {
+    if (!routePlans.length)
       return (
         <Center h={120}>
           <Stack align="center" gap={4}>
-            <Text c="gray.5" size="sm">저장된 플랜이 없습니다.</Text>
-            <Text c="gray.6" size="xs">경로 편집에서 플랜을 저장하면 이곳에 나타납니다.</Text>
+            <Text c="gray.5" size="sm">
+              저장된 플랜이 없습니다.
+            </Text>
+            <Text c="gray.6" size="xs">
+              경로 편집에서 플랜을 저장하면 이곳에 나타납니다.
+            </Text>
           </Stack>
         </Center>
       );
-    }
-
     return (
       <Stack gap="md">
         {routePlans.map((plan) => {
-          const stopCount = (plan.days || []).reduce((acc, day) => {
-            const waypoints = day.waypoints || [];
-            return acc + 2 + waypoints.length;
-          }, 0);
-
+          const stopCount = (plan.days || []).reduce(
+            (acc, day) => acc + 2 + (day.waypoints || []).length,
+            0
+          );
           return (
             <Paper
               key={plan.id}
               withBorder
               radius="md"
               p="md"
-              bg="dark.7"
-              style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
+              style={neonPaperStyle}
             >
               <Stack gap="md">
                 <Stack gap="xs">
@@ -567,7 +669,11 @@ export default function ItineraryView() {
                       <Text
                         size="xs"
                         c="gray.5"
-                        style={{ display: "flex", alignItems: "center", gap: 4 }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
                       >
                         <CalendarDays size={14} />
                         {new Date(plan.updatedAt).toLocaleDateString("ko-KR")}
@@ -578,36 +684,33 @@ export default function ItineraryView() {
                       c="gray.5"
                       style={{ display: "flex", alignItems: "center", gap: 4 }}
                     >
-                      <MapPin size={14} /> {stopCount}곳
+                      <MapPin size={14} />
+                      {stopCount}곳
                     </Text>
                     <Text
                       size="xs"
                       c="gray.5"
                       style={{ display: "flex", alignItems: "center", gap: 4 }}
                     >
-                      <Bookmark size={14} /> {plan.days?.length || 0}일
+                      <Bookmark size={14} />
+                      {plan.days?.length || 0}일
                     </Text>
                   </Group>
                 </Stack>
-                <Group gap="sm">
-                  <Button
-                    fullWidth
+                <Group gap="sm" grow>
+                  <NeonButton
                     size="sm"
-                    variant="gradient"
-                    gradient={{ from: "grape", to: "pink" }}
                     onClick={() => handleApplyRoutePlan(plan)}
                   >
                     플래너로 불러오기
-                  </Button>
-                  <Button
-                    fullWidth
+                  </NeonButton>
+                  <NeonButton
                     size="sm"
-                    variant="outline"
-                    color="gray.6"
+                    variant="secondary"
                     onClick={() => handleDeleteRoutePlan(plan.id)}
                   >
                     삭제
-                  </Button>
+                  </NeonButton>
                 </Group>
               </Stack>
             </Paper>
@@ -619,48 +722,48 @@ export default function ItineraryView() {
 
   if (isGenerating || !localItinerary) {
     return (
-      <Center h="100vh" bg="dark.9">
-        {isGenerating ? (
-          <Stack align="center" gap="md">
-            <Loader color="grape" size="xl" />
-            <Title order={3} c="gray.1">
-              AI가 여행 일정을 만드는 중입니다
-            </Title>
-            <Text c="gray.5">조금만 기다려주세요...</Text>
-          </Stack>
-        ) : (
-          <Paper
-            shadow="lg"
-            p="xl"
-            radius="md"
-            withBorder
-            bg="dark.8"
-            style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
-          >
+      <div className="relative w-full h-screen overflow-hidden bg-black">
+        <WaveAndParticleEffect />
+        <Center h="100%" className="relative z-10 p-4">
+          {isGenerating ? (
             <Stack align="center" gap="md">
-              <Frown
-                size={48}
-                strokeWidth={1.5}
-                color="var(--mantine-color-grape-5)"
-              />
-              <Title order={3} c="gray.1">
-                아직 일정이 없습니다
-              </Title>
-              <Text c="gray.5" ta="center">
-                샘플 일정을 생성하거나 저장된 플랜을 불러와 시작해보세요.
-              </Text>
-              <Button
-                onClick={generateSampleItinerary}
-                variant="gradient"
-                gradient={{ from: "grape", to: "pink" }}
-                leftSection={<Sparkles size={16} />}
-              >
-                샘플 일정 만들기
-              </Button>
+              <Loader color="grape" size="xl" />
+              <GradientText size="3xl">
+                AI가 여행 일정을 만드는 중입니다
+              </GradientText>
+              <Text c="gray.5">조금만 기다려주세요...</Text>
             </Stack>
-          </Paper>
-        )}
-      </Center>
+          ) : (
+            <Paper
+              shadow="lg"
+              p="xl"
+              radius="md"
+              withBorder
+              style={{
+                backgroundColor: "rgba(10, 5, 20, 0.7)",
+                borderColor: "rgba(168, 85, 247, 0.3)",
+                backdropFilter: "blur(12px)",
+                boxShadow: "0 0 25px rgba(168, 85, 247, 0.2)",
+              }}
+            >
+              <Stack align="center" gap="md">
+                <Frown
+                  size={48}
+                  strokeWidth={1.5}
+                  color="var(--mantine-color-grape-5)"
+                />
+                <GradientText size="2xl">아직 일정이 없습니다</GradientText>
+                <Text c="gray.5" ta="center">
+                  샘플 일정을 생성하거나 저장된 플랜을 불러와 시작해보세요.
+                </Text>
+                <NeonButton onClick={generateSampleItinerary}>
+                  <Sparkles size={16} /> 샘플 일정 만들기
+                </NeonButton>
+              </Stack>
+            </Paper>
+          )}
+        </Center>
+      </div>
     );
   }
 
@@ -698,33 +801,38 @@ export default function ItineraryView() {
 
   const savedPlansContent = (
     <Box>
-      <Title order={isDesktop ? 2 : 4} mb="xl" c="gray.1">
-        저장된 플랜
+      <Title order={isDesktop ? 2 : 4} mb="xl">
+        <GradientText>저장된 플랜</GradientText>
       </Title>
       {renderSavedPlans()}
     </Box>
   );
 
   const DesktopLayout = () => (
-    <Flex h="100vh" bg="dark.9">
+    <Flex h="100vh" style={{ backgroundColor: "transparent" }}>
       <Paper
         w={380}
         p="lg"
-        bg="dark.8"
         withBorder
         style={{
-          borderTop: 0,
-          borderBottom: 0,
-          borderLeft: 0,
-          borderColor: "rgba(192, 132, 252, 0.2)",
+          backgroundColor: "rgba(10, 5, 20, 0.6)",
+          border: "none",
+          borderRight: "1px solid rgba(168, 85, 247, 0.3)",
           height: "100vh",
           display: "flex",
           flexDirection: "column",
+          backdropFilter: "blur(10px)",
         }}
       >
-        <Box className="itinerary-scroll" style={{ flex: 1, overflowY: "auto" }}>{savedPlansContent}</Box>
+        <Box className="neon-scrollbar" style={{ flex: 1, overflowY: "auto" }}>
+          {savedPlansContent}
+        </Box>
       </Paper>
-      <Box className="itinerary-scroll" style={{ flex: 1, overflowY: "auto" }} p="xl">
+      <Box
+        className="neon-scrollbar"
+        style={{ flex: 1, overflowY: "auto" }}
+        p="xl"
+      >
         <ItineraryHeader
           itinerary={localItinerary}
           hasChanges={hasChanges}
@@ -741,20 +849,24 @@ export default function ItineraryView() {
   );
 
   const MobileLayout = () => (
-    <AppShell header={{ height: 60 }} padding="md" bg="dark.9">
+    <AppShell header={{ height: 60 }} padding="md" bg="transparent">
       <AppShell.Header
-        bg="dark.8"
-        withBorder
-        style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
+        style={{
+          backgroundColor: "rgba(10, 5, 20, 0.7)",
+          borderColor: "rgba(168, 85, 247, 0.3)",
+          backdropFilter: "blur(12px)",
+        }}
       >
         <Group h="100%" px="md" justify="space-between">
-          <Title order={4} c="grape.3">여행 플래너</Title>
+          <GradientText size="lg">여행 플래너</GradientText>
           {(isSaving || autoSaving) && (
-            <Text size="xs" c="grape.3">저장 중...</Text>
+            <Text size="xs" c="grape.3">
+              저장 중...
+            </Text>
           )}
         </Group>
       </AppShell.Header>
-      <AppShell.Main className="itinerary-scroll">
+      <AppShell.Main className="neon-scrollbar">
         <ItineraryHeader
           itinerary={localItinerary}
           hasChanges={hasChanges}
@@ -765,7 +877,18 @@ export default function ItineraryView() {
           onSave={handleSaveChanges}
           onDiscard={handleDiscardChanges}
         />
-        <Tabs defaultValue="itinerary" color="grape" mt="lg">
+        <Tabs
+          defaultValue="itinerary"
+          color="grape"
+          mt="lg"
+          styles={{
+            list: { borderBottom: "1px solid rgba(168, 85, 247, 0.2)" },
+            tab: {
+              color: "var(--mantine-color-gray-5)",
+              "&[data-active]": { color: "#fff", textShadow: "0 0 5px #fff" },
+            },
+          }}
+        >
           <Tabs.List grow>
             <Tabs.Tab value="itinerary" leftSection={<List size={16} />}>
               일정
@@ -786,8 +909,13 @@ export default function ItineraryView() {
   );
 
   return (
-    <>
-      {isDesktop ? <DesktopLayout /> : <MobileLayout />}
+    // [핵심 수정] 최상위 div 구조 변경
+    <div className="relative w-full h-screen overflow-hidden bg-black text-white">
+      <WaveAndParticleEffect />
+      <NeonScrollbarStyles />
+      <div className="relative z-10 w-full h-full">
+        {isDesktop ? <DesktopLayout /> : <MobileLayout />}
+      </div>
       <AnimatePresence>
         {editingActivity && (
           <ActivityEditor
@@ -804,6 +932,6 @@ export default function ItineraryView() {
           />
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

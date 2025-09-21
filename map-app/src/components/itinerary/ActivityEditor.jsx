@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Modal,
-  Button,
   TextInput,
   Textarea,
   NumberInput,
@@ -14,8 +13,9 @@ import {
   Input,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Save, Clock, MapPin, DollarSign, Info } from "lucide-react";
-import PlaceSearchInput from "components/directions/PlaceSearchInput";
+import { Save, Clock, DollarSign, Info } from "lucide-react";
+import PlaceSearchInput from "../directions/PlaceSearchInput";
+import { NeonButton, GradientText } from "components/ui/NeonTheme";
 
 const categoryCodeMap = {
   FD6: "restaurant",
@@ -49,14 +49,9 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
     onSave(formData);
     onClose();
   };
-
   const handleChange = (key, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
-
   const handlePlaceSelect = (place) => {
     if (!place) return;
     setPlaceQuery(place.name || "");
@@ -74,24 +69,24 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
     }));
   };
 
-  const inputStyles = useMemo(
+  const neonInputStyles = useMemo(
     () => ({
       label: {
-        color: "var(--mantine-color-gray-4)",
+        color: "#d1d5db",
         marginBottom: "4px",
         fontSize: "var(--mantine-font-size-sm)",
       },
       input: {
-        backgroundColor: "var(--mantine-color-dark-6)",
-        borderColor: "var(--mantine-color-dark-4)",
-        color: "var(--mantine-color-gray-1)",
+        backgroundColor: "rgba(10, 5, 20, 0.7)",
+        borderColor: "rgba(168, 85, 247, 0.3)",
+        color: "#f9fafb",
+        transition: "border-color 200ms ease, box-shadow 200ms ease",
         "&:focus": {
-          borderColor: "var(--mantine-color-grape-5)",
+          borderColor: "rgba(236, 72, 153, 0.8)",
+          boxShadow: "0 0 8px rgba(236, 72, 153, 0.5)",
         },
       },
-      icon: {
-        color: "var(--mantine-color-gray-5)",
-      },
+      icon: { color: "#9ca3af" },
     }),
     []
   );
@@ -102,21 +97,21 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
     <Modal
       opened={opened}
       onClose={onClose}
-      title={
-        <Title order={4} c="gray.1">
-          활동 편집
-        </Title>
-      }
+      title={<GradientText size="xl">활동 편집</GradientText>}
       size="xl"
       radius="md"
       fullScreen={isMobile}
       centered={!isMobile}
       overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
       styles={{
-        content: { backgroundColor: "var(--mantine-color-dark-8)" },
+        content: {
+          backgroundColor: "rgba(10, 5, 20, 0.8)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(168, 85, 247, 0.3)",
+        },
         header: {
-          backgroundColor: "var(--mantine-color-dark-8)",
-          borderBottom: "1px solid var(--mantine-color-dark-5)",
+          backgroundColor: "transparent",
+          borderBottom: "1px solid rgba(168, 85, 247, 0.2)",
         },
       }}
     >
@@ -129,6 +124,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               </Text>
             }
             labelPosition="left"
+            styles={{ label: { color: "#d8b4fe" } }}
           />
           <SimpleGrid cols={isMobile ? 1 : 2}>
             <TextInput
@@ -137,7 +133,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               value={formData.time || ""}
               onChange={(e) => handleChange("time", e.currentTarget.value)}
               leftSection={<Clock size={16} />}
-              styles={inputStyles}
+              styles={neonInputStyles}
             />
             <NumberInput
               label="체류 시간 (분)"
@@ -145,11 +141,10 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               onChange={(val) => handleChange("duration", Number(val) || 0)}
               min={0}
               step={15}
-              styles={inputStyles}
+              styles={neonInputStyles}
             />
           </SimpleGrid>
         </Stack>
-
         <Stack gap="md">
           <Divider
             label={
@@ -158,8 +153,9 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               </Text>
             }
             labelPosition="left"
+            styles={{ label: { color: "#d8b4fe" } }}
           />
-          <Input.Wrapper label="장소명" styles={inputStyles}>
+          <Input.Wrapper label="장소명" styles={neonInputStyles}>
             <PlaceSearchInput
               value={placeQuery}
               onChange={(value) => {
@@ -182,22 +178,26 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               label="장소 유형"
               placeholder="attraction / restaurant ..."
               value={formData.place_type || ""}
-              onChange={(e) => handleChange("place_type", e.currentTarget.value)}
+              onChange={(e) =>
+                handleChange("place_type", e.currentTarget.value)
+              }
               leftSection={<Info size={16} />}
-              styles={inputStyles}
+              styles={neonInputStyles}
             />
             <TextInput
               label="도로명 주소"
               value={formData.roadAddress || ""}
-              onChange={(e) => handleChange("roadAddress", e.currentTarget.value)}
-              styles={inputStyles}
+              onChange={(e) =>
+                handleChange("roadAddress", e.currentTarget.value)
+              }
+              styles={neonInputStyles}
             />
           </SimpleGrid>
           <TextInput
             label="지번 주소"
             value={formData.address || ""}
             onChange={(e) => handleChange("address", e.currentTarget.value)}
-            styles={inputStyles}
+            styles={neonInputStyles}
           />
           <SimpleGrid cols={isMobile ? 1 : 2}>
             <TextInput
@@ -211,7 +211,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
                   e.currentTarget.value ? Number(e.currentTarget.value) : null
                 )
               }
-              styles={inputStyles}
+              styles={neonInputStyles}
             />
             <TextInput
               label="경도"
@@ -224,11 +224,10 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
                   e.currentTarget.value ? Number(e.currentTarget.value) : null
                 )
               }
-              styles={inputStyles}
+              styles={neonInputStyles}
             />
           </SimpleGrid>
         </Stack>
-
         <Stack gap="md">
           <Divider
             label={
@@ -237,6 +236,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               </Text>
             }
             labelPosition="left"
+            styles={{ label: { color: "#d8b4fe" } }}
           />
           <Textarea
             label="설명"
@@ -245,7 +245,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
             onChange={(e) => handleChange("description", e.currentTarget.value)}
             autosize
             minRows={2}
-            styles={inputStyles}
+            styles={neonInputStyles}
           />
           <NumberInput
             label="예상 비용 (원)"
@@ -254,22 +254,16 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
             min={0}
             step={1000}
             leftSection={<DollarSign size={16} />}
-            styles={inputStyles}
+            styles={neonInputStyles}
           />
         </Stack>
-
         <Group justify="flex-end" mt="xl">
-          <Button variant="default" onClick={onClose}>
+          <NeonButton variant="secondary" onClick={onClose}>
             취소
-          </Button>
-          <Button
-            variant="gradient"
-            gradient={{ from: "grape", to: "pink" }}
-            onClick={handleSave}
-            leftSection={<Save size={16} />}
-          >
+          </NeonButton>
+          <NeonButton onClick={handleSave} leftSection={<Save size={16} />}>
             저장
-          </Button>
+          </NeonButton>
         </Group>
       </Stack>
     </Modal>

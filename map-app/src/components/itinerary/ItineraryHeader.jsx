@@ -2,9 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import {
   Paper,
-  Title,
   Text,
-  Button,
   Group,
   Stack,
   Badge,
@@ -20,6 +18,7 @@ import {
   Check,
   Clock8,
 } from "lucide-react";
+import { NeonButton, GradientText } from "components/ui/NeonTheme";
 
 const formatCurrency = (value) =>
   (value || 0).toLocaleString("ko-KR", { maximumFractionDigits: 0 });
@@ -27,29 +26,15 @@ const formatCurrency = (value) =>
 const formatTimestamp = (timestamp) => {
   if (!timestamp) return null;
   const date = new Date(timestamp);
-  const dateLabel = date.toLocaleDateString("ko-KR");
-  const timeLabel = date
+  return `${date.toLocaleDateString("ko-KR")} ${date
     .toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
-    .replace(/:\d{2}$/u, "");
-  return `${dateLabel} ${timeLabel}`;
+    .replace(/:\d{2}$/u, "")}`;
 };
 
 const STATUS_PALETTE = {
-  saving: {
-    bg: "rgba(168, 85, 247, 0.16)",
-    text: "var(--mantine-color-grape-2)",
-    icon: "#d8b4fe",
-  },
-  pending: {
-    bg: "rgba(249, 115, 22, 0.16)",
-    text: "var(--mantine-color-orange-2)",
-    icon: "#fdba74",
-  },
-  saved: {
-    bg: "rgba(16, 185, 129, 0.16)",
-    text: "var(--mantine-color-teal-2)",
-    icon: "#99f6e4",
-  },
+  saving: { bg: "rgba(168, 85, 247, 0.16)", text: "#d8b4fe", icon: "#e9d5ff" },
+  pending: { bg: "rgba(249, 115, 22, 0.16)", text: "#fdba74", icon: "#fed7aa" },
+  saved: { bg: "rgba(16, 185, 129, 0.16)", text: "#99f6e4", icon: "#ccfbf1" },
 };
 
 export default function ItineraryHeader({
@@ -66,27 +51,32 @@ export default function ItineraryHeader({
   const totalCost =
     itinerary?.days?.reduce(
       (total, day) =>
-        total + (day.activities || []).reduce((subtotal, activity) => subtotal + (activity.cost_estimate || 0), 0),
+        total +
+        (day.activities || []).reduce(
+          (subtotal, activity) => subtotal + (activity.cost_estimate || 0),
+          0
+        ),
       0
     ) || 0;
   const activityCount =
-    itinerary?.days?.reduce((total, day) => total + (day.activities?.length || 0), 0) || 0;
+    itinerary?.days?.reduce(
+      (total, day) => total + (day.activities?.length || 0),
+      0
+    ) || 0;
 
   const status = (() => {
-    if (isSaving || isAutoSaving) {
+    if (isSaving || isAutoSaving)
       return {
         tone: "saving",
         label: "변경 사항을 저장하는 중이에요",
         icon: Sparkles,
       };
-    }
-    if (hasChanges) {
+    if (hasChanges)
       return {
         tone: "pending",
         label: "저장되지 않은 변경이 있습니다",
         icon: Clock8,
       };
-    }
     const formatted = formatTimestamp(lastSavedAt);
     return {
       tone: "saved",
@@ -113,8 +103,12 @@ export default function ItineraryHeader({
         p={isMobile ? "md" : "xl"}
         radius="lg"
         withBorder
-        bg="dark.7"
-        style={{ borderColor: "rgba(192, 132, 252, 0.2)" }}
+        style={{
+          backgroundColor: "rgba(10, 5, 20, 0.7)",
+          borderColor: "rgba(168, 85, 247, 0.3)",
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 0 25px rgba(168, 85, 247, 0.2)",
+        }}
       >
         <Stack gap="lg">
           <Stack gap="xs">
@@ -127,8 +121,15 @@ export default function ItineraryHeader({
                   fontWeight: 700,
                   fontSize: isMobile ? "1.15rem" : "1.6rem",
                   backgroundColor: "transparent",
-                  color: "var(--mantine-color-gray-0)",
-                  borderColor: "rgba(192, 132, 252, 0.28)",
+                  color: "#f9fafb",
+                  border: "none",
+                  borderBottom: "1px solid rgba(168, 85, 247, 0.3)",
+                  borderRadius: 0,
+                  paddingLeft: 0,
+                  transition: "border-color 200ms ease",
+                  "&:focus": {
+                    borderColor: "rgba(236, 72, 153, 0.8)",
+                  },
                 },
               }}
             />
@@ -138,7 +139,7 @@ export default function ItineraryHeader({
                 size="sm"
                 style={{ display: "flex", alignItems: "center", gap: 6 }}
               >
-                <MapPin size={16} /> {itinerary?.destination || "목적지가 정해지지 않았어요"}
+                <MapPin size={16} /> {itinerary?.destination || "목적지 미정"}
               </Text>
               {!isMobile && (
                 <Text
@@ -153,6 +154,12 @@ export default function ItineraryHeader({
                 variant="light"
                 color="grape"
                 leftSection={<Sparkles size={12} />}
+                styles={{
+                  root: {
+                    backgroundColor: "rgba(168, 85, 247, 0.15)",
+                    color: "#d8b4fe",
+                  },
+                }}
               >
                 {activityCount}개의 활동
               </Badge>
@@ -165,7 +172,6 @@ export default function ItineraryHeader({
               py={6}
               style={{
                 backgroundColor: palette.bg,
-                color: palette.text,
                 borderRadius: "var(--mantine-radius-md)",
                 display: "flex",
                 alignItems: "center",
@@ -178,23 +184,22 @@ export default function ItineraryHeader({
               </Text>
             </Box>
             <Group gap="sm">
-              <Button
-                variant="outline"
-                color="gray"
+              <NeonButton
+                size="sm"
+                variant="secondary"
                 onClick={onDiscard}
                 disabled={!hasChanges}
               >
                 변경 취소
-              </Button>
-              <Button
-                variant="gradient"
-                gradient={{ from: "grape", to: "pink" }}
+              </NeonButton>
+              <NeonButton
+                size="sm"
                 onClick={onSave}
                 loading={isSaving}
                 disabled={!hasChanges && !isSaving}
               >
                 저장
-              </Button>
+              </NeonButton>
             </Group>
           </Group>
 
@@ -208,8 +213,8 @@ export default function ItineraryHeader({
               >
                 <DollarSign size={16} /> 예상 총 비용
               </Text>
-              <Text fw={700} c="grape.2" size="lg">
-                {formatCurrency(totalCost)}원
+              <Text fw={700} size="lg">
+                <GradientText>{formatCurrency(totalCost)}원</GradientText>
               </Text>
             </Group>
           </Box>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { TravelProfile } from "Entities/TravelProfile";
-import { Button } from "components/ui/button";
 import {
   Sparkles,
   ChevronRight,
@@ -24,6 +23,14 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "utils";
+import useIsMobile from "./useIsMobile";
+import {
+  BackgroundEffect,
+  NeonCard,
+  NeonButton,
+  GradientText,
+  NeonScrollbarStyles,
+} from "../components/ui/NeonTheme";
 
 // --- Child Components ---
 
@@ -212,7 +219,7 @@ function QuestionCard({ question, answer, onAnswer }) {
       </div>
 
       <div className="flex-1 relative overflow-hidden">
-        <div className="absolute inset-0 overflow-y-auto pr-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-700 hover:scrollbar-thumb-slate-600">
+        <div className="absolute inset-0 overflow-y-auto pr-3 neon-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {question.options.map((option) => {
               const { Icon, bg, border, fg } = iconForOption(option.value);
@@ -230,15 +237,15 @@ function QuestionCard({ question, answer, onAnswer }) {
                   <button
                     disabled={disabled}
                     onClick={() => onAnswer(question.id, option.value)}
-                    className={`w-full text-left p-3 rounded-xl border ${
+                    className={`w-full text-left p-3 rounded-xl border backdrop-blur-sm transition-all ${
                       selected
-                        ? "border-indigo-500 bg-indigo-500/10"
-                        : border + " " + bg
+                        ? "border-pink-500/70 bg-pink-500/10 shadow-lg shadow-pink-500/20"
+                        : `${border} ${bg} hover:border-pink-500/50 hover:bg-white/5`
                     } ${
                       disabled
                         ? "opacity-50 cursor-not-allowed"
-                        : "hover:bg-slate-700/50"
-                    } transition-all`}
+                        : "hover:shadow-pink-500/10"
+                    }`}
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -278,7 +285,7 @@ function QuestionCard({ question, answer, onAnswer }) {
           </div>
         </div>
         <div
-          className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-slate-800/80 to-transparent pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"
           aria-hidden="true"
         />
       </div>
@@ -296,6 +303,7 @@ const questionVariants = {
 
 export default function PersonaAnalysis() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [questions, setQuestions] = useState([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [questionError, setQuestionError] = useState(null);
@@ -429,12 +437,12 @@ export default function PersonaAnalysis() {
             <br />
             2) 프록시 설정 <code>src/setupProxy.js</code> 확인
           </div>
-          <Button
-            className="bg-indigo-600 hover:bg-indigo-500 text-white"
+          <NeonButton
+            variant="primary"
             onClick={() => window.location.reload()}
           >
             다시 시도
-          </Button>
+          </NeonButton>
         </div>
       </div>
     );
@@ -442,131 +450,144 @@ export default function PersonaAnalysis() {
 
   if (!questions || questions.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
-        <div className="max-w-lg w-full text-center bg-slate-800 border border-slate-700 shadow-2xl rounded-2xl p-8">
-          <h2 className="text-xl font-semibold text-white mb-2">
-            질문이 없습니다
-          </h2>
-          <p className="text-slate-400 mb-6">
-            백엔드가 실행 중인지, 질문 데이터가 정상인지 확인해 주세요.
-          </p>
-          <Button
-            className="bg-indigo-600 hover:bg-indigo-500 text-white"
-            onClick={() => window.location.reload()}
-          >
-            새로고침
-          </Button>
+      <BackgroundEffect className="neon-scrollbar px-4 py-10">
+        <NeonScrollbarStyles />
+        <div className="min-h-screen flex items-center justify-center">
+          <NeonCard className="max-w-lg w-full text-center" variant="secondary">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold text-white">
+                질문 목록이 비어 있습니다
+              </h2>
+              <p className="text-slate-200/80">
+                백엔드가 실행 중인지, 질문 데이터가 정상적으로 반환되는지
+                확인해주세요.
+              </p>
+              <NeonButton
+                onClick={() => window.location.reload()}
+                className="mx-auto"
+                variant="primary"
+                size="md"
+              >
+                새로고침
+              </NeonButton>
+            </div>
+          </NeonCard>
         </div>
-      </div>
+      </BackgroundEffect>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-4 md:p-8 overflow-hidden relative">
-      <div className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3 w-[800px] h-[800px] bg-indigo-900/40 rounded-full blur-3xl opacity-50" />
-      <div className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3 w-[600px] h-[600px] bg-fuchsia-900/30 rounded-full blur-3xl opacity-50" />
-
-      <div className="max-w-2xl mx-auto relative z-10">
+    <BackgroundEffect className="neon-scrollbar px-4 pt-6 pb-28 md:px-8 md:py-12">
+      <NeonScrollbarStyles />
+      <div className="max-w-3xl mx-auto relative z-10 space-y-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
+          className="text-center space-y-4"
         >
-          <div className="inline-block relative p-0.5 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 mb-4">
-            <div className="bg-slate-800 p-3 rounded-[14px]">
-              <Sparkles className="w-8 h-8 text-indigo-400" />
+          <div className="inline-block relative p-0.5 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 shadow-lg shadow-fuchsia-500/30">
+            <div className="bg-black/60 p-3 rounded-[14px]">
+              <Sparkles className="w-8 h-8 text-pink-300" />
             </div>
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            당신만의 여행 페르소나 찾기
+          <h1 className="mb-4">
+            <GradientText
+              size={isMobile ? "3xl" : "5xl"}
+              className="block leading-tight text-center"
+            >
+              당신만의 여행 페르소나 찾기
+            </GradientText>
           </h1>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto">
-            몇 가지 질문에 답하면 AI가 여행 스타일에 맞는 코스를 추천해
-            드립니다.
+          <p className="text-lg text-slate-200/80 max-w-xl mx-auto">
+            몇 가지 질문에 답하면 AI가 당신의 여행 스타일에 맞는 코스를 추천해
+            드릴게요.
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="bg-slate-800/50 backdrop-blur-lg border border-slate-700 rounded-2xl p-6 md:p-8 shadow-2xl"
-        >
-          <ProgressIndicator
-            currentStep={currentStep}
-            totalSteps={questions.length}
-          />
+        <NeonCard className="backdrop-blur-xl border-purple-500/30">
+          <div className="space-y-6">
+            <ProgressIndicator
+              currentStep={currentStep}
+              totalSteps={questions.length}
+            />
 
-          <div className="relative">
-            {/* 질문 카드를 렌더링하고 애니메이션을 적용하는 컨테이너 */}
-            <AnimatePresence initial={false} custom={direction}>
-              <motion.div
-                key={page}
-                custom={direction}
-                variants={questionVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 },
-                }}
-                className="absolute w-full top-0"
-              >
-                <QuestionCard
-                  question={questions[currentStep]}
-                  answer={answers[questions[currentStep]?.id]}
-                  onAnswer={handleAnswer}
-                />
-              </motion.div>
-            </AnimatePresence>
-            {/* QuestionCard의 높이만큼 공간을 차지하여 레이아웃이 깨지지 않도록 함 */}
-            <div className="h-[420px]" />
+            <div className="relative">
+              {/* 질문 카드를 렌더링하고 애니메이션을 적용하는 컨테이너 */}
+              <AnimatePresence initial={false} custom={direction}>
+                <motion.div
+                  key={page}
+                  custom={direction}
+                  variants={questionVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 },
+                  }}
+                  className="absolute w-full top-0"
+                >
+                  <QuestionCard
+                    question={questions[currentStep]}
+                    answer={answers[questions[currentStep]?.id]}
+                    onAnswer={handleAnswer}
+                  />
+                </motion.div>
+              </AnimatePresence>
+              {/* QuestionCard의 높이만큼 공간을 차지하여 레이아웃이 깨지지 않도록 함 */}
+              <div className="h-[420px]" />
+            </div>
           </div>
-        </motion.div>
+        </NeonCard>
 
         <motion.div
-          className="flex justify-between items-center mt-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          className="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-between gap-4 border-t border-slate-800 bg-slate-950/70 p-4 backdrop-blur-sm sm:relative sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Button
-            variant="ghost"
+          <NeonButton
             onClick={() => paginate(-1)}
             disabled={currentStep === 0}
-            className="px-6 py-3 text-slate-400 hover:bg-slate-700 hover:text-white disabled:opacity-0"
+            variant="secondary"
+            size="lg"
+            className="flex flex-1 items-center justify-center gap-2 sm:flex-none"
           >
-            <ChevronLeft className="w-4 h-4 mr-2" />
+            <ChevronLeft className="w-4 h-4" />
             이전
-          </Button>
+          </NeonButton>
 
           {currentStep < questions.length - 1 ? (
-            <Button
+            <NeonButton
               onClick={() => paginate(1)}
               disabled={!isStepComplete()}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold shadow-lg shadow-indigo-500/20 hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50"
+              variant="primary"
+              size="lg"
+              className="flex flex-1 items-center justify-center gap-2 sm:flex-none"
             >
               다음
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
+              <ChevronRight className="w-4 h-4" />
+            </NeonButton>
           ) : (
-            <Button
+            <NeonButton
               onClick={analyzeProfile}
               disabled={!isStepComplete() || isAnalyzing}
-              className="px-8 py-3 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white font-semibold shadow-lg shadow-fuchsia-500/20 hover:from-fuchsia-600 hover:to-pink-600 disabled:opacity-50"
+              variant="primary"
+              size="lg"
+              className="flex flex-1 items-center justify-center gap-2 sm:flex-none"
             >
               {isAnalyzing ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> 분석 중…
+                  <Loader2 className="w-4 h-4 animate-spin" /> 분석 중...
                 </>
               ) : (
                 "결과 확인하기"
               )}
-            </Button>
+            </NeonButton>
           )}
         </motion.div>
       </div>
-    </div>
+    </BackgroundEffect>
   );
 }

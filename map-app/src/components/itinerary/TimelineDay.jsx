@@ -11,7 +11,6 @@ import {
   Avatar,
   Title,
   ActionIcon,
-  Button,
   Flex,
   Box,
 } from "@mantine/core";
@@ -29,6 +28,7 @@ import {
   Ticket,
   GripVertical,
 } from "lucide-react";
+import { NeonButton, GradientText } from "components/ui/NeonTheme";
 
 const activityIcons = {
   attraction: MapPin,
@@ -51,11 +51,9 @@ export default function TimelineDay({
   onAddActivity,
   onDeleteActivity,
   onSelectDay,
-  onDateChange,
   isActive = false,
 }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
-
   const handleSelectDay = () => {
     if (typeof onSelectDay === "function") {
       onSelectDay(dayIndex);
@@ -68,13 +66,27 @@ export default function TimelineDay({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: dayIndex * 0.1 }}
     >
-      <Group mb="lg" align="center" onClick={handleSelectDay} style={{ cursor: "pointer" }}>
-        <Avatar color={isActive ? "grape" : "gray"} size="lg" radius="xl">
+      <Group
+        mb="lg"
+        align="center"
+        onClick={handleSelectDay}
+        style={{ cursor: "pointer" }}
+      >
+        <Avatar
+          color={isActive ? "grape" : "gray"}
+          size="lg"
+          radius="xl"
+          styles={{
+            root: isActive
+              ? { boxShadow: "0 0 10px var(--mantine-color-grape-5)" }
+              : {},
+          }}
+        >
           {day.day_number}
         </Avatar>
         <Box>
-          <Title order={isMobile ? 4 : 3} c={isActive ? "grape.2" : "gray.1"}>
-            {dayLabel(day.day_number)} 날
+          <Title order={isMobile ? 4 : 3}>
+            <GradientText>{dayLabel(day.day_number)} 날</GradientText>
           </Title>
           <Text size="sm" c="gray.5">
             {day.date
@@ -115,16 +127,21 @@ export default function TimelineDay({
                       p="md"
                       radius="md"
                       withBorder
-                      bg="dark.8"
                       shadow={snapshot.isDragging ? "lg" : "xs"}
                       style={{
-                        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
                         marginLeft: 10,
+                        backgroundColor: "rgba(10, 5, 20, 0.7)",
                         borderColor: snapshot.isDragging
-                          ? "var(--mantine-color-grape-5)"
+                          ? "rgba(236, 72, 153, 0.8)"
                           : isActive
-                          ? "rgba(192, 132, 252, 0.6)"
-                          : "rgba(192, 132, 252, 0.2)",
+                          ? "rgba(168, 85, 247, 0.6)"
+                          : "rgba(168, 85, 247, 0.2)",
+                        backdropFilter: "blur(8px)",
+                        transition:
+                          "box-shadow 0.2s ease, border-color 0.2s ease",
+                        boxShadow: snapshot.isDragging
+                          ? "0 0 15px rgba(236, 72, 153, 0.5)"
+                          : "none",
                       }}
                     >
                       <Flex align="center">
@@ -140,7 +157,16 @@ export default function TimelineDay({
                         <Box style={{ flex: 1, overflow: "hidden" }}>
                           <Group justify="space-between" wrap="nowrap">
                             <Group gap="xs" wrap="nowrap">
-                              <Badge variant="light" color={isActive ? "grape" : "gray"}>
+                              <Badge
+                                variant="light"
+                                color={isActive ? "grape" : "gray"}
+                                styles={{
+                                  root: {
+                                    backgroundColor: "rgba(168, 85, 247, 0.15)",
+                                    color: "#d8b4fe",
+                                  },
+                                }}
+                              >
                                 {activity.place_type}
                               </Badge>
                               <Text
@@ -155,7 +181,8 @@ export default function TimelineDay({
                               >
                                 <Clock size={14} />
                                 {activity.time}
-                                {activity.duration && ` (${activity.duration}분)`}
+                                {activity.duration &&
+                                  ` (${activity.duration}분)`}
                               </Text>
                             </Group>
                             <Group
@@ -199,16 +226,14 @@ export default function TimelineDay({
       </Timeline>
 
       <Box mt="md">
-        <Button
+        <NeonButton
           fullWidth
-          variant={isActive ? "gradient" : "outline"}
-          gradient={{ from: "grape", to: "pink" }}
-          color="gray.7"
+          variant={isActive ? "primary" : "secondary"}
           leftSection={<Plus size={16} />}
           onClick={() => onAddActivity(day.activities.length)}
         >
           활동 추가
-        </Button>
+        </NeonButton>
       </Box>
     </motion.div>
   );
