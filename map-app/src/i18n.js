@@ -71,6 +71,8 @@ const resources = {
       "modal.disclaimer.and": "과",
       "modal.disclaimer.privacy": "개인정보처리방침",
       "modal.disclaimer.suffix": "에 동의하는 것으로 간주됩니다.",
+      "cta.title": "이제, 당신의 완벽한 여행을 시작할 시간",
+      "cta.start": "5가지 질문으로 시작하기",
     },
     QuickTranslator: {
       all: "전체",
@@ -553,6 +555,8 @@ const resources = {
       "modal.disclaimer.and": "and",
       "modal.disclaimer.privacy": "Privacy Policy",
       "modal.disclaimer.suffix": ".",
+      "cta.title": "Now, it's time to start your perfect trip",
+      "cta.start": "Start with 5 questions",
     },
     QuickTranslator: {
       all: "All",
@@ -771,6 +775,102 @@ const resources = {
         "※ The provided information is for reference only. For accurate information about ingredients, allergies, and other menu details, please contact the restaurant!",
       file_selected: "Selected file",
     },
+    cultureGuide: {
+      greeting: "Greeting Etiquette",
+      greeting_content:
+        "In Korea, greet older people first and bow your head when greeting.",
+      greeting_extra:
+        "Usually a light nod is sufficient, and shaking hands with both hands appears more polite.",
+      greeting_modal_title: "Korean Honorifics and Basic Greeting Expressions",
+      greeting_modal_paragraphs:
+        "Korea has honorifics and informal speech, so greeting expressions vary depending on the situation.",
+      greeting_modal_paragraphs_2:
+        "Friends say 'annyeong' to each other, but you must say 'annyeonghaseyo' to adults or people you meet for the first time to be polite.",
+      greeting_modal_list_1: "안녕하세요 (Daily honorific)",
+      greeting_modal_list_2: "안녕하십니까 (Formal)",
+      greeting_modal_list_3: "안녕 (Close friends, informal)",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워 (Thank you)",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해 (Sorry)",
+      greeting_modal_link_1: "How to greet Korean people",
+      meal: "Dining Etiquette",
+      meal_content:
+        "Adults pick up utensils first, don't hold the rice bowl while eating. Receive alcohol with both hands.",
+      meal_extra:
+        "After finishing your meal, it's polite to place chopsticks neatly on the bowl.",
+      meal_modal_title: "Korean Dining Etiquette",
+      meal_modal_paragraphs:
+        "In Korea, dining is not just about eating food but an important occasion to respect others.",
+      meal_modal_paragraphs_2:
+        "Before eating, say 'jal meokgesseumnida' (I will eat well), and after eating, say 'jal meogeosseumnida' (I ate well), which shows respect for both the person who prepared the food and those who shared the meal.",
+      meal_modal_list_1: "Elders or guests sit first when taking seats.",
+      meal_modal_list_2: "Don't stick chopsticks into the rice bowl.",
+      meal_modal_list_3: "When drinking alcohol, turn your head slightly.",
+      meal_modal_list_4:
+        "Chewing loudly or pointing at people with chopsticks is impolite.",
+      meal_modal_list_5: "Place bowls on the table and eat.",
+      meal_modal_link_1: "Korean dining etiquette",
+      transportation: "Public Transportation",
+      transportation_content:
+        "Give up priority seats on the subway and don't talk loudly on the phone.",
+      transportation_extra:
+        "During rush hours, carrying bags in front is a considerate attitude.",
+      transportation_modal_title: "Korean Public Transportation",
+      transportation_modal_paragraphs:
+        "Korean subways and buses are very convenient, but it's important to follow seat and behavior etiquette.",
+      transportation_modal_paragraphs_2:
+        "Especially priority seats and pregnant women's seats are confusing for foreigners - it's common culture not to sit even if they're empty.",
+      transportation_modal_list_1:
+        "Priority seats are for elderly, disabled, and pregnant women only - young people don't use them.",
+      transportation_modal_list_2:
+        "Pregnant women's seats (pink seats) are kept empty so pregnant women can use them anytime.",
+      transportation_modal_list_3:
+        "Don't talk loudly on public transportation.",
+      transportation_modal_list_4:
+        "Carry bags in front or put them down to be considerate of other passengers.",
+      transportation_modal_list_5:
+        "When boarding, let passengers exit first, then board in order.",
+      transportation_modal_link_1: "Using Korean public transportation",
+      transportation_modal_link_2: "Using Seoul subway",
+      tip: "Tipping Culture",
+      tip_content:
+        "Korea has no tipping culture. Service charges are already included.",
+      tip_extra:
+        "Some hotels in tourist areas may accept small tips as an exception, but it's not mandatory.",
+      tip_modal_title: "Korean Tipping Culture",
+      tip_modal_paragraphs:
+        "Korea's tipping culture is very different from the West and barely exists.",
+      tip_modal_list_1: "Restaurants/Cafes: No tip needed",
+      tip_modal_list_2: "Taxis: Pay only the set fare",
+      tip_modal_list_3: "Hair salons/Massage services: No tipping culture",
+      footwear: "Removing Shoes",
+      footwear_content:
+        "In Korean homes or some restaurants, you take off your shoes before entering.",
+      footwear_extra:
+        "Shoe cabinets are usually at the entrance, and indoor slippers are often prepared.",
+      footwear_modal_title: "Korean Shoe Removal Culture",
+      footwear_modal_paragraphs:
+        "In Korea, removing shoes when entering homes is a natural cultural practice.",
+      footwear_modal_paragraphs_2:
+        "This is a traditional habit to keep the interior clean and protect family health.",
+      footwear_modal_paragraphs_3:
+        "Indoors, people often wear slippers instead of shoes or just socks.",
+      footwear_modal_list_1: "Homes: Remove shoes at the entrance",
+      footwear_modal_list_2:
+        "Traditional Korean restaurants/Hanok: Often remove shoes due to floor seating structure",
+      gift: "Gift Etiquette",
+      gift_content:
+        "When receiving gifts, accept them with both hands and don't open them immediately.",
+      gift_extra:
+        "Especially for adults or superiors, alcohol, health foods, and tea are safe gift choices.",
+      gift_modal_title: "Korean Gift Etiquette",
+      gift_modal_paragraphs:
+        "In Korea, gifts carry meaning of relationship and respect, not just objects.",
+      gift_modal_paragraphs_2:
+        "When giving and receiving gifts, you must use both hands as etiquette.",
+      gift_modal_list_1: "Give and receive with both hands",
+      gift_modal_list_2:
+        "Exchange gifts in various situations like holidays, housewarming, gratitude",
+    },
   },
   ja: {
     common: {
@@ -843,6 +943,8 @@ const resources = {
       "modal.disclaimer.and": "と",
       "modal.disclaimer.privacy": "プライバシーポリシー",
       "modal.disclaimer.suffix": "に同意したものとみなされます。",
+      "cta.title": "今こそ、あなたの完璧な旅行を始める時",
+      "cta.start": "5つの質問で始める",
     },
     QuickTranslator: {
       all: "すべて",
@@ -1106,6 +1208,98 @@ const resources = {
         "※ 提供される情報は参考用です。成分、アレルギー等のメニューに関する正確な情報は店舗にお問い合わせください！",
       file_selected: "選択されたファイル",
     },
+    cultureGuide: {
+      greeting: "挨拶マナー",
+      greeting_content: "韓国では年上の人に先に挨拶し、頭を下げて挨拶します。",
+      greeting_extra:
+        "通常は軽い会釈で十分で、両手で握手するとより丁寧に見えます。",
+      greeting_modal_title: "韓国の敬語と基本的な挨拶表現",
+      greeting_modal_paragraphs:
+        "韓国には敬語とタメ語があるため、挨拶表現も状況によって変わります。",
+      greeting_modal_paragraphs_2:
+        "友達同士は「안녕」と言いますが、大人や初対面の人には必ず「안녕하세요」と言うのが礼儀です。",
+      greeting_modal_list_1: "안녕하세요（日常敬語）",
+      greeting_modal_list_2: "안녕하십니까（格式）",
+      greeting_modal_list_3: "안녕（親しい間柄、タメ語）",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워（ありがとう）",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해（ごめんなさい）",
+      greeting_modal_link_1: "韓国人への挨拶の仕方",
+      meal: "食事マナー",
+      meal_content:
+        "大人が先にスプーンと箸を取り、ご飯茶碗を持って食べません。お酒は両手で受け取ります。",
+      meal_extra:
+        "ご飯を食べ終えた後は、箸を茶碗の上にきちんと置くのが礼儀です。",
+      meal_modal_title: "韓国の食事マナー",
+      meal_modal_paragraphs:
+        "韓国では食事は単に食べ物を食べるだけでなく、相手を尊重する重要な場です。",
+      meal_modal_paragraphs_2:
+        "食事前には「잘 먹겠습니다」（いただきます）、食事後には「잘 먹었습니다」（ごちそうさまでした）と挨拶し、これは準備した人と一緒にいた人すべてへの尊重を意味します。",
+      meal_modal_list_1: "席に座るときは年長者やお客様が先に座ります。",
+      meal_modal_list_2: "箸をご飯茶碗に刺しません。",
+      meal_modal_list_3: "お酒を飲むときは頭を少し向けて飲みます。",
+      meal_modal_list_4: "大きな音で噛んだり、箸で人を指すのは失礼です。",
+      meal_modal_list_5: "茶碗は食卓の上に置いて食べます。",
+      meal_modal_link_1: "韓国人の食事マナー",
+      transportation: "公共交通機関",
+      transportation_content:
+        "地下鉄では優先席を譲り、大きな声で通話しません。",
+      transportation_extra:
+        "混雑時間帯にはバッグを前に持つことが配慮する態度です。",
+      transportation_modal_title: "韓国の公共交通機関",
+      transportation_modal_paragraphs:
+        "韓国の地下鉄とバスは非常に便利ですが、座席と行動マナーを守ることが重要です。",
+      transportation_modal_paragraphs_2:
+        "特に優先席と妊婦配慮席は外国人にとって混乱しやすいですが、空いていても座らないのが一般的な文化です。",
+      transportation_modal_list_1:
+        "優先席は老人、障害者、妊婦専用座席で、若い人は使用しません。",
+      transportation_modal_list_2:
+        "妊婦配慮席（ピンク席）は妊婦がいつでも使用できるよう空けておきます。",
+      transportation_modal_list_3: "公共交通機関内では大きな声で通話しません。",
+      transportation_modal_list_4:
+        "バッグは前に持つか下ろして他の乗客に配慮します。",
+      transportation_modal_list_5:
+        "乗車時は降車客が先に降りてから順番に乗車します。",
+      transportation_modal_link_1: "韓国公共交通機関利用",
+      transportation_modal_link_2: "ソウルで地下鉄利用",
+      tip: "チップ文化",
+      tip_content:
+        "韓国にはチップ文化がありません。サービス料金が既に含まれています。",
+      tip_extra:
+        "観光地の一部ホテルは例外的に少額のチップを受け取ることもありますが、必須ではありません。",
+      tip_modal_title: "韓国のチップ文化",
+      tip_modal_paragraphs:
+        "韓国のチップ文化は西洋とは異なり、ほとんど存在しません。",
+      tip_modal_list_1: "レストラン・カフェ：チップ不要",
+      tip_modal_list_2: "タクシー：定められた料金のみ支払い",
+      tip_modal_list_3: "美容院・マッサージ等サービス業：チップ文化なし",
+      footwear: "靴脱ぎ",
+      footwear_content: "韓国の家庭や一部レストランでは靴を脱いで入ります。",
+      footwear_extra:
+        "靴箱は通常入口にあり、室内履きが準備されている場合が多いです。",
+      footwear_modal_title: "韓国の靴脱ぎ文化",
+      footwear_modal_paragraphs:
+        "韓国では家に入るとき靴を脱ぐことが当然の文化として定着しています。",
+      footwear_modal_paragraphs_2:
+        "これは室内を清潔に保ち、家族の健康を守るための伝統的な習慣です。",
+      footwear_modal_paragraphs_3:
+        "室内では靴の代わりにスリッパを履いたり、靴下だけを履いて生活する場合が多いです。",
+      footwear_modal_list_1: "家庭：玄関で靴を脱いで入る",
+      footwear_modal_list_2:
+        "伝統韓食店・韓屋：座式構造のため靴を脱ぐ場合が多い",
+      gift: "贈り物マナー",
+      gift_content:
+        "贈り物を受け取るときは両手で受け取り、すぐに開けないのが礼儀です。",
+      gift_extra:
+        "特に大人や上司には酒、健康食品、お茶などが無難な贈り物です。",
+      gift_modal_title: "韓国の贈り物マナー",
+      gift_modal_paragraphs:
+        "韓国では贈り物は単純な物ではなく、関係と尊重の意味を込めます。",
+      gift_modal_paragraphs_2:
+        "贈り物を渡すときと受け取るときは必ず両手を使うのが礼儀です。",
+      gift_modal_list_1: "両手でやり取りする",
+      gift_modal_list_2:
+        "名節・引っ越し祝い・感謝挨拶など様々な状況で贈り物のやり取り",
+    },
   },
   zh: {
     common: {
@@ -1175,6 +1369,8 @@ const resources = {
       "modal.disclaimer.and": "和",
       "modal.disclaimer.privacy": "隐私政策",
       "modal.disclaimer.suffix": "。",
+      "cta.title": "现在，是开始您完美旅行的时候了",
+      "cta.start": "通过5个问题开始",
     },
     QuickTranslator: {
       all: "全部",

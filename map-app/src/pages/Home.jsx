@@ -609,14 +609,14 @@ const KPopTravelHome = () => {
           className="text-center"
         >
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-            이제, 당신의 완벽한 여행을 시작할 시간
+            {t("cta.title")}
           </h2>
           <div className="mt-8">
             <Link
               to="/persona"
               className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-white shadow-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg"
             >
-              5가지 질문으로 시작하기
+              {t("cta.start")}
             </Link>
           </div>
         </motion.div>
