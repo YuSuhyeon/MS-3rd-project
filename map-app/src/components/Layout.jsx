@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import BrandLogo from "components/BrandLogo";
 import LanguageButtons from "components/ui/LanguageButtons";
@@ -1093,6 +1093,7 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { profile, login, logout } = useAuth();
   //const { t } = useTranslation("Navigation"); //0921주영 주석처리하고 아래에 i18n추가
   const { t, i18n } = useTranslation("Navigation");
@@ -1168,9 +1169,7 @@ export default function Layout({ children }) {
         }
 
         .neon-menu-toggle {
-          position: fixed;
-          top: 20px;
-          left: 20px;
+          position: relative;
           z-index: 1001;
           width: 50px;
           height: 50px;
@@ -1325,30 +1324,66 @@ export default function Layout({ children }) {
       `}</style>
 
       <div className="flex flex-col min-h-screen bg-[#18102a] relative">
-        {/* 메뉴버튼 (모바일/PC 모두 fixed) */}
-        {!menuOpen && (
-          <motion.button
-            className="neon-menu-toggle"
-            onClick={toggleMenu}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-            style={{
-              position: "fixed",
-              top: 15,
-              left: 15,
-              zIndex: 1001,
-              width: 45,
-              height: 45,
-            }}
-          >
-            <img src="/img/menu_150.png" alt="메뉴" className="menu-icon" />
-            <div className="neon-glow" />
-          </motion.button>
-        )}
+        {/* 상단 고정 버튼들 */}
+        <div className="fixed top-4 left-0 right-0 z-50 flex items-center justify-between px-4">
+          {/* 메뉴버튼 (왼쪽) */}
+          {!menuOpen && (
+            <motion.button
+              className="neon-menu-toggle"
+              onClick={toggleMenu}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              style={{
+                width: 45,
+                height: 45,
+              }}
+            >
+              <img src="/img/menu_150.png" alt="메뉴" className="menu-icon" />
+              <div className="neon-glow" />
+            </motion.button>
+          )}
+
+          {/* 오른쪽 버튼들 (언어 버튼 + 홈 버튼) */}
+          <div className="flex items-center gap-3">
+            {/* 언어 버튼 */}
+            <motion.div
+              className="h-10 flex items-center justify-center"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <LanguageButtons />
+            </motion.div>
+
+            {/* 홈 버튼 */}
+            <motion.button
+              onClick={() => navigate("/")}
+              className="neon-menu-toggle"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              style={{
+                width: 45,
+                height: 45,
+              }}
+              title="홈으로 이동"
+            >
+              <img
+                src="/img/Home.png"
+                alt="홈"
+                className="menu-icon"
+                style={{ filter: "brightness(0) invert(1)" }}
+              />
+              <div className="neon-glow" />
+            </motion.button>
+          </div>
+        </div>
 
         {/* 오버레이 */}
         <AnimatePresence>
@@ -1418,8 +1453,7 @@ export default function Layout({ children }) {
                   </motion.div>
                 );
               })}
-            </nav>
-
+            </nav>{" "}
             <div className="mt-6">
               <BannerWidget />
             </div>
