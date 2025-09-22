@@ -91,3 +91,12 @@ code {
 .itinerary-scroll::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(192, 132, 252, 1), rgba(147, 51, 234, 1));
 }
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

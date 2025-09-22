@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
@@ -10,27 +10,25 @@ import {
   MapPin,
   MessageSquare,
   Clock,
-  Edit3,
   Trash2,
-  Eye,
   Camera,
   LogOut,
   LogIn,
   Loader,
+  X,
   Route,
   ShoppingBag,
   User,
   Calendar,
-  ThumbsUp,
   Bookmark,
-  Star,
+  Edit3,
 } from "lucide-react";
 
 import { BackgroundEffect } from "../components/ui/NeonTheme";
+import { Itinerary } from "../Entities/Itinerary";
 
 // 로컬스토리지 키 상수
 const STORAGE_KEYS = {
-  TRAVEL_PLANS: "routes", // Route.js에서 사용하는 키
   LIKED_PRODUCTS: "liked_travel_products",
 };
 
@@ -69,23 +67,6 @@ const LikedProductsService = {
       return null;
     }
   },
-};
-
-// 모바일 감지 Hook
-const useMediaQuery = (query) => {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia(query);
-    setMatches(media.matches);
-
-    const listener = (e) => setMatches(e.matches);
-    media.addEventListener("change", listener);
-
-    return () => media.removeEventListener("change", listener);
-  }, [query]);
-
-  return matches;
 };
 
 const NeonCard = ({
@@ -245,43 +226,234 @@ const StatCard = ({ icon: Icon, title, value, variant = "default" }) => {
 };
 
 // 여행 계획 카드 컴포넌트
-const TravelPlanCard = ({ plan, onDelete }) => {
+const TravelPlanCard = ({ plan, onDelete, onSelect }) => {
   const formatDate = (timestamp) => {
     if (!timestamp) return "날짜 없음";
-    return new Date(timestamp).toLocaleDateString("ko-KR");
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return "날짜 없음";
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const dayCount = plan?.total_days || plan?.days?.length || 0;
+  const activitiesCount = Array.isArray(plan?.days)
+    ? plan.days.reduce(
+        (count, day) =>
+          count + (Array.isArray(day?.activities) ? day.activities.length : 0),
+        0
+      )
+    : 0;
+
+  const handleDeleteClick = (event) => {
+    event.stopPropagation();
+    onDelete(plan?.id);
   };
 
   return (
-    <NeonCard className="p-6">
-      <div className="flex gap-4">
-        <div className="w-20 h-20 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center">
-          <Route className="w-8 h-8 text-blue-400" />
+    <NeonCard
+      className="w-full p-4 sm:p-5 md:p-6 cursor-pointer group"
+      onClick={() => onSelect(plan)}
+    >
+      <div className="flex gap-3 sm:gap-4">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center">
+          <Route className="w-7 h-7 sm:w-8 sm:h-8 text-blue-300 group-hover:text-blue-200 transition-colors" />
         </div>
-        <div className="flex-1">
-          <h3 className="font-bold text-white text-lg mb-2">
-            {plan.title || "여행 계획"}
-          </h3>
-          <p className="text-gray-300 text-sm mb-3">
-            {plan.description || "여행 루트 계획"}
-          </p>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm text-gray-400">
-              <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                {formatDate(plan.created_date)}
-              </div>
-              {plan.stops && <span>{plan.stops.length}개 장소</span>}
+        <div className="flex-1 min-w-0">
+          <div className="min-w-0">
+            <h3 className="font-bold text-white text-base sm:text-lg md:text-xl mb-1 truncate">
+              {plan?.itinerary_name || plan?.title || "여행 계획"}
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-400">
+              {plan?.destination || plan?.description || "목적지 미정"}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-wrap sm:flex-row gap-3 mt-4 text-xs sm:text-sm text-gray-400">
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              <span>{dayCount || "일정 없음"}</span>
+              {dayCount ? <span>일 일정</span> : null}
             </div>
+            {activitiesCount ? (
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{activitiesCount}개 활동</span>
+              </div>
+            ) : null}
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              <span className="truncate max-w-[140px] sm:max-w-none">
+                {plan?.destination || "미정"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Bookmark className="w-4 h-4" />
+              <span>업데이트: {formatDate(plan?.updated_at || plan?.created_at)}</span>
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-start">
             <button
-              onClick={() => onDelete(plan.id)}
-              className="p-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
+              onClick={handleDeleteClick}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/15 text-red-200 hover:bg-red-500/25 transition-colors"
+              title="삭제"
             >
               <Trash2 className="w-4 h-4" />
+              <span className="text-xs sm:text-sm">삭제</span>
             </button>
           </div>
         </div>
       </div>
     </NeonCard>
+  );
+};
+
+const TravelPlanDetailModal = ({ plan, onClose, isLoading }) => {
+  if (!plan) return null;
+
+  const formatDateTime = (timestamp) => {
+    if (!timestamp) return "-";
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const days = Array.isArray(plan?.days) ? plan.days : [];
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="relative w-full max-w-3xl max-h-[85vh] overflow-hidden"
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 40, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 120, damping: 18 }}
+      >
+        <div className="relative bg-gradient-to-br from-gray-900/95 via-gray-900/90 to-black/90 border border-purple-500/30 rounded-3xl shadow-2xl">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/5 text-gray-300 hover:bg-white/10 transition-colors"
+            aria-label="닫기"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="px-8 pt-8 pb-6 border-b border-purple-500/20">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                <Route className="w-6 h-6 text-blue-300" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">
+                  {plan?.itinerary_name || "여행 계획"}
+                </h2>
+                <p className="text-sm text-gray-400">
+                  {plan?.destination || "목적지 미정"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4 text-sm text-gray-300">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-purple-300" />
+                <span>{plan?.total_days || plan?.days?.length || 0}일 일정</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-purple-300" />
+                <span>저장: {formatDateTime(plan?.created_at || plan?.created_date)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Bookmark className="w-4 h-4 text-purple-300" />
+                <span>
+                  최근 업데이트: {formatDateTime(plan?.updated_at || plan?.created_date)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-8 py-6 overflow-y-auto max-h-[55vh] space-y-6">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-300">
+                <Loader className="w-6 h-6 animate-spin mb-3" />
+                <span>상세 정보를 불러오는 중입니다...</span>
+              </div>
+            ) : days.length > 0 ? (
+              days.map((day, dayIndex) => (
+                <div
+                  key={day?.id || day?.day_number || `day-${dayIndex}`}
+                  className="border border-purple-500/20 rounded-2xl p-5 bg-white/5 backdrop-blur-sm"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white">
+                      Day {day?.day_number || dayIndex + 1}
+                    </h3>
+                    {day?.date ? (
+                      <span className="text-sm text-gray-400">
+                        {formatDateTime(day.date)}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {Array.isArray(day?.activities) && day.activities.length > 0 ? (
+                    <div className="space-y-3">
+                      {day.activities.map((activity, activityIndex) => (
+                        <div
+                          key={
+                            activity?.id ||
+                            `${day?.day_number || dayIndex}-${activityIndex}`
+                          }
+                          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-sm text-purple-200">
+                              <Clock className="w-4 h-4" />
+                              <span>{activity?.time || "시간 미정"}</span>
+                            </div>
+                            <div className="text-sm text-gray-300">
+                              {activity?.place_name || activity?.title || "활동"}
+                            </div>
+                          </div>
+                          {activity?.description ? (
+                            <p className="mt-2 text-sm text-gray-400">
+                              {activity.description}
+                            </p>
+                          ) : null}
+                          {activity?.address ? (
+                            <p className="mt-1 text-xs text-gray-500">
+                              {activity.address}
+                            </p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">등록된 활동이 없습니다.</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12 text-gray-400">
+                저장된 일정 정보가 없습니다.
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
@@ -343,7 +515,10 @@ const PostCard = ({ post, onEdit, onDelete }) => {
   };
 
   return (
-    <NeonCard className="p-6">
+    <NeonCard
+      className="p-6 cursor-pointer"
+      onClick={() => onEdit(post)}
+    >
       <div className="flex gap-4">
         {post.pictures && post.pictures.length > 0 && (
           <img
@@ -352,8 +527,10 @@ const PostCard = ({ post, onEdit, onDelete }) => {
             className="w-20 h-20 object-cover rounded-lg"
           />
         )}
-        <div className="flex-1">
-          <h3 className="font-bold text-white text-lg mb-2">{post.title}</h3>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-white text-lg mb-1 truncate">
+            {post.title}
+          </h3>
           <p className="text-gray-300 text-sm mb-4 line-clamp-2">
             {post.content}
           </p>
@@ -370,12 +547,26 @@ const PostCard = ({ post, onEdit, onDelete }) => {
               <span>{formatDate(post.created_at)}</span>
             </div>
 
-            <button
-              onClick={() => onDelete(post.id)}
-              className="p-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEdit(post);
+                }}
+                className="p-2 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
+              >
+                <Edit3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDelete(post.id);
+                }}
+                className="p-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -384,13 +575,16 @@ const PostCard = ({ post, onEdit, onDelete }) => {
 };
 
 // 좋아요한 글 카드 컴포넌트
-const LikedPostCard = ({ post, onRemove }) => {
+const LikedPostCard = ({ post, onNavigate, onRemove }) => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("ko-KR");
   };
 
   return (
-    <NeonCard className="p-6">
+    <NeonCard
+      className="p-6 cursor-pointer"
+      onClick={() => onNavigate(post)}
+    >
       <div className="flex gap-4">
         <img
           src={post.user_profile_image || "/default-avatar.png"}
@@ -421,7 +615,10 @@ const LikedPostCard = ({ post, onRemove }) => {
               </div>
             </div>
             <button
-              onClick={() => onRemove(post.id)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemove(post.id);
+              }}
               className="p-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
               title="좋아요 취소"
             >
@@ -434,32 +631,8 @@ const LikedPostCard = ({ post, onRemove }) => {
   );
 };
 
-// Route localStorage 서비스 (제공해주신 코드 기반)
-const RouteService = {
-  async list(sort = "-created_date", limit = 100) {
-    const items = this.readAll();
-    const sorted = items.sort(
-      (a, b) => (b.created_date || 0) - (a.created_date || 0)
-    );
-    const sliced = sorted.slice(0, limit);
-    return Promise.resolve(sliced);
-  },
-  readAll() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.TRAVEL_PLANS);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      return [];
-    }
-  },
-  writeAll(items) {
-    localStorage.setItem(STORAGE_KEYS.TRAVEL_PLANS, JSON.stringify(items));
-  },
-};
-
 // 메인 마이페이지 컴포넌트
 export default function MyPage() {
-  const isMobile = useMediaQuery("(max-width: 768px)");
   const { profile, logout, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("travel-plans");
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -467,78 +640,54 @@ export default function MyPage() {
 
   // LocalStorage 데이터 상태
   const [travelPlans, setTravelPlans] = useState([]);
+  const [travelPlansLoading, setTravelPlansLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isPlanDetailLoading, setIsPlanDetailLoading] = useState(false);
   const [likedProducts, setLikedProducts] = useState([]);
 
-  // API 데이터 상태
   const [userPosts, setUserPosts] = useState([]);
   const [likedPosts, setLikedPosts] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // LocalStorage에서 데이터 로드
-  useEffect(() => {
-    loadLocalStorageData();
-
-    // 실시간 동기화를 위한 이벤트 리스너 추가
-    const handleStorageChange = (e) => {
-      if (
-        e.key === STORAGE_KEYS.LIKED_PRODUCTS ||
-        e.key === STORAGE_KEYS.TRAVEL_PLANS
-      ) {
-        loadLocalStorageData();
-      }
-    };
-
-    // 창 포커스 시에도 데이터 다시 로드
-    const handleFocus = () => {
-      loadLocalStorageData();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("focus", handleFocus);
-    };
+  const loadLikedProducts = useCallback(() => {
+    try {
+      const products = LikedProductsService.getLikedProducts();
+      setLikedProducts(products);
+    } catch (error) {
+      console.error("좋아요한 여행 상품 로드 오류:", error);
+    }
   }, []);
 
-  // 프로필 로드시 모든 데이터 미리 가져오기
-  useEffect(() => {
-    if (profile) {
-      fetchAllData();
+  const fetchItineraries = useCallback(async () => {
+    if (!profile) {
+      setTravelPlans([]);
+      return;
+    }
+
+    setTravelPlansLoading(true);
+    try {
+      const items = await Itinerary.list(50);
+      setTravelPlans(items);
+    } catch (error) {
+      console.error("여행 일정 로드 오류:", error);
+    } finally {
+      setTravelPlansLoading(false);
     }
   }, [profile]);
 
-  // 탭 변경시 해당 데이터 가져오기
-  useEffect(() => {
-    if (profile && (activeTab === "my-posts" || activeTab === "liked-posts")) {
-      fetchTabData();
-    }
-  }, [activeTab, profile]);
-
-  const loadLocalStorageData = async () => {
-    try {
-      // 저장한 여행 계획 로드 (Route 서비스 사용)
-      const plans = await RouteService.list();
-      setTravelPlans(plans);
-
-      // 좋아요한 여행 상품 로드 - 서비스 사용
-      const products = LikedProductsService.getLikedProducts();
-      setLikedProducts(products);
-      console.log("로드된 좋아요 상품:", products); // 디버깅용
-    } catch (error) {
-      console.error("LocalStorage 데이터 로드 오류:", error);
-    }
-  };
-
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     if (!profile) return;
 
     try {
       const userId = profile.id || profile.sub;
+      const params = new URLSearchParams({ limit: "50" });
       const [myPostsResponse, likedPostsResponse] = await Promise.all([
-        fetch(`/api/users/${userId}/boards`, { credentials: "include" }),
-        fetch("/api/user/liked-posts", { credentials: "include" }),
+        fetch(`/api/users/${userId}/boards?${params.toString()}`, {
+          credentials: "include",
+        }),
+        fetch(`/api/user/liked-posts?${params.toString()}`, {
+          credentials: "include",
+        }),
       ]);
 
       if (myPostsResponse.ok) {
@@ -557,39 +706,30 @@ export default function MyPage() {
     } catch (error) {
       console.error("데이터 가져오기 오류:", error);
     }
-  };
+  }, [profile]);
 
-  const fetchTabData = async () => {
+  const fetchTabData = useCallback(async () => {
+    if (!profile) return;
+    if (!(activeTab === "my-posts" || activeTab === "liked-posts")) return;
+
     setLoading(true);
     try {
       let endpoint = "";
       let setState = null;
 
-      switch (activeTab) {
-        case "my-posts":
-          const userId = profile.id || profile.sub;
-          endpoint = `/api/users/${userId}/boards`;
-          setState = setUserPosts;
-          break;
-        case "liked-posts":
-          endpoint = "/api/user/liked-posts"; // 이 API가 호출되는지 확인
-          setState = setLikedPosts;
-          break;
-        default:
-          setLoading(false);
-          return;
+      if (activeTab === "my-posts") {
+        const userId = profile.id || profile.sub;
+        endpoint = `/api/users/${userId}/boards?limit=50`;
+        setState = setUserPosts;
+      } else if (activeTab === "liked-posts") {
+        endpoint = `/api/user/liked-posts?limit=50`;
+        setState = setLikedPosts;
       }
 
-      console.log(`API 호출: ${endpoint}`); // 디버깅용 로그 추가
+      if (!endpoint) return;
 
-      const response = await fetch(endpoint, {
-        credentials: "include",
-      });
-
-      console.log(`응답 상태: ${response.status}`); // 디버깅용 로그 추가
-
+      const response = await fetch(endpoint, { credentials: "include" });
       const data = await response.json();
-      console.log("응답 데이터:", data); // 디버깅용 로그 추가
 
       if (data.success) {
         setState(data.posts || []);
@@ -601,7 +741,46 @@ export default function MyPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, profile]);
+
+  useEffect(() => {
+    loadLikedProducts();
+  }, [loadLikedProducts]);
+
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      if (event.key === LikedProductsService.STORAGE_KEY) {
+        loadLikedProducts();
+      }
+    };
+
+    const handleFocus = () => {
+      loadLikedProducts();
+      fetchItineraries();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadLikedProducts, fetchItineraries]);
+
+  useEffect(() => {
+    fetchItineraries();
+  }, [fetchItineraries]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  useEffect(() => {
+    if (profile && (activeTab === "my-posts" || activeTab === "liked-posts")) {
+      fetchTabData();
+    }
+  }, [activeTab, profile, fetchTabData]);
 
   const tabs = [
     { id: "travel-plans", label: "저장한 여행 계획", icon: Route },
@@ -610,13 +789,45 @@ export default function MyPage() {
     { id: "liked-posts", label: "내가 좋아요 누른 글", icon: Heart },
   ];
 
-  const handleDeleteTravelPlan = (planId) => {
-    if (window.confirm("여행 계획을 삭제하시겠습니까?")) {
-      const currentItems = RouteService.readAll();
-      const updatedItems = currentItems.filter((item) => item.id !== planId);
-      RouteService.writeAll(updatedItems);
-      setTravelPlans(updatedItems);
+  const handleDeleteTravelPlan = async (planId) => {
+    if (!planId) return;
+    if (!window.confirm("여행 계획을 삭제하시겠습니까?")) return;
+
+    try {
+      await Itinerary.remove(planId);
+      setTravelPlans((prev) => prev.filter((item) => item.id !== planId));
+      if (selectedPlan?.id === planId) {
+        setSelectedPlan(null);
+      }
+    } catch (error) {
+      console.error("여행 계획 삭제 오류:", error);
+      alert("여행 계획을 삭제하는 중 오류가 발생했습니다.");
     }
+  };
+
+  const handleSelectTravelPlan = async (plan) => {
+    if (!plan) return;
+    setSelectedPlan(plan);
+
+    if (!plan.id) {
+      setIsPlanDetailLoading(false);
+      return;
+    }
+
+    setIsPlanDetailLoading(true);
+    try {
+      const fullPlan = await Itinerary.get(plan.id);
+      setSelectedPlan(fullPlan);
+    } catch (error) {
+      console.error("여행 계획 상세 조회 오류:", error);
+    } finally {
+      setIsPlanDetailLoading(false);
+    }
+  };
+
+  const handleClosePlanDetail = () => {
+    setSelectedPlan(null);
+    setIsPlanDetailLoading(false);
   };
 
   const handleRemoveLikedProduct = (productId) => {
@@ -625,7 +836,6 @@ export default function MyPage() {
         LikedProductsService.removeLikedProduct(productId);
       if (updatedProducts !== null) {
         setLikedProducts(updatedProducts);
-        console.log("좋아요 취소됨:", productId); // 디버깅용
       } else {
         alert("좋아요 취소 중 오류가 발생했습니다.");
       }
@@ -633,8 +843,7 @@ export default function MyPage() {
   };
 
   const handleEditPost = (post) => {
-    console.log("Edit post:", post);
-    navigate(`/write?edit=${post.id}`);
+    navigate(`/boards/${post.id}`);
   };
 
   const handleDeletePost = async (postId) => {
@@ -657,11 +866,24 @@ export default function MyPage() {
     }
   };
 
-  const handleRemoveLikedPost = (postId) => {
-    if (window.confirm("좋아요를 취소하시겠습니까?")) {
-      // TODO: 백엔드 API 구현 후 실제 API 호출
-      console.log("Remove liked post:", postId);
-      fetchTabData();
+  const handleRemoveLikedPost = async (postId) => {
+    if (!window.confirm("좋아요를 취소하시겠습니까?")) return;
+
+    try {
+      const response = await fetch(`/api/boards/${postId}/like`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        setLikedPosts((prev) => prev.filter((post) => post.id !== postId));
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "좋아요 취소에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("좋아요 취소 오류:", error);
+      alert(error.message || "좋아요 취소 중 오류가 발생했습니다.");
     }
   };
 
@@ -696,7 +918,8 @@ export default function MyPage() {
 
   // 로그인한 경우 - 마이페이지 표시
   return (
-    <BackgroundEffect>
+    <>
+      <BackgroundEffect>
       {/* Header */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 py-16">
@@ -824,13 +1047,19 @@ export default function MyPage() {
                     저장한 여행 계획 ({travelPlans.length})
                   </h2>
                 </div>
-                {travelPlans.length > 0 ? (
-                  <div className="space-y-6">
+                {travelPlansLoading ? (
+                  <div className="text-center py-20">
+                    <Loader className="w-8 h-8 animate-spin text-purple-400 mx-auto mb-4" />
+                    <p className="text-gray-300">여행 계획을 불러오는 중입니다...</p>
+                  </div>
+                ) : travelPlans.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
                     {travelPlans.map((plan) => (
                       <TravelPlanCard
-                        key={plan.id}
+                        key={plan.id || plan.itinerary_name}
                         plan={plan}
                         onDelete={handleDeleteTravelPlan}
+                        onSelect={handleSelectTravelPlan}
                       />
                     ))}
                   </div>
@@ -950,6 +1179,7 @@ export default function MyPage() {
                       <LikedPostCard
                         key={post.id}
                         post={post}
+                        onNavigate={handleEditPost}
                         onRemove={handleRemoveLikedPost}
                       />
                     ))}
@@ -973,6 +1203,16 @@ export default function MyPage() {
           </AnimatePresence>
         </div>
       </div>
-    </BackgroundEffect>
+      </BackgroundEffect>
+      <AnimatePresence>
+        {selectedPlan && (
+          <TravelPlanDetailModal
+            plan={selectedPlan}
+            onClose={handleClosePlanDetail}
+            isLoading={isPlanDetailLoading}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

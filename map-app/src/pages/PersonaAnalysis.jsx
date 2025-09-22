@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { createPageUrl } from "utils";
 import useIsMobile from "./useIsMobile";
 import {
@@ -303,6 +304,7 @@ const questionVariants = {
 
 export default function PersonaAnalysis() {
   const navigate = useNavigate();
+  const { profile: authProfile, isLoading: authLoading, login } = useAuth();
   const isMobile = useIsMobile();
   const [questions, setQuestions] = useState([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
@@ -355,7 +357,7 @@ export default function PersonaAnalysis() {
           // 최대 선택 개수 미만이면 추가
           return { ...prev, [questionId]: [...currentSelection, value] };
         }
-        // 최대 선택 개수에 도달했으면 변경 없음
+        // 최대 선택 개수에 도달했으므로 변경 없음
         return prev;
       });
     } else {
@@ -397,11 +399,11 @@ export default function PersonaAnalysis() {
       }
       const analysisResult = await response.json();
 
-      // 2. 받은 분석 결과와 사용자의 답변을 합쳐 프로필 객체를 생성합니다.
+      // 2. 받은 분석 결과를 사용자의 답변과 합쳐 새로운 객체를 생성합니다.
       const newProfile = { ...answers, analysis_result: analysisResult };
 
-      // 3. TravelProfile.create를 사용해 브라우저의 localStorage에 프로필을 저장합니다.
-      // 이 과정이 있어야 ResultDashboard 페이지에서 데이터를 읽을 수 있습니다.
+      // 3. TravelProfile.create를 이용해 브라우저의 localStorage에 프로필을 저장합니다.
+      // 이 과정을 통해 ResultDashboard 페이지에서 데이터를 읽을 수 있습니다.
       await TravelProfile.create(newProfile);
 
       // 4. 모든 과정이 성공하면 결과 페이지로 이동합니다.
@@ -415,11 +417,49 @@ export default function PersonaAnalysis() {
 
   // --- Render Logic ---
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-slate-400">
+        <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
+        <p>로그인 상태를 확인하고 있습니다...</p>
+      </div>
+    );
+  }
+
+  if (!authProfile) {
+    return (
+      <BackgroundEffect className="min-h-screen flex items-center justify-center px-4 py-10">
+        <NeonScrollbarStyles />
+        <NeonCard className="max-w-lg w-full text-center space-y-6">
+          <div className="space-y-2">
+            <GradientText size="2xl">로그인이 필요합니다</GradientText>
+            <p className="text-slate-300">
+              페르소나 분석 기능을 사용하려면 Google 또는 Microsoft 계정으로
+              로그인해주세요.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <NeonButton size="lg" onClick={() => login("google")}>
+              Google로 로그인
+            </NeonButton>
+            <NeonButton
+              size="lg"
+              variant="secondary"
+              onClick={() => login("microsoft")}
+            >
+              Microsoft로 로그인
+            </NeonButton>
+          </div>
+        </NeonCard>
+      </BackgroundEffect>
+    );
+  }
+
   if (loadingQuestions) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-slate-400">
         <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-        <p>질문을 불러오는 중…</p>
+        <p>Loading questions...</p>
       </div>
     );
   }

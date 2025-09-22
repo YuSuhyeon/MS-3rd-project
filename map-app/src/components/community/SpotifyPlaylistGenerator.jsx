@@ -11,7 +11,6 @@ import {
   Filter,
   Sparkles,
   Volume2,
-  Clock,
   Users,
   Shuffle,
   Heart,
@@ -28,6 +27,20 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { NeonButton, GradientText } from "../ui/NeonTheme";
+
+const SpotifyIcon = ({ className = "", ...props }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M12 0C5.373 0 0 5.372 0 12s5.373 12 12 12 12-5.372 12-12S18.627 0 12 0Zm5.476 17.344c-.217.338-.67.44-1.008.223-2.759-1.74-6.233-2.133-10.325-1.167-.389.092-.781-.151-.873-.541a.705.705 0 0 1 .54-.872c4.49-1.047 8.34-.6 11.353 1.277.337.217.44.668.223 1.005Zm1.44-3.209c-.273.424-.838.55-1.262.277-3.158-1.938-7.98-2.5-11.734-1.367-.476.14-.977-.135-1.118-.611-.14-.475.135-.977.611-1.118 4.3-1.27 9.6-.64 13.195 1.545.424.272.55.838.308 1.274Zm.124-3.338c-3.784-2.246-10.042-2.453-13.64-1.34-.566.179-1.166-.142-1.345-.708-.18-.566.142-1.166.708-1.345C7.426 6.228 14.38 6.46 18.686 9c.528.313.702.99.388 1.518-.313.527-.99.701-1.518.388Z" />
+  </svg>
+);
 
 // 1. 비디오 플레이어 모달 컴포넌트
 const VideoPlayerModal = ({ video, onClose }) => {
@@ -40,20 +53,21 @@ const VideoPlayerModal = ({ video, onClose }) => {
 
   return (
     <motion.div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       onClick={onClose}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="relative w-full max-w-4xl"
+        className="relative w-full max-w-[92vw] sm:max-w-3xl lg:max-w-4xl"
         onClick={(e) => e.stopPropagation()}
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.9 }}
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 22 }}
       >
-        <div className="aspect-w-16 aspect-h-9 bg-black rounded-lg overflow-hidden shadow-2xl">
+        <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black/60" style={{ paddingBottom: "56.25%" }}>
           <iframe
             src={srcUrl}
             title="YouTube video player"
@@ -61,7 +75,7 @@ const VideoPlayerModal = ({ video, onClose }) => {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
-            className="w-full h-full"
+            className="absolute inset-0 h-full w-full"
           ></iframe>
         </div>
       </motion.div>
@@ -71,45 +85,53 @@ const VideoPlayerModal = ({ video, onClose }) => {
 
 // 2. 비디오 카드 컴포넌트 (클릭 이벤트 핸들러 추가)
 const YouTubeVideoCard = ({ video, onCardClick }) => {
-  // video.thumbnail은 실제 데이터의 'image' 속성과 같아야 합니다.
-  // 이 컴포넌트는 첫 질문의 코드를 기반으로 합니다.
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      onClick={() => onCardClick(video)} // 클릭 시 비디오 객체 전달
-      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer"
+      onClick={() => onCardClick(video)}
+      className="group relative cursor-pointer overflow-hidden rounded-3xl border border-red-500/30 bg-black/35 transition-all duration-300 backdrop-blur-sm hover:-translate-y-2 hover:border-red-400/50"
     >
-      <div className="relative">
+      <div className="relative h-48 overflow-hidden">
         <img
-          src={video.thumbnail || video.image} // 데이터 속성에 맞춰 image 또는 thumbnail 사용
+          src={video.thumbnail || video.image}
           alt={video.title}
-          className="w-full h-48 object-cover"
+          className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-          <div className="bg-red-600 rounded-full p-3">
-            <Play className="w-8 h-8 text-white fill-current" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/40 to-black/70" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/50">
+          <div className="rounded-full bg-red-600/90 p-4 shadow-[0_20px_40px_rgba(220,38,38,0.35)]">
+            <Play className="h-6 w-6 text-white" />
           </div>
         </div>
+        <div className="absolute top-4 left-4 flex items-center gap-2">
+          {video.publishedAt && (
+            <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/80">
+              {video.publishedAt}
+            </div>
+          )}
+        </div>
+        {video.views && (
+          <div className="absolute top-4 right-4 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+            {video.views}
+          </div>
+        )}
       </div>
-      <div className="p-4">
-        <h4 className="font-bold text-gray-900 mb-2 line-clamp-2 leading-snug">
+      <div className="space-y-2 p-6">
+        <p className="line-clamp-2 text-lg font-semibold text-white">
           {video.title}
-        </h4>
-        <div className="flex items-center justify-between text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            <span>{video.publishedAt || "Recently"}</span>
-          </div>
-          <span>{video.views || ""}</span>
-        </div>
+        </p>
+        {video.description && (
+          <p className="text-sm text-purple-100/70">{video.description}</p>
+        )}
       </div>
     </motion.div>
   );
 };
 
 const SpotifyPlaylistGenerator = () => {
-  const { t } = useTranslation("playlists"); 
+  const { t } = useTranslation("playlists");
+  const { t: tNav } = useTranslation("Navigation");
   const [spotifyUser, setSpotifyUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
@@ -766,95 +788,124 @@ const SpotifyPlaylistGenerator = () => {
 
   // 플레이리스트 카드 컴포넌트
   const PlaylistCard = ({ playlist }) => {
+    const theme = THEMES[playlist.theme];
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all ${
-          playlist.isLocked ? "opacity-75" : ""
+        className={`relative overflow-hidden rounded-3xl border border-purple-500/25 bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-xl transition-all duration-300 ${
+          playlist.isLocked
+            ? "opacity-75"
+            : "hover:-translate-y-2 hover:shadow-[0_40px_120px_-40px_rgba(236,72,153,0.45)]"
         }`}
       >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(236,72,153,0.25),_transparent_55%)] opacity-60" />
         <div className="relative">
-          <img
-            src={playlist.image}
-            alt={playlist.title}
-            className="w-full h-40 object-cover"
-          />
-
-          {/* 
-          {playlist.isLocked && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <div className="text-center text-white">
-                <LogIn className="w-8 h-8 mx-auto mb-2" />
-                <p className="text-sm">로그인 필요</p>
-              </div>
+          <div className="relative h-48 overflow-hidden rounded-3xl">
+            <img
+              src={playlist.image}
+              alt={playlist.title}
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80" />
+            <div className="absolute top-4 left-4 flex items-center gap-2">
+              {theme?.icon && (
+                <span className="text-2xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.35)]">
+                  {theme.icon}
+                </span>
+              )}
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg ${
+                  theme?.color
+                    ? `bg-gradient-to-r ${theme.color}`
+                    : "bg-purple-600/80"
+                }`}
+              >
+                {playlist.theme}
+              </span>
             </div>
-          )} */}
-
-          <div className="absolute top-3 right-3">
-            <span
-              className={`px-2 py-1 text-white text-xs rounded-full ${
-                THEMES[playlist.theme]
-                  ? `bg-gradient-to-r ${THEMES[playlist.theme].color}`
-                  : "bg-gray-500"
-              }`}
-            >
-              {playlist.theme}
-            </span>
+            {playlist.isLocked && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.35em] text-white/80">
+                  {t("login")}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="p-4">
-          <h3 className="font-bold text-gray-900 mb-2">{playlist.title}</h3>
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-            {playlist.description}
-          </p>
+        <div className="relative z-10 flex flex-col gap-5 p-6">
+          <div>
+            <GradientText
+              size="xl"
+              variant="primary"
+              className="leading-tight"
+            >
+              {playlist.title}
+            </GradientText>
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-purple-100/80">
+              {playlist.description}
+            </p>
+          </div>
 
-          <div className="space-y-2 mb-4">
+          <div className="space-y-2 rounded-2xl border border-white/10 bg-black/40 p-4">
             {playlist.songs.map((song, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between text-sm"
+                className="flex items-center justify-between gap-3 text-sm text-purple-100/80"
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  <Music className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                  <span className="font-medium truncate text-gray-500">{song.title}</span>
-                  <span className="text-gray-500">- {song.artist}</span>
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/5 text-purple-200/80">
+                    <Music className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-white/90">
+                      {song.title}
+                    </p>
+                    <p className="truncate text-xs text-purple-200/70">
+                      {song.artist}
+                    </p>
+                  </div>
                 </div>
-                <span className="text-gray-400">{song.duration}</span>
+                <span className="text-xs text-purple-200/60">
+                  {song.duration}
+                </span>
               </div>
             ))}
           </div>
 
-          <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-            <span>{playlist.totalDuration}</span>
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              {playlist.followers.toLocaleString()}
+          <div className="flex items-center justify-between text-xs text-purple-200/70">
+            <span className="uppercase tracking-[0.3em]">
+              {playlist.totalDuration}
+            </span>
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-purple-200" />
+              <span className="font-medium text-white/80">
+                {playlist.followers.toLocaleString()}
+              </span>
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <button
+          <div className="flex items-center gap-3">
+            <NeonButton
+              variant="success"
+              size="sm"
               disabled={playlist.isLocked}
-              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
-                playlist.isLocked
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-green-500 text-white hover:bg-green-600"
-              }`}
+              className="flex flex-1 items-center justify-center gap-2"
             >
-              <Play className="w-4 h-4" />
+              <Play className="h-4 w-4" />
               {t("play")}
-            </button>
+            </NeonButton>
             <button
+              type="button"
               disabled={playlist.isLocked}
-              className={`p-2 border rounded-lg ${
+              className={`rounded-2xl border border-white/10 bg-white/5 p-2 text-purple-200 transition-all duration-200 ${
                 playlist.isLocked
-                  ? "border-gray-200 text-gray-400"
-                  : "border-gray-200 hover:bg-gray-50"
+                  ? "cursor-not-allowed opacity-40"
+                  : "hover:border-purple-300/60 hover:bg-white/10 hover:text-white"
               }`}
             >
-              <Heart className="w-4 h-4" />
+              <Heart className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -863,34 +914,6 @@ const SpotifyPlaylistGenerator = () => {
   };
 
   // 유튜브 비디오 카드 컴포넌트
-  const YouTubeCard = ({ video, onCardClick }) => {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        onClick={() => !video.isLocked && onCardClick(video)} // 비디오 '객체' 전체를 전달
-        className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer"
-      >
-        <div className="relative">
-          <img
-            src={video.image}
-            alt={video.title}
-            className="w-full h-48 object-cover"
-          />
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-            <Play className="w-12 h-12 text-white fill-current" />
-          </div>
-        </div>
-        <div className="p-4">
-          <h3 className="font-bold text-gray-900 mb-1">{video.title}</h3>
-          <p className="text-sm text-gray-600 line-clamp-2">
-            {video.description}
-          </p>
-        </div>
-      </motion.div>
-    );
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -900,214 +923,254 @@ const SpotifyPlaylistGenerator = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* 로그인 상태 헤더 */}
-      <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100">
-        <div className="flex items-center justify-between">
+    <div className="space-y-10">
+      <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-black/30 backdrop-blur-md">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-3xl blur-xl"></div>
+        <div className="relative z-10 flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-purple-100/80">
+              <Sparkles className="h-4 w-4 text-purple-200" />
+              {t("ai_custom_recommend")}
+            </div>
+            <p> 
+              <GradientText size="3xl" variant="primary" className="leading-tight">
+              {t("title")}
+              </GradientText>
+            </p>
+            <p className="text-sm text-purple-100/85 sm:text-base">
+              {t("description")}
+            </p>
+            <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.35em] text-purple-200/80">
+              {[t("ai_custom_recommend"), t("unlimited_creation"), t("spotify_auto_save")].map((feature) => (
+                <span
+                  key={feature}
+                  className="rounded-full border border-white/10 bg-black/30 px-3 py-1"
+                >
+                  {feature}
+                </span>
+              ))}
+            </div>
+          </div>
+
           {spotifyUser ? (
-            <div className="flex items-center gap-4">
-              {spotifyUser.avatar && (
-                <img
-                  src={spotifyUser.avatar}
-                  alt="Spotify avatar"
-                  className="w-12 h-12 rounded-full"
-                />
-              )}
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  Hello, {spotifyUser.display_name} 💖
-                </h2>
-                <p className="text-gray-600">
-                  Now, Make a k-pop list just for you🎵
-                </p>
+            <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-black/35 p-6 backdrop-blur-sm">
+              <div className="flex items-center gap-4">
+                {spotifyUser.avatar ? (
+                  <img
+                    src={spotifyUser.avatar}
+                    alt="Spotify avatar"
+                    className="h-14 w-14 rounded-full border border-white/20"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-black/40 text-[#1DB954]">
+                    <SpotifyIcon className="h-7 w-7" />
+                  </div>
+                )}
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.35em] text-purple-200/70">
+                    {t("my_playlist")}
+                  </p>
+                  <p className="text-xl font-semibold text-white">
+                    {spotifyUser.display_name}
+                  </p>
+                  <p className="text-sm text-purple-200/70">{t("your_playlist")}</p>
+                </div>
               </div>
-              <button
-                onClick={() => setIsGeneratorOpen(true)}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors flex items-center gap-2 font-medium"
-              >
-                <Sparkles className="w-5 h-5" />
-                create playlist
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 border border-gray-300 rounded-xl text-gray-600 hover:bg-white/50 transition-colors flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                logout
-              </button>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <NeonButton
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setIsGeneratorOpen(true)}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {t("create_new_playlist")}
+                </NeonButton>
+                <NeonButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {tNav("log_out")}
+                </NeonButton>
+              </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center">
-                  <Music className="w-8 h-8 text-white" />
+            <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-black/35 p-6 backdrop-blur-sm">
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-black/40 text-[#1DB954]">
+                  <SpotifyIcon className="h-7 w-7" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">
+                <div className="space-y-2">
+                  <GradientText size="xl" variant="primary">
                     {t("title")}
-                  </h2>
-                  <p className="text-gray-600">
-                    {t("description")}
-                  </p>
+                  </GradientText>
+                  <p className="text-sm text-purple-100/80">{t("make_playlist")}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleLogin}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors flex items-center gap-2 font-medium"
-                >
-                  <LogIn className="w-5 h-5" />
-                  {t("login")}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 플레이리스트 섹션 */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900">
-              {spotifyUser ? t("my_playlist") : t("playlist_preview")}
-            </h3>
-            <p className="text-gray-600 mt-1">
-              {spotifyUser
-                ? t("your_playlist")
-                : t("make_playlist")}
-            </p>
-          </div>
-
-          {!spotifyUser && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
-              <p className="text-sm text-yellow-700 font-medium">{t("preview")}</p>
-            </div>
-          )}
-        </div>
-
-        {/* 플레이리스트 그리드 */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(spotifyUser ? playlists : mockPlaylists).map((playlist) => (
-            <PlaylistCard key={playlist.id} playlist={playlist} />
-          ))}
-
-          {/* 빈 상태 또는 추가 생성 카드 */}
-          {spotifyUser && playlists.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-dashed border-purple-300 rounded-xl p-8 text-center"
-            >
-              <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-              <h4 className="font-bold text-gray-900 mb-2">
-                {t("create_playlist")}
-              </h4>
-              <p className="text-gray-600 mb-4">
-                {t("create_playlist_description")}
-              </p>
-              <button
-                onClick={() => setIsGeneratorOpen(true)}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              <NeonButton
+                variant="primary"
+                size="md"
+                onClick={handleLogin}
+                className="mt-6 flex w-full items-center justify-center gap-2"
               >
-                {t("start_now")}
-              </button>
-            </motion.div>
-          )}
-
-          {spotifyUser && playlists.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-300 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 transition-all cursor-pointer"
-              onClick={() => setIsGeneratorOpen(true)}
-            >
-              <Plus className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h4 className="font-bold text-gray-900 mb-2">
-                {t("create_new_playlist")}
-              </h4>
-              <p className="text-gray-600">
-                {t("create_new_playlist_description")}
-              </p>
-            </motion.div>
-          )}
-        </div>
-      </div>
-      {/*youtube */}
-      <div className="mt-12">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
-                <Play className="w-5 h-5 text-white fill-current" />
-              </div>
-              {t("featured_youtube_mix")}
-            </h3>
-            <p className="text-gray-600 mt-1">
-              {t("latest_k_pop_travel_playlists")}
-            </p>
-          </div>
-          <a
-            href="https://www.youtube.com/playlist?list=PLA91TLEzZINsQDpAkhMAFuDj5C-vJHziT"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
-          >
-            <ExternalLink className="w-4 h-4" />
-            {t("view_full_playlist")}
-          </a>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {youtubeVideos.map((video) => (
-            <YouTubeVideoCard
-              key={video.id}
-              video={video}
-              onCardClick={setSelectedVideo}
-            />
-          ))}
-        </div>
-
-        {/* 로그인 촉진 섹션 (비로그인 시) */}
-        {!spotifyUser && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-center text-white"
-          >
-            <Headphones className="w-16 h-16 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold mb-3">
-              {t("create_your_own_playlist")}
-            </h3>
-            <p className="text-purple-100 mb-6 max-w-2xl mx-auto">
-              {t("create_your_own_playlist_description")}
-            </p>
-            <div className="flex items-center justify-center gap-8 mb-6 text-sm">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5" />
-                <span>{t("ai_custom_recommend")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Music className="w-5 h-5" />
-                <span>{t("unlimited_creation")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Download className="w-5 h-5" />
-                <span>{t("spotify_auto_save")}</span>
-              </div>
+                <LogIn className="h-5 w-5" />
+                {tNav("log_in")}
+              </NeonButton>
             </div>
-            <button
-              onClick={handleLogin}
-              className="px-8 py-4 bg-white text-purple-600 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center gap-2 mx-auto text-lg"
-            >
-              <LogIn className="w-6 h-6" />
-              {t("start_now")}
-            </button>
-          </motion.div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* 플레이리스트 생성 모달 */}
+      <div className="space-y-8">
+        <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-black/30 p-6 sm:p-8 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-3xl blur-xl" />
+          <div className="relative z-10 space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <GradientText size="2xl" variant="primary" className="leading-tight">
+                  {spotifyUser ? t("my_playlist") : t("playlist_preview")}
+                </GradientText>
+                <p className="text-sm text-purple-100/80 sm:text-base">
+                  {spotifyUser ? t("your_playlist") : t("make_playlist")}
+                </p>
+              </div>
+              {!spotifyUser && (
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.35em] text-purple-200/80">
+                  {t("preview")}
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {(spotifyUser ? playlists : mockPlaylists).map((playlist) => (
+                <PlaylistCard key={playlist.id} playlist={playlist} />
+              ))}
+
+              {spotifyUser && playlists.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex h-full flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-purple-500/50 bg-black/35 p-8 text-center backdrop-blur-sm"
+                >
+                  <Sparkles className="h-10 w-10 text-purple-300" />
+                  <GradientText size="lg" variant="primary">
+                    {t("create_playlist")}
+                  </GradientText>
+                  <p className="text-sm text-purple-100/80">
+                    {t("create_playlist_description")}
+                  </p>
+                  <NeonButton
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setIsGeneratorOpen(true)}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                    {t("start_now")}
+                  </NeonButton>
+                </motion.div>
+              )}
+
+              {spotifyUser && playlists.length > 0 && (
+                <motion.button
+                  type="button"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  onClick={() => setIsGeneratorOpen(true)}
+                  className="flex h-full flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-purple-400/60 bg-black/30 p-8 text-center text-purple-100/80 transition-all duration-300 hover:-translate-y-2 hover:border-purple-300 hover:bg-black/40"
+                >
+                  <Plus className="h-10 w-10" />
+                  <GradientText size="lg" variant="primary">
+                    {t("create_new_playlist")}
+                  </GradientText>
+                  <p className="text-sm text-purple-100/70">
+                    {t("create_new_playlist_description")}
+                  </p>
+                </motion.button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-3xl border border-red-500/30 bg-black/30 p-6 sm:p-8 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 via-red-500/10 to-orange-500/10 rounded-3xl blur-xl" />
+          <div className="relative z-10 space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-600/80">
+                    <Play className="h-5 w-5 text-white" />
+                  </div>
+                  <GradientText size="2xl" variant="danger">
+                    {t("featured_youtube_mix")}
+                  </GradientText>
+                </div>
+                <p className="text-sm text-purple-100/80 sm:text-base">
+                  {t("latest_k_pop_travel_playlists")}
+                </p>
+              </div>
+              <a
+                href="https://www.youtube.com/playlist?list=PLA91TLEzZINsQDpAkhMAFuDj5C-vJHziT"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-red-200 transition-colors duration-200 hover:border-red-400/60 hover:text-white"
+              >
+                <ExternalLink className="h-4 w-4" />
+                {t("view_full_playlist")}
+              </a>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {youtubeVideos.map((video) => (
+                <YouTubeVideoCard
+                  key={video.id}
+                  video={video}
+                  onCardClick={setSelectedVideo}
+                />
+              ))}
+            </div>
+
+            {!spotifyUser && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-r from-purple-600/70 via-pink-600/70 to-purple-700/70 p-8 text-center text-white backdrop-blur-sm"
+              >
+                <Headphones className="mx-auto h-14 w-14" />
+                <h3 className="mt-4 text-2xl font-semibold">
+                  {t("create_your_own_playlist")}
+                </h3>
+                <p className="mt-3 text-sm text-purple-100/85 md:text-base">
+                  {t("create_your_own_playlist_description")}
+                </p>
+                <div className="mt-6 flex flex-wrap justify-center gap-4 text-[11px] uppercase tracking-[0.35em] text-purple-100/80">
+                  {[t("ai_custom_recommend"), t("unlimited_creation"), t("spotify_auto_save")].map((feature) => (
+                    <span
+                      key={feature}
+                      className="rounded-full border border-white/20 bg-white/10 px-3 py-1"
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+                <NeonButton
+                  variant="primary"
+                  size="md"
+                  onClick={handleLogin}
+                  className="mt-6 inline-flex items-center justify-center gap-2"
+                >
+                  <LogIn className="h-5 w-5" />
+                  {t("start_now")}
+                </NeonButton>
+              </motion.div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <AnimatePresence>
         {isGeneratorOpen && spotifyUser && (
           <PlaylistGeneratorModal
@@ -1116,7 +1179,7 @@ const SpotifyPlaylistGenerator = () => {
           />
         )}
       </AnimatePresence>
-      {/* youtube모달  */}
+
       <AnimatePresence>
         {selectedVideo && (
           <VideoPlayerModal

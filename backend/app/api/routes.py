@@ -1,11 +1,4 @@
-from flask import Blueprint, jsonify, redirect, request, session
-from ..services import persona_service , community_service,community_social, storage_service
-
 import os
-from flask import Blueprint, jsonify, redirect, request, session
-from flask_cors import cross_origin 
-from pathlib import Path
-
 import csv
 import math
 import time
@@ -14,23 +7,29 @@ import requests
 import tempfile
 import jwt
 from functools import wraps
+from pathlib import Path
+from datetime import datetime, timedelta
 
+from flask import Blueprint, jsonify, redirect, request, session
+from flask_cors import cross_origin
+
+from ..services import persona_service, community_service, community_social, storage_service
 
 api_bp = Blueprint('api', __name__)
 
-# ---------- Paths ----------
+# ---------- 경로 설정 ----------
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REPO_ROOT = os.path.dirname(BACKEND_DIR)
 PUBLIC_DIR = os.path.join(REPO_ROOT, 'map-app', 'public')
 SEOUL_DATA_DIR = os.path.join(PUBLIC_DIR, 'seoul_data')
 ROUTE_PLANS_DIR = os.path.join(REPO_ROOT, 'backend', 'data', 'route_plans')
 
-
+# K6 페르소나 ID와 라벨 매핑
 k6_id2label = {
-    0: '알뜰 필수코스 정복자',
-    1: '플렉스 장기 체류객',
-    2: '관계 중심 체류객',
-    3: '실속파 쇼핑 원정대',
+    0: '알뜰 필수코스 정복형',
+    1: '럭셔리 장기 체류형',
+    2: '관계중심 체류형',
+    3: '지속적 쇼핑 탐험가',
     4: '문화유산 탐험가',
     5: '미니멀 K-컬처 팬',
 }
@@ -59,14 +58,12 @@ def health():
         'cwd': os.getcwd(),
     })
 
-
-# ---------- Seoul places data loading & caching ----------
+# ---------- 서울 장소 데이터 로딩 & 캐싱 ----------
 _PLACES_CACHE = { 'mtime': 0.0, 'items': [] }
 
-# 서울 지역 필터링을 위한 경계 상자 정의
+# 서울 지역 필터링을 위한 경계 좌표 정의
 SEOUL_MIN_LAT, SEOUL_MAX_LAT = 37.413294, 37.715133
 SEOUL_MIN_LNG, SEOUL_MAX_LNG = 126.734086, 127.269311
-
 
 def _pick(o, keys):
     for k in keys:
@@ -87,24 +84,15 @@ def _normalize_row(row: dict, idx: int, src: str):
         return None
     addr = _pick(row, ['address', 'addr', 'addr1', 'road_address', 'address_ko']) or ''
     cat_parts = [
-        str(row.get('category') or ''),
-        str(row.get('cat') or ''),
-        str(row.get('category_ko') or ''),
-        str(row.get('cat1') or ''),
-        str(row.get('cat2') or ''),
-        str(row.get('cat3') or ''),
+        str(row.get('category') or ''), str(row.get('cat') or ''), str(row.get('category_ko') or ''),
+        str(row.get('cat1') or ''), str(row.get('cat2') or ''), str(row.get('cat3') or ''),
         str(row.get('contenttype') or ''),
     ]
     cat = ' '.join([c for c in cat_parts if c]).strip()
     desc = str(_pick(row, ['desc', 'description', 'rag_seed_text_ko']) or '')
     return {
-        'id': f"{src}-{idx}",
-        'name': str(name),
-        'lat': lat,
-        'lng': lng,
-        'addr': str(addr),
-        'category': str(cat),
-        'desc': desc,
+        'id': f"{src}-{idx}", 'name': str(name), 'lat': lat, 'lng': lng,
+        'addr': str(addr), 'category': str(cat), 'desc': desc,
     }
 
 def _parse_csv(file_path: str, src_label: str):
@@ -114,23 +102,16 @@ def _parse_csv(file_path: str, src_label: str):
             try:
                 with open(file_path, 'r', encoding=enc, newline='') as f:
                     reader = csv.DictReader(f)
-                    out = []
-                    i = 0
-                    for row in reader:
-                        i += 1
-                        n = _normalize_row(row, i, src_label)
-                        if n:
-                            out.append(n)
-                    return { 'items': out, 'mtime': stat.st_mtime }
+                    out = [_normalize_row(row, i + 1, src_label) for i, row in enumerate(reader)]
+                    return {'items': [n for n in out if n], 'mtime': stat.st_mtime}
             except Exception:
                 continue
-        return { 'items': [], 'mtime': 0 }
+        return {'items': [], 'mtime': 0}
     except Exception:
-        return { 'items': [], 'mtime': 0 }
+        return {'items': [], 'mtime': 0}
 
 def _load_all_places():
     try:
-        # Check if cache is fresh enough
         current_max_mtime = 0
         if os.path.isdir(SEOUL_DATA_DIR):
             for fname in os.listdir(SEOUL_DATA_DIR):
@@ -138,82 +119,71 @@ def _load_all_places():
                 try:
                     current_max_mtime = max(current_max_mtime, os.path.getmtime(os.path.join(SEOUL_DATA_DIR, fname)))
                 except Exception: pass
+        
         if _PLACES_CACHE['mtime'] >= current_max_mtime and _PLACES_CACHE['items']:
             return _PLACES_CACHE['items']
 
-        # Reload all
         aggregated = []
         if os.path.isdir(SEOUL_DATA_DIR):
             for fname in os.listdir(SEOUL_DATA_DIR):
-                if not fname.lower().endswith('.csv'):
-                    continue
+                if not fname.lower().endswith('.csv'): continue
                 path = os.path.join(SEOUL_DATA_DIR, fname)
                 parsed = _parse_csv(path, fname)
                 aggregated.extend(parsed['items'])
 
         if aggregated:
-            # 서울 지역 내에 있는 장소만 필터링
             aggregated = [x for x in aggregated if (
                 isinstance(x.get('lat'), (int, float)) and isinstance(x.get('lng'), (int, float)) and
                 SEOUL_MIN_LAT <= float(x['lat']) <= SEOUL_MAX_LAT and SEOUL_MIN_LNG <= float(x['lng']) <= SEOUL_MAX_LNG
             )]
             _PLACES_CACHE['items'] = aggregated
-            _PLACES_CACHE['mtime'] = current_max_mtime # BUG FIX: latest_mtime -> current_max_mtime
+            _PLACES_CACHE['mtime'] = current_max_mtime
             return aggregated
         return _PLACES_CACHE.get('items') or []
     except Exception:
         return _PLACES_CACHE.get('items') or []
 
-
-# ----- Persona label helpers (avoid encoding issues) -----
 def _persona_id_from_label(label: str) -> int:
-    # Reverse map for robustness
     rev_map = {v: k for k, v in k6_id2label.items()}
     return rev_map.get(str(label).strip(), 0)
 
-# ---------- Persona helpers (route builder) ----------
 def _haversine(lat1, lon1, lat2, lon2):
     R = 6371.0
     to_rad = lambda d: (d * math.pi) / 180.0
-    dLat = to_rad(lat2 - lat1)
-    dLon = to_rad(lon2 - lon1)
+    dLat, dLon = to_rad(lat2 - lat1), to_rad(lon2 - lon1)
     a = math.sin(dLat / 2) ** 2 + math.cos(to_rad(lat1)) * math.cos(to_rad(lat2)) * math.sin(dLon / 2) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
-# [정리] K6 페르소나를 위한 카테고리 추출 함수
 def _extract_category(item):
     text = (f"{item.get('category','')} {item.get('name','')} {item.get('addr','')} {item.get('desc','')}").lower()
     has = lambda *keys: any(str(k).lower() in text for k in keys)
-    if has('a04', 'shopping', '쇼핑', '시장', '백화점', '아울렛', '면세', '명동', '강남'): return 'shopping'
+    if has('a04', 'shopping', '쇼핑', '화장품', '백화점', '아울렛', '면세', '명동', '강남'): return 'shopping'
     if has('a05', 'food', '맛집', '음식', '식당', 'restaurant', 'cafe', '카페', '미식'): return 'food'
     if has('b02', '32', 'hotel', 'resort', '호텔', '리조트', '숙박', '스파', '럭셔리'): return 'luxury'
-    if has('a0201', 'park', '공원', '자연', '둘레길', '산', '숲', '호수', '하천', '강'): return 'nature'
+    if has('a0201', 'park', '공원', '자연', '둘레길', '산', '강', '호수', '하천', '숲'): return 'nature'
     if has('a0206', 'a0207', 'heritage', 'museum', 'gallery', 'culture', '문화', '박물관', '미술관', '궁', '한옥', '성곽'): return 'culture'
-    if has('k-pop', 'kpop', '한류', '엔터테인먼트', '아이돌', '방송', '팝업'): return 'k-culture'
+    if has('k-pop', 'kpop', '한류', '엔터테인먼트', '아이돌', '방송', '기획사'): return 'k-culture'
     return 'general'
 
-# [정리] K6 페르소나 ID 기반 점수 계산 함수
 def _score_by_persona_pid(pid: int, item: dict):
-    """Score item by K6 persona id (0..5). Avoids string-equality issues with encodings."""
     cat = _extract_category(item)
     text = f"{item.get('name','')} {item.get('addr','')} {item.get('category','')} {item.get('desc','')}".lower()
     score = 0
-    def anykey(*keys):
-        return any(str(k).lower() in text for k in keys)
+    anykey = lambda *keys: any(str(k).lower() in text for k in keys)
     
-    if pid == 0: # 알뜰 필수코스 정복자
+    if pid == 0: # 알뜰 필수코스 정복형
         if cat in ['culture', 'shopping']: score += 2
-        if anykey('명소', '랜드마크', '궁', '타워', '광화문', '남산', '북촌', '한옥', '경복궁', '창덕궁', '덕수궁'): score += 2
-    elif pid == 1: # 플렉스 장기 체류객
+        if anykey('명소', '랜드마크', '궁', '유적', '광화문', '남산', '북촌', '한옥', '경복궁', '창덕궁', '덕수궁'): score += 2
+    elif pid == 1: # 럭셔리 장기 체류형
         if cat == 'luxury': score += 4
         if anykey('호텔', '리조트', '스파', '프리미엄', '럭셔리'): score += 1
-    elif pid == 2: # 관계 중심 체류객
+    elif pid == 2: # 관계중심 체류형
         if cat in ['nature', 'food']: score += 3
-        if anykey('가족', '아이', '키즈', '데이트', '친구', '모임', '카페', '공원'): score += 1
-    elif pid == 3: # 실속파 쇼핑 원정대
+        if anykey('가족', '아이', '키즈', '연인', '친구', '모임', '카페', '공원'): score += 1
+    elif pid == 3: # 지속적 쇼핑 탐험가
         if cat == 'shopping': score += 4
-        if anykey('쇼핑', '시장', '백화점', '아울렛', '면세점', '명동', '강남'): score += 1
+        if anykey('쇼핑', '화장품', '백화점', '아울렛', '면세점', '명동', '강남'): score += 1
     elif pid == 4: # 문화유산 탐험가
         if cat == 'culture': score += 4
         if anykey('문화유산', '박물관', '미술관', '전시', '전통', '한옥', '궁', '유적'): score += 1
@@ -221,99 +191,60 @@ def _score_by_persona_pid(pid: int, item: dict):
         if cat in ['culture', 'shopping', 'k-culture']: score += 3
         if anykey('k-pop', '한류', '아이돌', '드라마', '공연', '뮤직', '엔터', 'sm', 'hybe', 'jyp', 'yg'): score += 1
     
-    return score if score > 0 else 1 # 기본 점수 1점 부여
+    return score if score > 0 else 1
 
 def _build_route(persona='문화유산 탐험가', maxStops=6, maxLegKm=20.0, origin=None, preferDiversity=True):
     all_items = _load_all_places()
-    if not all_items:
-        return []
+    if not all_items: return []
     
     pid = _persona_id_from_label(persona)
+    enriched = [{'derived_category': _extract_category(it), '_score': _score_by_persona_pid(pid, it), **it} for it in all_items]
     
-    enriched = []
-    for it in all_items:
-        e = dict(it)
-        e['derived_category'] = _extract_category(it)
-        e['_score'] = _score_by_persona_pid(pid, it)
-        enriched.append(e)
-    
-    # 점수가 1보다 큰 장소들을 우선 풀로 사용
-    top = [x for x in enriched if x['_score'] > 1]
-    pool = top if top else enriched
+    pool = [x for x in enriched if x['_score'] > 1] or enriched
 
     seed = None
     if origin and isinstance(origin, dict):
         try:
-            olat = float(origin.get('lat'))
-            olng = float(origin.get('lng'))
-            # 원점에서 가장 가까운 장소를 시작점으로 선택
-            seed = sorted(({'x':x, 'd': _haversine(olat, olng, x['lat'], x['lng'])} for x in pool), key=lambda a: a['d'])[0]['x']
-        except Exception:
-            seed = None
+            olat, olng = float(origin.get('lat')), float(origin.get('lng'))
+            seed = sorted(pool, key=lambda x: _haversine(olat, olng, x['lat'], x['lng']))[0]
+        except Exception: pass
 
     if seed is None:
-        # 점수가 가장 높은 50개 장소 중 지리적으로 중심에 있는 장소를 시작점으로 선택
         topN = sorted(pool, key=lambda a: a['_score'], reverse=True)[:50]
         if topN:
-            avgLat = sum(x['lat'] for x in topN)/len(topN)
-            avgLng = sum(x['lng'] for x in topN)/len(topN)
+            avgLat, avgLng = sum(x['lat'] for x in topN)/len(topN), sum(x['lng'] for x in topN)/len(topN)
             seed = sorted(topN, key=lambda a: _haversine(avgLat, avgLng, a['lat'], a['lng']))[0]
-        elif pool:
-            seed = pool[0] # 후보군이 없으면 그냥 첫번째 장소 사용
-        else:
-            return [] # 장소가 아예 없으면 빈 리스트 반환
+        elif pool: seed = pool[0]
+        else: return []
 
-    route = []
-    used = set()
-    current = seed
-    route.append(current)
-    used.add(current['id'])
-    
+    route, used, current = [], set(), seed
     while len(route) < max(3, int(maxStops)):
-        candidates = [{ 'x': x, 'd': _haversine(current['lat'], current['lng'], x['lat'], x['lng']) } for x in pool if x['id'] not in used]
+        route.append(current)
+        used.add(current['id'])
+        candidates = [{'x': x, 'd': _haversine(current['lat'], current['lng'], x['lat'], x['lng'])} for x in pool if x['id'] not in used]
         within = [c for c in candidates if c['d'] <= max(3.0, float(maxLegKm))]
         
         def diversity_penalty(cat):
-            if not preferDiversity:
-                return 0
+            if not preferDiversity: return 0
             lastCat = route[-1]['derived_category'] if route else None
-            # 이전 장소와 같은 카테고리면 페널티 부여
             return 1.5 if lastCat and cat == lastCat else 0
             
-        considered = within if within else candidates
-        if not considered:
-            break
+        considered = within or candidates
+        if not considered: break
             
-        # 최종 점수 = 페르소나 점수 - 다양성 페널티 - 거리 페널티
-        best = sorted(({
-            **c,
-            'score': c['x']['_score'] - diversity_penalty(c['x']['derived_category']) - (c['d'] / max(1.0, float(maxLegKm)))
-        } for c in considered), key=lambda a: a['score'], reverse=True)[0]
-        
-        nxt = best['x']
-        route.append(nxt)
-        used.add(nxt['id'])
-        current = nxt
+        best = sorted(considered, key=lambda c: c['x']['_score'] - diversity_penalty(c['x']['derived_category']) - (c['d'] / max(1.0, float(maxLegKm))), reverse=True)[0]
+        current = best['x']
 
-    out = []
-    for idx, p in enumerate(route):
-        prev = route[idx-1] if idx>0 else None
-        km = _haversine(prev['lat'], prev['lng'], p['lat'], p['lng']) if prev else 0.0
-        minutes = int(round((km / 20.0) * 60)) if km else 0
-        e = dict(p)
-        e['approx_leg_km'] = km
-        e['approx_leg_minutes'] = minutes
-        out.append(e)
-    return out
+    return [
+        {**p, 'approx_leg_km': _haversine(route[idx-1]['lat'], route[idx-1]['lng'], p['lat'], p['lng']) if idx > 0 else 0.0}
+        for idx, p in enumerate(route)
+    ]
 
-#페르소나 분석에 필요한 질문 목록을 반환하는 API
 @api_bp.route('/persona/questions', methods=['GET'])
 def get_questions():
     questions = persona_service.load_questions()
     return jsonify(questions)
 
-
-#사용자의 답변을 받아 페르소나를 분석하고 결과를 반환하는 API
 @api_bp.route('/persona/analyze', methods=['POST'])
 def analyze(): 
     payload = request.get_json(force=True, silent=True) or {}
@@ -321,37 +252,27 @@ def analyze():
     result = persona_service.analyze_persona(answers)
     return jsonify(result)
 
-
-# ---------- Additional endpoints to mirror CRA dev server ----------
-
 @api_bp.route('/seoul-data', methods=['GET'])
 def seoul_data():
     all_items = _load_all_places()
     q = str(request.args.get('q', '')).strip().lower()
-    if q:
-        limited = [x for x in all_items if q in (x.get('name','').lower() + ' ' + x.get('addr','').lower())][:50]
-    else:
-        limited = all_items[:500]
-    return jsonify({ 'count': len(all_items), 'items': limited })
-
+    limited = [x for x in all_items if q in (x.get('name','').lower() + ' ' + x.get('addr','').lower())][:50] if q else all_items[:500]
+    return jsonify({'count': len(all_items), 'items': limited})
 
 @api_bp.route('/persona/route', methods=['POST'])
 def persona_route():
     try:
         body = request.get_json(silent=True) or {}
-        # 기본 페르소나를 '문화유산 탐험가'로 변경
         persona = str(body.get('persona_type') or body.get('persona') or '문화유산 탐험가')
         maxStops = max(3, min(8, int(body.get('maxStops') or 6)))
         maxLegKm = max(3.0, min(30.0, float(body.get('maxLegKm') or 20)))
         origin = body.get('origin') if isinstance(body.get('origin'), dict) else None
-        preferDiversity = False if body.get('preferDiversity') is False else True
+        preferDiversity = body.get('preferDiversity', True)
         items = _build_route(persona=persona, maxStops=maxStops, maxLegKm=maxLegKm, origin=origin, preferDiversity=preferDiversity)
-        return jsonify({ 'count': len(items), 'items': items })
-    except Exception:
-        # 개발 환경에서는 상세 에러를 반환하는 것이 디버깅에 용이
+        return jsonify({'count': len(items), 'items': items})
+    except Exception as e:
         import traceback
-        return jsonify({ 'error': 'route_build_failed', 'detail': traceback.format_exc() }), 500
-
+        return jsonify({'error': 'route_build_failed', 'detail': traceback.format_exc()}), 500
 
 @api_bp.route('/translate', methods=['GET'])
 def translate():
@@ -382,7 +303,6 @@ def translate():
     except Exception:
         return jsonify({ 'error': 'translate_failed' }), 500
 
-
 @api_bp.route('/kakao-waypoints', methods=['POST'])
 def kakao_waypoints():
     key = os.getenv('KAKAO_REST_API_KEY') or os.getenv('REACT_APP_KAKAO_API_KEY')
@@ -395,7 +315,6 @@ def kakao_waypoints():
             'Authorization': f'KakaoAK {key}',
             'Content-Type': 'application/json',
         }, data=_json.dumps(payload), timeout=15)
-        # Pass through JSON and status
         try:
             data = r.json()
         except Exception:
@@ -403,7 +322,6 @@ def kakao_waypoints():
         return jsonify(data), r.status_code
     except Exception:
         return jsonify({ 'result_code': 'REQUEST_FAILED', 'result_msg': 'Failed to request Kakao API' }), 500
-
 
 def _naver_headers():
     cid = os.getenv('NAVER_MAPS_API_KEY_ID') or os.getenv('NAVER_CLIENT_ID') or os.getenv('NAVER_MAPS_CLIENT_ID')
@@ -414,7 +332,6 @@ def _naver_headers():
         'X-NCP-APIGW-API-KEY-ID': cid,
         'X-NCP-APIGW-API-KEY': csec,
     }
-
 
 def _naver_parse_route(j):
     try:
@@ -439,7 +356,6 @@ def _naver_parse_route(j):
         return None
     except Exception:
         return None
-
 
 def _naver_leg(mode: str, start_xy: tuple, end_xy: tuple, timeout=10):
     headers = _naver_headers()
@@ -476,7 +392,6 @@ def _naver_leg(mode: str, start_xy: tuple, end_xy: tuple, timeout=10):
             last_err = str(e)
     return None, last_err
 
-
 @api_bp.route('/naver/walking', methods=['POST'])
 def naver_walking_route():
     try:
@@ -508,7 +423,6 @@ def naver_walking_route():
         return jsonify({ 'routes': [{ 'summary': { 'distance': total_dist, 'duration': total_dur }, 'sections': sections }] })
     except Exception as e:
         return jsonify({ 'error': 'naver_walking_failed', 'detail': str(e) }), 500
-
 
 @api_bp.route('/naver/transit', methods=['POST'])
 def naver_transit_route():
@@ -542,7 +456,6 @@ def naver_transit_route():
     except Exception as e:
         return jsonify({ 'error': 'naver_transit_failed', 'detail': str(e) }), 500
 
-
 def _sections_path_to_kakao_roads(sections: list):
     out = []
     for sec in sections or []:
@@ -559,7 +472,6 @@ def _sections_path_to_kakao_roads(sections: list):
         except Exception:
             out.append({ 'summary': { 'distance': 0, 'duration': 0 }, 'roads': [] })
     return out
-
 
 @api_bp.route('/tmap/route', methods=['POST'])
 def tmap_route():
@@ -611,7 +523,6 @@ def tmap_route():
     except Exception as e:
         return jsonify({ 'error': 'tmap_route_failed', 'detail': str(e) }), 500
 
-
 @api_bp.route('/tmap/transit', methods=['POST'])
 def tmap_transit():
     try:
@@ -644,7 +555,6 @@ def tmap_transit():
         return jsonify({ 'routes': [{ 'summary': { 'distance': total_dist, 'duration': total_dur }, 'sections': kakao_like_sections }] })
     except Exception as e:
         return jsonify({ 'error': 'tmap_transit_failed', 'detail': str(e) }), 500
-
 
 @api_bp.route('/persona/courses', methods=['GET'])
 def persona_courses():
@@ -702,7 +612,6 @@ def persona_courses():
             out = []
             for key, stops in grouped.items():
                 stops_sorted = sorted(stops, key=lambda x: x['order'])
-                # BUG FIX: '??' -> ' 등'
                 title = f"{stops_sorted[0]['name']} 등" if stops_sorted else ''
                 out.append({
                     'key': key,
@@ -715,7 +624,6 @@ def persona_courses():
         return jsonify({ 'items': items })
     except Exception as e:
         return jsonify({ 'error': 'courses_failed', 'detail': str(e) }), 500
-
 
 @api_bp.route('/persona/courses2', methods=['GET'])
 def persona_courses2():
@@ -775,7 +683,6 @@ def persona_courses2():
                 stops_sorted = sorted(stops, key=lambda x: x['order'])
                 if not stops_sorted: continue
                 pid_v = stops_sorted[0]['personaId']
-                # BUG FIX: '??' -> ' 등'
                 title = f"{stops_sorted[0]['name']} 등"
                 out.append({
                     'key': key,
@@ -791,6 +698,103 @@ def persona_courses2():
     except Exception as e:
         return jsonify({ 'error': 'courses2_failed', 'detail': str(e) }), 500
 
+@api_bp.route('/user/persona-profiles', methods=['GET', 'POST'])
+def user_persona_profiles():
+    try:
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
+        if not current_user_id:
+            return jsonify({'success': False, 'error': '로그인이 필요합니다.'}), 401
+
+        if request.method == 'POST':
+            payload = request.get_json(silent=True) or {}
+            analysis_result = payload.get('analysis_result')
+            if analysis_result is None:
+                return jsonify({'success': False, 'error': 'analysis_result is required'}), 400
+            answers = payload.get('answers')
+            result = board_service.create_persona_profile(current_user_id, answers, analysis_result)
+            if result.get('success'):
+                return jsonify(result), 201
+            return jsonify(result), 500
+
+        limit_param = request.args.get('limit', 20)
+        try:
+            limit = int(limit_param)
+        except (TypeError, ValueError):
+            limit = 20
+        limit = max(1, min(limit, 100))
+        result = board_service.list_persona_profiles(current_user_id, limit=limit)
+        if result.get('success'):
+            return jsonify(result)
+        return jsonify(result), 500
+    except Exception as e:
+        print(f"user_persona_profiles error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@api_bp.route('/user/itineraries', methods=['GET', 'POST'])
+def user_itineraries():
+    try:
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
+        if not current_user_id:
+            return jsonify({'success': False, 'error': '로그인이 필요합니다.'}), 401
+
+        if request.method == 'POST':
+            payload = request.get_json(silent=True) or {}
+            if not payload:
+                return jsonify({'success': False, 'error': '요청 데이터가 필요합니다.'}), 400
+            result = board_service.upsert_itinerary(current_user_id, payload)
+            if result.get('success'):
+                return jsonify(result), 201
+            return jsonify(result), 500
+
+        limit_param = request.args.get('limit', 50)
+        try:
+            limit = int(limit_param)
+        except (TypeError, ValueError):
+            limit = 50
+        limit = max(1, min(limit, 100))
+        result = board_service.list_itineraries(current_user_id, limit=limit)
+        if result.get('success'):
+            return jsonify(result)
+        return jsonify(result), 500
+    except Exception as e:
+        print(f"user_itineraries error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@api_bp.route('/user/itineraries/<string:itinerary_id>', methods=['GET', 'PUT', 'DELETE'])
+def user_itinerary_detail(itinerary_id):
+    try:
+        auth_header = request.headers.get('Authorization')
+        current_user_id = get_user_from_token(auth_header)
+        if not current_user_id:
+            return jsonify({'success': False, 'error': '로그인이 필요합니다.'}), 401
+
+        if request.method == 'DELETE':
+            result = board_service.delete_itinerary(current_user_id, itinerary_id)
+            status_code = 200 if result.get('success') else 500
+            return jsonify(result), status_code
+
+        if request.method == 'PUT':
+            payload = request.get_json(silent=True) or {}
+            if not payload:
+                return jsonify({'success': False, 'error': '요청 데이터가 필요합니다.'}), 400
+            payload['id'] = itinerary_id
+            result = board_service.upsert_itinerary(current_user_id, payload)
+            status_code = 200 if result.get('success') else 500
+            return jsonify(result), status_code
+
+        # GET 요청
+        result = board_service.list_itineraries(current_user_id, limit=200)
+        if not result.get('success'):
+            return jsonify(result), 500
+        itinerary = next((item for item in result.get('itineraries', []) if item.get('id') == itinerary_id), None)
+        if not itinerary:
+            return jsonify({'success': False, 'error': '여행 일정을 찾을 수 없습니다.'}), 404
+        return jsonify({'success': True, 'itinerary': itinerary})
+    except Exception as e:
+        print(f"user_itinerary_detail error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @api_bp.route('/route-plans', methods=['POST'])
 def save_route_plan():
@@ -808,7 +812,6 @@ def save_route_plan():
     except Exception as e:
         return jsonify({ 'error': 'save_failed', 'detail': str(e) }), 500
 
-
 @api_bp.route('/route-plans/<plan_id>', methods=['GET'])
 def load_route_plan(plan_id: str):
     try:
@@ -823,9 +826,9 @@ def load_route_plan(plan_id: str):
     except Exception as e:
         return jsonify({ 'error': 'load_failed', 'detail': str(e) }), 500
 #-----------------------------------------------
-# ---------- YOLO DETECT (file upload) ----------
+# ---------- YOLO DETECT (파일 업로드) ----------
 _YOLO_MODEL = None
-# best.pt 경로 찾음 
+# best.pt 경로 찾기
 def get_model_path():    
     # 1. 현재 파일(routes.py) 기준으로 프로젝트 루트 찾기
     current_file = Path(__file__).resolve()  # /path/to/backend/app/api/routes.py
@@ -833,12 +836,12 @@ def get_model_path():
     model_path = backend_root / "models" / "best.pt"
     
     print(f"계산된 모델 경로: {model_path}")
-    print(f"파일 존재: {model_path.exists()}")
+    print(f"파일 존재 여부: {model_path.exists()}")
     
     if model_path.exists():
         return str(model_path)
     
-    # 2. 환경변수 확인 (팀원별로 설정 가능)
+    # 2. 환경변수 확인 (따로 설정 가능)
     env_path = os.getenv("YOLO_MODEL_PATH")
     if env_path and os.path.exists(env_path):
         return env_path
@@ -849,12 +852,12 @@ def get_model_path():
 @api_bp.route("/detect", methods=["POST", "OPTIONS"])
 def detect():
     try:
-        print("=== 🚀 YOLO Detection 요청 받음 ===")
+        print("=== ✅ YOLO Detection 요청 받음 ===")
         
         if request.method == "OPTIONS":
             return ("", 204)
 
-        # 파일 필수 확인
+        # 파일 유무 확인
         if "file" not in request.files:
             return jsonify({"error": "missing_file"}), 400
 
@@ -863,8 +866,7 @@ def detect():
         imgsz = int(request.form.get("imgsz", 640))
         device = os.getenv("YOLO_DEVICE", "cpu")       
 
-
-        # 모델 로딩 (한 번만 로딩)
+        # 모델 로딩 (최초 한 번만 로딩)
         model_path = get_model_path()
         
         global _YOLO_MODEL
@@ -881,7 +883,7 @@ def detect():
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
             f.save(tmp.name)
             tmp_path = tmp.name
-            print(f" 임시 파일 저장: {tmp_path}")
+            print(f" 임시 파일 저장됨: {tmp_path}")
 
         try:
             # YOLO 추론 실행
@@ -899,7 +901,7 @@ def detect():
             # 임시 파일 정리
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
-                print("🗑️  임시 파일 삭제")
+                print("👍 임시 파일 삭제됨")
 
         # 결과 처리 및 JSON 변환
         detections = []
@@ -911,7 +913,7 @@ def detect():
                 names = result.names  # 클래스 인덱스 -> 이름 매핑
                 boxes = result.boxes
                 
-                # 각 탐지된 객체 정보 추출
+                # 감지된 객체 정보 추출
                 if len(boxes) > 0:
                     cls_list = boxes.cls.tolist() if hasattr(boxes, "cls") else []
                     conf_list = boxes.conf.tolist() if hasattr(boxes, "conf") else []
@@ -932,9 +934,9 @@ def detect():
                             "conf": confidence,
                         })
                         
-                        print(f"🎯 탐지: {class_name} (신뢰도: {confidence:.3f})")
+                        print(f"감지됨: {class_name} (신뢰도 {confidence:.3f})")
 
-        print(f"📊 최종 탐지된 객체 수: {len(detections)}")
+        print(f"✅ 최종 감지된 객체 수: {len(detections)}")
         
         # 성공 응답
         return jsonify({
@@ -963,7 +965,7 @@ def detect():
         print(f"❌ 일반 오류: {e}")
         import traceback
         error_details = traceback.format_exc()
-        print(f"📋 상세 오류:\n{error_details}")
+        print(f"상세 오류:\n{error_details}")
         
         return jsonify({
             "error": "yolo_processing_failed",
@@ -971,10 +973,7 @@ def detect():
             "detail": str(e)
         }), 500
 
-
-
-
-# ---------- POI INFO (names -> info) ----------
+# ---------- POI INFO (이름 -> 정보) ----------
 @api_bp.route("/poi-info", methods=["POST", "OPTIONS"])
 @cross_origin(
     origins=["http://localhost:5000","http://127.0.0.1:5000","http://localhost:3000","http://127.0.0.1:3000"],
@@ -989,9 +988,9 @@ def poi_info():
     names = payload.get("names", [])
     # 고정 정보 DB
     DB = {
-        "63스퀘어":      {"name":"63스퀘어","address":"서울 영등포구 63로 50","open_hours_text":"10:00–22:00(시설별 상이)","ticket_price_text":"전시/전망대 유료","phone":"02-789-5663","website":"https://www.63.co.kr","description":"한강변 랜드마크. 아쿠아리움/전시/전망대가 유명."},
-        "경복궁":        {"name":"경복궁","address":"서울 종로구 사직로 161","open_hours_text":"09:00–18:00(요일·계절별 상이, 화요일 휴궁)","ticket_price_text":"유료, 한복 착용 무료","phone":"02-3700-3900","website":"https://www.royalpalace.go.kr","description":"조선의 정궁. 근정전, 경회루 등 볼거리 풍부."},
-        "남산서울타워":  {"name":"남산서울타워","address":"서울 용산구 남산공원길 105","open_hours_text":"10:00–23:00(변동 가능)","ticket_price_text":"전망대 유료","phone":"02-3455-9277","website":"https://www.seoultower.co.kr","description":"서울 전경을 볼 수 있는 대표 전망 명소."},
+        "63스퀘어":      {"name":"63스퀘어","address":"서울 영등포구 63로 50","open_hours_text":"10:00-22:00(시설별 상이)","ticket_price_text":"전시/전망대 유료","phone":"02-789-5663","website":"https://www.63.co.kr","description":"한강변 랜드마크. 아쿠아리움/전시/전망대가 유명."},
+        "경복궁":        {"name":"경복궁","address":"서울 종로구 사직로 161","open_hours_text":"09:00-18:00(요일·계절별 상이, 화요일 휴궁)","ticket_price_text":"유료, 한복 착용 무료","phone":"02-3700-3900","website":"https://www.royalpalace.go.kr","description":"조선 제1의 궁궐. 근정전, 경회루 등 볼거리가 많음."},
+        "남산서울타워":  {"name":"남산서울타워","address":"서울 용산구 남산공원길 105","open_hours_text":"10:00-23:00(변동가능)","ticket_price_text":"전망대 유료","phone":"02-3455-9277","website":"https://www.seoultower.co.kr","description":"서울 전경을 볼 수 있는 대표적인 전망 명소."},
         "롯데월드타워":  {"name":"롯데월드타워","address":"서울 송파구 올림픽로 300","open_hours_text":"시설별 상이","ticket_price_text":"SEOUL SKY 유료","phone":"1661-2000","website":"https://www.lwt.co.kr","description":"123층 초고층 타워. 전망대·쇼핑·호텔 집합."},
     }
     items = [DB[n] for n in names if n in DB]
@@ -1103,27 +1102,22 @@ def get_spotify_user():
     except Exception as e:
         return jsonify({'is_logged_in': False, 'error': str(e)}), 500
    
-   
 @api_bp.route('/spotify/logout', methods=['POST'])
 def spotify_logout():   
     session.pop('spotify_token_info', None)
     return jsonify({'success': True, 'message': '로그아웃되었습니다.'}) 
 
-
 # =================================================================
-#Social - DB 
+# Social - DB 
 board_service  = community_social.BoardService()
 
 # =================================================================
 # JWT 토큰 검증 함수들
 #====================================================================
-
-
-#    Authorization 헤더에서 JWT 토큰을 파싱하고 사용자 ID를 반환
 def get_user_from_token(auth_header):
-
+    """Authorization 헤더에서 JWT 토큰을 파싱하고 사용자 ID를 반환"""
     try:
-        #Authorization 헤더 확인
+        # Authorization 헤더 확인
         if not auth_header or not auth_header.startswith('Bearer '):
             # 토큰이 없으면 세션에서 시도
             session_user_id = session.get('user_id')
@@ -1131,22 +1125,22 @@ def get_user_from_token(auth_header):
         
         # 토큰 추출
         token = auth_header.split(' ')[1]        
-        # Google 토큰인지 확인 
+        # Google 토큰인지 확인
         if len(token) > 500:  
-            print(" Google 토큰으로 추정됨")
+            print("Google 토큰으로 추정됨.")
             user_id = verify_google_token(token)
             if user_id:
                 print(f"Google 토큰 검증 성공: user_id={user_id}")
                 return user_id
         
         # 자체 발급 토큰 검증
-        print("자체 토큰으로 추정됨")
+        print("자체 토큰으로 추정됨.")
         user_id = verify_custom_token(token)
         if user_id:
             print(f"자체 토큰 검증 성공: user_id={user_id}")
             return user_id
         
-        # 토큰 검증 실패시 세션으로 폴백    
+        # 토큰 검증 실패시 세션으로 폴백
         session_user_id = session.get('user_id')
         return session_user_id
         
@@ -1168,7 +1162,7 @@ def verify_google_token(token):
         if kid in google_keys['keys']:
             key = google_keys['keys'][kid]
             
-            # 토큰 디코딩 및 검증
+            # 토큰 디코드 및 검증
             decoded_token = jwt.decode(
                 token,
                 key,
@@ -1179,7 +1173,6 @@ def verify_google_token(token):
             
             # Google 사용자 정보에서 우리 DB의 사용자 ID 찾기
             google_id = decoded_token.get('sub')
-            email = decoded_token.get('email')
             
             # DB에서 Google ID로 사용자 검색
             user_result = board_service.get_user_by_social('google', google_id)
@@ -1187,7 +1180,7 @@ def verify_google_token(token):
                 return user_result['user']['id']
             
     except jwt.ExpiredSignatureError:
-        print("Google 토큰이 만료됨")
+        print("Google 토큰이 만료됨.")
     except jwt.InvalidTokenError as e:
         print(f"Google 토큰 검증 실패: {e}")
     except Exception as e:
@@ -1200,7 +1193,7 @@ def verify_custom_token(token):
         # 환경변수에서 비밀키 가져오기
         secret_key = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-this')
         
-        # 토큰 디코딩 및 검증
+        # 토큰 디코드 및 검증
         decoded_token = jwt.decode(
             token, 
             secret_key, 
@@ -1213,14 +1206,14 @@ def verify_custom_token(token):
         
         # 만료시간 확인
         if exp and datetime.fromtimestamp(exp) < datetime.utcnow():
-            print("자체 토큰이 만료됨")
+            print("자체 토큰이 만료됨.")
             return None
         
         print(f"자체 토큰에서 추출된 user_id: {user_id}")
         return user_id
         
     except jwt.ExpiredSignatureError:
-        print("자체 토큰이 만료됨")
+        print("자체 토큰이 만료됨.")
     except jwt.InvalidTokenError as e:
         print(f"자체 토큰 검증 실패: {e}")
     except Exception as e:
@@ -1240,14 +1233,12 @@ def create_custom_token(user_id, email=None):
         }
         
         token = jwt.encode(payload, secret_key, algorithm='HS256')
-        print(f"사용자 {user_id}를 위한 토큰 생성됨")
+        print(f"사용자 {user_id}를 위한 토큰 생성됨.")
         return token
         
     except Exception as e:
         print(f"토큰 생성 중 오류: {e}")
         return None
-
-
 
 # =================================================================
 # Google 로그인 콜백 :  사용자 정보를 DB에 저장하고 세션을 설정
@@ -1262,7 +1253,7 @@ def google_callback():
         if not access_token:
             return jsonify({
                 'success': False,
-                'error': 'Google 토큰이 필요합니다'
+                'error': 'Google 토큰이 필요합니다.'
             }), 400
         
         # 사용자 정보 추출
@@ -1290,7 +1281,6 @@ def google_callback():
                 profile_image = google_user.get('picture')
                 
             except Exception as e:
-
                 return jsonify({
                     'success': False,
                     'error': 'Google 사용자 정보 확인 실패'
@@ -1299,7 +1289,7 @@ def google_callback():
         if not google_id or not email:
             return jsonify({
                 'success': False,
-                'error': 'Google 사용자 정보가 불완전합니다'
+                'error': 'Google 사용자 정보가 불완전합니다.'
             }), 400
         
         # DB에서 기존 사용자 확인 또는 생성
@@ -1307,11 +1297,9 @@ def google_callback():
         user_result = board_service.get_user_by_social('google', google_id)
         
         if user_result['success']:
-
             user = user_result['user']
             user_id = user['id']
-            print(f"기존 사용자 로그인: user_id={user_id}")
-            
+            print(f"기존 사용자 로그인 user_id={user_id}")
         else:
             # 신규 사용자 - DB에 저장
             create_result = board_service.create_or_update_user(
@@ -1324,12 +1312,10 @@ def google_callback():
             
             if create_result['success']:
                 user_id = create_result['user_id']
-
             else:
-
                 return jsonify({
                     'success': False,
-                    'error': '사용자 생성에 실패했습니다'
+                    'error': '사용자 생성에 실패했습니다.'
                 }), 500
         
         # 3. 세션 설정
@@ -1340,7 +1326,6 @@ def google_callback():
         session['email'] = email
         session['name'] = name
         session.permanent = True       
-
         
         # 4. 응답 데이터 준비
         user_data = {
@@ -1359,19 +1344,14 @@ def google_callback():
         })
         
     except Exception as e:
-   
         import traceback
         traceback.print_exc()
         return jsonify({
             'success': False,
-            'error': '로그인 처리 중 오류가 발생했습니다'
+            'error': '로그인 처리 중 오류가 발생했습니다.'
         }), 500
 
-
-
-
-#Microsoft Login ==============================================
-
+# Microsoft Login ==============================================
 @api_bp.route('/auth/microsoft/callback', methods=['POST'])
 def microsoft_callback():
     try:
@@ -1392,7 +1372,7 @@ def microsoft_callback():
         name = user_info.get('displayName')
         
         if not microsoft_id or not email:
-            return jsonify({'success': False, 'error': 'Microsoft 사용자 정보가 불완전합니다'}), 400
+            return jsonify({'success': False, 'error': 'Microsoft 사용자 정보가 불완전합니다.'}), 400
         
         print(f"Microsoft 로그인 시도: microsoft_id={microsoft_id}, email={email}")
         
@@ -1402,7 +1382,7 @@ def microsoft_callback():
         if user_result['success']:
             user = user_result['user']
             user_id = user['id']
-            print(f"기존 Microsoft 사용자 로그인: user_id={user_id}")
+            print(f"기존 Microsoft 사용자 로그인 user_id={user_id}")
         else:
             # 신규 사용자 생성
             create_result = board_service.create_or_update_user(
@@ -1417,7 +1397,7 @@ def microsoft_callback():
                 user_id = create_result['user_id']
                 print(f"신규 Microsoft 사용자 생성: user_id={user_id}")
             else:
-                return jsonify({'success': False, 'error': 'Microsoft 사용자 생성에 실패했습니다'}), 500
+                return jsonify({'success': False, 'error': 'Microsoft 사용자 생성에 실패했습니다.'}), 500
         
         # 세션 설정
         session.clear()
@@ -1450,7 +1430,7 @@ def microsoft_callback():
         print(f"Microsoft 콜백 오류: {str(e)}")
         return jsonify({
             'success': False,
-            'error': 'Microsoft 로그인 처리 중 오류가 발생했습니다'
+            'error': 'Microsoft 로그인 처리 중 오류가 발생했습니다.'
         }), 500
         
 # =================================================================
@@ -1458,12 +1438,11 @@ def microsoft_callback():
 # =================================================================
 @api_bp.route('/logout', methods=['POST'])
 def logout():
-
     try:
         session.clear()
         return jsonify({
             'success': True,
-            'message': '로그아웃되었습니다'
+            'message': '로그아웃되었습니다.'
         })
     except Exception as e:
         print(f"Error in /logout: {e}")
@@ -1472,81 +1451,12 @@ def logout():
             'error': str(e)
         }), 500
         
-            
-# ========================Social 게시판 CRUD=====================================
-#  Create 
-# 게시글 작성 --------------------------------
-# @api_bp.route('/boards', methods=['POST'])
-# def create_board():
-#     try:       
-#         try:
-            
-#             data = request.get_json()
-#         except Exception as e:
-#             return jsonify({
-#                 'success': False,
-#                 'error': '잘못된 데이터 형식입니다'
-#             }), 400
-        
-#         # JWT 토큰 또는 세션에서 사용자 ID 가져오기
-#         auth_header = request.headers.get('Authorization')        
-#         current_user_id = get_user_from_token(auth_header)      
-          
-#         if not current_user_id:
-#             return jsonify({
-#                 'success': False,
-#                 'error': '로그인이 필요합니다'
-#             }), 401        
-
-#         title = data.get('title', '').strip()
-#         content = data.get('content', '').strip()
-#         tags = data.get('tags', '').strip()
-   
-#         if not title:
-#             return jsonify({
-#                 'success': False,
-#                 'error': '제목은 필수입니다'
-#             }), 400
-            
-#         if not content:
-#             return jsonify({
-#                 'success': False,
-#                 'error': '내용은 필수입니다'
-#             }), 400
-        
-#         # BoardService의 create_post 메서드 호출
-#         result = board_service.create_post(
-#             user_id=current_user_id,
-#             title=title,
-#             content=content,
-#             images=None
-#         )
-                
-#         if result['success']:
-#             return jsonify({
-#                 'success': True,
-#                 'board_id': result['board_id'],
-#                 'message': result['message']
-#             }), 201
-#         else:
-#             return jsonify({
-#                 'success': False,
-#                 'error': result['error']
-#             }), 500
-            
-#     except Exception as e:
-
-#         import traceback
-#         traceback.print_exc()
-#         return jsonify({
-#             'success': False,
-#             'error': str(e)
-#         }), 500
-# 게시글 작성 --------------------------------
+# ======================== Social 게시판 CRUD =====================================
+# 게시글 생성 --------------------------------
 @api_bp.route('/boards', methods=['POST'])
 def create_board():
     try:       
-        print("=== 게시글 작성 요청 시작 ===")
+        print("=== 게시글 생성 요청 시작 ===")
         print("Content-Type:", request.content_type)
         
         # FormData로 받는 경우 (이미지가 있을 때)
@@ -1574,7 +1484,7 @@ def create_board():
                 print(f"JSON 파싱 오류: {e}")
                 return jsonify({
                     'success': False,
-                    'error': '잘못된 데이터 형식입니다'
+                    'error': '잘못된 데이터 형식입니다.'
                 }), 400
         
         # JWT 토큰 또는 세션에서 사용자 ID 가져오기
@@ -1584,24 +1494,23 @@ def create_board():
         if not current_user_id:
             return jsonify({
                 'success': False,
-                'error': '로그인이 필요합니다'
+                'error': '로그인이 필요합니다.'
             }), 401        
 
         if not title:
             return jsonify({
                 'success': False,
-                'error': '제목은 필수입니다'
+                'error': '제목은 필수입니다.'
             }), 400
             
         if not content:
             return jsonify({
                 'success': False,
-                'error': '내용은 필수입니다'
+                'error': '내용은 필수입니다.'
             }), 400
         
         # 이미지 업로드 처리
         uploaded_image_urls = []
-        
         if 'multipart/form-data' in str(request.content_type):
             # 이미지 파일들 처리
             for key in request.files:
@@ -1611,7 +1520,6 @@ def create_board():
                         print(f"이미지 업로드 시작: {file.filename}")
                         
                         # Azure Blob Storage에 업로드
-            
                         upload_result = storage_service.upload_image(file)
                         
                         if upload_result['success']:
@@ -1647,17 +1555,17 @@ def create_board():
             }), 500
             
     except Exception as e:
-        print(f"게시글 작성 에러 상세: {e}")
+        print(f"게시글 생성 에러 상세: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
-# 댓글 작성 --------------------------------
+
+# 댓글 생성 --------------------------------
 @api_bp.route('/boards/<int:board_id>/comments', methods=['POST'])
 def create_comment(board_id):
-
     try:
         auth_header = request.headers.get('Authorization')
         current_user_id = get_user_from_token(auth_header)
@@ -1665,7 +1573,7 @@ def create_comment(board_id):
         if not current_user_id:
             return jsonify({
                 'success': False,
-                'error': '로그인이 필요합니다'
+                'error': '로그인이 필요합니다.'
             }), 401
         
         data = request.get_json()
@@ -1674,7 +1582,7 @@ def create_comment(board_id):
         if not content:
             return jsonify({
                 'success': False,
-                'error': '댓글 내용이 필요합니다'
+                'error': '댓글 내용이 필요합니다.'
             }), 400
         
         result = board_service.create_comment(board_id, current_user_id, content)
@@ -1698,13 +1606,8 @@ def create_comment(board_id):
             'success': False,
             'error': str(e)
         }), 500
-        
-        
-        
-# =================================================================
-#  Read 
 
-#댓글 목록------------------
+# 댓글 목록 ------------------
 @api_bp.route('/boards/<int:board_id>/comments', methods=['GET'])
 def get_comments(board_id):
     try:
@@ -1728,12 +1631,7 @@ def get_comments(board_id):
             'error': str(e)
         }), 500
 
-
-# =================================================================
-# Update
-
-
-# 게시글 수정------------------
+# 게시글 수정 ------------------
 @api_bp.route('/boards/<int:board_id>', methods=['PUT'])
 def update_board(board_id):
     try:
@@ -1743,7 +1641,7 @@ def update_board(board_id):
         if not current_user_id:
             return jsonify({
                 'success': False,
-                'error': '로그인이 필요합니다'
+                'error': '로그인이 필요합니다.'
             }), 401
         
         data = request.get_json()
@@ -1753,7 +1651,7 @@ def update_board(board_id):
         if not title or not content:
             return jsonify({
                 'success': False,
-                'error': '제목과 내용은 필수입니다'
+                'error': '제목과 내용은 필수입니다.'
             }), 400
         
         result = board_service.update_post(board_id, current_user_id, title, content)
@@ -1778,9 +1676,7 @@ def update_board(board_id):
             'error': str(e)
         }), 500
 
-
-# 댓글 수정------------------
-
+# 댓글 수정 ------------------
 @api_bp.route('/comments/<int:comment_id>', methods=['PUT'])
 def update_comment(comment_id):
     try:
@@ -1790,7 +1686,7 @@ def update_comment(comment_id):
         if not current_user_id:
             return jsonify({
                 'success': False,
-                'error': '로그인이 필요합니다'
+                'error': '로그인이 필요합니다.'
             }), 401
         
         data = request.get_json()
@@ -1799,7 +1695,7 @@ def update_comment(comment_id):
         if not content:
             return jsonify({
                 'success': False,
-                'error': '댓글 내용이 필요합니다'
+                'error': '댓글 내용이 필요합니다.'
             }), 400
         
         result = board_service.update_comment(comment_id, current_user_id, content)
@@ -1824,13 +1720,9 @@ def update_comment(comment_id):
             'error': str(e)
         }), 500
         
-# =================================================================
-# Delete ( 실제로 DB에서 지우는게 아니라 delete한 날짜로 관리하는 소프트 삭제 방법)
-
 # 댓글 삭제 API ----------------------------------------------------   
 @api_bp.route('/comments/<int:comment_id>', methods=['DELETE'])
 def delete_comment(comment_id):
-
     try:
         auth_header = request.headers.get('Authorization')
         current_user_id = get_user_from_token(auth_header)
@@ -1838,7 +1730,7 @@ def delete_comment(comment_id):
         if not current_user_id:
             return jsonify({
                 'success': False,
-                'error': '로그인이 필요합니다'
+                'error': '로그인이 필요합니다.'
             }), 401
         
         result = board_service.delete_comment(comment_id, current_user_id)
@@ -1872,7 +1764,7 @@ def delete_board(board_id):
         if not current_user_id:
             return jsonify({
                 'success': False,
-                'error': '로그인이 필요합니다'
+                'error': '로그인이 필요합니다.'
             }), 401
         
         result = board_service.delete_post(board_id, current_user_id)
@@ -1896,70 +1788,34 @@ def delete_board(board_id):
             'error': str(e)
         }), 500
 
-
-# =================================================================
-# 좋아요  기능
-# insert --------------------------------
+# 좋아요 기능 --------------------------------
 @api_bp.route('/boards/<int:board_id>/like', methods=['POST'])
 def add_like(board_id):
     try:
-        print(f"=== 좋아요 요청 시작: board_id={board_id} ===")
-        
         auth_header = request.headers.get('Authorization')
-        print(f"Authorization 헤더: {auth_header}")
-        
         current_user_id = get_user_from_token(auth_header)
-        print(f"현재 사용자 ID: {current_user_id}")
         
         if not current_user_id:
-            print("인증 실패: 로그인이 필요합니다")
-            return jsonify({
-                'success': False,
-                'error': '로그인이 필요합니다'
-            }), 401
+            return jsonify({'success': False, 'error': '로그인이 필요합니다.'}), 401
         
-        # JSON 파싱 안전하게 처리
-        try:
-            data = request.get_json() if request.is_json else {}
-            print(f"요청 데이터: {data}")
-        except Exception as json_error:
-            print(f"JSON 파싱 에러: {json_error}")
-            data = {}
-        
-        print(f"board_service.add_like 호출: board_id={board_id}, user_id={current_user_id}")
         result = board_service.add_like(board_id, current_user_id)
-        print(f"board_service.add_like 결과: {result}")
         
         if result['success']:
-            response_data = {
+            return jsonify({
                 'success': True,
                 'likes_count': result['likes_count'],
                 'is_liked': True,
-                'message': '좋아요를 추가했습니다'
-            }
-            print(f"성공 응답: {response_data}")
-            return jsonify(response_data), 201
+                'message': '좋아요를 추가했습니다.'
+            }), 201
         else:
-            # 이미 좋아요를 눌렀거나 다른 에러
             status_code = 409 if '이미' in result['error'] else 500
-            error_response = {
-                'success': False,
-                'error': result['error']
-            }
-            print(f"실패 응답: {error_response}, 상태코드: {status_code}")
-            return jsonify(error_response), status_code
+            return jsonify({'success': False, 'error': result['error']}), status_code
             
     except Exception as e:
-        print(f"=== 예외 발생 in POST /boards/{board_id}/like ===")
-        print(f"예외 타입: {type(e)}")
-        print(f"예외 메시지: {str(e)}")
+        print(f"좋아요 추가 예외: {e}")
         import traceback
-        print(f"스택 트레이스: {traceback.format_exc()}")
-        
-        return jsonify({
-            'success': False,
-            'error': f'서버 내부 오류: {str(e)}'
-        }), 500
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': f'서버 내부 오류: {str(e)}'}), 500
 
 @api_bp.route('/boards/<int:board_id>/like', methods=['DELETE'])
 def remove_like(board_id):
@@ -1968,38 +1824,24 @@ def remove_like(board_id):
         current_user_id = get_user_from_token(auth_header)
         
         if not current_user_id:
-            return jsonify({
-                'success': False,
-                'error': '로그인이 필요합니다'
-            }), 401
+            return jsonify({'success': False, 'error': '로그인이 필요합니다.'}), 401
         
-        # toggle_like이 아니라 remove_like 호출
         result = board_service.remove_like(board_id, current_user_id)
         
         if result['success']:
             return jsonify({
                 'success': True,
                 'likes_count': result['likes_count'],
-                'is_liked': False  # DELETE는 항상 False
+                'is_liked': False
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': result['error']
-            }), 500
+            return jsonify({'success': False, 'error': result['error']}), 500
             
     except Exception as e:
         print(f"Error in DELETE /boards/{board_id}/like: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-         
-            
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-# =================================================================
-# 인기 태그 
-# =================================================================
+# 인기 태그 ----------------------------------------------------
 @api_bp.route('/boards/trending/tags', methods=['GET'])
 def get_trending_tags():
     try:
@@ -2011,9 +1853,8 @@ def get_trending_tags():
     except Exception as e:
         print(f"Error in /boards/trending/tags: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-# =================================================================
-# 인기 게시글 
-# =================================================================
+
+# 인기 게시글 --------------------------------------------------
 @api_bp.route('/boards/trending/posts', methods=['GET'])
 def get_trending_posts():
     try:
@@ -2026,11 +1867,7 @@ def get_trending_posts():
         print(f"Error in /boards/trending/posts: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-# =================================================================
-# 게시글 검색 : 게시글 검색 
-# =================================================================
-        
+# 게시글 검색 ---------------------------------------------------
 @api_bp.route('/boards/search', methods=['GET'])
 def search_boards():
     try:
@@ -2039,10 +1876,7 @@ def search_boards():
         limit = int(request.args.get('limit', 10))
         
         if not query:
-            return jsonify({
-                'success': False,
-                'error': '검색어가 필요합니다'
-            }), 400
+            return jsonify({'success': False, 'error': '검색어가 필요합니다.'}), 400
         
         result = board_service.search_posts(query, page=page, limit=limit)
         
@@ -2054,37 +1888,23 @@ def search_boards():
                 'query': query
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': result['error']
-            }), 500
+            return jsonify({'success': False, 'error': result['error']}), 500
             
     except ValueError:
-        return jsonify({
-            'success': False,
-            'error': 'page와 limit은 숫자여야 합니다'
-        }), 400
+        return jsonify({'success': False, 'error': 'page와 limit은 숫자여야 합니다.'}), 400
     except Exception as e:
         print(f"Error in /boards/search: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-# =================================================================
-# 게시글 상세 조회 : 특정 게시글의 상세 정보와  현재 사용자의 권한 정보 조회
-# =================================================================
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# 게시글 상세 조회 -------------------------------------------------
 @api_bp.route('/boards/<int:board_id>', methods=['GET'])
 def get_board_detail(board_id):
     try:
-        
         auth_header = request.headers.get('Authorization')
         current_user_id = get_user_from_token(auth_header)
         
         if not current_user_id:
-            return jsonify({
-                'success': False,
-                'error': '로그인이 필요합니다'
-            }), 401
+            return jsonify({'success': False, 'error': '로그인이 필요합니다.'}), 401
      
         result = board_service.get_post_detail(board_id, current_user_id)
         
@@ -2093,24 +1913,16 @@ def get_board_detail(board_id):
                 'success': True,
                 'post': result['post'],
                 'comments': result['comments'],
-                'user_permissions': result.get('user_permissions', {})  # 사용자 권한 정보
+                'user_permissions': result.get('user_permissions', {})
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': result['error']
-            }), 404 if '찾을 수 없습니다' in result['error'] else 500
+            return jsonify({'success': False, 'error': result['error']}), 404 if '찾을 수 없습니다' in result['error'] else 500
             
     except Exception as e:
         print(f"Error in /boards/{board_id}: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
         
-# =================================================================
-# 특정 사용자의 게시글 목록을 조회
-# =================================================================
+# 특정 사용자의 게시글 목록 조회 ------------------------------------
 @api_bp.route('/users/<int:user_id>/boards', methods=['GET'])
 def get_user_boards(user_id):  
     try:
@@ -2125,27 +1937,15 @@ def get_user_boards(user_id):
                 'pagination': result['pagination']
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': result['error']
-            }), 500
+            return jsonify({'success': False, 'error': result['error']}), 500
             
     except ValueError:
-        return jsonify({
-            'success': False,
-            'error': 'page와 limit은 숫자여야 합니다'
-        }), 400
+        return jsonify({'success': False, 'error': 'page와 limit은 숫자여야 합니다.'}), 400
     except Exception as e:
         print(f"Error in /users/{user_id}/boards: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-
-# =================================================================
-# 게시글 목록 조회  (검색 포함)
-# =================================================================
+# 게시글 목록 조회 (검색 포함) --------------------------------------
 @api_bp.route('/boards', methods=['GET'])
 def get_boards():   
     try:
@@ -2171,50 +1971,33 @@ def get_boards():
             if query:
                 response_data['search_query'] = query
                 response_data['search_results_count'] = len(result['posts'])
-                
 
             return jsonify(response_data)
         else:
-            return jsonify({
-                'success': False,
-                'error': result['error']
-            }), 500
+            return jsonify({'success': False, 'error': result['error']}), 500
             
     except ValueError:
-        return jsonify({
-            'success': False,
-            'error': 'page와 limit은 숫자여야 합니다'
-        }), 400
+        return jsonify({'success': False, 'error': 'page와 limit은 숫자여야 합니다.'}), 400
     except Exception as e:
         print(f"Error in /boards: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-
-
-#=================================================================
-# 현재 사용자의 프로필 정보 조회 API
-# =================================================================
+# 현재 사용자의 프로필 정보 조회 ------------------------------------
 @api_bp.route('/user/profile', methods=['GET'])
 def get_current_user():
-
     try:
         auth_header = request.headers.get('Authorization')
         user_id = get_user_from_token(auth_header)
-        
         
         if not user_id:
             return jsonify({
                 'success': False,
                 'is_logged_in': False,
-                'error': '로그인이 필요합니다'
+                'error': '로그인이 필요합니다.'
             }), 401
         
-        # DB에서 사용자 정보 가져오기
         result = board_service.get_user_by_id(user_id)
         
         if result['success']:
@@ -2231,12 +2014,11 @@ def get_current_user():
                 }
             })
         else:
-            # 사용자 정보가 없으면 세션 클리어
             session.clear()
             return jsonify({
                 'success': False,
                 'is_logged_in': False,
-                'error': '사용자 정보를 찾을 수 없습니다'
+                'error': '사용자 정보를 찾을 수 없습니다.'
             }), 404
             
     except Exception as e:
@@ -2246,8 +2028,8 @@ def get_current_user():
             'is_logged_in': False,
             'error': str(e)
         }), 500
-# =================================================================
-#  현재 로그인 상태를 확인 -새로고침 시 로그인 상태 복원
+
+# 현재 로그인 상태 확인 -------------------------------------------
 @api_bp.route('/auth/status', methods=['GET'])
 def auth_status():
     try:
@@ -2261,7 +2043,6 @@ def auth_status():
                 'is_logged_in': False
             }), 401
         
-        # DB에서 사용자 정보 가져오기
         user_result = board_service.get_user_by_id(current_user_id)
         if not user_result['success']:
             session.clear()

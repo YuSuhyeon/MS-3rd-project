@@ -42,7 +42,6 @@ import {
 
 import {
   tourProducts,
-  partnershipData,
   tourDetailData,
   getTourOffer,
 } from "../utils/mockTourData";
@@ -583,6 +582,30 @@ const ReviewsTab = ({ reviews }) => (
   </div>
 );
 
+const ImageWithFallback = ({
+  src,
+  alt,
+  className,
+  fallbackSrc = "/img/seoul_drone.png",
+}) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [hasError, setHasError] = useState(false);
+
+  const handleError = (e) => {
+    if (!hasError) {
+      setImgSrc(fallbackSrc);
+      setHasError(true);
+    } else {
+      // 기본 이미지도 실패하면 숨김
+      e.target.style.display = "none";
+    }
+  };
+
+  return (
+    <img src={imgSrc} alt={alt} className={className} onError={handleError} />
+  );
+};
+
 // 메인 TourDetail 컴포넌트
 export default function TourDetail({ onBack }) {
   const { id } = useParams();
@@ -740,7 +763,6 @@ export default function TourDetail({ onBack }) {
                 <div className="overflow-hidden rounded-2xl">
                   <div className="relative group">
                     {(() => {
-                      // 모바일에서 비디오 필터링
                       const filteredImages =
                         tourData.images?.filter((media) => {
                           const isVideo =
@@ -756,21 +778,19 @@ export default function TourDetail({ onBack }) {
                                   media.toLowerCase().includes(ext)
                                 )
                               : media?.type === "video";
-                          return !isVideo; // 비디오 제외
+                          return !isVideo;
                         }) || [];
 
-                      // 필터링된 배열에서 현재 이미지 선택
-                      // selectedImage가 필터링된 배열 범위를 벗어나면 0으로 리셋
                       const safeSelectedImage =
                         selectedImage >= filteredImages.length
                           ? 0
                           : selectedImage;
                       const currentImage =
                         filteredImages[safeSelectedImage] ||
-                        "../img/photoism_kdh_frame.jpg";
+                        "/img/default-tour.jpg";
 
                       return (
-                        <img
+                        <ImageWithFallback
                           src={
                             typeof currentImage === "string"
                               ? currentImage
@@ -778,6 +798,7 @@ export default function TourDetail({ onBack }) {
                           }
                           alt={tourData.title}
                           className="w-full h-64 object-cover"
+                          fallbackSrc="/img/default-tour.jpg"
                         />
                       );
                     })()}

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { createPageUrl } from "utils";
 import {
   NeonCard,
@@ -29,8 +30,13 @@ import {
 } from "../components/ui/NeonTheme";
 import CoursePreviewModal from "components/result/CoursePreviewModal";
 import AnalysisSummaryPanel from "components/result/AnalysisSummaryPanel";
+import {
+  PERSONA_CANONICAL_MAP,
+  courseMatchesPersona,
+  normalizePersonaType,
+} from "../utils/persona";
 
-// 동적 효과 컴포넌트 (파일 내부에 직접 정의)
+// 배경 효과 컴포넌트 (파일 내에서 직접 정의)
 const WaveAndParticleEffect = () => {
   const canvasRef = useRef(null);
 
@@ -309,6 +315,7 @@ const CourseListItem = ({ course, onNavigate }) => (
 // --- Main Component ---
 export default function ResultDashboard() {
   const navigate = useNavigate();
+  const { profile: authProfile, isLoading: authLoading, login } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [csvCourses, setCsvCourses] = useState([]);
@@ -363,20 +370,45 @@ export default function ResultDashboard() {
   };
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+
+    const loadProfiles = async () => {
+      if (!authProfile) {
+        if (!cancelled) {
+          setProfile(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      setLoading(true);
       try {
         const profiles = await TravelProfile.list("-created_date", 100);
+        if (cancelled) return;
         if (profiles.length > 0) {
           const withAnalysis = profiles.find((p) => p && p.analysis_result);
           setProfile(withAnalysis || profiles[0]);
+        } else {
+          setProfile(null);
         }
       } catch (e) {
         console.error("프로필 로드 실패", e);
-        setProfile(null);
+        if (!cancelled) {
+          setProfile(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    })();
-  }, []);
+    };
+
+    loadProfiles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authProfile]);
 
   useEffect(() => {
     if (profile?.analysis_result?.persona_type) {
@@ -386,16 +418,31 @@ export default function ResultDashboard() {
 
   useEffect(() => {
     (async () => {
-      if (!profile?.analysis_result?.persona_type) return;
+      const personaRaw = profile?.analysis_result?.persona_type;
+      const personaCanonical = normalizePersonaType(personaRaw);
+      if (!personaCanonical) return;
       setLoadingCourses(true);
       try {
-        const ptype = profile.analysis_result.persona_type;
-        const r = await fetch(
-          `/api/persona/courses2?ptype=${encodeURIComponent(ptype)}&grouped=1`,
-          { cache: "no-cache" }
-        );
+        const meta = PERSONA_CANONICAL_MAP[personaCanonical];
+        const params = new URLSearchParams({ grouped: "1" });
+        if (meta && typeof meta.pid === "number") {
+          params.set("pid", String(meta.pid));
+        }
+        if (meta?.aliases && meta.aliases.length > 0) {
+          params.set("ptype", meta.aliases[0]);
+        } else if (personaRaw) {
+          params.set("ptype", personaRaw);
+        }
+
+        const r = await fetch(`/api/persona/courses2?${params.toString()}`, {
+          cache: "no-cache",
+        });
         const j = await r.json();
-        setCsvCourses(Array.isArray(j.items) ? j.items : []);
+        const items = Array.isArray(j.items) ? j.items : [];
+        const filtered = items.filter((item) =>
+          courseMatchesPersona(item, personaCanonical)
+        );
+        setCsvCourses(filtered);
       } catch (e) {
         console.warn("courses load failed", e);
         setCsvCourses([]);
@@ -407,7 +454,14 @@ export default function ResultDashboard() {
 
   const filteredCourses = useMemo(() => {
     const q = (courseQuery || "").trim().toLowerCase();
-    const src = loadingCourses ? [] : csvCourses || [];
+    const personaCanonical = normalizePersonaType(
+      profile?.analysis_result?.persona_type
+    );
+    const src = loadingCourses
+      ? []
+      : (csvCourses || []).filter((course) =>
+          courseMatchesPersona(course, personaCanonical)
+        );
     if (!q) return src;
     return src.filter((c) => {
       const inTitle = String(c.title || "")
@@ -422,7 +476,12 @@ export default function ResultDashboard() {
         );
       return inTitle || inStops;
     });
-  }, [courseQuery, csvCourses, loadingCourses]);
+  }, [
+    courseQuery,
+    csvCourses,
+    loadingCourses,
+    profile?.analysis_result?.persona_type,
+  ]);
 
   const handleNavigate = (course) => {
     try {
@@ -459,8 +518,46 @@ export default function ResultDashboard() {
     );
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-slate-300">
+        <NeonLoader size="lg" />
+        <p className="mt-4 text-sm">로그인 상태를 확인하고 있습니다...</p>
+      </div>
+    );
+  }
+
+  if (!authProfile) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-4 py-12">
+        <NeonCard className="max-w-lg w-full text-center space-y-6 border-purple-500/30 bg-slate-900/70 backdrop-blur-xl">
+          <GradientText size="3xl">로그인이 필요합니다</GradientText>
+          <p className="text-slate-300">
+            여행 페르소나 분석 및 추천 코스를 확인하려면 로그인해주세요.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <NeonButton size="lg" onClick={() => login("google")}>
+              Google로 로그인
+            </NeonButton>
+            <NeonButton
+              size="lg"
+              variant="secondary"
+              onClick={() => login("microsoft")}
+            >
+              Microsoft로 로그인
+            </NeonButton>
+          </div>
+        </NeonCard>
+      </div>
+    );
+  }
+
   if (loading) {
-    return <NeonLoader size="lg" />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <NeonLoader size="lg" />
+      </div>
+    );
   }
 
   if (!profile?.analysis_result) {
@@ -476,8 +573,8 @@ export default function ResultDashboard() {
             className="max-w-md w-full text-center space-y-4"
           >
             <p className="text-slate-200/80">
-              최근 저장된 페르소나 분석 결과를 찾을 수 없어요. 나만의 여행
-              스타일을 다시 분석해 보세요.
+              최근 생성된 페르소나 분석 결과를 찾을 수 없어, 새로운 여행 계획을
+              다시 분석해보세요.
             </p>
             <NeonButton
               onClick={() => navigate(createPageUrl("Home"))}
@@ -545,12 +642,12 @@ export default function ResultDashboard() {
           </div>
         </div>
 
-        {/* 섹션 2: 중간 (나의 여행 페르소나 분석 패널) */}
-        <div className="overflow-hidden bg-[#3f2261]/90">
+        {/* 섹션 2: 중간 (여행 페르소나 분석 패널) */}
+        <div className="overflow-hidden bg-gradient-to-b from-[#3f2261]/95 via-[#31195b]/85 to-[#2a0f4d]/90">
           <div className="relative z-20 px-4 md:px-10">
             <div className="max-w-6xl mx-auto">
               <Divider />
-              <Section title="나의 여행 페르소나">
+              <Section title="여행 페르소나">
                 <AnalysisSummaryPanel
                   profile={{
                     ...profile,
@@ -566,7 +663,7 @@ export default function ResultDashboard() {
         </div>
 
         {/* 섹션 3: 하단 (추천 스팟, 추천 코스) */}
-        <div className="overflow-hidden bg-[#2c134d]/90">
+        <div className="overflow-hidden bg-gradient-to-b from-[#2c134d]/90 via-[#1f0a36]/85 to-[#140428]/90">
           <div className="relative z-20 px-4 md:px-10">
             <div className="max-w-6xl mx-auto">
               <Divider />
@@ -583,15 +680,6 @@ export default function ResultDashboard() {
                     disabled={loadingSpots}
                   >
                     <RotateCcw className="w-4 h-4" /> 새로고침
-                  </NeonButton>
-                  <NeonButton
-                    size="sm"
-                    variant="secondary"
-                    className="flex items-center gap-2 px-3 py-2"
-                    onClick={() => reshuffleSpots()}
-                    disabled={loadingSpots}
-                  >
-                    <RefreshCw className="w-4 h-4" /> 재배열
                   </NeonButton>
                 </div>
                 {loadingSpots ? (
@@ -652,7 +740,6 @@ export default function ResultDashboard() {
               <Section
                 title={
                   <>
-                    {" "}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                       {analysis.persona_type}
                     </span>{" "}
@@ -672,7 +759,7 @@ export default function ResultDashboard() {
                       <input
                         value={courseQuery}
                         onChange={(e) => setCourseQuery(e.target.value)}
-                        placeholder="코스 혹은 장소 검색..."
+                        placeholder="코스 이름, 장소 검색..."
                         className="w-full pl-10 pr-4 py-2 rounded-xl border border-purple-500/30 focus:outline-none focus:ring-2 focus:ring-purple-500/60 bg-black/60 text-white placeholder-slate-400"
                       />
                     </div>
@@ -699,15 +786,15 @@ export default function ResultDashboard() {
                             ) : (
                               <List size={16} />
                             )}
-                            {mode === "cards" ? "카드형" : "리스트형"}
+                            {mode === "cards" ? "카드 뷰" : "리스트 뷰"}
                           </span>
                         </button>
                       ))}
                     </div>
                     <div className="text-right text-sm text-slate-200/70 order-3 hidden md:block">
                       {!loadingCourses
-                        ? `${filteredCourses.length}개의 코스`
-                        : "불러오는 중..."}
+                        ? `${filteredCourses.length} courses`
+                        : "Loading courses..."}
                     </div>
                   </motion.div>
                 </div>

@@ -44,14 +44,11 @@ import ItineraryHeader from "../components/itinerary/ItineraryHeader";
 import TimelineDay from "../components/itinerary/TimelineDay";
 
 import { Itinerary } from "../Entities/Itinerary";
-import { RoutePlan } from "../Entities/RoutePlan";
-import {
-  useItineraryStore,
-  convertPlanToItinerary,
-  convertItineraryToPlan,
-} from "../store/useItineraryStore";
+import { useItineraryStore } from "../store/useItineraryStore";
+import { useAuth } from "../context/AuthContext";
 
 const WaveAndParticleEffect = () => {
+  // ... (이 컴포넌트는 수정할 내용이 없습니다) ...
   const canvasRef = useRef(null);
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -128,7 +125,7 @@ const WaveAndParticleEffect = () => {
     };
   }, []);
   return (
-    <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10">
+    <div aria-hidden="true" className="fixed inset-0 pointer-events-none z-10">
       <canvas ref={canvasRef} className="absolute inset-0 opacity-60" />
       <div className="absolute inset-0 opacity-30">
         {[...Array(50)].map((_, i) => (
@@ -177,6 +174,7 @@ const WaveAndParticleEffect = () => {
   );
 };
 
+// 초기 여행 로드 관련
 const deepClone = (value) => {
   if (value == null) return value;
   if (typeof structuredClone === "function") return structuredClone(value);
@@ -198,6 +196,7 @@ export default function ItineraryView() {
     setLoadingPlans,
     setIsSaving,
     setLastSavedAt,
+    resetState,
   } = useItineraryStore((state) => ({
     itinerary: state.itinerary,
     localItinerary: state.localItinerary,
@@ -211,7 +210,15 @@ export default function ItineraryView() {
     setLoadingPlans: state.setLoadingPlans,
     setIsSaving: state.setIsSaving,
     setLastSavedAt: state.setLastSavedAt,
+    resetState: state.resetState,
   }));
+  const { profile: authProfile, isLoading: authLoading, login } = useAuth();
+  const isAuthenticated = !!authProfile;
+  useEffect(() => {
+    if (!isAuthenticated) {
+      resetState();
+    }
+  }, [isAuthenticated, resetState]);
   const [editingActivity, setEditingActivity] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
@@ -236,29 +243,52 @@ export default function ItineraryView() {
       Math.min(prev, Math.max((localItinerary?.days?.length || 1) - 1, 0))
     );
   }, [localItinerary?.days?.length]);
+
   const loadRoutePlans = useCallback(async () => {
+    if (!isAuthenticated) {
+      setRoutePlans([]);
+      setLoadingPlans(false);
+      return [];
+    }
     setLoadingPlans(true);
     try {
-      const plans = await RoutePlan.list();
-      setRoutePlans(plans);
+      const itineraries = await Itinerary.list(100);
+      const mapped = itineraries.map((item) => ({
+        ...item,
+        id: item.id || item.itinerary_id,
+        itinerary_name: item.itinerary_name || item.name || "새로운 여행",
+        days: Array.isArray(item.days) ? item.days : [],
+      }));
+      setRoutePlans(mapped);
+      return mapped;
     } catch (error) {
       console.error(error);
       notifications.show({
         color: "red",
-        title: "저장된 플랜을 불러오지 못했어요",
-        message: "잠시 후 다시 시도해주세요.",
-        icon: <XCircle size={16} />,
+        title: "여행 목록 로딩 실패",
+        message: "데이터를 불러오는 중 오류가 발생했습니다.",
       });
+      return [];
     } finally {
       setLoadingPlans(false);
     }
-  }, [setLoadingPlans, setRoutePlans]);
+  }, [isAuthenticated, setLoadingPlans, setRoutePlans]);
+
   const generateSampleItinerary = useCallback(async () => {
+    if (!isAuthenticated) {
+      notifications.show({
+        color: "yellow",
+        title: "로그인이 필요합니다",
+        message: "샘플 여행을 만들려면 로그인해주세요.",
+        icon: <Frown size={16} />,
+      });
+      return;
+    }
     setIsGenerating(true);
     try {
       const sample = {
-        itinerary_name: "도시 감성 3일",
-        destination: "서울",
+        itinerary_name: "도쿄 3박 4일 샘플",
+        destination: "도쿄",
         total_days: 3,
         travel_style: "CAR",
         source_plan_id: null,
@@ -273,10 +303,11 @@ export default function ItineraryView() {
       setLocalItinerary(deepClone(created));
       setActiveDayIndex(0);
       autoReadyRef.current = false;
+      await loadRoutePlans();
       notifications.show({
         color: "teal",
-        title: "샘플 일정이 준비됐어요",
-        message: "이제 일정을 자유롭게 편집해보세요!",
+        title: "샘플 여행 생성 완료",
+        message: "새로운 샘플 여행 계획이 만들어졌습니다.",
         icon: <Sparkles size={16} />,
       });
     } catch (error) {
@@ -284,15 +315,18 @@ export default function ItineraryView() {
       notifications.show({
         color: "red",
         title: "샘플 생성 실패",
-        message: "샘플 일정을 만드는 데 문제가 발생했어요.",
-        icon: <XCircle size={16} />,
+        message: "샘플 여행을 만드는 중 오류가 발생했습니다.",
       });
     } finally {
       setIsGenerating(false);
     }
-  }, [setItinerary, setLocalItinerary]);
+  }, [isAuthenticated, setItinerary, setLocalItinerary, loadRoutePlans]);
+
   useEffect(() => {
     (async () => {
+      if (!isAuthenticated) {
+        return;
+      }
       try {
         const itineraries = await Itinerary.list();
         if (itineraries.length > 0) {
@@ -306,44 +340,38 @@ export default function ItineraryView() {
         console.error(error);
         notifications.show({
           color: "red",
-          title: "일정을 불러오지 못했어요",
-          message: "페이지를 새로고침하거나 잠시 후 다시 시도해주세요.",
+          title: "여행 로드 실패",
+          message: "여행 정보를 불러오는 중 오류가 발생했습니다.",
           icon: <XCircle size={16} />,
         });
       }
     })();
-  }, [generateSampleItinerary, setItinerary, setLocalItinerary]);
+  }, [
+    generateSampleItinerary,
+    isAuthenticated,
+    setItinerary,
+    setLocalItinerary,
+  ]);
+
   useEffect(() => {
     loadRoutePlans();
   }, [loadRoutePlans]);
-  const synchronizeRoutePlan = useCallback(
-    async (itineraryData) => {
-      if (!itineraryData?.source_plan_id) return;
-      try {
-        const originalPlan = await RoutePlan.get(itineraryData.source_plan_id);
-        if (!originalPlan) return;
-        const updatedPlan = convertItineraryToPlan(itineraryData, originalPlan);
-        await RoutePlan.save(updatedPlan);
-        await loadRoutePlans();
-      } catch (error) {
-        console.error("Failed to sync route plan", error);
-        notifications.show({
-          color: "red",
-          title: "플랜 동기화 실패",
-          message: "저장된 플랜을 최신 상태로 유지하지 못했어요.",
-          icon: <XCircle size={16} />,
-        });
-      }
-    },
-    [loadRoutePlans]
-  );
+
   const handleSaveChanges = useCallback(async () => {
     if (!localItinerary) return;
+    if (!isAuthenticated) {
+      notifications.show({
+        color: "yellow",
+        title: "로그인이 필요합니다",
+        message: "변경사항을 저장하려면 로그인해주세요.",
+      });
+      return;
+    }
     setIsSaving(true);
     try {
       const updated = await Itinerary.update(localItinerary.id, localItinerary);
       setItinerary(deepClone(updated));
-      await synchronizeRoutePlan(localItinerary);
+      await loadRoutePlans();
       setLastSavedAt(Date.now());
       lastSerializedRef.current = JSON.stringify(localItinerary);
       autoReadyRef.current = false;
@@ -352,28 +380,29 @@ export default function ItineraryView() {
       }, 0);
       notifications.show({
         color: "teal",
-        title: "변경 사항이 저장됐어요",
-        message: "일정과 연결된 플랜이 최신 상태로 유지됐습니다.",
+        title: "저장 완료",
+        message: "변경사항이 성공적으로 저장되었습니다.",
         icon: <Check size={16} />,
       });
     } catch (error) {
       console.error("Failed to save changes", error);
       notifications.show({
         color: "red",
-        title: "저장에 실패했어요",
-        message: "네트워크 상태를 확인하고 다시 시도해주세요.",
-        icon: <XCircle size={16} />,
+        title: "저장 실패",
+        message: "변경사항을 저장하는 중 오류가 발생했습니다.",
       });
     } finally {
       setIsSaving(false);
     }
   }, [
+    isAuthenticated,
+    loadRoutePlans,
     localItinerary,
     setItinerary,
     setIsSaving,
-    synchronizeRoutePlan,
     setLastSavedAt,
   ]);
+
   const handleDiscardChanges = useCallback(() => {
     if (!itinerary) return;
     setLocalItinerary(deepClone(itinerary));
@@ -384,10 +413,11 @@ export default function ItineraryView() {
     }, 0);
     notifications.show({
       color: "gray",
-      title: "변경 사항을 되돌렸어요",
-      message: "이전으로 돌아갔습니다.",
+      title: "변경사항 취소",
+      message: "마지막으로 저장된 버전으로 복원되었습니다.",
     });
   }, [itinerary, setLocalItinerary]);
+
   useEffect(() => {
     if (!debouncedItinerary) return;
     if (!autoReadyRef.current) {
@@ -405,13 +435,13 @@ export default function ItineraryView() {
           debouncedItinerary
         );
         setItinerary(deepClone(updated));
-        await synchronizeRoutePlan(debouncedItinerary);
+        await loadRoutePlans();
         setLastSavedAt(Date.now());
         lastSerializedRef.current = serialized;
         notifications.show({
           color: "teal",
-          title: "자동 저장 완료",
-          message: "작성 중인 내용이 안전하게 저장됐습니다.",
+          title: "자동 저장",
+          message: "변경사항이 자동으로 저장되었습니다.",
           icon: <Check size={16} />,
           autoClose: 2000,
         });
@@ -420,7 +450,7 @@ export default function ItineraryView() {
         notifications.show({
           color: "red",
           title: "자동 저장 실패",
-          message: "인터넷 연결을 확인하고 수동 저장을 시도해주세요.",
+          message: "변경사항을 저장하는 중 오류가 발생했습니다.",
           icon: <XCircle size={16} />,
         });
       } finally {
@@ -432,77 +462,98 @@ export default function ItineraryView() {
   }, [
     debouncedItinerary,
     setItinerary,
-    synchronizeRoutePlan,
+    loadRoutePlans,
     setIsSaving,
     setLastSavedAt,
   ]);
+
   const handleApplyRoutePlan = useCallback(
-    async (plan) => {
+    (plan) => {
       if (!plan) return;
-      try {
-        const converted = convertPlanToItinerary(plan);
-        const created = await Itinerary.create(converted);
-        setItinerary(created);
-        setLocalItinerary(deepClone(created));
-        setActiveDayIndex(0);
-        autoReadyRef.current = false;
-        lastSerializedRef.current = JSON.stringify(created);
+      if (!isAuthenticated) {
         notifications.show({
-          color: "teal",
-          title: "플랜을 불러왔어요",
-          message: "선택한 경로 플랜을 일정에 적용했습니다.",
-          icon: <Check size={16} />,
+          color: "yellow",
+          title: "로그인 필요",
+          message: "여행 계획을 적용하려면 로그인해야 합니다.",
         });
-      } catch (error) {
-        console.error(error);
-        notifications.show({
-          color: "red",
-          title: "플랜 불러오기 실패",
-          message: "저장된 플랜을 불러오는 중 문제가 발생했어요.",
-          icon: <XCircle size={16} />,
-        });
+        return;
       }
+      const normalized = {
+        ...plan,
+        id: plan.id || plan.itinerary_id,
+        itinerary_name: plan.itinerary_name || plan.name || "새로운 여행",
+        days: Array.isArray(plan.days) ? deepClone(plan.days) : [],
+      };
+      setItinerary(deepClone(normalized));
+      setLocalItinerary(deepClone(normalized));
+      setActiveDayIndex(0);
+      autoReadyRef.current = false;
+      lastSerializedRef.current = JSON.stringify(normalized);
+      notifications.show({
+        color: "teal",
+        title: "계획 적용됨",
+        message: "선택한 여행 계획을 불러왔습니다.",
+        icon: <Check size={16} />,
+      });
     },
-    [setItinerary, setLocalItinerary]
+    [isAuthenticated, setItinerary, setLocalItinerary]
   );
+
   const handleDeleteRoutePlan = useCallback(
     async (planId) => {
       if (!planId) return;
+      if (!isAuthenticated) {
+        notifications.show({
+          color: "yellow",
+          title: "로그인 필요",
+          message: "여행 계획을 삭제하려면 로그인해야 합니다.",
+        });
+        return;
+      }
       if (
         typeof window !== "undefined" &&
-        !window.confirm("저장된 플랜을 삭제하시겠어요?")
+        !window.confirm("정말로 이 여행 계획을 삭제하시겠습니까?")
       ) {
         return;
       }
       try {
-        await RoutePlan.remove(planId);
-        await loadRoutePlans();
-        if (localItinerary?.source_plan_id === planId) {
-          const remaining = await Itinerary.list();
-          const next = remaining[0] || null;
-          setItinerary(next);
+        await Itinerary.remove(planId);
+        const remaining = await loadRoutePlans();
+        if (
+          localItinerary &&
+          (localItinerary.id === planId ||
+            localItinerary.source_plan_id === planId)
+        ) {
+          const next = remaining && remaining.length ? remaining[0] : null;
+          setItinerary(next ? deepClone(next) : null);
           setLocalItinerary(next ? deepClone(next) : null);
           setActiveDayIndex(0);
           lastSerializedRef.current = next ? JSON.stringify(next) : null;
         }
         notifications.show({
           color: "green",
-          title: "플랜을 삭제했어요",
-          message: "선택한 플랜을 삭제했습니다.",
-          icon: <Trash2 size={16} />,
+          title: "삭제 완료",
+          message: "여행 계획이 성공적으로 삭제되었습니다.",
         });
       } catch (error) {
         console.error(error);
         notifications.show({
           color: "red",
-          title: "삭제에 실패했어요",
-          message: "플랜 삭제 중 문제가 발생했습니다.",
-          icon: <XCircle size={16} />,
+          title: "삭제 실패",
+          message: "계획을 삭제하는 중 오류가 발생했습니다.",
         });
       }
     },
-    [loadRoutePlans, localItinerary, setItinerary, setLocalItinerary]
+    [
+      isAuthenticated,
+      loadRoutePlans,
+      localItinerary,
+      setItinerary,
+      setLocalItinerary,
+      setActiveDayIndex,
+    ]
   );
+
   const onDragEnd = useCallback(
     (result) => {
       const { source, destination } = result;
@@ -514,33 +565,51 @@ export default function ItineraryView() {
         return;
       }
       setLocalItinerary((prev) => {
-        const draft = deepClone(prev);
+        const newDays = [...prev.days];
         const sourceDayIndex = parseInt(source.droppableId.split("-")[1], 10);
         const destDayIndex = parseInt(
           destination.droppableId.split("-")[1],
           10
         );
-        const [movedActivity] = draft.days[sourceDayIndex].activities.splice(
-          source.index,
-          1
-        );
-        draft.days[destDayIndex].activities.splice(
-          destination.index,
-          0,
-          movedActivity
-        );
-        return draft;
+
+        if (sourceDayIndex === destDayIndex) {
+          // 같은 날짜 내에서 이동
+          const day = newDays[sourceDayIndex];
+          const newActivities = Array.from(day.activities);
+          const [movedActivity] = newActivities.splice(source.index, 1);
+          newActivities.splice(destination.index, 0, movedActivity);
+
+          newDays[sourceDayIndex] = { ...day, activities: newActivities };
+        } else {
+          // 다른 날짜로 이동
+          const sourceDay = newDays[sourceDayIndex];
+          const destDay = newDays[destDayIndex];
+          const newSourceActivities = Array.from(sourceDay.activities);
+          const newDestActivities = Array.from(destDay.activities);
+
+          const [movedActivity] = newSourceActivities.splice(source.index, 1);
+          newDestActivities.splice(destination.index, 0, movedActivity);
+
+          newDays[sourceDayIndex] = {
+            ...sourceDay,
+            activities: newSourceActivities,
+          };
+          newDays[destDayIndex] = { ...destDay, activities: newDestActivities };
+        }
+
+        return { ...prev, days: newDays };
       });
     },
     [setLocalItinerary]
   );
+
   const addActivity = useCallback(
     (dayIndex, insertIndex) => {
       const newActivity = {
         id: `activity_${Date.now()}`,
         time: "12:00",
         duration: 60,
-        place_name: "새로운 장소",
+        place_name: "새로운 활동",
         place_type: "activity",
         description: "",
         tips: "",
@@ -550,62 +619,91 @@ export default function ItineraryView() {
         address: "",
         roadAddress: "",
       };
-      setLocalItinerary((prev) => {
-        const draft = deepClone(prev);
-        const index =
-          typeof insertIndex === "number"
-            ? insertIndex
-            : draft.days[dayIndex].activities.length;
-        draft.days[dayIndex].activities.splice(index, 0, newActivity);
-        return draft;
-      });
+      setLocalItinerary((prev) => ({
+        ...prev,
+        days: prev.days.map((day, d_idx) => {
+          if (d_idx !== dayIndex) {
+            return day;
+          }
+          const newActivities = [...day.activities];
+          const finalInsertIndex =
+            typeof insertIndex === "number"
+              ? insertIndex
+              : newActivities.length;
+          newActivities.splice(finalInsertIndex, 0, newActivity);
+          return { ...day, activities: newActivities };
+        }),
+      }));
       setEditingActivity({ ...newActivity, dayIndex });
     },
     [setLocalItinerary]
   );
+
   const updateActivity = useCallback(
     (dayIndex, activityId, updatedData) => {
-      setLocalItinerary((prev) => {
-        const draft = deepClone(prev);
-        const idx = draft.days[dayIndex].activities.findIndex(
-          (a) => a.id === activityId
-        );
-        if (idx !== -1) {
-          draft.days[dayIndex].activities[idx] = {
-            ...draft.days[dayIndex].activities[idx],
-            ...updatedData,
+      setLocalItinerary((prev) => ({
+        ...prev,
+        days: prev.days.map((day, d_idx) => {
+          if (d_idx !== dayIndex) {
+            return day;
+          }
+          return {
+            ...day,
+            activities: day.activities.map((activity) => {
+              if (activity.id !== activityId) {
+                return activity;
+              }
+              return {
+                ...activity,
+                ...updatedData,
+                id: activity.id,
+              };
+            }),
           };
-        }
-        return draft;
-      });
+        }),
+      }));
     },
     [setLocalItinerary]
   );
+
   const deleteActivity = useCallback(
     (dayIndex, activityId) => {
-      setLocalItinerary((prev) => {
-        const draft = deepClone(prev);
-        draft.days[dayIndex].activities = draft.days[
-          dayIndex
-        ].activities.filter((activity) => activity.id !== activityId);
-        return draft;
-      });
+      setLocalItinerary((prev) => ({
+        ...prev,
+        days: prev.days.map((day, d_idx) => {
+          if (d_idx !== dayIndex) {
+            return day;
+          }
+          return {
+            ...day,
+            activities: day.activities.filter(
+              (activity) => activity.id !== activityId
+            ),
+          };
+        }),
+      }));
     },
     [setLocalItinerary]
   );
+
   const handleTitleChange = useCallback(
     (newTitle) => {
       setLocalItinerary((prev) => ({ ...prev, itinerary_name: newTitle }));
     },
     [setLocalItinerary]
   );
+
+  // 불필요한 리렌더링 방지.
   const handleDateChange = useCallback(
     (dayIndex, newDate) => {
-      setLocalItinerary((prev) => {
-        const draft = deepClone(prev);
-        draft.days[dayIndex].date = newDate ? newDate.toISOString() : null;
-        return draft;
-      });
+      setLocalItinerary((prev) => ({
+        ...prev,
+        days: prev.days.map((day, d_idx) =>
+          d_idx === dayIndex
+            ? { ...day, date: newDate ? newDate.toISOString() : null }
+            : day
+        ),
+      }));
     },
     [setLocalItinerary]
   );
@@ -617,7 +715,7 @@ export default function ItineraryView() {
       backdropFilter: "blur(12px)",
       boxShadow: "0 0 15px rgba(168, 85, 247, 0.1)",
     };
-    if (loadingPlans)
+    if (loadingPlans) {
       return (
         <Stack gap="md">
           {Array.from({ length: 3 }).map((_, idx) => (
@@ -626,31 +724,41 @@ export default function ItineraryView() {
               withBorder
               radius="md"
               p="md"
-              style={neonPaperStyle}
+              style={{
+                ...neonPaperStyle,
+                height: "150px",
+                animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              }}
             />
           ))}
         </Stack>
       );
-    if (!routePlans.length)
+    }
+    if (!routePlans.length) {
       return (
         <Center h={120}>
           <Stack align="center" gap={4}>
             <Text c="gray.5" size="sm">
-              저장된 플랜이 없습니다.
+              저장된 여행 계획이 없습니다.
             </Text>
             <Text c="gray.6" size="xs">
-              경로 편집에서 플랜을 저장하면 이곳에 나타납니다.
+              새로운 계획을 만들거나 기존 계획을 수정하여 관리하세요.
             </Text>
           </Stack>
         </Center>
       );
+    }
     return (
       <Stack gap="md">
         {routePlans.map((plan) => {
-          const stopCount = (plan.days || []).reduce(
-            (acc, day) => acc + 2 + (day.waypoints || []).length,
-            0
-          );
+          const stopCount = (plan.days || []).reduce((acc, day) => {
+            const activities = Array.isArray(day?.activities)
+              ? day.activities.length
+              : 0;
+            return acc + activities;
+          }, 0);
+          const updatedAt = plan.updated_at || plan.updatedAt;
+          const title = plan.itinerary_name || plan.name || "새로운 여행";
           return (
             <Paper
               key={plan.id}
@@ -662,10 +770,10 @@ export default function ItineraryView() {
               <Stack gap="md">
                 <Stack gap="xs">
                   <Text fw={600} c="gray.1" size="lg" truncate>
-                    {plan.name}
+                    {title}
                   </Text>
                   <Group gap="md" wrap="nowrap">
-                    {plan.updatedAt && (
+                    {updatedAt && (
                       <Text
                         size="xs"
                         c="gray.5"
@@ -676,7 +784,7 @@ export default function ItineraryView() {
                         }}
                       >
                         <CalendarDays size={14} />
-                        {new Date(plan.updatedAt).toLocaleDateString("ko-KR")}
+                        {new Date(updatedAt).toLocaleDateString("ko-KR")}
                       </Text>
                     )}
                     <Text
@@ -685,7 +793,7 @@ export default function ItineraryView() {
                       style={{ display: "flex", alignItems: "center", gap: 4 }}
                     >
                       <MapPin size={14} />
-                      {stopCount}곳
+                      {stopCount}개 장소
                     </Text>
                     <Text
                       size="xs"
@@ -702,7 +810,7 @@ export default function ItineraryView() {
                     size="sm"
                     onClick={() => handleApplyRoutePlan(plan)}
                   >
-                    플래너로 불러오기
+                    이 계획 불러오기
                   </NeonButton>
                   <NeonButton
                     size="sm"
@@ -720,89 +828,81 @@ export default function ItineraryView() {
     );
   }, [loadingPlans, routePlans, handleApplyRoutePlan, handleDeleteRoutePlan]);
 
-  if (isGenerating || !localItinerary) {
-    return (
-      <div className="relative w-full h-screen overflow-hidden bg-black">
-        <WaveAndParticleEffect />
-        <Center h="100%" className="relative z-10 p-4">
-          {isGenerating ? (
-            <Stack align="center" gap="md">
-              <Loader color="grape" size="xl" />
-              <GradientText size="3xl">
-                AI가 여행 일정을 만드는 중입니다
-              </GradientText>
-              <Text c="gray.5">조금만 기다려주세요...</Text>
-            </Stack>
-          ) : (
-            <Paper
-              shadow="lg"
-              p="xl"
-              radius="md"
-              withBorder
-              style={{
-                backgroundColor: "rgba(10, 5, 20, 0.7)",
-                borderColor: "rgba(168, 85, 247, 0.3)",
-                backdropFilter: "blur(12px)",
-                boxShadow: "0 0 25px rgba(168, 85, 247, 0.2)",
-              }}
-            >
-              <Stack align="center" gap="md">
-                <Frown
-                  size={48}
-                  strokeWidth={1.5}
-                  color="var(--mantine-color-grape-5)"
-                />
-                <GradientText size="2xl">아직 일정이 없습니다</GradientText>
-                <Text c="gray.5" ta="center">
-                  샘플 일정을 생성하거나 저장된 플랜을 불러와 시작해보세요.
-                </Text>
-                <NeonButton onClick={generateSampleItinerary}>
-                  <Sparkles size={16} /> 샘플 일정 만들기
-                </NeonButton>
-              </Stack>
-            </Paper>
-          )}
-        </Center>
-      </div>
-    );
-  }
+  // ... 나머지 코드(UI 부분)는 동일합니다.
 
-  const itineraryContent = (
+  const itineraryContent = localItinerary ? (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Stack gap="xl">
-        {localItinerary.days?.map((day, dayIndex) => (
-          <Droppable key={dayIndex} droppableId={`day-${dayIndex}`}>
-            {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef}>
-                <TimelineDay
-                  day={day}
-                  dayIndex={dayIndex}
-                  isActive={dayIndex === activeDayIndex}
-                  onSelectDay={() => setActiveDayIndex(dayIndex)}
-                  onDateChange={handleDateChange}
-                  onEditActivity={(activity) =>
-                    setEditingActivity({ ...activity, dayIndex })
-                  }
-                  onAddActivity={(insertIndex) =>
-                    addActivity(dayIndex, insertIndex)
-                  }
-                  onDeleteActivity={(activityId) =>
-                    deleteActivity(dayIndex, activityId)
-                  }
-                />
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
+      <Tabs
+        color="grape"
+        value={String(activeDayIndex)}
+        onChange={(value) => setActiveDayIndex(Number(value))}
+        styles={{
+          list: { borderBottom: "1px solid rgba(168, 85, 247, 0.2)" },
+          tab: {
+            color: "var(--mantine-color-gray-5)",
+            "&[data-active]": { color: "#fff", textShadow: "0 0 5px #fff" },
+          },
+        }}
+      >
+        <Tabs.List>
+          {(localItinerary.days || []).map((day, index) => (
+            <Tabs.Tab key={day.day_number} value={String(index)}>
+              Day {day.day_number}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+        {(localItinerary.days || []).map((day, index) => (
+          <Tabs.Panel key={day.day_number} value={String(index)} pt="lg">
+            <Droppable droppableId={`day-${index}`} type="ACTIVITY">
+              {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps}>
+                  <TimelineDay
+                    day={day}
+                    dayIndex={index}
+                    onAddActivity={addActivity}
+                    onEditActivity={(activity) =>
+                      setEditingActivity({ ...activity, dayIndex: index })
+                    }
+                    onDeleteActivity={deleteActivity}
+                    onDateChange={handleDateChange}
+                  />
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </Tabs.Panel>
         ))}
-      </Stack>
+      </Tabs>
     </DragDropContext>
+  ) : (
+    <Center h="50vh">
+      {authLoading ? (
+        <Loader color="grape" />
+      ) : !isAuthenticated ? (
+        <Stack align="center">
+          <Text>로그인하여 여행 계획을 시작하세요.</Text>
+          <NeonButton onClick={() => login && login()}>로그인</NeonButton>
+        </Stack>
+      ) : isGenerating ? (
+        <Stack align="center">
+          <Loader color="grape" />
+          <Text>샘플 여행을 만드는 중...</Text>
+        </Stack>
+      ) : (
+        <Stack align="center">
+          <Text>여행 계획이 없습니다.</Text>
+          <NeonButton onClick={generateSampleItinerary} loading={isGenerating}>
+            샘플 여행 만들기
+          </NeonButton>
+        </Stack>
+      )}
+    </Center>
   );
 
   const savedPlansContent = (
     <Box>
       <Title order={isDesktop ? 2 : 4} mb="xl">
-        <GradientText>저장된 플랜</GradientText>
+        <GradientText>저장된 일정</GradientText>
       </Title>
       {renderSavedPlans()}
     </Box>
@@ -815,7 +915,7 @@ export default function ItineraryView() {
         p="lg"
         withBorder
         style={{
-          backgroundColor: "rgba(10, 5, 20, 0.6)",
+          backgroundColor: "transparent",
           border: "none",
           borderRight: "1px solid rgba(168, 85, 247, 0.3)",
           height: "100vh",
@@ -858,7 +958,7 @@ export default function ItineraryView() {
         }}
       >
         <Group h="100%" px="md" justify="space-between">
-          <GradientText size="lg">여행 플래너</GradientText>
+          <GradientText size="lg">Itinerary Planner</GradientText>
           {(isSaving || autoSaving) && (
             <Text size="xs" c="grape.3">
               저장 중...
@@ -891,10 +991,10 @@ export default function ItineraryView() {
         >
           <Tabs.List grow>
             <Tabs.Tab value="itinerary" leftSection={<List size={16} />}>
-              일정
+              여행 계획
             </Tabs.Tab>
             <Tabs.Tab value="savedPlans" leftSection={<Bookmark size={16} />}>
-              저장된 플랜
+              저장된 계획
             </Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="itinerary" pt="lg">
@@ -909,29 +1009,28 @@ export default function ItineraryView() {
   );
 
   return (
-    // [핵심 수정] 최상위 div 구조 변경
-    <div className="relative w-full h-screen overflow-hidden bg-black text-white">
+    <div className="w-full h-full text-white bg-black">
       <WaveAndParticleEffect />
       <NeonScrollbarStyles />
-      <div className="relative z-10 w-full h-full">
+      <div className="relative z-20 w-full h-full">
         {isDesktop ? <DesktopLayout /> : <MobileLayout />}
+        <AnimatePresence>
+          {editingActivity && (
+            <ActivityEditor
+              activity={editingActivity}
+              opened={!!editingActivity}
+              onClose={() => setEditingActivity(null)}
+              onSave={(updatedData) =>
+                updateActivity(
+                  editingActivity.dayIndex,
+                  editingActivity.id,
+                  updatedData
+                )
+              }
+            />
+          )}
+        </AnimatePresence>
       </div>
-      <AnimatePresence>
-        {editingActivity && (
-          <ActivityEditor
-            activity={editingActivity}
-            opened={!!editingActivity}
-            onClose={() => setEditingActivity(null)}
-            onSave={(updatedData) =>
-              updateActivity(
-                editingActivity.dayIndex,
-                editingActivity.id,
-                updatedData
-              )
-            }
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

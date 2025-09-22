@@ -1,6 +1,4 @@
 import { create } from "zustand";
-import { Itinerary } from "Entities/Itinerary";
-import { RoutePlan } from "Entities/RoutePlan";
 
 const deepClone = (value) => {
   if (typeof structuredClone === "function") {
@@ -267,3 +265,4 @@ export const useItineraryStore = create((set) => ({
 
   resetState: () => set({ itinerary: null, localItinerary: null }),
 }));
+

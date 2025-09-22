@@ -68,6 +68,37 @@ export default function TMapContainer({ stops = [], path = [] }) {
   const overlaysRef = useRef({ markers: [], polylines: [], infoWindows: [] });
   const mapClickListenerRef = useRef(null);
 
+  const detachMarker = (marker) => {
+    if (!marker) return;
+    try {
+      marker.setMap(null);
+    } catch (error) {
+      console.warn("TMap marker detach failed", error);
+    }
+  };
+
+  const detachPolyline = (polyline) => {
+    if (!polyline) return;
+    try {
+      polyline.setMap(null);
+    } catch (error) {
+      console.warn("TMap polyline detach failed", error);
+    }
+  };
+
+  const closeInfo = (info) => {
+    if (!info) return;
+    try {
+      if (typeof info.setMap === "function") {
+        info.setMap(null);
+      } else if (typeof info.close === "function") {
+        info.close();
+      }
+    } catch (error) {
+      console.warn("TMap info window close failed", error);
+    }
+  };
+
   // 지도 초기화 useEffect
   useEffect(() => {
     let cancelled = false;
@@ -107,18 +138,15 @@ export default function TMapContainer({ stops = [], path = [] }) {
           }
           mapClickListenerRef.current = null;
         }
-        overlaysRef.current.markers.forEach((m) => m.setMap(null));
-        overlaysRef.current.polylines.forEach((p) => p.setMap(null));
-        overlaysRef.current.infoWindows.forEach((info) => {
-          if (!info) return;
-          if (typeof info.close === "function") {
-            info.close();
-          } else if (typeof info.setMap === "function") {
-            info.setMap(null);
-          }
-        });
+        overlaysRef.current.markers.forEach(detachMarker);
+        overlaysRef.current.polylines.forEach(detachPolyline);
+        overlaysRef.current.infoWindows.forEach(closeInfo);
 
-        mapRef.current.destroy();
+        try {
+          mapRef.current.destroy();
+        } catch (error) {
+          console.warn("Failed to destroy TMap instance", error);
+        }
         mapRef.current = null;
         apiRef.current = null;
         overlaysRef.current = { markers: [], polylines: [], infoWindows: [] };
@@ -132,16 +160,9 @@ export default function TMapContainer({ stops = [], path = [] }) {
     const map = mapRef.current;
     if (!Tmapv2 || !map || typeof Tmapv2.LatLng !== "function") return;
 
-    overlaysRef.current.markers.forEach((m) => m.setMap(null));
-    overlaysRef.current.polylines.forEach((p) => p.setMap(null));
-    overlaysRef.current.infoWindows.forEach((info) => {
-      if (!info) return;
-      if (typeof info.setMap === "function") {
-        info.setMap(null);
-      } else if (typeof info.close === "function") {
-        info.close();
-      }
-    });
+    overlaysRef.current.markers.forEach(detachMarker);
+    overlaysRef.current.polylines.forEach(detachPolyline);
+    overlaysRef.current.infoWindows.forEach(closeInfo);
     overlaysRef.current = { markers: [], polylines: [], infoWindows: [] };
 
     if (mapClickListenerRef.current && Tmapv2?.Event?.removeListener) {
@@ -154,14 +175,7 @@ export default function TMapContainer({ stops = [], path = [] }) {
     }
 
     const closeInfoWindows = () => {
-      overlaysRef.current.infoWindows.forEach((info) => {
-        if (!info) return;
-        if (typeof info.setMap === "function") {
-          info.setMap(null);
-        } else if (typeof info.close === "function") {
-          info.close();
-        }
-      });
+      overlaysRef.current.infoWindows.forEach(closeInfo);
     };
 
     const safeStops = Array.isArray(stops) ? stops : [];
@@ -179,14 +193,24 @@ export default function TMapContainer({ stops = [], path = [] }) {
         s?.role ||
         (idx === 0 ? "start" : idx === totalStops - 1 ? "end" : "waypoint");
       const iconUrl = buildMarkerIcon(role, order);
-      const marker = new Tmapv2.Marker({
-        position: pos,
-        map,
-        icon: iconUrl,
-        iconSize: new Tmapv2.Size(40, 52),
-      });
-      overlaysRef.current.markers.push(marker);
-      bounds.extend(pos);
+      let marker = null;
+      try {
+        marker = new Tmapv2.Marker({
+          position: pos,
+          map,
+          icon: iconUrl,
+          iconSize: new Tmapv2.Size(40, 52),
+        });
+        overlaysRef.current.markers.push(marker);
+      } catch (error) {
+        console.error("TMap marker creation failed", error);
+      }
+
+      try {
+        bounds.extend(pos);
+      } catch (error) {
+        console.warn("TMap bounds extend failed", error);
+      }
 
       const label = s?.label || getDefaultStopLabel(idx, totalStops);
       const safeHeader = escapeHtml(`${order}. ${label}`);
@@ -198,15 +222,20 @@ export default function TMapContainer({ stops = [], path = [] }) {
           ? s.address.trim()
           : "주소 정보 없음";
       const safeAddress = escapeHtml(displayAddress);
-      const info = new Tmapv2.InfoWindow({
-        position: pos,
-        content: `<div style="padding:8px 12px;font-size:13px;line-height:1.5;color:#0f172a;background:#fff;border:1px solid rgba(148,163,184,0.6);border-radius:10px;box-shadow:0 10px 24px rgba(15,23,42,0.18);white-space:nowrap;max-width:220px;"><strong style="display:block;margin-bottom:4px;">${safeHeader}</strong><div style="font-weight:600;margin-bottom:2px;">${safeName}</div><div style="font-size:11px;color:#475569;">${safeAddress}</div></div>`,
-        type: 2,
-        map: null,
-      });
-      overlaysRef.current.infoWindows.push(info);
+      let info = null;
+      try {
+        info = new Tmapv2.InfoWindow({
+          position: pos,
+          content: `<div style="padding:8px 12px;font-size:13px;line-height:1.5;color:#0f172a;background:#fff;border:1px solid rgba(148,163,184,0.6);border-radius:10px;box-shadow:0 10px 24px rgba(15,23,42,0.18);white-space:nowrap;max-width:220px;"><strong style="display:block;margin-bottom:4px;">${safeHeader}</strong><div style="font-weight:600;margin-bottom:2px;">${safeName}</div><div style="font-size:11px;color:#475569;">${safeAddress}</div></div>`,
+          type: 2,
+          map: null,
+        });
+        overlaysRef.current.infoWindows.push(info);
+      } catch (error) {
+        console.error("TMap info window creation failed", error);
+      }
 
-      if (Tmapv2?.Event?.addListener) {
+      if (marker && info && Tmapv2?.Event?.addListener) {
         Tmapv2.Event.addListener(marker, "click", () => {
           closeInfoWindows();
           if (typeof info.setMap === "function") {
@@ -217,11 +246,15 @@ export default function TMapContainer({ stops = [], path = [] }) {
         });
       }
 
-      if (idx === 0) {
-        if (typeof info.setMap === "function") {
-          info.setMap(map);
-        } else if (typeof info.open === "function") {
-          info.open(map, marker);
+      if (idx === 0 && info && marker) {
+        try {
+          if (typeof info.setMap === "function") {
+            info.setMap(map);
+          } else if (typeof info.open === "function") {
+            info.open(map, marker);
+          }
+        } catch (error) {
+          console.warn("TMap info window auto-open failed", error);
         }
       }
     });
@@ -246,32 +279,54 @@ export default function TMapContainer({ stops = [], path = [] }) {
 
     if (pathToDraw.length >= 2) {
       const linePath = pathToDraw.map((p) => new Tmapv2.LatLng(p.lat, p.lng));
-      const line = new Tmapv2.Polyline({
-        path: linePath,
-        strokeColor: "#0ea5e9",
-        strokeWeight: 5,
-        strokeOpacity: 0.85,
-        map,
+      try {
+        const line = new Tmapv2.Polyline({
+          path: linePath,
+          strokeColor: "#0ea5e9",
+          strokeWeight: 5,
+          strokeOpacity: 0.85,
+          map,
+        });
+        overlaysRef.current.polylines.push(line);
+      } catch (error) {
+        console.error("TMap polyline creation failed", error);
+      }
+      linePath.forEach((point) => {
+        try {
+          bounds.extend(point);
+        } catch (error) {
+          console.warn("TMap bounds extend failed", error);
+        }
       });
-      overlaysRef.current.polylines.push(line);
-      linePath.forEach((point) => bounds.extend(point));
     }
 
     if (Tmapv2?.Event?.addListener) {
-      mapClickListenerRef.current = Tmapv2.Event.addListener(
-        map,
-        "click",
-        closeInfoWindows
-      );
+      try {
+        mapClickListenerRef.current = Tmapv2.Event.addListener(
+          map,
+          "click",
+          closeInfoWindows
+        );
+      } catch (error) {
+        console.warn("TMap click listener registration failed", error);
+      }
     }
 
     if (!bounds.isEmpty()) {
-      map.panToBounds(bounds, true, 80);
+      try {
+        map.panToBounds(bounds, true, 80);
+      } catch (error) {
+        console.warn("TMap panToBounds failed", error);
+      }
     } else if (safeStops[0]) {
       const lat = Number(safeStops[0]?.lat);
       const lng = Number(safeStops[0]?.lng);
       if (Number.isFinite(lat) && Number.isFinite(lng)) {
-        map.setCenter(new Tmapv2.LatLng(lat, lng));
+        try {
+          map.setCenter(new Tmapv2.LatLng(lat, lng));
+        } catch (error) {
+          console.warn("TMap setCenter failed", error);
+        }
       }
     }
   }, [stops, path]);

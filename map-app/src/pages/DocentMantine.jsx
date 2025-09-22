@@ -19,7 +19,7 @@ import { Card } from "components/ui/card";
 import { translateText } from "integrations/translator";
 import { speakText, stopTTS } from "integrations/tts";
 import Papa from "papaparse";
-
+import { useNavigate } from "react-router-dom";
 // NeonTheme 컴포넌트들을 import
 import {
   BackgroundEffect,
@@ -288,6 +288,7 @@ const FixedChatbot = ({
       timestamp: new Date(),
     },
   ]);
+  const navigate = useNavigate();
   const [inputMessage, setInputMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -367,16 +368,72 @@ const FixedChatbot = ({
     return dets;
   };
 
-  // const fetchPOIInfos = async (names) => {
-  //   const resp = await fetch(`${AZURE_FUNC_BASE}/poi-info`, {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ names, lang: "ko" }),
-  //   });
-  //   if (!resp.ok) throw new Error(`Azure Function HTTP ${resp.status}`);
-  //   const js = await resp.json();
-  //   return js?.items || [];
-  // };
+  // 텍스트 메시지에서도 투어 키워드 감지 개선
+  const handleSendMessageEnhanced = async (content, attachments) => {
+    if (!content.trim() && !attachments) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      type: "user",
+      content,
+      timestamp: new Date(),
+      attachments,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsProcessing(true);
+
+    try {
+      const toKo = async (t) =>
+        selectedLang === "ko" ? t : await translateText(t, "ko");
+      const fromKo = async (t) =>
+        selectedLang === "ko" ? t : await translateText(t, selectedLang);
+
+      const koQuery = await toKo(content || "");
+      const koResult = await callApi(koQuery);
+
+      // 🔥 텍스트 질문에서도 투어 키워드 체크
+      if (checkIfShouldRedirectToTour(koResult)) {
+        const tourMessages = {
+          ko: "🎯 투어 관련 질문이시군요! 전문 가이드 투어 서비스와 맞춤 코스 추천은 투어 페이지에서 확인하실 수 있습니다.",
+          en: "🎯 I see you're asking about tours! Professional guided tour services and custom course recommendations are available on our tour page.",
+          ja: "🎯 ツアーに関するご質問ですね！専門ガイドツアーサービスとカスタムコース推薦は、ツアーページでご確認いただけます。",
+          zh: "🎯 看起来您在咨询旅游相关问题！专业导游服务和定制路线推荐可在旅游页面查看。",
+        };
+
+        const tourMessage = tourMessages[selectedLang] || tourMessages.ko;
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            type: "ai-tour",
+            content: tourMessage,
+            showTourButton: true,
+            originalResponse: koResult,
+            timestamp: new Date(),
+          },
+        ]);
+        return;
+      }
+
+      // 일반 응답 처리
+      const result = await fromKo(koResult);
+      const aiMessage = {
+        id: (Date.now() + 1).toString(),
+        type: "ai",
+        content: result,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      // 에러 처리...
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // 기존 텍스트 질문 처리
   const handleSendMessage = async (content, attachments) => {
     if (!content.trim() && !attachments) return;
@@ -440,124 +497,30 @@ const FixedChatbot = ({
     }
   };
 
-  // 파일/카메라 입력 공통 처리 (YOLO + Azure Function)
-  // const processImage = async (file) => {
-  //   if (!file) return;
-  //   const imageUrl = URL.createObjectURL(file);
+  const checkIfShouldRedirectToTour = (response) => {
+    //투어 단어 감지
+    const tourKeywords = [
+      "투어 서비스 페이지",
+      "투어 예약",
+      "가이드 투어",
+      "투어 신청",
+      "예약하세요",
+      "tour service",
+      "book a tour",
+      "guided tour",
+      "tour booking",
+    ];
 
-  //   // 1) 사용자 말풍선 (이미지)
-  //   setMessages((prev) => [
-  //     ...prev,
-  //     {
-  //       id: String(Date.now()),
-  //       type: "user",
-  //       content: ui.imageQueryText,
-  //       attachments: [{ type: "image", url: imageUrl, caption: file.name }],
-  //       timestamp: new Date(),
-  //     },
-  //   ]);
-  //   setIsProcessing(true);
+    return tourKeywords.some((keyword) =>
+      response.toLowerCase().includes(keyword.toLowerCase())
+    );
+  };
 
-  //   try {
-  //     // 2) YOLO 감지
-  //     const dets = await callYOLO(file);
-  //     if (!dets.length) {
-  //       setMessages((prev) => [
-  //         ...prev,
-  //         {
-  //           id: String(Date.now() + 1),
-  //           type: "ai",
-  //           content: "대상이 인식되지 않았어요. 다른 사진으로 시도해 보실래요?",
-  //           timestamp: new Date(),
-  //         },
-  //       ]);
-  //       return;
-  //     }
+  // 투어 페이지로 이동하는 함수
+  const handleTourRedirect = () => {
+    navigate("/tour");
+  };
 
-  //     // 3) 허용 라벨 정규화/필터
-  //     const allowed = dets
-  //       .map((d) => ({ ...d, canon: normalizeLabel(d.label) }))
-  //       .filter((d) => !!d.canon);
-
-  //     if (!allowed.length) {
-  //       const tops = dets
-  //         .slice(0, 3)
-  //         .map((d) => `${d.label}(${prettyPct(d.conf)})`)
-  //         .join(", ");
-  //       setMessages((prev) => [
-  //         ...prev,
-  //         {
-  //           id: String(Date.now() + 2),
-  //           type: "ai",
-  //           content: `아직은 63스퀘어/경복궁/남산서울타워/롯데월드타워만 지원해요.\n감지: ${tops}`,
-  //           timestamp: new Date(),
-  //         },
-  //       ]);
-  //       return;
-  //     }
-
-  //     // 4) Azure Function 상세 정보 조회
-  //     const uniqueNames = Array.from(
-  //       new Set(allowed.map((d) => d.canon))
-  //     ).slice(0, 3);
-  //     const infos = await fetchPOIInfos(uniqueNames);
-
-  //     if (!infos.length) {
-  //       setMessages((prev) => [
-  //         ...prev,
-  //         {
-  //           id: String(Date.now() + 3),
-  //           type: "ai",
-  //           content: `인식: ${uniqueNames.join(
-  //             ", "
-  //           )} — 상세 정보를 가져오지 못했어요.`,
-  //           timestamp: new Date(),
-  //         },
-  //       ]);
-  //       return;
-  //     }
-
-  //     // 5) 말풍선 출력
-  //     const infoTextBlocks = infos.map((info) => {
-  //       const lines = [
-  //         `**${info.name || ""}**`,
-  //         info.address ? `• 주소: ${info.address}` : null,
-  //         info.phone ? `• 전화: ${info.phone}` : null,
-  //         info.open_hours_text ? `• 운영시간: ${info.open_hours_text}` : null,
-  //         info.ticket_price_text ? `• 입장료: ${info.ticket_price_text}` : null,
-  //         info.website ? `• 웹사이트: ${info.website}` : null,
-  //         info.description ? `\n${info.description}` : null,
-  //       ]
-  //         .filter(Boolean)
-  //         .join("\n");
-  //       return lines;
-  //     });
-
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       ...infoTextBlocks.map((txt, i) => ({
-  //         id: String(Date.now() + 4 + i),
-  //         type: "ai",
-  //         content: txt,
-  //         timestamp: new Date(),
-  //       })),
-  //     ]);
-  //   } catch (err) {
-  //     console.error(err);
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       {
-  //         id: String(Date.now() + 999),
-  //         type: "ai",
-  //         content: `오류가 발생했어요: ${String(err?.message || err)}`,
-  //         timestamp: new Date(),
-  //       },
-  //     ]);
-  //   } finally {
-  //     setIsProcessing(false);
-  //     setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
-  //   }
-  // };
   // 파일/카메라 입력 공통 처리 (YOLO + RAG Azure Function)
   const processImage = async (file) => {
     if (!file) return;
@@ -652,6 +615,32 @@ const FixedChatbot = ({
 
       const ragResponse = await callApi(ragQuery); // callTourismAPI 사용
 
+      // 🔥 투어 페이지 리다이렉트 체크 - 개선된 버전
+      if (checkIfShouldRedirectToTour(ragResponse)) {
+        // 언어별 메시지 생성
+        const tourMessages = {
+          ko: "🎯 더 자세한 투어 정보와 예약은 투어 서비스 페이지에서 확인하실 수 있어요!\n전문 가이드와 함께하는 특별한 여행을 경험해보세요.",
+          en: "🎯 For more detailed tour information and reservations, please check our tour service page!\nExperience a special journey with professional guides.",
+          ja: "🎯 より詳しいツアー情報とご予約は、ツアーサービスページでご確認いただけます！\n専門ガイドと一緒に特別な旅をお楽しみください。",
+          zh: "🎯 更详细的旅游信息和预订可在旅游服务页面查看！\n与专业导游一起体验特别的旅程。",
+        };
+
+        const tourMessage = tourMessages[selectedLang] || tourMessages.ko;
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: String(Date.now() + 3),
+            type: "ai-tour",
+            content: tourMessage,
+            showTourButton: true,
+            originalResponse: ragResponse, // 원본 응답도 보관
+            timestamp: new Date(),
+          },
+        ]);
+        return; // 일반 응답 처리 방지
+      }
+
       // 6) 선택된 언어로 번역
       const translatedResponse =
         selectedLang === "ko"
@@ -692,6 +681,71 @@ const FixedChatbot = ({
     }
   };
 
+  //여기 투어버튼
+  const renderTourButton = (message) => {
+    if (message.type === "ai-tour" && message.showTourButton) {
+      const buttonTexts = {
+        ko: "🎯 투어 서비스 페이지로 이동",
+        en: "🎯 Go to Tour Service Page",
+        ja: "🎯 ツアーサービスページへ移動",
+        zh: "🎯 前往旅游服务页面",
+      };
+
+      return (
+        <div className="mt-3 space-y-2">
+          {/* 메인 투어 페이지 버튼 */}
+          <button
+            onClick={handleTourRedirect}
+            className={`
+            w-full py-3 px-4 rounded-lg font-medium transition-all duration-200
+            bg-gradient-to-r from-blue-500 to-blue-600 
+            hover:from-blue-600 hover:to-blue-700
+            active:from-blue-700 active:to-blue-800
+            text-white shadow-md hover:shadow-lg
+            touch-manipulation cursor-pointer
+            ${isMobile ? "text-base" : "text-sm"}
+          `}
+            style={{
+              minHeight: isMobile ? "44px" : "36px",
+            }}
+          >
+            {buttonTexts[selectedLang] || buttonTexts.ko}
+          </button>
+
+          {/* 추가: 원본 응답도 보여주는 옵션 */}
+          {message.originalResponse && (
+            <button
+              onClick={() => {
+                // 원본 응답을 새 메시지로 추가
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: String(Date.now() + 1000),
+                    type: "ai",
+                    content:
+                      selectedLang === "ko"
+                        ? message.originalResponse
+                        : translateText(message.originalResponse, selectedLang),
+                    timestamp: new Date(),
+                  },
+                ]);
+              }}
+              className={`
+              w-full py-2 px-3 rounded-lg text-sm transition-all duration-200
+              bg-gray-700 hover:bg-gray-600 text-gray-200
+              border border-gray-600 hover:border-gray-500
+              ${isMobile ? "text-sm" : "text-xs"}
+            `}
+            >
+              {selectedLang === "ko" ? "📝 상세 정보 보기" : "📝 View Details"}
+            </button>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
   const handleImageFromGallery = (event) => {
     const f = event.target.files?.[0];
     if (f) processImage(f);
@@ -728,55 +782,55 @@ const FixedChatbot = ({
           } overflow-y-auto neon-scrollbar space-y-4 pb-2`}
         >
           <AnimatePresence>
+            // 메시지 영역에서 각 메시지를 렌더링할 때
             {messages.map((message) => (
-              <motion.div
+              <div
                 key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex items-end gap-2 ${
+                className={`flex ${
                   message.type === "user" ? "justify-end" : "justify-start"
                 }`}
               >
-                {/* 메시지 내용 그대로 */}
-                {message.type === "ai" && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/25">
-                    <Bot className="w-4 h-4 text-white" />
-                  </div>
-                )}
                 <div
-                  className={`${
-                    isMobile ? "max-w-[70%]" : "max-w-[60%]"
-                  } rounded-2xl px-4 py-2.5 ${
+                  className={`max-w-[80%] p-3 rounded-xl text-sm ${
                     message.type === "user"
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25"
-                      : "bg-gradient-to-r from-gray-800/80 to-gray-900/90 text-white border border-gray-600/30"
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                      : "bg-gray-800 text-gray-100 border border-gray-700"
                   }`}
                 >
-                  {message.attachments?.map((attachment, index) => (
-                    <div key={index} className="mb-2">
+                  {message.attachments?.map((attachment, idx) => (
+                    <div key={idx} className="mb-2">
                       {attachment.type === "image" && (
                         <img
                           src={attachment.url}
                           alt={attachment.caption}
-                          className={`rounded-lg border border-purple-500/30 ${
-                            isMobile
-                              ? "max-w-32 h-auto ml-auto"
-                              : "max-w-48 h-auto"
-                          }`}
+                          className="w-full h-32 object-cover rounded-lg"
                         />
                       )}
                     </div>
                   ))}
-                  <div className="whitespace-pre-line text-sm leading-relaxed">
-                    {message.content}
-                  </div>
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+
+                  {/* 투어 버튼 추가  */}
+                  {(message.type === "ai-tour" ||
+                    message.content.includes("투어 서비스 페이지") ||
+                    message.content.includes("Tour Service Page")) && (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => {
+                          window.location.href = "/tour"; // 간단한 방법
+                          // 또는 navigate('/tour'); // useNavigate 훅 사용하는 경우
+                        }}
+                        className="w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg"
+                      >
+                        🎯{" "}
+                        {selectedLang === "ko"
+                          ? "투어 서비스 페이지로 이동"
+                          : "Go to Tour Service Page"}
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {message.type === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/25">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                )}
-              </motion.div>
+              </div>
             ))}
           </AnimatePresence>
           {isProcessing && (
@@ -1199,7 +1253,7 @@ export default function DocentMantine() {
       throw error;
     }
   };
-  // 카테고리 버튼 – pill
+  // 카테고리 버튼
   const CategoryBar = ({ ui, category, setCategory }) => (
     <div className="bg-gray-900/80 backdrop-blur-lg border-b border-purple-500/30 px-4 py-3">
       <div className={`flex flex-wrap ${isMobile ? "gap-1" : "gap-2"}`}>

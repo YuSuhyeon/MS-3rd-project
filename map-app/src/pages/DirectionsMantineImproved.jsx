@@ -6,7 +6,9 @@ import { Button } from "components/ui/button";
 import PlaceSearchInput from "components/directions/PlaceSearchInput";
 import TMapContainer from "components/directions/TMapContainer";
 import ensureTmap from "integrations/tmapLoader";
-import { RoutePlan } from "Entities/RoutePlan";
+import { Itinerary } from "Entities/Itinerary";
+import { convertPlanToItinerary } from "../store/useItineraryStore";
+import { useAuth } from "../context/AuthContext";
 import {
   Plus,
   X,
@@ -20,7 +22,7 @@ import {
   ChevronUp,
   ChevronRight,
   MoreVertical,
-  Map,
+  Map as MapIcon,
   PersonStanding,
   Train,
 } from "lucide-react";
@@ -54,8 +56,51 @@ const ensureKakao = () => {
   return kakaoSdkPromise;
 };
 
+const kakaoMarkerColors = {
+  start: "#16a34a",
+  end: "#ef4444",
+  waypoint: "#2563eb",
+};
+
+const kakaoMarkerCache = new Map();
+
+const escapeHtml = (value = "") =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const buildKakaoMarkerDataUri = (role = "waypoint", order = "") => {
+  const normalizedRole = kakaoMarkerColors[role] ? role : "waypoint";
+  const displayOrder = (() => {
+    const numeric = Number(order);
+    if (!Number.isFinite(numeric) || numeric <= 0) return "";
+    if (numeric > 99) return "99+";
+    return String(Math.round(numeric));
+  })();
+  const cacheKey = `${normalizedRole}-${displayOrder}`;
+  if (kakaoMarkerCache.has(cacheKey)) {
+    return kakaoMarkerCache.get(cacheKey);
+  }
+
+  const fill = kakaoMarkerColors[normalizedRole];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="58" viewBox="0 0 44 58">
+    <g fill="none" fill-rule="evenodd">
+      <path d="M22 2C11.51 2 3 10.51 3 21c0 11.159 9.946 22.21 17.91 33.643a2 2 0 0 0 3.18 0C37.054 43.211 47 32.16 47 21 47 10.51 38.49 2 28 2Z" fill="${fill}" stroke="#0f172a" stroke-width="1.5" />
+      <text x="22" y="23" font-size="15" font-family="'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', Arial, sans-serif" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="middle">${displayOrder}</text>
+    </g>
+  </svg>`;
+  const uri = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  kakaoMarkerCache.set(cacheKey, uri);
+  return uri;
+};
+
 export default function DirectionsMantineImproved() {
   const location = useLocation();
+  const { profile: authProfile } = useAuth();
+  const isAuthenticated = !!authProfile;
 
   const makeEmptyDay = (idx = 0) => ({
     id: `day-${Date.now()}-${idx}`,
@@ -76,6 +121,7 @@ export default function DirectionsMantineImproved() {
   const [days, setDays] = useState([makeEmptyDay(0)]);
   const [activeDay, setActiveDay] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [currentItineraryId, setCurrentItineraryId] = useState(null);
   const [searchContext, setSearchContext] = useState(null);
   const [mapProvider, setMapProvider] = useState("KAKAO");
   const [routeMode, setRouteMode] = useState("CAR");
@@ -90,6 +136,7 @@ export default function DirectionsMantineImproved() {
   const TMAP_ERROR_MESSAGE =
     "T map 로딩에 실패했습니다. API 키를 확인해주세요.";
   const markerRefs = useRef([]);
+  const overlayRefs = useRef([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const [addDayMenuOpen, setAddDayMenuOpen] = useState(false);
@@ -272,34 +319,6 @@ export default function DirectionsMantineImproved() {
     } catch {}
   }, [location.state]);
 
-  useEffect(() => {
-    if (
-      presetAppliedRef.current ||
-      location.state?.presetCourse ||
-      sessionStorage.getItem("routePreset")
-    )
-      return;
-    try {
-      const raw = localStorage.getItem("routePlanDraft");
-      if (raw) {
-        const j = JSON.parse(raw);
-        if (j?.days?.length) {
-          setDays(j.days);
-          setActiveDay(j.activeDay || 0);
-        }
-      }
-    } catch {}
-  }, [location.state]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        "routePlanDraft",
-        JSON.stringify({ days, activeDay })
-      );
-    } catch {}
-  }, [days, activeDay]);
-
   const cur = days[activeDay] || makeEmptyDay(activeDay);
 
   const updateCur = (patch) =>
@@ -330,53 +349,269 @@ export default function DirectionsMantineImproved() {
 
   const clearMap = () => {
     if (polyRefs.current) {
-      polyRefs.current.forEach((p) => p.setMap(null));
+      polyRefs.current.forEach((p) => {
+        if (p && typeof p.setMap === "function") {
+          p.setMap(null);
+        }
+      });
       polyRefs.current = [];
     }
     if (markerRefs.current) {
-      markerRefs.current.forEach((m) => m.setMap(null));
+      markerRefs.current.forEach((m) => {
+        if (m && typeof m.setMap === "function") {
+          m.setMap(null);
+        }
+      });
       markerRefs.current = [];
+    }
+    if (overlayRefs.current) {
+      overlayRefs.current.forEach((o) => {
+        if (o && typeof o.setMap === "function") {
+          o.setMap(null);
+        }
+      });
+      overlayRefs.current = [];
     }
   };
 
-  const drawPolylines = (routes) => {
-    const map = mapObjRef.current;
-    if (!map) return;
-    clearMap();
-    if (!routes?.length) return;
+  const getRouteCoordinates = (route) => {
+    const coords = [];
+    if (!route) return coords;
 
-    ensureKakao().then((kakao) => {
-      const colors = ["#60a5fa", "#a78bfa", "#34d399"];
-      const bounds = new kakao.maps.LatLngBounds();
-      routes.slice(0, 3).forEach((route, idx) => {
-        const path = [];
-        (route.sections || []).forEach((sec) =>
-          (sec.roads || []).forEach((r) => {
-            for (let i = 0; i < (r.vertexes || []).length; i += 2) {
-              const ll = new kakao.maps.LatLng(
-                r.vertexes[i + 1],
-                r.vertexes[i]
-              );
-              path.push(ll);
-              bounds.extend(ll);
-            }
-          })
-        );
-        if (path.length) {
-          const poly = new kakao.maps.Polyline({
-            path,
-            strokeWeight: 5,
-            strokeColor: colors[idx % colors.length],
-            strokeOpacity: 0.9,
-            strokeStyle: "solid",
-          });
-          poly.setMap(map);
-          polyRefs.current.push(poly);
+    const pushPair = (lng, lat) => {
+      const lngNum = Number(lng);
+      const latNum = Number(lat);
+      if (!Number.isFinite(lngNum) || !Number.isFinite(latNum)) return;
+      const prev = coords[coords.length - 1];
+      if (prev && prev.lat === latNum && prev.lng === lngNum) return;
+      coords.push({ lat: latNum, lng: lngNum });
+    };
+
+    const processVertexArray = (vertexes) => {
+      if (!Array.isArray(vertexes)) return;
+      for (let i = 0; i < vertexes.length; i += 2) {
+        pushPair(vertexes[i], vertexes[i + 1]);
+      }
+    };
+
+    if (Array.isArray(route?.sections)) {
+      route.sections.forEach((sec) => {
+        processVertexArray(sec?.vertexes);
+        const roads = Array.isArray(sec?.roads) ? sec.roads : [];
+        roads.forEach((road) => processVertexArray(road?.vertexes));
+        const links = Array.isArray(sec?.links) ? sec.links : [];
+        links.forEach((link) => processVertexArray(link?.vertexes));
+      });
+    }
+
+    const processPointArray = (collection) => {
+      if (!Array.isArray(collection)) return;
+      collection.forEach((pt) => {
+        if (Array.isArray(pt)) {
+          pushPair(pt[0], pt[1]);
+        } else if (pt && typeof pt === "object") {
+          pushPair(pt.lng ?? pt.lon ?? pt.longitude, pt.lat ?? pt.latitude);
         }
       });
-      if (!bounds.isEmpty()) map.setBounds(bounds);
-    });
+    };
+
+    if (!coords.length) processPointArray(route?.path);
+    if (!coords.length) processPointArray(route?.points);
+
+    if (!coords.length && Array.isArray(route?.itineraries)) {
+      route.itineraries.forEach((itin) => {
+        (itin?.legs || []).forEach((leg) => {
+          processVertexArray(leg?.vertexes);
+          processPointArray(leg?.path);
+        });
+      });
+    }
+
+    if (!coords.length) {
+      processPointArray(route?.geometry?.coordinates);
+      processPointArray(route?.geometry?.paths);
+    }
+
+    return coords;
   };
+
+  const drawPolylines = (routes, stops = []) => {
+    const mapInstance = mapObjRef.current;
+    if (!mapInstance) return;
+    clearMap();
+
+    const hasRoutes = Array.isArray(routes) && routes.length > 0;
+    const safeStops = Array.isArray(stops) ? stops : [];
+    if (!hasRoutes && !safeStops.length) return;
+
+    ensureKakao()
+      .then((kakao) => {
+        const map = mapObjRef.current;
+        if (!map || map !== mapInstance) return;
+
+        const modePalettes = {
+          CAR: ["#2563eb", "#4f46e5", "#38bdf8"],
+          PEDESTRIAN: ["#10b981", "#34d399", "#22d3ee"],
+          TRANSIT: ["#7c3aed", "#a855f7", "#f97316"],
+        };
+        const colors = modePalettes[routeMode] || ["#60a5fa", "#a78bfa", "#34d399"];
+        const bounds = new kakao.maps.LatLngBounds();
+
+        routes.slice(0, 3).forEach((route, idx) => {
+          const coords = getRouteCoordinates(route);
+          if (coords.length) {
+            const path = coords.map(
+              ({ lat, lng }) => new kakao.maps.LatLng(lat, lng)
+            );
+            const polyline = new kakao.maps.Polyline({
+              path,
+              strokeWeight: routeMode === "PEDESTRIAN" ? 4 : 5,
+              strokeColor: colors[idx % colors.length],
+              strokeOpacity: 0.88,
+              strokeStyle: routeMode === "PEDESTRIAN" ? "shortdash" : "solid",
+            });
+            polyline.setMap(map);
+            polyRefs.current.push(polyline);
+            path.forEach((ll) => bounds.extend(ll));
+          }
+        });
+
+        const validStops = safeStops
+          .map((stop, idx) => {
+            const lat = Number(stop?.lat);
+            const lng = Number(stop?.lng);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+            const inferredRole =
+              stop?.role ||
+              (idx === 0
+                ? "start"
+                : idx === safeStops.length - 1
+                ? "end"
+                : "waypoint");
+            const order = Number.isFinite(stop?.order)
+              ? Number(stop.order)
+              : idx + 1;
+            return {
+              ...stop,
+              lat,
+              lng,
+              role: inferredRole,
+              order,
+            };
+          })
+          .filter(Boolean);
+
+        validStops.forEach((stop) => {
+          const position = new kakao.maps.LatLng(stop.lat, stop.lng);
+          bounds.extend(position);
+
+          const iconUri = buildKakaoMarkerDataUri(stop.role, stop.order);
+          const markerImage = new kakao.maps.MarkerImage(
+            iconUri,
+            new kakao.maps.Size(44, 58),
+            { offset: new kakao.maps.Point(22, 58) }
+          );
+          const marker = new kakao.maps.Marker({
+            map,
+            position,
+            image: markerImage,
+            title: stop.name || "",
+            zIndex: stop.role === "start" || stop.role === "end" ? 4 : 3,
+          });
+          markerRefs.current.push(marker);
+
+          const waypointIndex = Math.max(1, stop.order - 1);
+          const baseLabel =
+            stop.role === "start"
+              ? "출발지"
+              : stop.role === "end"
+              ? "도착지"
+              : `경유지 ${waypointIndex}`;
+          const primaryName =
+            typeof stop?.name === "string" ? stop.name.trim() : "";
+          const overlayLabel = primaryName && primaryName !== baseLabel
+            ? `${baseLabel} · ${primaryName}`
+            : baseLabel;
+          const overlay = new kakao.maps.CustomOverlay({
+            position,
+            yAnchor: 1.35,
+            zIndex: 5,
+            content: `<div style="padding:6px 12px;border-radius:9999px;background:rgba(15,23,42,0.88);color:#fff;font-size:11px;font-weight:600;box-shadow:0 12px 24px rgba(15,23,42,0.35);white-space:nowrap;">${escapeHtml(
+              overlayLabel
+            )}</div>`,
+          });
+          overlay.setMap(map);
+          overlayRefs.current.push(overlay);
+        });
+
+        if (!bounds.isEmpty()) {
+          map.setBounds(bounds);
+        }
+      })
+      .catch((error) => {
+        console.error("카카오 경로 렌더링 실패:", error);
+      });
+  };
+
+  const orderedStops = useMemo(() => {
+    const stops = [];
+    const pushStop = (coords, meta) => {
+      if (!coords) return;
+      const lat = Number(coords?.lat);
+      const lng = Number(coords?.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      stops.push({
+        ...meta,
+        lat,
+        lng,
+      });
+    };
+
+    pushStop(cur.startCoords, {
+      name: cur.startLocation,
+      role: "start",
+      address: cur.startAddress,
+      roadAddress: cur.startRoadAddress,
+    });
+
+    (cur.waypoints || []).forEach((w) => {
+      pushStop(w, {
+        name: w?.name || "",
+        role: "waypoint",
+        address: w?.address,
+        roadAddress: w?.roadAddress,
+      });
+    });
+
+    pushStop(cur.endCoords, {
+      name: cur.endLocation,
+      role: "end",
+      address: cur.endAddress,
+      roadAddress: cur.endRoadAddress,
+    });
+
+    return stops.map((stop, idx) => ({ ...stop, order: idx + 1 }));
+  }, [
+    cur.startCoords,
+    cur.startLocation,
+    cur.startAddress,
+    cur.startRoadAddress,
+    cur.waypoints,
+    cur.endCoords,
+    cur.endLocation,
+    cur.endAddress,
+    cur.endRoadAddress,
+  ]);
+
+  const tmapStops = useMemo(
+    () => orderedStops.map((stop) => ({ ...stop })),
+    [orderedStops]
+  );
+
+  const tmapPath = useMemo(() => {
+    if (!cur.lastRoutes?.length) return [];
+    return getRouteCoordinates(cur.lastRoutes[0]);
+  }, [cur.lastRoutes]);
 
   useEffect(() => {
     const currentDay = days[activeDay];
@@ -385,8 +620,8 @@ export default function DirectionsMantineImproved() {
     if (mapProvider === "KAKAO") {
       const checkMapAndDraw = () => {
         if (mapObjRef.current) {
-          if (lastRoutes) {
-            drawPolylines(lastRoutes);
+          if (lastRoutes?.length) {
+            drawPolylines(lastRoutes, orderedStops);
           } else {
             clearMap();
           }
@@ -398,36 +633,7 @@ export default function DirectionsMantineImproved() {
     } else {
       clearMap();
     }
-  }, [days, activeDay, mapProvider]);
-
-  const tmapStops = useMemo(() => {
-    const stops = [];
-    if (cur.startCoords)
-      stops.push({ ...cur.startCoords, name: cur.startLocation });
-    (cur.waypoints || []).forEach((w) => {
-      if (w.lat && w.lng) stops.push(w);
-    });
-    if (cur.endCoords) stops.push({ ...cur.endCoords, name: cur.endLocation });
-    return stops;
-  }, [
-    cur.startCoords,
-    cur.endCoords,
-    cur.waypoints,
-    cur.startLocation,
-    cur.endLocation,
-  ]);
-
-  const tmapPath = useMemo(() => {
-    const path = [];
-    if (!cur.lastRoutes?.length) return path;
-    (cur.lastRoutes[0].sections || []).forEach((sec) =>
-      (sec.roads || []).forEach((r) => {
-        for (let i = 0; i < (r.vertexes || []).length; i += 2)
-          path.push({ lat: r.vertexes[i + 1], lng: r.vertexes[i] });
-      })
-    );
-    return path;
-  }, [cur.lastRoutes]);
+  }, [days, activeDay, mapProvider, orderedStops, routeMode]);
 
   const recomputeTimelineWithStays = ({
     stops,
@@ -517,7 +723,21 @@ export default function DirectionsMantineImproved() {
         });
       }
       const j = await res.json();
-      if (!res.ok || !j.routes) throw new Error("경로 API 요청 실패");
+      if (!res.ok) {
+        throw new Error(j?.message || "경로 API 요청 실패");
+      }
+
+      const routes = Array.isArray(j?.routes)
+        ? j.routes.filter(Boolean)
+        : [];
+      const primaryRoute = routes[0];
+      if (!primaryRoute) {
+        throw new Error("유효한 경로를 찾지 못했습니다.");
+      }
+      const sections = Array.isArray(primaryRoute.sections)
+        ? primaryRoute.sections
+        : [];
+      const summarySource = primaryRoute.summary || null;
       const stops = [
         { ...start, name: cur.startLocation },
         ...validMids,
@@ -529,18 +749,22 @@ export default function DirectionsMantineImproved() {
       );
       const timeline = recomputeTimelineWithStays({
         stops,
-        sections: j.routes[0]?.sections || [],
+        sections,
         startTime: cur.startTime,
         stays,
       });
-      const summary = {
-        distance: j.routes[0].summary.distance / 1000,
-        duration: Math.round(j.routes[0].summary.duration / 60),
-      };
+      const summary = summarySource
+        ? {
+            distance: (summarySource.distance || 0) / 1000,
+            duration: summarySource.duration
+              ? Math.round(summarySource.duration / 60)
+              : 0,
+          }
+        : null;
       updateCur({
         timeline,
         summary,
-        lastRoutes: j.routes,
+        lastRoutes: routes,
         stays,
         startCoords: start,
         endCoords: end,
@@ -749,26 +973,28 @@ export default function DirectionsMantineImproved() {
   const saveToBackend = async () => {
     try {
       if (!days.some((d) => d.startLocation && d.endLocation)) {
-        window.alert(
-          "저장할 경로가 없습니다. 최소한 출발지와 도착지를 설정해주세요."
-        );
+        window.alert("Please set at least one start and end point before saving.");
+        return;
+      }
+      if (!isAuthenticated) {
+        window.alert("Please sign in to save this route.");
         return;
       }
       const defaultName = days
         .map((d, idx) => {
           const start = d.startLocation || `Day ${idx + 1}`;
           const end = d.endLocation || "";
-          return `${idx + 1}일차 ${start}${end ? ` → ${end}` : ""}`;
+          return `${idx + 1} - ${start}${end ? " -> " + end : ""}`;
         })
         .join(", ");
       const nameInput = window.prompt(
-        "저장할 플랜 이름을 입력하세요.",
-        defaultName || "내 경로 플랜"
+        "Enter a name for this route plan.",
+        defaultName || "My route plan"
       );
       if (nameInput === null) return;
       const trimmedName = nameInput.trim();
       if (!trimmedName) {
-        window.alert("플랜 이름을 입력해주세요.");
+        window.alert("Route plan name is required.");
         return;
       }
 
@@ -791,20 +1017,29 @@ export default function DirectionsMantineImproved() {
         summary: d.summary || null,
       }));
 
-      await RoutePlan.save({
+      const itineraryId = currentItineraryId || `itinerary_${Date.now()}`;
+      const planPayload = {
+        id: itineraryId,
         name: trimmedName,
-        days: normalizedDays,
-        mapProvider,
         routeMode,
-        activeDay,
-      });
+        days: normalizedDays,
+      };
 
-      window.alert(
-        "경로 플랜이 저장되었습니다. 일정 플래너에서 관리할 수 있어요."
-      );
+      const itineraryFromPlan = convertPlanToItinerary(planPayload);
+      const payload = {
+        ...itineraryFromPlan,
+        id: itineraryId,
+        itinerary_name: itineraryFromPlan.itinerary_name || trimmedName,
+        travel_style: itineraryFromPlan.travel_style || routeMode,
+        source_plan_id: itineraryFromPlan.source_plan_id || planPayload.id,
+      };
+
+      await Itinerary.create(payload);
+      setCurrentItineraryId(itineraryId);
+      window.alert("Route plan saved. You can manage it from the itinerary planner.");
     } catch (error) {
       console.error("Failed to save route plan", error);
-      window.alert("경로 플랜 저장 중 오류가 발생했습니다.");
+      window.alert("An unexpected error occurred while saving the route plan.");
     }
   };
 
@@ -920,7 +1155,6 @@ export default function DirectionsMantineImproved() {
   ]);
 
   const canCalculate = Boolean(cur.startLocation && cur.endLocation);
-  const showFab = canCalculate;
 
   const openSearch = (type) => {
     setSheetExpanded(true);
@@ -1019,13 +1253,13 @@ export default function DirectionsMantineImproved() {
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
-              onClick={() => duplicateDay(activeDay)}
-              className="hidden h-10 items-center rounded-full border-white/20 bg-white/10 px-4 text-sm font-semibold text-white shadow-lg backdrop-blur hover:bg-white/20 sm:flex"
-              aria-label="일정 복제"
+              onClick={calculateRoute}
+              disabled={!canCalculate || isCalculating}
+              className="hidden h-10 items-center rounded-full border-indigo-200/40 bg-indigo-500 px-4 text-sm font-semibold text-white shadow-lg backdrop-blur hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 sm:flex"
+              aria-label="경로 계산"
             >
-              <Copy className="mr-2 h-4 w-4" />
-              <span>일정 복제</span>
+              <MapIcon className="mr-2 h-4 w-4" />
+              <span>{isCalculating ? "경로 계산 중..." : "경로 계산"}</span>
             </Button>
             <Button
               variant="outline"
@@ -1053,7 +1287,7 @@ export default function DirectionsMantineImproved() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-48 origin-top-right rounded-xl bg-white p-2 text-slate-900 shadow-2xl ring-1 ring-black/5 sm:hidden"
+                    className="absolute right-0 top-full mt-2 w-52 origin-top-right rounded-xl bg-white p-2 text-slate-900 shadow-2xl ring-1 ring-black/5"
                   >
                     <button
                       onClick={() => {
@@ -1098,24 +1332,6 @@ export default function DirectionsMantineImproved() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showFab && (
-          <motion.button
-            key="route-fab"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            onClick={calculateRoute}
-            disabled={!canCalculate || isCalculating}
-            className="fixed bottom-28 right-6 z-30 flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-2xl hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-500"
-          >
-            <Map className="h-4 w-4" />
-            {isCalculating ? "경로 계산 중..." : "경로 계산"}
-          </motion.button>
-        )}
-      </AnimatePresence>
-
       <motion.div
         className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-4xl px-4 pb-4"
         initial={false}
@@ -1126,30 +1342,54 @@ export default function DirectionsMantineImproved() {
           <div className="flex items-center justify-center py-2">
             <span className="h-1.5 w-12 rounded-full bg-slate-300" />
           </div>
-          <button
-            type="button"
-            onClick={() => setSheetExpanded((prev) => !prev)}
-            className="flex items-center justify-between gap-3 px-5 pb-3 text-left"
-          >
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
-                Day {activeDay + 1}
+          <div className="space-y-3 px-5 pb-3">
+            <button
+              type="button"
+              onClick={() => setSheetExpanded((prev) => !prev)}
+              className="flex w-full items-center justify-between gap-3 text-left"
+            >
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
+                  Day {activeDay + 1}
+                </span>
+                <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+                  {collapsedSummary}
+                </p>
+              </div>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                {sheetExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
               </span>
-              <p className="mt-1 line-clamp-2 text-sm text-slate-500">
-                {collapsedSummary}
-              </p>
-            </div>
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-              {sheetExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronUp className="h-4 w-4" />
-              )}
-            </span>
-          </button>
+            </button>
+            {!sheetExpanded && (
+              <Button
+                type="button"
+                onClick={calculateRoute}
+                disabled={!canCalculate || isCalculating}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-400 sm:hidden"
+              >
+                <MapIcon className="h-4 w-4" />
+                <span>{isCalculating ? "경로 계산 중..." : "경로 계산"}</span>
+              </Button>
+            )}
+          </div>
 
           {sheetExpanded && (
             <div className="flex-1 space-y-6 overflow-y-auto px-5 pb-8">
+              <div className="sm:hidden">
+                <Button
+                  type="button"
+                  onClick={calculateRoute}
+                  disabled={!canCalculate || isCalculating}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-400"
+                >
+                  <MapIcon className="h-4 w-4" />
+                  <span>{isCalculating ? "경로 계산 중..." : "경로 계산"}</span>
+                </Button>
+              </div>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-1 items-center gap-2 overflow-x-auto pb-1">
                   {days.map((d, i) => {
@@ -1303,12 +1543,12 @@ export default function DirectionsMantineImproved() {
                       {
                         value: "KAKAO",
                         label: "카카오맵",
-                        icon: <Map size={14} />,
+                        icon: <MapIcon size={14} />,
                       },
                       {
                         value: "TMAP",
                         label: "T map",
-                        icon: <Map size={14} />,
+                        icon: <MapIcon size={14} />,
                       },
                     ]}
                   />

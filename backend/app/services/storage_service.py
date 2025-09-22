@@ -54,35 +54,7 @@ def generate_sas_url(blob_url: str) -> str:
         print(f"SAS URL 생성 중 오류 발생: {e}")
         return blob_url
 
-#Blob Storage에 이미지 파일을 업로드하고 URL을 반환합
-# def upload_image(file_stream, container_name: str = CONTAINER_NAME) -> dict:
 
-#     if not blob_service_client:
-#         return {'success': False, 'error': 'Blob Storage 클라이언트 초기화 실패'}
-
-#     try:
-#         original_filename = file_stream.filename
-#         file_extension = os.path.splitext(original_filename)[1]
-#         unique_filename = f"{uuid.uuid4()}{file_extension}"
-        
-#         container_client = blob_service_client.get_container_client(container_name)
-        
-#         # 컨테이너가 존재하지 않으면 생성
-#         try:
-#             container_client.create_container()
-#         except Exception:
-#             pass # 컨테이너가 이미 존재하면 무시
-
-#         blob_client = container_client.get_blob_client(unique_filename)
-#         blob_client.upload_blob(file_stream, overwrite=True)
-        
-#         blob_url = blob_client.url
-        
-#         return {'success': True, 'url': blob_url}
-    
-#     except Exception as e:
-#         print(f"이미지 업로드 중 오류 발생: {e}")
-#         return {'success': False, 'error': str(e)}
 
 def upload_image(file_stream, container_name: str = CONTAINER_NAME) -> dict:
     if not blob_service_client:

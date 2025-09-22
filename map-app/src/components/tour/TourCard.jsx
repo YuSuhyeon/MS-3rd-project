@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, MapPin, Star, Bookmark, Eye } from "lucide-react";
-import { tourDetailData } from "../utils/mockTourData";
 
-const TourCard = ({ item, onDetailClick }) => {
-  const [isLiked, setIsLiked] = useState(false);
+const TourCard = ({ item, onDetailClick, onLikeToggle, isLiked = false }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   const getCategoryInfo = (category) => {
@@ -35,6 +33,42 @@ const TourCard = ({ item, onDetailClick }) => {
           label: "먹방",
           gradient: "from-orange-500 to-pink-500",
         };
+      case "it":
+        return {
+          emoji: "🖥️",
+          label: "IT",
+          gradient: "from-blue-500 to-cyan-500",
+        };
+      case "sports":
+        return {
+          emoji: "⚾",
+          label: "스포츠",
+          gradient: "from-green-500 to-blue-500",
+        };
+      case "beauty":
+        return {
+          emoji: "💄",
+          label: "뷰티",
+          gradient: "from-pink-500 to-rose-500",
+        };
+      case "culture":
+        return {
+          emoji: "🏛️",
+          label: "문화",
+          gradient: "from-purple-500 to-indigo-500",
+        };
+      case "adventure":
+        return {
+          emoji: "🏔️",
+          label: "모험",
+          gradient: "from-emerald-500 to-teal-500",
+        };
+      case "entertainment":
+        return {
+          emoji: "🎢",
+          label: "엔터",
+          gradient: "from-yellow-500 to-orange-500",
+        };
       default:
         return {
           emoji: "🎵",
@@ -48,118 +82,99 @@ const TourCard = ({ item, onDetailClick }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      layout
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
-      className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl group"
+      exit={{ opacity: 0, y: -20 }}
+      whileHover={{ y: -4 }}
+      className="bg-gray-900/90 backdrop-blur-lg rounded-xl shadow-xl border border-purple-500/30 overflow-hidden hover:shadow-2xl hover:shadow-purple-500/20 hover:border-pink-500/50 group transition-all duration-300 cursor-pointer"
+      onClick={() => onDetailClick(item)}
     >
-      {/* 이미지 섹션 */}
-      <div className="relative overflow-hidden">
+      {/* 컴팩트한 이미지 섹션 */}
+      <div className="relative h-32 overflow-hidden">
         <img
           src={item.image || "/placeholder.svg"}
           alt={item.title}
-          className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
 
         {/* 그라데이션 오버레이 */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
         {/* 카테고리 뱃지 */}
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-2 left-2">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${categoryInfo.gradient} backdrop-blur-sm`}
+            className={`px-2 py-1 bg-gradient-to-r ${categoryInfo.gradient} text-white text-xs font-semibold rounded-full backdrop-blur-sm shadow-lg`}
           >
             {categoryInfo.emoji} {categoryInfo.label}
           </span>
         </div>
 
         {/* 북마크 버튼 */}
-        <div className="absolute top-4 right-4 flex gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsBookmarked(!isBookmarked);
-            }}
-            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${
-              isBookmarked
-                ? "bg-yellow-500 text-white shadow-lg"
-                : "bg-white/20 text-white hover:bg-white/30"
-            }`}
-          >
-            <Bookmark className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsBookmarked(!isBookmarked);
+          }}
+          className={`absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-sm transition-all duration-200 ${
+            isBookmarked
+              ? "bg-yellow-500 text-white shadow-lg"
+              : "bg-white/20 text-white hover:bg-white/30"
+          }`}
+        >
+          <Bookmark size={14} fill={isBookmarked ? "currentColor" : "none"} />
+        </button>
 
-        {/* 파트너십 & 평점 
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="flex items-center justify-between">
-            <span className="px-3 py-1 bg-white/20 text-white text-xs rounded-full backdrop-blur-sm font-medium">
-              {item.partnership}
+        {/* K-pop 그룹 정보 */}
+        {item.kpopGroup && (
+          <div className="absolute bottom-2 left-2">
+            <span className="text-white text-xs font-medium bg-black/40 px-2 py-1 rounded backdrop-blur-sm">
+              {item.kpopGroup}
             </span>
-            <div className="flex items-center gap-1 text-white text-sm">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="font-semibold">{item.rating}</span>
-            </div>
-          </div>
-        </div>*/}
-      </div>
-
-      {/* 컨텐츠 섹션 */}
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            {item.kpopGroup}
-          </span>
-          <span className="text-gray-400">•</span>
-          <span className="text-sm text-gray-500">리뷰 {item.reviews}개</span>
-        </div>
-
-        {/* 제목 */}
-        <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
-          {item.title}
-        </h3>
-
-        {/* 설명 */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-          {item.description}
-        </p>
-
-        {/* 위치 정보 */}
-        {item.location && (
-          <div className="flex items-center gap-2 text-gray-500 mb-4">
-            <MapPin className="w-4 h-4" />
-            <span className="text-sm">{item.location}</span>
           </div>
         )}
+      </div>
 
-        {/* 비즈니스 성과 메트릭 
-        <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100">
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">ROI</div>
-            <div className="text-sm font-bold text-green-600">{item.roi}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">신규고객</div>
-            <div className="text-sm font-bold text-blue-600">
-              {item.newCustomers}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">브랜드가치</div>
-            <div className="text-sm font-bold text-purple-600">
-              {item.brandValue}
-            </div>
-          </div>
-        </div>*/}
+      {/* 컴팩트한 컨텐츠 섹션 */}
+      <div className="p-3 space-y-2">
+        {/* 제목과 평점 */}
+        <div className="space-y-1">
+          <h3 className="text-sm font-bold text-white line-clamp-1">
+            {item.title}
+          </h3>
 
-        {/* 태그 */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {item.tags?.slice(0, 3).map((tag, index) => (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs text-gray-300">
+                {item.rating || "4.5"}
+              </span>
+              <span className="text-xs text-gray-500">
+                ({item.reviews || "0"})
+              </span>
+            </div>
+
+            {/* 위치 정보 - 컴팩트 */}
+            {item.location && (
+              <div className="flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-gray-400" />
+                <span className="text-xs text-gray-500 truncate max-w-20">
+                  {item.location}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 설명 - 더 간결하게 */}
+        <p className="text-xs text-gray-400 line-clamp-2">{item.description}</p>
+
+        {/* 태그 - 최대 2개만 */}
+        <div className="flex gap-1 flex-wrap">
+          {item.tags?.slice(0, 2).map((tag, index) => (
             <span
               key={index}
-              className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+              className="px-2 py-0.5 bg-gray-800/80 text-gray-400 text-xs rounded-full border border-gray-700"
             >
               #{tag}
             </span>
@@ -167,36 +182,39 @@ const TourCard = ({ item, onDetailClick }) => {
         </div>
 
         {/* 가격과 액션 버튼 */}
-        <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-sm font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
             {item.price}
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {/* 좋아요 버튼 */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setIsLiked(!isLiked);
+                onLikeToggle && onLikeToggle(item);
               }}
-              className={`p-2 rounded-xl transition-all duration-200 ${
+              className={`p-1.5 rounded-lg transition-all duration-200 ${
                 isLiked
-                  ? "bg-red-50 text-red-500 shadow-md"
-                  : "hover:bg-gray-50 text-gray-400"
+                  ? "bg-red-500/20 text-red-400 shadow-md"
+                  : "hover:bg-gray-800/80 text-gray-500 hover:text-gray-300"
               }`}
               aria-label={isLiked ? "좋아요 취소" : "좋아요"}
             >
-              <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+              <Heart size={14} fill={isLiked ? "currentColor" : "none"} />
             </button>
 
-            {/* 자세히 보기 버튼 */}
+            {/* 자세히 보기 버튼 - 더 작게 */}
             <button
-              onClick={() => onDetailClick(item)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 text-sm font-semibold shadow-lg hover:shadow-xl"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDetailClick(item);
+              }}
+              className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 text-xs font-semibold shadow-md"
               aria-label={`${item.title} 상세보기`}
             >
-              <Eye className="w-4 h-4" />
-              자세히 보기
+              <Eye size={12} />
+              보기
             </button>
           </div>
         </div>
