@@ -703,25 +703,6 @@ export default function Menu() {
               </button>
             </div> */}
             {/* 헤더 영역 */}
-            <div className="sidebar-header py-4">
-              {" "}
-              {/* py-4 추가 */}
-              <div className="flex items-center gap-2">
-                <img
-                  src="/img/main_logo.png"
-                  alt="Klover 로고"
-                  className="w-12 h-12 rounded-lg object-cover"
-                />
-                <span className="text-white font-semibold text-lg">Klover</span>
-              </div>
-              <button
-                className="close-button"
-                onClick={handleCloseClick}
-                type="button"
-              >
-                <X size={20} />
-              </button>
-            </div>
 
             {/* 네비게이션 메뉴 */}
             <div className="p-3 flex-1 overflow-y-auto">

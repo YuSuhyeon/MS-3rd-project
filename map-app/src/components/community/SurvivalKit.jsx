@@ -49,7 +49,8 @@ export default function SurvivalKit() {
   );
 
   const activeInfo = useMemo(
-    () => sections.find((section) => section.id === activeSection) || sections[0],
+    () =>
+      sections.find((section) => section.id === activeSection) || sections[0],
     [sections, activeSection]
   );
 
@@ -226,7 +227,9 @@ export default function SurvivalKit() {
                     }`}
                   >
                     <div
-                      className={`absolute inset-0 bg-gradient-to-br ${glowGradients[section.id]} opacity-0 transition-opacity duration-500 group-hover:opacity-60 ${
+                      className={`absolute inset-0 bg-gradient-to-br ${
+                        glowGradients[section.id]
+                      } opacity-0 transition-opacity duration-500 group-hover:opacity-60 ${
                         isActive ? "opacity-80" : ""
                       }`}
                     />
@@ -372,7 +375,9 @@ export default function SurvivalKit() {
                       <p className="text-sm leading-relaxed text-gray-200">
                         {guide.content}
                       </p>
-                      <p className="text-xs text-purple-200/70">{guide.extra}</p>
+                      <p className="text-xs text-purple-200/70">
+                        {guide.extra}
+                      </p>
                     </div>
                     <div className="flex items-center justify-between pt-2">
                       <span className="text-[11px] uppercase tracking-[0.35em] text-purple-200/60">
@@ -425,7 +430,6 @@ export default function SurvivalKit() {
                 className="relative overflow-hidden p-6 sm:p-8"
                 delay={0}
               >
-
                 <div className="space-y-5">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{selectedGuide.icon}</span>

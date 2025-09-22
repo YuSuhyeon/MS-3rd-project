@@ -28,6 +28,7 @@ function AppRoutes() {
     <Routes>
       {/* 루트 경로는 Layout 없이 Home 페이지만 렌더링합니다. */}
       <Route path="/" element={<Home />} />
+      <Route path="/popular-places/:areaName" element={<PopularPlaces />} />
 
       {/* 그 외 모든 경로는 Layout 컴포넌트로 감싸서 렌더링합니다. */}
       <Route
@@ -42,10 +43,7 @@ function AppRoutes() {
                 path="/directions"
                 element={<DirectionsMantineImproved />}
               />
-              <Route
-                path="/popular-places/:areaName"
-                element={<PopularPlaces />}
-              />
+
               <Route path="/tour" element={<Tour />} />
               <Route path="/itinerary" element={<ItineraryView />} />
               <Route path="/community" element={<CommunityMain />} />

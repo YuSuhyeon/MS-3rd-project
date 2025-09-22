@@ -5,7 +5,7 @@ const msalConfig = {
     clientId: "efc5f1c1-3333-404f-9933-f5dd45432aad",
     authority:
       "https://login.microsoftonline.com/5fb256f0-fbf2-40d2-81d5-bac1b32c419d",
-    redirectUri: "http://localhost:3000",
+    redirectUri: "http://localhost:5000",
   },
   cache: {
     cacheLocation: "localStorage",

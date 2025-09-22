@@ -635,7 +635,7 @@ const KPopTravelHome = () => {
                   size="2xl"
                   className="font-bold"
                 >
-                  TravelK
+                  KLover
                 </GradientText>
                 <p className="text-sm text-gray-400">{t("main.badge")}</p>
               </div>

@@ -67,7 +67,10 @@ const VideoPlayerModal = ({ video, onClose }) => {
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ type: "spring", stiffness: 200, damping: 22 }}
       >
-        <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black/60" style={{ paddingBottom: "56.25%" }}>
+        <div
+          className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black/60"
+          style={{ paddingBottom: "56.25%" }}
+        >
           <iframe
             src={srcUrl}
             title="YouTube video player"
@@ -836,11 +839,7 @@ const SpotifyPlaylistGenerator = () => {
 
         <div className="relative z-10 flex flex-col gap-5 p-6">
           <div>
-            <GradientText
-              size="xl"
-              variant="primary"
-              className="leading-tight"
-            >
+            <GradientText size="xl" variant="primary" className="leading-tight">
               {playlist.title}
             </GradientText>
             <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-purple-100/80">
@@ -932,16 +931,24 @@ const SpotifyPlaylistGenerator = () => {
               <Sparkles className="h-4 w-4 text-purple-200" />
               {t("ai_custom_recommend")}
             </div>
-            <p> 
-              <GradientText size="3xl" variant="primary" className="leading-tight">
-              {t("title")}
+            <p>
+              <GradientText
+                size="3xl"
+                variant="primary"
+                className="leading-tight"
+              >
+                {t("title")}
               </GradientText>
             </p>
             <p className="text-sm text-purple-100/85 sm:text-base">
               {t("description")}
             </p>
             <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.35em] text-purple-200/80">
-              {[t("ai_custom_recommend"), t("unlimited_creation"), t("spotify_auto_save")].map((feature) => (
+              {[
+                t("ai_custom_recommend"),
+                t("unlimited_creation"),
+                t("spotify_auto_save"),
+              ].map((feature) => (
                 <span
                   key={feature}
                   className="rounded-full border border-white/10 bg-black/30 px-3 py-1"
@@ -973,7 +980,9 @@ const SpotifyPlaylistGenerator = () => {
                   <p className="text-xl font-semibold text-white">
                     {spotifyUser.display_name}
                   </p>
-                  <p className="text-sm text-purple-200/70">{t("your_playlist")}</p>
+                  <p className="text-sm text-purple-200/70">
+                    {t("your_playlist")}
+                  </p>
                 </div>
               </div>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -1007,7 +1016,9 @@ const SpotifyPlaylistGenerator = () => {
                   <GradientText size="xl" variant="primary">
                     {t("title")}
                   </GradientText>
-                  <p className="text-sm text-purple-100/80">{t("make_playlist")}</p>
+                  <p className="text-sm text-purple-100/80">
+                    {t("make_playlist")}
+                  </p>
                 </div>
               </div>
               <NeonButton
@@ -1030,7 +1041,11 @@ const SpotifyPlaylistGenerator = () => {
           <div className="relative z-10 space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <GradientText size="2xl" variant="primary" className="leading-tight">
+                <GradientText
+                  size="2xl"
+                  variant="primary"
+                  className="leading-tight"
+                >
                   {spotifyUser ? t("my_playlist") : t("playlist_preview")}
                 </GradientText>
                 <p className="text-sm text-purple-100/80 sm:text-base">
@@ -1147,7 +1162,11 @@ const SpotifyPlaylistGenerator = () => {
                   {t("create_your_own_playlist_description")}
                 </p>
                 <div className="mt-6 flex flex-wrap justify-center gap-4 text-[11px] uppercase tracking-[0.35em] text-purple-100/80">
-                  {[t("ai_custom_recommend"), t("unlimited_creation"), t("spotify_auto_save")].map((feature) => (
+                  {[
+                    t("ai_custom_recommend"),
+                    t("unlimited_creation"),
+                    t("spotify_auto_save"),
+                  ].map((feature) => (
                     <span
                       key={feature}
                       className="rounded-full border border-white/20 bg-white/10 px-3 py-1"

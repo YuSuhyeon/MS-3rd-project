@@ -28,11 +28,11 @@ const resources = {
       "login.welcome": " 환영합니다!",
       "login.logout": "로그아웃",
       "login.login": "로그인",
-      "main.title.k_travel": "K-여행",
+      "main.title.k_travel": "여행",
       "main.title.connector": "을",
       "main.title.ai_creates": "AI가 만들어드려요",
       "main.subtitle":
-        "5가지 질문으로 여행 스타일을 분석하고, K-Pop과 함께하는 완벽한 코스를 추천받으세요. 복잡한 계획은 AI에게, 당신은 설렘만 준비하세요.",
+        "5가지 질문으로 여행 스타일을 분석하고,나만의 완벽한 코스를 추천받으세요. 복잡한 계획은 AI에게, 당신은 설렘만 준비하세요.",
       "main.start.persona": "페르소나 분석 시작",
       "main.start.start": "시작하기",
       // "now.playing": "Now Playing",
@@ -43,8 +43,8 @@ const resources = {
       "main.subtitle.ai_action":
         "혁신적인 AI 기술로 당신만의 완벽한 한국 여행을 설계합니다",
       "main.more.view": "자세히 보기",
-      "steps.title": "간단한 3단계로",
-      "steps.completion": "완성",
+      "steps.title": "3단계로 완성하는",
+      "steps.completion": "여행",
       "steps.step1.title": "페르소나 분석",
       "steps.step1.description": "5가지 질문으로 여행 스타일 분석",
       "steps.step2.title": "AI 맞춤 추천",
@@ -55,14 +55,14 @@ const resources = {
       "popular.highlight": "여행지",
       "popular.action.join": "를",
       "popular.action": "만나보세요",
-      "popular.description": "다른 여행자들이 선택한 인기 코스를 확인해보세요",
+      "popular.description": "다른 여행자들이 선택한 인기 코스",
       "footer.slogan": "AI와 함께하는 완벽한 한국 여행을 경험해보세요",
       "footer.privacy_policy": "개인정보처리방침",
       "footer.terms_of_service": "이용약관",
       "footer.customer_center": "고객센터",
       "footer.partnership": "파트너십",
-      "footer.copyright": "© 2025 TravelK. All rights reserved.",
-      "modal.welcome": "TravelK에 오신 것을 환영합니다",
+      "footer.copyright": "© 2025 Klover. All rights reserved.",
+      "modal.welcome": "Klover에 오신 것을 환영합니다",
       "modal.instruction": "AI 맞춤 여행 플래너를 시작하려면 로그인하세요",
       "modal.continue_google": "Google로 계속하기",
       "modal.continue_microsoft": "Microsoft로 계속하기",
@@ -148,6 +148,16 @@ const resources = {
       vision_ocr: "비전 OCR",
       quick_translator: "빠른 통역",
       culture_guide: "한국 문화 가이드",
+      hero_title: "서바이벌 키트",
+      hero_subtitle:
+        "한국 여행에서 꼭 필요한 실시간 도구와 문화 인사이트를 한곳에 모았어요.",
+      hero_tagline: "이미지 번역 · 음성 번역 · 문화 가이드",
+      section_vision_benefit:
+        "카메라로 찍은 간판과 메뉴를 AI가 즉시 번역합니다.",
+      section_translator_benefit:
+        "음성과 텍스트를 24개 언어로 빠르게 변환해요.",
+      section_culture_benefit: "현지인이 전하는 한국 핵심 매너만 정리했어요.",
+      modal_close: "닫기",
       // 문화 가이드 번역
       greeting: "인사 예절",
       greeting_content:
@@ -544,8 +554,8 @@ const resources = {
       "footer.terms_of_service": "Terms of Service",
       "footer.customer_center": "Customer Center",
       "footer.partnership": "Partnership",
-      "footer.copyright": "© 2024 TravelK. All rights reserved.",
-      "modal.welcome": "Welcome to TravelK",
+      "footer.copyright": "© 2025 Klover. All rights reserved.",
+      "modal.welcome": "Welcome to Klover",
       "modal.instruction":
         "Please log in to start your AI custom travel planner",
       "modal.continue_google": "Continue with Google",
@@ -633,6 +643,17 @@ const resources = {
       vision_ocr: "Vision OCR",
       quick_translator: "Quick Translator",
       culture_guide: "Culture Guide",
+      hero_title: "Neon Survival Kit",
+      hero_subtitle:
+        "Everything you need to feel at home in Korea: live tools and cultural insights.",
+      hero_tagline: "Vision OCR · Real-time Translator · Culture Briefings",
+      section_vision_benefit:
+        "Point your camera at signs or menus and get instant AI translation.",
+      section_translator_benefit:
+        "Switch voice or text across 24 languages in seconds.",
+      section_culture_benefit:
+        "Learn the essential etiquette locals actually use.",
+      modal_close: "Close",
       // 문화 가이드 번역
       greeting: "Greeting Etiquette",
       greeting_content:
@@ -932,8 +953,8 @@ const resources = {
       "footer.terms_of_service": "利用規約",
       "footer.customer_center": "カスタマーセンター",
       "footer.partnership": "パートナーシップ",
-      "footer.copyright": "© 2024 TravelK. All rights reserved.",
-      "modal.welcome": "TravelKへようこそ",
+      "footer.copyright": "© 2025 Klover. All rights reserved.",
+      "modal.welcome": "Klover",
       "modal.instruction":
         "AIカスタム旅行プランナーを開始するにはログインしてください",
       "modal.continue_google": "Googleで続行",
@@ -1072,6 +1093,16 @@ const resources = {
       vision_ocr: "ビジョン OCR",
       quick_translator: "クイック翻訳",
       culture_guide: "韓国文化ガイド",
+      hero_title: "ネオンサバイバルキット",
+      hero_subtitle:
+        "韓国旅行で欠かせないリアルタイムツールと文化インサイトを一つに。",
+      hero_tagline: "ビジョンOCR · リアルタイム翻訳 · 文化ガイド",
+      section_vision_benefit:
+        "看板やメニューを撮るだけでAIが即時に翻訳します。",
+      section_translator_benefit:
+        "音声・テキストを24言語に素早く切り替えできます。",
+      section_culture_benefit: "現地の人が実際に使うマナーを厳選しました。",
+      modal_close: "閉じる",
       // 文化ガイド翻訳
       greeting: "挨拶マナー",
       greeting_content: "韓国では年上の人に先に挨拶し、頭を下げて挨拶します。",
@@ -1359,8 +1390,8 @@ const resources = {
       "footer.terms_of_service": "服务条款",
       "footer.customer_center": "客户中心",
       "footer.partnership": "合作伙伴",
-      "footer.copyright": "© 2024 TravelK. All rights reserved.",
-      "modal.welcome": "欢迎来到TravelK",
+      "footer.copyright": "© 2025 Klover. All rights reserved.",
+      "modal.welcome": "欢迎来到 Klover",
       "modal.instruction": "请登录以开始您的AI定制旅行规划师",
       "modal.continue_google": "使用Google继续",
       "modal.continue_microsoft": "使用Microsoft继续",
@@ -1491,6 +1522,13 @@ const resources = {
       vision_ocr: "视觉OCR",
       quick_translator: "快速翻译",
       culture_guide: "韩国文化指南",
+      hero_title: "霓虹生存工具箱",
+      hero_subtitle: "韩国旅行必备的实时工具与文化洞察一次打包。",
+      hero_tagline: "视觉OCR · 实时翻译 · 文化指南",
+      section_vision_benefit: "拍下招牌或菜单，AI立即为你翻译。",
+      section_translator_benefit: "数秒内在24种语言间切换语音和文本。",
+      section_culture_benefit: "精选五个韩国当地人常用的礼仪提示。",
+      modal_close: "关闭",
       // 文化指南翻译
       greeting: "问候礼仪",
       greeting_content: "在韩国，要先向年长者问候，并低头行礼。",
