@@ -1,6 +1,12 @@
 // pages/DirectionsMantineImproved.jsx
 
-import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "components/ui/button";
 import PlaceSearchInput from "components/directions/PlaceSearchInput";
@@ -454,7 +460,11 @@ export default function DirectionsMantineImproved() {
           PEDESTRIAN: ["#10b981", "#34d399", "#22d3ee"],
           TRANSIT: ["#7c3aed", "#a855f7", "#f97316"],
         };
-        const colors = modePalettes[routeMode] || ["#60a5fa", "#a78bfa", "#34d399"];
+        const colors = modePalettes[routeMode] || [
+          "#60a5fa",
+          "#a78bfa",
+          "#34d399",
+        ];
         const bounds = new kakao.maps.LatLngBounds();
 
         routes.slice(0, 3).forEach((route, idx) => {
@@ -529,9 +539,10 @@ export default function DirectionsMantineImproved() {
               : `경유지 ${waypointIndex}`;
           const primaryName =
             typeof stop?.name === "string" ? stop.name.trim() : "";
-          const overlayLabel = primaryName && primaryName !== baseLabel
-            ? `${baseLabel} · ${primaryName}`
-            : baseLabel;
+          const overlayLabel =
+            primaryName && primaryName !== baseLabel
+              ? `${baseLabel} · ${primaryName}`
+              : baseLabel;
           const overlay = new kakao.maps.CustomOverlay({
             position,
             yAnchor: 1.35,
@@ -727,9 +738,7 @@ export default function DirectionsMantineImproved() {
         throw new Error(j?.message || "경로 API 요청 실패");
       }
 
-      const routes = Array.isArray(j?.routes)
-        ? j.routes.filter(Boolean)
-        : [];
+      const routes = Array.isArray(j?.routes) ? j.routes.filter(Boolean) : [];
       const primaryRoute = routes[0];
       if (!primaryRoute) {
         throw new Error("유효한 경로를 찾지 못했습니다.");
@@ -818,8 +827,7 @@ export default function DirectionsMantineImproved() {
     const formatAddress = (stop) => {
       const road =
         typeof stop?.roadAddress === "string" ? stop.roadAddress.trim() : "";
-      const addr =
-        typeof stop?.address === "string" ? stop.address.trim() : "";
+      const addr = typeof stop?.address === "string" ? stop.address.trim() : "";
       return {
         address: road || addr,
         roadAddress: road,
@@ -873,9 +881,12 @@ export default function DirectionsMantineImproved() {
       if (personaCourseId !== null && personaCourseId !== undefined) {
         params.set("pid", String(personaCourseId));
       }
-      const response = await fetch(`/api/persona/courses2?${params.toString()}`, {
-        cache: "no-cache",
-      });
+      const response = await fetch(
+        `/api/persona/courses2?${params.toString()}`,
+        {
+          cache: "no-cache",
+        }
+      );
       if (!response.ok) {
         throw new Error("추천 코스를 불러오지 못했습니다.");
       }
@@ -884,9 +895,7 @@ export default function DirectionsMantineImproved() {
       setRecommendedCourses(items);
     } catch (error) {
       console.error(error);
-      setRecommendedError(
-        error?.message || "추천 코스를 불러오지 못했습니다."
-      );
+      setRecommendedError(error?.message || "추천 코스를 불러오지 못했습니다.");
     } finally {
       setRecommendedLoading(false);
     }
@@ -973,7 +982,9 @@ export default function DirectionsMantineImproved() {
   const saveToBackend = async () => {
     try {
       if (!days.some((d) => d.startLocation && d.endLocation)) {
-        window.alert("Please set at least one start and end point before saving.");
+        window.alert(
+          "Please set at least one start and end point before saving."
+        );
         return;
       }
       if (!isAuthenticated) {
@@ -1036,7 +1047,9 @@ export default function DirectionsMantineImproved() {
 
       await Itinerary.create(payload);
       setCurrentItineraryId(itineraryId);
-      window.alert("Route plan saved. You can manage it from the itinerary planner.");
+      window.alert(
+        "Route plan saved. You can manage it from the itinerary planner."
+      );
     } catch (error) {
       console.error("Failed to save route plan", error);
       window.alert("An unexpected error occurred while saving the route plan.");
@@ -1241,8 +1254,8 @@ export default function DirectionsMantineImproved() {
       <div className="pointer-events-none fixed inset-x-0 top-0 z-10 h-44 bg-gradient-to-b from-slate-950/90 to-transparent" />
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 h-56 bg-gradient-to-t from-slate-950/90 to-transparent" />
 
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-20">
-        <div className="pointer-events-auto mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 py-5 sm:gap-4">
+      <header className="pointer-events-none fixed inset-x-0 top-[76px] z-20 sm:top-0">
+        <div className="pointer-events-auto mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 py-4 sm:gap-4 sm:py-5">
           <div className="flex-1 space-y-1">
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-200/80">
               Route Planner
@@ -1423,9 +1436,7 @@ export default function DirectionsMantineImproved() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() =>
-                        setAddDayMenuOpen((prev) => !prev)
-                      }
+                      onClick={() => setAddDayMenuOpen((prev) => !prev)}
                       className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600"
                       aria-label="일차 추가 메뉴"
                     >
@@ -1708,7 +1719,9 @@ export default function DirectionsMantineImproved() {
             className="fixed inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur"
           >
             <div className="flex items-center justify-between px-5 pt-6 pb-4">
-              <h3 className="text-lg font-semibold text-white">추천 코스 불러오기</h3>
+              <h3 className="text-lg font-semibold text-white">
+                추천 코스 불러오기
+              </h3>
               <button
                 onClick={() => setCoursePickerOpen(false)}
                 className="rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
@@ -1728,7 +1741,9 @@ export default function DirectionsMantineImproved() {
               ) : recommendedError ? (
                 <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-6 text-sm text-rose-100">
                   <p className="font-semibold">불러오기 실패</p>
-                  <p className="mt-2 text-xs text-rose-100/80">{recommendedError}</p>
+                  <p className="mt-2 text-xs text-rose-100/80">
+                    {recommendedError}
+                  </p>
                   <button
                     type="button"
                     onClick={loadRecommendedCourses}
@@ -1744,9 +1759,7 @@ export default function DirectionsMantineImproved() {
               ) : (
                 recommendedCourses.map((course) => {
                   const stopNames = Array.isArray(course.stops)
-                    ? course.stops
-                        .map((stop) => stop?.name)
-                        .filter(Boolean)
+                    ? course.stops.map((stop) => stop?.name).filter(Boolean)
                     : [];
                   return (
                     <button
@@ -1757,15 +1770,17 @@ export default function DirectionsMantineImproved() {
                     >
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm font-semibold text-white">
-                          {course.title || (`코스 ${course.code || ""}`).trim()}
+                          {course.title || `코스 ${course.code || ""}`.trim()}
                         </span>
                         <span className="text-xs text-slate-400">
-                          {Array.isArray(course.stops) ? `${course.stops.length}곳` : ''}
+                          {Array.isArray(course.stops)
+                            ? `${course.stops.length}곳`
+                            : ""}
                         </span>
                       </div>
                       {stopNames.length > 0 && (
                         <p className="mt-2 text-xs text-slate-400 line-clamp-2">
-                          {stopNames.join(' · ')}
+                          {stopNames.join(" · ")}
                         </p>
                       )}
                     </button>

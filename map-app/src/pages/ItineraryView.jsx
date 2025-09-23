@@ -223,6 +223,8 @@ export default function ItineraryView() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [autoSaving, setAutoSaving] = useState(false);
+  const titleDraftRef = useRef("");
+  const [isTitleEditing, setIsTitleEditing] = useState(false);
   const itineraryFingerprint = useMemo(
     () => (itinerary ? JSON.stringify(itinerary) : null),
     [itinerary]
@@ -243,6 +245,17 @@ export default function ItineraryView() {
       Math.min(prev, Math.max((localItinerary?.days?.length || 1) - 1, 0))
     );
   }, [localItinerary?.days?.length]);
+
+  useEffect(() => {
+    if (!localItinerary) {
+      titleDraftRef.current = "";
+      setIsTitleEditing(false);
+      return;
+    }
+    if (!isTitleEditing) {
+      titleDraftRef.current = localItinerary.itinerary_name || "";
+    }
+  }, [localItinerary?.itinerary_name, isTitleEditing]);
 
   const loadRoutePlans = useCallback(async () => {
     if (!isAuthenticated) {
@@ -359,6 +372,21 @@ export default function ItineraryView() {
 
   const handleSaveChanges = useCallback(async () => {
     if (!localItinerary) return;
+    setIsTitleEditing(false);
+    const currentTitle = localItinerary.itinerary_name || "";
+    const draftTitle =
+      typeof titleDraftRef.current === "string"
+        ? titleDraftRef.current
+        : currentTitle;
+
+    const preparedItinerary =
+      draftTitle !== currentTitle
+        ? { ...localItinerary, itinerary_name: draftTitle }
+        : localItinerary;
+
+    if (draftTitle !== currentTitle) {
+      setLocalItinerary(preparedItinerary);
+    }
     if (!isAuthenticated) {
       notifications.show({
         color: "yellow",
@@ -369,11 +397,14 @@ export default function ItineraryView() {
     }
     setIsSaving(true);
     try {
-      const updated = await Itinerary.update(localItinerary.id, localItinerary);
+      const updated = await Itinerary.update(
+        preparedItinerary.id,
+        preparedItinerary
+      );
       setItinerary(deepClone(updated));
       await loadRoutePlans();
       setLastSavedAt(Date.now());
-      lastSerializedRef.current = JSON.stringify(localItinerary);
+      lastSerializedRef.current = JSON.stringify(preparedItinerary);
       autoReadyRef.current = false;
       setTimeout(() => {
         autoReadyRef.current = true;
@@ -401,11 +432,15 @@ export default function ItineraryView() {
     setItinerary,
     setIsSaving,
     setLastSavedAt,
+    setLocalItinerary,
+    setIsTitleEditing,
   ]);
 
   const handleDiscardChanges = useCallback(() => {
     if (!itinerary) return;
     setLocalItinerary(deepClone(itinerary));
+    titleDraftRef.current = itinerary?.itinerary_name || "";
+    setIsTitleEditing(false);
     lastSerializedRef.current = JSON.stringify(itinerary);
     autoReadyRef.current = false;
     setTimeout(() => {
@@ -416,10 +451,11 @@ export default function ItineraryView() {
       title: "변경사항 취소",
       message: "마지막으로 저장된 버전으로 복원되었습니다.",
     });
-  }, [itinerary, setLocalItinerary]);
+  }, [itinerary, setLocalItinerary, setIsTitleEditing]);
 
   useEffect(() => {
     if (!debouncedItinerary) return;
+    if (isTitleEditing) return;
     if (!autoReadyRef.current) {
       autoReadyRef.current = true;
       return;
@@ -465,6 +501,7 @@ export default function ItineraryView() {
     loadRoutePlans,
     setIsSaving,
     setLastSavedAt,
+    isTitleEditing,
   ]);
 
   const handleApplyRoutePlan = useCallback(
@@ -686,12 +723,34 @@ export default function ItineraryView() {
     [setLocalItinerary]
   );
 
-  const handleTitleChange = useCallback(
-    (newTitle) => {
-      setLocalItinerary((prev) => ({ ...prev, itinerary_name: newTitle }));
+  const handleTitleCommit = useCallback(
+    (rawTitle) => {
+      const nextTitle =
+        typeof rawTitle === "string" ? rawTitle : titleDraftRef.current || "";
+      titleDraftRef.current = nextTitle;
+      setLocalItinerary((prev) => {
+        if (!prev || prev.itinerary_name === nextTitle) {
+          return prev;
+        }
+        return {
+          ...prev,
+          itinerary_name: nextTitle,
+        };
+      });
     },
     [setLocalItinerary]
   );
+
+  const handleTitleDraftChange = useCallback((nextTitle) => {
+    titleDraftRef.current = nextTitle;
+  }, []);
+
+  const handleTitleEditingChange = useCallback((editing) => {
+    setIsTitleEditing(editing);
+    if (editing) {
+      autoReadyRef.current = false;
+    }
+  }, []);
 
   // 불필요한 리렌더링 방지.
   const handleDateChange = useCallback(
@@ -939,7 +998,9 @@ export default function ItineraryView() {
           isSaving={isSaving}
           isAutoSaving={autoSaving}
           lastSavedAt={lastSavedAt}
-          onTitleChange={handleTitleChange}
+          onTitleDraftChange={handleTitleDraftChange}
+          onTitleCommit={handleTitleCommit}
+          onTitleEditingChange={handleTitleEditingChange}
           onSave={handleSaveChanges}
           onDiscard={handleDiscardChanges}
         />
@@ -958,7 +1019,12 @@ export default function ItineraryView() {
         }}
       >
         <Group h="100%" px="md" justify="space-between">
-          <GradientText size="lg">Itinerary Planner</GradientText>
+          <GradientText
+            size="lg"
+            style={{ marginLeft: "clamp(44px, 13vw, 80px)" }}
+          >
+            여행 일정 플래너
+          </GradientText>
           {(isSaving || autoSaving) && (
             <Text size="xs" c="grape.3">
               저장 중...
@@ -973,7 +1039,9 @@ export default function ItineraryView() {
           isSaving={isSaving}
           isAutoSaving={autoSaving}
           lastSavedAt={lastSavedAt}
-          onTitleChange={handleTitleChange}
+          onTitleDraftChange={handleTitleDraftChange}
+          onTitleCommit={handleTitleCommit}
+          onTitleEditingChange={handleTitleEditingChange}
           onSave={handleSaveChanges}
           onDiscard={handleDiscardChanges}
         />

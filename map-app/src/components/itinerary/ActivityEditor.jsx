@@ -171,6 +171,9 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               onSelect={handlePlaceSelect}
               placeholder="검색어를 입력하면 장소를 추천해드려요"
               className="itinerary-place-input"
+              appearance="dark"
+              inputClassName="border-[rgba(168,85,247,0.35)] focus:border-[rgba(236,72,153,0.8)] focus:ring-[rgba(236,72,153,0.45)]"
+              dropdownClassName="border-[rgba(168,85,247,0.35)]"
             />
           </Input.Wrapper>
           <SimpleGrid cols={isMobile ? 1 : 2}>

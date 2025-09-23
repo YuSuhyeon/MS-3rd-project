@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Paper,
@@ -43,11 +43,22 @@ export default function ItineraryHeader({
   isSaving,
   isAutoSaving,
   lastSavedAt,
-  onTitleChange,
+  onTitleDraftChange,
+  onTitleCommit,
+  onTitleEditingChange,
   onSave,
   onDiscard,
 }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const [draftTitle, setDraftTitle] = useState(itinerary?.itinerary_name || "");
+  const [isTitleFocused, setIsTitleFocused] = useState(false);
+
+  useEffect(() => {
+    if (isTitleFocused) return;
+    const nextTitle = itinerary?.itinerary_name || "";
+    setDraftTitle(nextTitle);
+    onTitleDraftChange?.(nextTitle);
+  }, [itinerary?.itinerary_name, isTitleFocused, onTitleDraftChange]);
   const totalCost =
     itinerary?.days?.reduce(
       (total, day) =>
@@ -113,8 +124,16 @@ export default function ItineraryHeader({
         <Stack gap="lg">
           <Stack gap="xs">
             <TextInput
-              value={itinerary?.itinerary_name || ""}
-              onChange={(event) => onTitleChange?.(event.currentTarget.value)}
+              value={draftTitle}
+              onChange={(event) => {
+                const value = event.currentTarget.value;
+                setDraftTitle(value);
+                onTitleDraftChange?.(value);
+              }}
+              onFocus={() => {
+                setIsTitleFocused(true);
+                onTitleEditingChange?.(true);
+              }}
               size={isMobile ? "md" : "lg"}
               styles={{
                 input: {
@@ -131,6 +150,19 @@ export default function ItineraryHeader({
                     borderColor: "rgba(236, 72, 153, 0.8)",
                   },
                 },
+              }}
+              onBlur={(event) => {
+                setIsTitleFocused(false);
+                onTitleEditingChange?.(false);
+                onTitleCommit?.(event.currentTarget.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  setIsTitleFocused(false);
+                  onTitleEditingChange?.(false);
+                  event.currentTarget.blur();
+                }
               }}
             />
             <Group gap="lg" wrap="wrap">
