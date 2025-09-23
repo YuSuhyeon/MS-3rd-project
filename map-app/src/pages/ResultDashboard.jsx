@@ -302,8 +302,7 @@ const CourseListItem = ({ course, onNavigate }) => (
     <div className="flex items-center gap-2 ml-4">
       <NeonButton
         size="sm"
-        variant="secondary"
-        className="flex items-center gap-1"
+        className="flex items-center gap-1 flex-shrink-0 whitespace-nowrap"
         onClick={onNavigate}
       >
         경로 편집 <ChevronRight className="w-4 h-4" />

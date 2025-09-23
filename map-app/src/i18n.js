@@ -73,6 +73,48 @@ const resources = {
       "modal.disclaimer.suffix": "에 동의하는 것으로 간주됩니다.",
       "cta.title": "이제, 당신의 완벽한 여행을 시작할 시간",
       "cta.start": "5가지 질문으로 시작하기",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "당신만의 여행 페르소나를 발견하세요",
+      "home.persona.desc":
+        "5가지 질문으로 여행 스타일을 분석하고, AI가 맞춤형 코스를 추천해드립니다.",
+      "home.persona.cta": "페르소나 분석 시작하기",
+      "home.persona.card1.title": "여행 스타일은?",
+      "home.persona.card1.pill1": "모험 추구형",
+      "home.persona.card1.pill2": "여유 만끽형",
+      "home.persona.card1.pill3": "계획적 탐방형",
+      "home.persona.card2.title": "관심 있는 활동은?",
+      "home.persona.card2.pill1": "문화 체험",
+      "home.persona.card2.pill2": "음식 탐방",
+      "home.persona.card2.pill3": "쇼핑",
+      "home.persona.card3.title": "선호하는 분위기는?",
+      "home.persona.card3.pill1": "트렌디한",
+      "home.persona.card3.pill2": "전통적인",
+      "home.persona.card3.pill3": "자연친화적",
+
+      "home.ai_reco.title": "AI가 만드는 완벽한 여행 코스",
+      "home.ai_reco.desc":
+        "개인 맞춤 분석을 바탕으로 최적의 여행 루트를 실시간으로 생성합니다.",
+      "home.ai_reco.tag1": "실시간 생성",
+      "home.ai_reco.tag2": "맞춤형 추천",
+      "home.ai_reco.tag3": "최적 경로",
+      "home.ai_reco.tag4": "시간 효율",
+      "home.ai_reco.tag5": "현지 정보",
+
+      "home.editing.title": "자유롭게 편집하고 완성하세요",
+      "home.editing.desc":
+        "드래그 앤 드롭으로 여행 일정을 자유롭게 수정하고 나만의 완벽한 플랜을 만들어보세요.",
+
+      "home.map.preview_label": "맞춤 여행 루트",
+
+      "home.itinerary.title": "여행 일정",
+      "home.itinerary.item1": "경복궁 관람",
+      "home.itinerary.item2": "북촌 한옥마을",
+      "home.itinerary.item3": "인사동 문화거리",
+      "home.itinerary.item4": "명동 쇼핑",
+
+      "home.controls.undo": "실행취소",
+      "home.controls.save": "저장하기",
     },
     QuickTranslator: {
       all: "전체",
@@ -145,6 +187,17 @@ const resources = {
       mypage: "마이 페이지",
     },
     SurvivalKit: {
+      // Hero 섹션
+      hero_tagline: "여행자 필수 도구",
+      hero_title: "서바이벌 키트",
+      hero_subtitle:
+        "한국 여행 중 필요한 모든 도구와 정보를 한 곳에서 만나보세요",
+
+      // 섹션 설명
+      section_vision_benefit: "이미지 텍스트 인식 및 번역",
+      section_translator_benefit: "실시간 음성 및 텍스트 번역",
+      section_culture_benefit: "한국 문화와 예절 가이드",
+
       vision_ocr: "비전 OCR",
       quick_translator: "빠른 통역",
       culture_guide: "한국 문화 가이드",
@@ -473,7 +526,8 @@ const resources = {
       location: "위치",
       voiceGuide: "음성 안내",
       tourDetection: {
-        message: "🎯 투어 관련 질문이시군요! 전문 가이드 투어 서비스와 맞춤 코스 추천은 투어 페이지에서 확인하실 수 있습니다.",
+        message:
+          "🎯 투어 관련 질문이시군요! 전문 가이드 투어 서비스와 맞춤 코스 추천은 투어 페이지에서 확인하실 수 있습니다.",
         buttonText: "🎯 투어 서비스 페이지로 이동",
       },
       viewDetails: "📝 상세 정보 보기",
@@ -576,7 +630,8 @@ const resources = {
       location: "Location",
       voiceGuide: "Voice Guide",
       tourDetection: {
-        message: "🎯 I see you're asking about tours! Professional guided tour services and custom course recommendations are available on our tour page.",
+        message:
+          "🎯 I see you're asking about tours! Professional guided tour services and custom course recommendations are available on our tour page.",
         buttonText: "🎯 Go to Tour Service Page",
       },
       viewDetails: "📝 View Details",
@@ -654,6 +709,48 @@ const resources = {
       "modal.disclaimer.suffix": ".",
       "cta.title": "Now, it's time to start your perfect trip",
       "cta.start": "Start with 5 questions",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "Discover Your Travel Persona",
+      "home.persona.desc":
+        "Analyze your travel style with 5 questions and get AI-customized course recommendations.",
+      "home.persona.cta": "Start Persona Analysis",
+      "home.persona.card1.title": "Travel Style?",
+      "home.persona.card1.pill1": "Adventure Seeker",
+      "home.persona.card1.pill2": "Leisure Enjoyer",
+      "home.persona.card1.pill3": "Planned Explorer",
+      "home.persona.card2.title": "Interests?",
+      "home.persona.card2.pill1": "Cultural Experience",
+      "home.persona.card2.pill2": "Food Tour",
+      "home.persona.card2.pill3": "Shopping",
+      "home.persona.card3.title": "Preferred Atmosphere?",
+      "home.persona.card3.pill1": "Trendy",
+      "home.persona.card3.pill2": "Traditional",
+      "home.persona.card3.pill3": "Nature-friendly",
+
+      "home.ai_reco.title": "Perfect Travel Course Created by AI",
+      "home.ai_reco.desc":
+        "Generate optimal travel routes in real-time based on personalized analysis.",
+      "home.ai_reco.tag1": "Real-time Generation",
+      "home.ai_reco.tag2": "Customized Recommendations",
+      "home.ai_reco.tag3": "Optimal Routes",
+      "home.ai_reco.tag4": "Time Efficient",
+      "home.ai_reco.tag5": "Local Information",
+
+      "home.editing.title": "Edit Freely and Complete",
+      "home.editing.desc":
+        "Freely modify your travel itinerary with drag and drop to create your perfect plan.",
+
+      "home.map.preview_label": "Custom Travel Route",
+
+      "home.itinerary.title": "Travel Itinerary",
+      "home.itinerary.item1": "Gyeongbokgung Tour",
+      "home.itinerary.item2": "Bukchon Hanok Village",
+      "home.itinerary.item3": "Insadong Culture Street",
+      "home.itinerary.item4": "Myeongdong Shopping",
+
+      "home.controls.undo": "Undo",
+      "home.controls.save": "Save",
     },
     QuickTranslator: {
       all: "All",
@@ -727,6 +824,17 @@ const resources = {
       log_in: "Log In",
     },
     SurvivalKit: {
+      // Hero 섹션
+      hero_tagline: "Essential Travel Tools",
+      hero_title: "Survival Kit",
+      hero_subtitle:
+        "Meet all the tools and information you need during your trip to Korea in one place",
+
+      // 섹션 설명
+      section_vision_benefit: "Image text recognition and translation",
+      section_translator_benefit: "Real-time voice and text translation",
+      section_culture_benefit: "Korean culture and etiquette guide",
+
       vision_ocr: "Vision OCR",
       quick_translator: "Quick Translator",
       culture_guide: "Culture Guide",
@@ -1042,6 +1150,48 @@ const resources = {
       "modal.disclaimer.suffix": "に同意したものとみなされます。",
       "cta.title": "今こそ、あなたの完璧な旅行を始める時",
       "cta.start": "5つの質問で始める",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "あなただけの旅行ペルソナを発見",
+      "home.persona.desc":
+        "5つの質問で旅行スタイルを分析し、AIがカスタマイズされたコースを推薦します。",
+      "home.persona.cta": "ペルソナ分析開始",
+      "home.persona.card1.title": "旅行スタイルは？",
+      "home.persona.card1.pill1": "冒険追求型",
+      "home.persona.card1.pill2": "余裕満喫型",
+      "home.persona.card1.pill3": "計画的探訪型",
+      "home.persona.card2.title": "興味のある活動は？",
+      "home.persona.card2.pill1": "文化体験",
+      "home.persona.card2.pill2": "グルメ探訪",
+      "home.persona.card2.pill3": "ショッピング",
+      "home.persona.card3.title": "好みの雰囲気は？",
+      "home.persona.card3.pill1": "トレンディー",
+      "home.persona.card3.pill2": "伝統的",
+      "home.persona.card3.pill3": "自然親和的",
+
+      "home.ai_reco.title": "AIが作る完璧な旅行コース",
+      "home.ai_reco.desc":
+        "個人カスタマイズ分析に基づいて最適な旅行ルートをリアルタイムで生成します。",
+      "home.ai_reco.tag1": "リアルタイム生成",
+      "home.ai_reco.tag2": "カスタマイズ推薦",
+      "home.ai_reco.tag3": "最適経路",
+      "home.ai_reco.tag4": "時間効率",
+      "home.ai_reco.tag5": "現地情報",
+
+      "home.editing.title": "自由に編集して完成させましょう",
+      "home.editing.desc":
+        "ドラッグ＆ドロップで旅行日程を自由に修正し、あなただけの完璧なプランを作ってみてください。",
+
+      "home.map.preview_label": "カスタム旅行ルート",
+
+      "home.itinerary.title": "旅行日程",
+      "home.itinerary.item1": "景福宮観覧",
+      "home.itinerary.item2": "北村韓屋村",
+      "home.itinerary.item3": "仁寺洞文化街",
+      "home.itinerary.item4": "明洞ショッピング",
+
+      "home.controls.undo": "元に戻す",
+      "home.controls.save": "保存",
     },
     QuickTranslator: {
       all: "すべて",
@@ -1208,13 +1358,25 @@ const resources = {
       location: "位置",
       voiceGuide: "音声ガイド",
       tourDetection: {
-        message: "🎯 ツアーに関するご質問ですね！専門ガイドツアーサービスとカスタムコース推薦は、ツアーページでご確認いただけます。",
+        message:
+          "🎯 ツアーに関するご質問ですね！専門ガイドツアーサービスとカスタムコース推薦は、ツアーページでご確認いただけます。",
         buttonText: "🎯 ツアーサービスページへ移動",
       },
       viewDetails: "📝 詳細情報を見る",
       selectPlace: "場所を選択してください",
     },
     SurvivalKit: {
+      // Hero 섹션
+      hero_tagline: "旅行者必須ツール",
+      hero_title: "サバイバルキット",
+      hero_subtitle:
+        "韓国旅行中に必要なすべてのツールと情報を一か所でお会いしましょう",
+
+      // 섹션 설명
+      section_vision_benefit: "画像テキスト認識と翻訳",
+      section_translator_benefit: "リアルタイム音声・テキスト翻訳",
+      section_culture_benefit: "韓国文化とマナーガイド",
+
       vision_ocr: "ビジョン OCR",
       quick_translator: "クイック翻訳",
       culture_guide: "韓国文化ガイド",
@@ -1517,6 +1679,46 @@ const resources = {
       "modal.disclaimer.suffix": "。",
       "cta.title": "现在，是开始您完美旅行的时候了",
       "cta.start": "通过5个问题开始",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "发现您专属的旅行人格",
+      "home.persona.desc":
+        "通过5个问题分析您的旅行风格，AI将为您推荐定制化路线。",
+      "home.persona.cta": "开始人格分析",
+      "home.persona.card1.title": "旅行风格？",
+      "home.persona.card1.pill1": "冒险追求型",
+      "home.persona.card1.pill2": "悠闲享受型",
+      "home.persona.card1.pill3": "计划探访型",
+      "home.persona.card2.title": "感兴趣的活动？",
+      "home.persona.card2.pill1": "文化体验",
+      "home.persona.card2.pill2": "美食探访",
+      "home.persona.card2.pill3": "购物",
+      "home.persona.card3.title": "偏好的氛围？",
+      "home.persona.card3.pill1": "时尚的",
+      "home.persona.card3.pill2": "传统的",
+      "home.persona.card3.pill3": "亲近自然的",
+
+      "home.ai_reco.title": "AI打造的完美旅行路线",
+      "home.ai_reco.desc": "基于个人定制分析，实时生成最优旅行路线。",
+      "home.ai_reco.tag1": "实时生成",
+      "home.ai_reco.tag2": "定制推荐",
+      "home.ai_reco.tag3": "最优路线",
+      "home.ai_reco.tag4": "时间效率",
+      "home.ai_reco.tag5": "本地信息",
+
+      "home.editing.title": "自由编辑并完成",
+      "home.editing.desc": "通过拖拽功能自由修改旅行日程，创建您的完美计划。",
+
+      "home.map.preview_label": "定制旅行路线",
+
+      "home.itinerary.title": "旅行日程",
+      "home.itinerary.item1": "景福宫参观",
+      "home.itinerary.item2": "北村韩屋村",
+      "home.itinerary.item3": "仁寺洞文化街",
+      "home.itinerary.item4": "明洞购物",
+
+      "home.controls.undo": "撤销",
+      "home.controls.save": "保存",
     },
     QuickTranslator: {
       all: "全部",
@@ -1649,7 +1851,8 @@ const resources = {
       location: "位置",
       voiceGuide: "语音导览",
       tourDetection: {
-        message: "🎯 看起来您在咨询旅游相关问题！专业导游服务和定制路线推荐可在旅游页面查看。",
+        message:
+          "🎯 看起来您在咨询旅游相关问题！专业导游服务和定制路线推荐可在旅游页面查看。",
         buttonText: "🎯 前往旅游服务页面",
       },
       viewDetails: "📝 查看详细信息",
@@ -1682,6 +1885,16 @@ const resources = {
       log_in: "登录",
     },
     SurvivalKit: {
+      // Hero 섹션
+      hero_tagline: "旅行者必备工具",
+      hero_title: "生存工具包",
+      hero_subtitle: "在韩国旅行中需要的所有工具和信息，在一个地方相遇",
+
+      // 섹션 설명
+      section_vision_benefit: "图像文字识别与翻译",
+      section_translator_benefit: "实时语音和文本翻译",
+      section_culture_benefit: "韩国文化与礼仪指南",
+
       vision_ocr: "视觉OCR",
       quick_translator: "快速翻译",
       culture_guide: "韩国文化指南",
