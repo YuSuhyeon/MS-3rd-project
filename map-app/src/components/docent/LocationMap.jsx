@@ -26,12 +26,6 @@ export default function LocationMap({
   const KAKAO_JS_KEY = process.env.REACT_APP_KAKAO_API_KEY;
   const MARKER_IMG = process.env.PUBLIC_URL + "/img/card_blue.png";
 
-  console.log("LocationMap 렌더링");
-  console.log("process.env:", process.env);
-  console.log("REACT_APP_KAKAO_API_KEY:", process.env.REACT_APP_KAKAO_API_KEY);
-  console.log("KAKAO_JS_KEY:", KAKAO_JS_KEY);
-  console.log("MARKER_IMG:", MARKER_IMG);
-
   // 번역된 내용 가져오기
   const getTranslatedContent = (key) => {
     if (selectedLang === "ko" || !key) {
@@ -170,24 +164,15 @@ export default function LocationMap({
 
   // 1) 최초 지도 생성
   useEffect(() => {
-    console.log("LocationMap: 지도 생성 시작");
-    console.log("KAKAO_JS_KEY:", KAKAO_JS_KEY ? "설정됨" : "없음");
-    console.log("userLocation:", userLocation);
-
     if (!KAKAO_JS_KEY) {
       console.warn("Set REACT_APP_KAKAO_API_KEY in .env");
     }
-
-    const container = document.getElementById("docent-map");
-    console.log("지도 컨테이너:", container);
-
     createKakaoMap({
       containerId: "docent-map",
       KAKAO_JS_KEY,
       center: userLocation || { lat: 37.5665, lng: 126.978 },
       level: 4,
       onMapReady: (map) => {
-        console.log("지도 생성 완료:", map);
         mapRef.current = map;
 
         // 지도 클릭 시 원 갱신 + 팝업 닫기 + 선택 해제
@@ -208,26 +193,14 @@ export default function LocationMap({
 
   // 2) POI 마커 렌더/업데이트
   useEffect(() => {
-    console.log("POI 마커 렌더링 시작");
-    console.log("mapRef.current:", mapRef.current);
-    console.log("pois:", pois);
-
     const map = mapRef.current;
-    if (!map) {
-      console.log("지도가 아직 준비되지 않음");
-      return;
-    }
+    if (!map) return;
 
     // 기존 마커 정리
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current.clear();
 
-    if (!Array.isArray(pois) || pois.length === 0) {
-      console.log("POI 데이터가 없음");
-      return;
-    }
-
-    console.log("POI 데이터 개수:", pois.length);
+    if (!Array.isArray(pois) || pois.length === 0) return;
 
     const data = pois.map((p) => ({
       poi_id: p.id,
