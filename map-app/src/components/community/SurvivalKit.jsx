@@ -47,7 +47,6 @@ export default function SurvivalKit() {
     ],
     [t]
   );
-
   const activeInfo = useMemo(
     () =>
       sections.find((section) => section.id === activeSection) || sections[0],
@@ -258,7 +257,6 @@ export default function SurvivalKit() {
             </div>
           </div>
         </NeonCard>
-
         <NeonCard
           variant="secondary"
           className="relative overflow-hidden p-6 sm:p-8"

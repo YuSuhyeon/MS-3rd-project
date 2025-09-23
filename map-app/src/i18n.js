@@ -467,7 +467,7 @@ const resources = {
       play: "재생",
       title: "K-pop 여행 플레이리스트",
       description:
-        "Spotify에 로그인하고 AI가 만든 플레이리스트를 생성하세요. 지금 바로 경험해보세요! ✨",
+        "Spotify에 로그인하고 AI가 만든 플레이리스트를 생성하세요. 지금 바로 경험해보세요!",
       login: "Spotify 로그인",
       my_playlist: "내 플레이리스트",
       playlist_preview: "플레이리스트 미리보기",
@@ -571,7 +571,7 @@ const resources = {
       "login.welcome": "Welcome!",
       "login.logout": "Logout",
       "login.login": "Login",
-      "main.title.k_travel": "Travel", //K-Travel을 수정
+      "main.title.k_travel": "Travel",
       "main.title.connector": "",
       "main.title.ai_creates": "AI creates for you",
       "main.subtitle":
@@ -1068,7 +1068,6 @@ const resources = {
       "modal.disclaimer.suffix": "に同意したものとみなされます。",
       "cta.title": "今こそ、あなたの完璧な旅行を始める時",
       "cta.start": "5つの質問で始める",
-
       home: {
         persona: {
           title: "どんな旅行を夢見ていますか？",
@@ -1556,7 +1555,6 @@ const resources = {
       "modal.disclaimer.suffix": "。",
       "cta.title": "现在，是开始您完美旅行的时候了",
       "cta.start": "通过5个问题开始",
-
       home: {
         persona: {
           title: "您梦想怎样的旅行？",

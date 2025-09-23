@@ -59,7 +59,7 @@ const useMediaQuery = (query) => {
 const PlaylistCard = ({ playlist }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -176,13 +176,13 @@ export default function CommunityMain() {
     {
       id: "survival",
       label: t("survival_kit"),
-      icon: <ShoppingBag />,
+      Icon: ShoppingBag,
       variant: "primary",
     },
     {
       id: "playlists",
       label: t("playlists"),
-      icon: <Music />,
+      Icon: Music,
       variant: "success",
     },
   ];
@@ -270,21 +270,26 @@ export default function CommunityMain() {
 
               {/* 네온 메뉴 아이템들 */}
               <div className="space-y-3">
-                {tabs.map((tab) => (
-                  <NeonButton
-                    key={tab.id}
-                    variant={activeTab === tab.id ? "primary" : "secondary"}
-                    size="lg"
-                    onClick={() => {
-                      handleTabClick(tab.id);
-                      setIsSideMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3 justify-start min-h-[56px]"
-                  >
-                    {tab.icon}
-                    <span className="font-medium capitalize">{tab.label}</span>
-                  </NeonButton>
-                ))}
+                {tabs.map((tab) => {
+                  const Icon = tab.Icon;
+                  return (
+                    <NeonButton
+                      key={tab.id}
+                      variant={activeTab === tab.id ? tab.variant : "secondary"}
+                      size="lg"
+                      onClick={() => {
+                        handleTabClick(tab.id);
+                        setIsSideMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 justify-start min-h-[56px]"
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span className="font-medium capitalize">
+                        {tab.label}
+                      </span>
+                    </NeonButton>
+                  );
+                })}
               </div>
             </div>
           </motion.div>
@@ -324,20 +329,45 @@ export default function CommunityMain() {
         // 데스크톱: 네온 상단 탭
         <>
           <div className="bg-black/60 backdrop-blur-sm border-b border-purple-500/30 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-6">
-              <div className="flex items-center gap-1">
-                {tabs.map((tab) => (
-                  <NeonButton
-                    key={tab.id}
-                    variant={activeTab === tab.id ? tab.variant : "secondary"}
-                    size="md"
-                    onClick={() => handleTabClick(tab.id)}
-                    className="flex items-center gap-2 px-6 py-4 min-h-[60px]"
-                  >
-                    {tab.icon}
-                    {tab.label}
-                  </NeonButton>
-                ))}
+            <div className="max-w-7xl mx-auto px-6 py-5">
+              <div className="flex justify-center">
+                <div className="relative inline-flex divide-x divide-white/10 rounded-2xl border border-white/10 bg-black/40 shadow-[0_20px_60px_-40px_rgba(168,85,247,0.9)]">
+                  {tabs.map((tab, index) => {
+                    const Icon = tab.Icon;
+                    const isActive = activeTab === tab.id;
+                    const isFirst = index === 0;
+                    const isLast = index === tabs.length - 1;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleTabClick(tab.id)}
+                        aria-pressed={isActive}
+                        className={`group relative flex min-w-[170px] items-center justify-center gap-3 px-7 py-4 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/80 focus-visible:ring-offset-0 ${
+                          isActive
+                            ? "bg-gradient-to-r from-purple-500/80 via-pink-500/70 to-blue-500/70 text-white shadow-[0_18px_45px_-25px_rgba(236,72,153,0.8)]"
+                            : "text-purple-100/80 hover:bg-white/10 hover:text-white"
+                        } ${isFirst ? "rounded-l-2xl" : ""} ${
+                          isLast ? "rounded-r-2xl" : ""
+                        }`}
+                      >
+                        <span
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/10 transition-colors duration-200 ${
+                            isActive
+                              ? "border-white/30 bg-black/20 text-white"
+                              : "text-purple-200 group-hover:text-white"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="whitespace-nowrap tracking-wide">
+                          {tab.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
