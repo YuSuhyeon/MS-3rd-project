@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
@@ -77,7 +78,6 @@ const fetchPosts = async (page = 1, limit = 4, searchParams = {}) => {
         hasPrev: result.hasPrev,
       };
     } catch (error) {
-      console.error("❌ 목업 데이터 처리 실패:", error);
       throw error; // loadPosts의 error handling으로 전달
     }
   }
@@ -353,31 +353,60 @@ const TrendingBar = ({
 
   return (
     <div className="mb-6">
-      <NeonCard variant="primary" className="overflow-hidden">
+      <div
+        className={`relative bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden ${
+          isMobile ? "p-3" : "p-6"
+        }`}
+      >
         <div
           className={`flex items-center ${
-            isMobile ? "flex-col gap-3" : "justify-between"
+            isMobile ? "flex-col gap-1" : "justify-between"
           }`}
         >
           <div
             className={`flex items-center ${
-              isMobile ? "flex-col gap-2 w-full" : "gap-4"
+              isMobile ? "flex-col gap-1 w-full" : "gap-4"
             }`}
           >
-            {/* 타입 표시 */}
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-              <span
-                className={`text-white font-bold ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
-              >
-                {showType === "tags" ? "실시간 인기 태그" : "실시간 인기 글"}
-              </span>
+            {/* 타입 탭 - 데스크톱에서만 표시 */}
+            <div
+              className={`flex items-center ${
+                isMobile ? "w-full justify-center" : ""
+              } gap-2`}
+            >
+              <div className="w-2 h-5 animate-pulse mr-1">✨</div>
+              {isMobile ? (
+                <span className="text-white font-bold text-sm">
+                  실시간 인기 {showType === "tags" ? "태그" : "글"}
+                </span>
+              ) : (
+                <div className="bg-white/5 rounded-lg p-0.5 border border-white/10 flex">
+                  <button
+                    onClick={() => setShowType("tags")}
+                    className={`px-3 py-1 rounded-md text-xs ${
+                      showType === "tags"
+                        ? "bg-purple-500 text-white"
+                        : "text-purple-300 hover:text-white"
+                    }`}
+                  >
+                    인기태그
+                  </button>
+                  <button
+                    onClick={() => setShowType("posts")}
+                    className={`px-3 py-1 rounded-md text-xs ${
+                      showType === "posts"
+                        ? "bg-yellow-500/30 text-yellow-200"
+                        : "text-yellow-300 hover:text-white"
+                    }`}
+                  >
+                    인기글
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 트렌드 아이템들 */}
-            <div className="flex items-center gap-2 overflow-hidden flex-wrap">
+            <div className="flex items-center gap-1 overflow-hidden flex-wrap">
               {showType === "tags" ? (
                 trendingTags && trendingTags.length > 0 ? (
                   <motion.div
@@ -385,17 +414,15 @@ const TrendingBar = ({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="flex items-center gap-2 flex-wrap"
+                    className="flex items-center gap-1 flex-wrap"
                   >
                     {trendingTags
-                      .slice(0, isMobile ? 3 : 5)
+                      .slice(0, isMobile ? 2 : 5)
                       .map((item, index) => (
                         <motion.button
                           key={item.tag || index}
                           onClick={() => onTagClick(item.tag)}
-                          className={`px-2 py-1 rounded-full transition-all duration-300 ${
-                            isMobile ? "text-xs" : "text-sm"
-                          } ${
+                          className={`px-1.5 py-0.5 rounded-full transition-all duration-300 text-xs ${
                             index === currentIndex % trendingTags.length
                               ? "bg-purple-500 text-white font-bold scale-110"
                               : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
@@ -421,16 +448,16 @@ const TrendingBar = ({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="flex items-center gap-2 max-w-full overflow-hidden flex-wrap"
+                  className="flex items-center gap-1 max-w-full overflow-hidden flex-wrap"
                 >
                   {trendingPosts
-                    .slice(0, isMobile ? 2 : 3)
+                    .slice(0, isMobile ? 1 : 3)
                     .map((post, index) => (
                       <motion.button
                         key={post.id || post.board_id || index}
                         onClick={() => onPostClick(post.id || post.board_id)}
-                        className={`px-2 py-1 rounded-lg transition-all duration-300 truncate ${
-                          isMobile ? "text-xs max-w-32" : "text-sm max-w-xs"
+                        className={`px-1.5 py-0.5 rounded-lg transition-all duration-300 truncate text-xs ${
+                          isMobile ? "max-w-24" : "max-w-xs"
                         } ${
                           index === currentIndex % trendingPosts.length
                             ? "bg-yellow-500/20 text-yellow-300 font-bold scale-105"
@@ -438,14 +465,8 @@ const TrendingBar = ({
                         }`}
                         whileHover={{ scale: 1.02 }}
                       >
-                        <span className="flex items-center gap-1">
-                          <span className="truncate">
-                            {post.title || "제목 없음"}
-                          </span>
-                          {/* <Heart className="w-2 h-2 flex-shrink-0" />
-                          <span className="text-xs">
-                            {post.likes_count || 0}
-                          </span> */}
+                        <span className="truncate">
+                          {post.title || "제목 없음"}
                         </span>
                       </motion.button>
                     ))}
@@ -479,7 +500,7 @@ const TrendingBar = ({
             </button>
           )}
         </div>
-      </NeonCard>
+      </div>
     </div>
   );
 };
@@ -1073,9 +1094,7 @@ const PostTable = ({ posts, ...props }) => {
                 {/* 고정 너비 설정 */}
                 제목
               </th>
-              <th className="px-4 py-3 text-center text-gray-300 text-sm font-medium w-24">
-                작성자
-              </th>
+              <th className="px-4 py-3 text-center text-gray-300 text-sm font-medium w-24"></th>
               <th
                 className="px-4 py-3 text-center text-gray-300 text-sm font-medium w-20 cursor-pointer hover:text-white transition-colors"
                 onClick={() => handleSort("created_at")}
@@ -1149,7 +1168,7 @@ export default function CommunitySocial() {
   const [trendModalType, setTrendModalType] = useState("");
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [showPostDetailModal, setShowPostDetailModal] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("all");
+  const [selectedTab, setSelectedTab] = useState("official");
 
   const currentUserId = profile?.sub || profile?.id || profile?.user_id;
 
@@ -1162,8 +1181,11 @@ export default function CommunitySocial() {
       newSearchParams = { ...newSearchParams, category };
     }
 
+    // 후기탭일 때는 3개씩, 정보탭일 때는 4개씩 로드
+    const limit = category === "travel" ? 3 : 4;
+
     try {
-      const result = await fetchPosts(page, 4, newSearchParams);
+      const result = await fetchPosts(page, limit, newSearchParams);
 
       setPosts(result.posts);
       setPagination({
@@ -1216,7 +1238,7 @@ export default function CommunitySocial() {
 
   useEffect(() => {
     setIsSearchMode(false);
-    loadPosts();
+    loadPosts({}, "official", 1);
     loadTrendingData();
   }, []);
 
@@ -1391,6 +1413,15 @@ export default function CommunitySocial() {
   return (
     <BackgroundEffect className="flex-1 min-h-screen neon-scrollbar overflow-y-auto">
       <NeonScrollbarStyles />
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
 
       {/* 배경 효과 */}
       <div className="absolute inset-0 pointer-events-none">
@@ -1417,7 +1448,7 @@ export default function CommunitySocial() {
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="relative z-10 p-6">
+      <div className="relative z-10 p-6 pt-24 md:pt-28">
         <div className="flex gap-6 flex-col lg:flex-row">
           {/* 왼쪽 메인 콘텐츠 */}
           <div className="flex-1">
@@ -1488,14 +1519,14 @@ export default function CommunitySocial() {
               {/* 탭 메뉴 */}
               <div className="flex justify-start gap-2 sm:gap-6 w-full sm:w-auto">
                 <button
-                  onClick={() => handleTabChange("all")}
+                  onClick={() => handleTabChange("official")}
                   className={`px-3 py-2 rounded-lg font-medium transition-all flex-1 sm:flex-none ${
-                    selectedTab === "all"
+                    selectedTab === "official"
                       ? "bg-purple-500/20 text-purple-300 border border-purple-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  전체
+                  정보
                 </button>
                 <button
                   onClick={() => handleTabChange("travel")}
@@ -1506,16 +1537,6 @@ export default function CommunitySocial() {
                   }`}
                 >
                   후기
-                </button>
-                <button
-                  onClick={() => handleTabChange("official")}
-                  className={`px-3 py-2 rounded-lg font-medium transition-all flex-1 sm:flex-none ${
-                    selectedTab === "official"
-                      ? "bg-purple-500/20 text-purple-300 border border-purple-400"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  정보
                 </button>
               </div>
 
@@ -1595,14 +1616,16 @@ export default function CommunitySocial() {
               </div>
             </div>
 
-            {/* 실시간 트렌드 바  */}
-            <TrendingBar
-              trendingTags={trendingTags}
-              trendingPosts={trendingPosts}
-              onTagClick={handleTagClick}
-              onPostClick={handleTrendPostClick}
-              isMobile={isMobile}
-            />
+            {/* 실시간 트렌드 바 - 후기탭에서만 표시 */}
+            {selectedTab === "travel" && (
+              <TrendingBar
+                trendingTags={trendingTags}
+                trendingPosts={trendingPosts}
+                onTagClick={handleTagClick}
+                onPostClick={handleTrendPostClick}
+                isMobile={isMobile}
+              />
+            )}
 
             {/* 게시글 목록 - 반응형 */}
             <motion.section
@@ -1614,99 +1637,390 @@ export default function CommunitySocial() {
                 // 정보 탭일 때는 공지사항을 구분해서 표시
                 posts.length > 0 ? (
                   <div className="space-y-6">
-                    {/* 공지사항 섹션 */}
-                    {posts.filter((post) => post.priority === "notice").length >
-                      0 && (
-                      <div className="bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm border border-yellow-400/30">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Pin className="w-5 h-5 text-yellow-400" />
-                          <h3 className="text-lg font-semibold text-white">
-                            공지사항
-                          </h3>
+                    {/* 모바일: 실시간 인기여행지 → 공지 → Editor's Pick */}
+                    <div className="block md:hidden">
+                      {/* 실시간 인기 여행지 - 모바일용 가로 스크롤 */}
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-3 text-sm text-gray-300">
+                          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                          <span>실시간 인기 여행지</span>
                         </div>
-
-                        <div className="space-y-3">
-                          {posts
-                            .filter((post) => post.priority === "notice")
-                            .map((post, index) => (
-                              <div
-                                key={post.id || post.board_id}
-                                className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-4"
+                        <div className="relative">
+                          <div
+                            className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
+                            style={{
+                              scrollbarWidth: "none",
+                              msOverflowStyle: "none",
+                            }}
+                          >
+                            {[
+                              {
+                                name: "명동",
+                                areaName: "명동 관광특구",
+                                icon: "🛍️",
+                              },
+                              {
+                                name: "광화문",
+                                areaName: "광화문·덕수궁",
+                                icon: "🏛️",
+                              },
+                              {
+                                name: "이태원",
+                                areaName: "이태원 관광특구",
+                                icon: "🌍",
+                              },
+                              {
+                                name: "잠실",
+                                areaName: "잠실 관광특구",
+                                icon: "🎡",
+                              },
+                              {
+                                name: "홍대",
+                                areaName: "홍대 관광특구",
+                                icon: "🎨",
+                              },
+                              {
+                                name: "강남",
+                                areaName: "강남 관광특구",
+                                icon: "🏢",
+                              },
+                              {
+                                name: "동대문",
+                                areaName: "동대문 관광특구",
+                                icon: "🛒",
+                              },
+                              {
+                                name: "인사동",
+                                areaName: "인사동",
+                                icon: "🏮",
+                              },
+                            ].map((place) => (
+                              <Link
+                                key={place.areaName}
+                                to={`/popular-places/${encodeURIComponent(
+                                  place.areaName
+                                )}`}
+                                className="flex-shrink-0"
                               >
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <h4
-                                        className="text-white font-medium hover:text-purple-300 transition-colors cursor-pointer"
-                                        onClick={() =>
-                                          handlePostClick(
-                                            post.id || post.board_id
-                                          )
-                                        }
-                                      >
-                                        {post.title}
-                                      </h4>
-                                    </div>
-                                    <p className="text-gray-300 text-sm line-clamp-2 mb-3">
-                                      {post.content?.substring(0, 100)}...
-                                    </p>
-                                    <div className="flex items-center gap-4 text-xs text-gray-400">
-                                      <span>{post.user_name}</span>
-                                      <span>👀 {post.likes_count || 0}</span>
-                                      <span>❤️ {post.comments_count || 0}</span>
+                                <NeonCard
+                                  variant="success"
+                                  className="text-center hover:scale-105 transition-transform cursor-pointer py-2 px-2 w-16 min-w-16"
+                                >
+                                  <div className="text-lg mb-1">
+                                    {place.icon}
+                                  </div>
+                                  <div className="text-xs text-white font-medium leading-tight">
+                                    {place.name}
+                                  </div>
+                                </NeonCard>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 공지사항 - 모바일용 간략 버전 */}
+                      {posts.filter((post) => post.priority === "notice")
+                        .length > 0 && (
+                        <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-yellow-400/30">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Pin className="w-4 h-4 text-yellow-400" />
+                            <h3 className="text-base font-semibold text-white">
+                              공지사항
+                            </h3>
+                          </div>
+                          <div className="space-y-2">
+                            {posts
+                              .filter((post) => post.priority === "notice")
+                              .slice(0, 2) // 모바일에서는 2개만 표시
+                              .map((post, index) => (
+                                <div
+                                  key={post.id || post.board_id}
+                                  className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-3"
+                                >
+                                  <h4
+                                    className="text-white font-medium hover:text-purple-300 transition-colors cursor-pointer text-sm mb-1"
+                                    onClick={() =>
+                                      handlePostClick(post.id || post.board_id)
+                                    }
+                                  >
+                                    {post.title}
+                                  </h4>
+                                  <p className="text-gray-300 text-xs line-clamp-1">
+                                    {post.content?.substring(0, 50)}...
+                                  </p>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Editor's Pick 섹션 */}
+                      {posts.filter((post) => post.priority !== "notice")
+                        .length > 0 && (
+                        <div className="mt-6">
+                          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <Hash className="w-5 h-5 text-purple-400" />
+                            Editor's Pick!
+                          </h3>
+                          <div className="space-y-3">
+                            {posts
+                              .filter((post) => post.priority !== "notice")
+                              .slice(0, 2) // 모바일에서는 2개만 표시
+                              .map((post, index) => (
+                                <MobilePostCard
+                                  key={post.id || post.board_id}
+                                  post={post}
+                                  index={index}
+                                  onLikeUpdate={handleLikeUpdate}
+                                  onPostUpdate={handlePostUpdate}
+                                  onPostDelete={handlePostDelete}
+                                  onPostClick={handlePostClick}
+                                  currentUserId={currentUserId}
+                                  onEditPost={handleEditPost}
+                                />
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 데스크톱: 공지사항 → 실시간인기여행지 → Editor's Pick 순서 */}
+                    <div className="hidden md:block">
+                      {/* 공지사항 섹션 */}
+                      {posts.filter((post) => post.priority === "notice")
+                        .length > 0 && (
+                        <div className="bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm border border-yellow-400/30 mb-8">
+                          <div className="flex items-center gap-2 mb-4">
+                            <Pin className="w-5 h-5 text-yellow-400" />
+                            <h3 className="text-lg font-semibold text-white">
+                              공지사항
+                            </h3>
+                          </div>
+
+                          <div className="space-y-3">
+                            {posts
+                              .filter((post) => post.priority === "notice")
+                              .map((post, index) => (
+                                <div
+                                  key={post.id || post.board_id}
+                                  className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-4"
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h4
+                                          className="text-white font-medium hover:text-purple-300 transition-colors cursor-pointer"
+                                          onClick={() =>
+                                            handlePostClick(
+                                              post.id || post.board_id
+                                            )
+                                          }
+                                        >
+                                          {post.title}
+                                        </h4>
+                                      </div>
+                                      <p className="text-gray-300 text-sm line-clamp-2 mb-3">
+                                        {post.content?.substring(0, 100)}...
+                                      </p>
+                                      <div className="flex items-center gap-4 text-xs text-gray-400">
+                                        <span>{post.user_name}</span>
+                                        <span>👀 {post.likes_count || 0}</span>
+                                        <span>
+                                          ❤️ {post.comments_count || 0}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 실시간 인기 여행지 - 데스크톱용 가로 스크롤 */}
+                      <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-3 text-sm text-gray-300">
+                          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                          <span>실시간 인기 여행지</span>
+                        </div>
+                        <div className="relative">
+                          <div
+                            className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
+                            style={{
+                              scrollbarWidth: "none",
+                              msOverflowStyle: "none",
+                            }}
+                          >
+                            {[
+                              {
+                                name: "명동",
+                                areaName: "명동 관광특구",
+                                icon: "🛍️",
+                              },
+                              {
+                                name: "광화문",
+                                areaName: "광화문·덕수궁",
+                                icon: "🏛️",
+                              },
+                              {
+                                name: "이태원",
+                                areaName: "이태원 관광특구",
+                                icon: "🌍",
+                              },
+                              {
+                                name: "잠실",
+                                areaName: "잠실 관광특구",
+                                icon: "🎡",
+                              },
+                              {
+                                name: "홍대",
+                                areaName: "홍대 관광특구",
+                                icon: "🎨",
+                              },
+                              {
+                                name: "강남",
+                                areaName: "강남 관광특구",
+                                icon: "🏢",
+                              },
+                              {
+                                name: "동대문",
+                                areaName: "동대문 관광특구",
+                                icon: "🛒",
+                              },
+                              {
+                                name: "인사동",
+                                areaName: "인사동",
+                                icon: "🏮",
+                              },
+                            ].map((place) => (
+                              <Link
+                                key={place.areaName}
+                                to={`/popular-places/${encodeURIComponent(
+                                  place.areaName
+                                )}`}
+                                className="flex-shrink-0"
+                              >
+                                <NeonCard
+                                  variant="success"
+                                  className="text-center hover:scale-105 transition-transform cursor-pointer py-4 w-24"
+                                >
+                                  <div className="text-2xl mb-2">
+                                    {place.icon}
+                                  </div>
+                                  <div className="text-sm text-white font-medium">
+                                    {place.name}
+                                  </div>
+                                </NeonCard>
+                              </Link>
                             ))}
+                          </div>
                         </div>
                       </div>
-                    )}
 
-                    {/* 일반 정보 게시글 */}
-                    {posts.filter((post) => post.priority !== "notice").length >
-                      0 && (
-                      <div>
-                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                          <Hash className="w-5 h-5 text-purple-400" />
-                          Editor Su Hyeon's Pick!
-                        </h3>
+                      {/* Editor's Pick 섹션 */}
+                      {posts.filter((post) => post.priority !== "notice")
+                        .length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <Hash className="w-5 h-5 text-purple-400" />
+                            Editor's Pick!
+                          </h3>
 
-                        {/* 모바일: 카드 형식 */}
-                        <div className="block md:hidden">
-                          {posts
-                            .filter((post) => post.priority !== "notice")
-                            .map((post, index) => (
-                              <MobilePostCard
-                                key={post.id || post.board_id}
-                                post={post}
-                                index={index}
-                                onLikeUpdate={handleLikeUpdate}
-                                onPostUpdate={handlePostUpdate}
-                                onPostDelete={handlePostDelete}
-                                onPostClick={handlePostClick}
-                                currentUserId={currentUserId}
-                                onEditPost={handleEditPost}
-                              />
-                            ))}
+                          {/* 데스크톱: 매거진 카드 형식 */}
+                          <div className="grid grid-cols-3 gap-6">
+                            {posts
+                              .filter((post) => post.priority !== "notice")
+                              .map((post, index) => {
+                                const cover =
+                                  post.image_url ||
+                                  post.cover_image ||
+                                  post.thumbnail_url ||
+                                  post.image ||
+                                  null;
+                                return (
+                                  <NeonCard
+                                    key={post.id || post.board_id}
+                                    variant="primary"
+                                    className="relative group overflow-hidden cursor-pointer h-full"
+                                    onClick={() =>
+                                      handlePostClick(post.id || post.board_id)
+                                    }
+                                  >
+                                    {cover && (
+                                      <div className="relative h-32 w-full overflow-hidden">
+                                        <img
+                                          src={cover}
+                                          alt="cover"
+                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                          onError={(e) => {
+                                            e.currentTarget.style.display =
+                                              "none";
+                                          }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                                      </div>
+                                    )}
+                                    <div className="relative z-10 p-5 flex flex-col h-full">
+                                      <div className="flex items-center gap-3 mb-3">
+                                        <img
+                                          src={
+                                            post.user_profile_image ||
+                                            "/img/default_profile_img.png"
+                                          }
+                                          alt="프로필"
+                                          className="w-8 h-8 rounded-full border border-purple-400/50"
+                                          onError={(e) => {
+                                            e.currentTarget.src =
+                                              "/img/default_profile_img.png";
+                                          }}
+                                        />
+                                        <div className="text-xs text-gray-300">
+                                          <div className="font-medium text-white/90">
+                                            {post.user_name ||
+                                              post.author ||
+                                              "익명"}
+                                          </div>
+                                          <div className="text-gray-400">
+                                            {post.created_at
+                                              ? new Date(
+                                                  post.created_at
+                                                ).toLocaleDateString()
+                                              : ""}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <h4 className="text-xl font-extrabold leading-snug bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-2 line-clamp-2">
+                                        {post.title || "제목 없음"}
+                                      </h4>
+                                      <p className="text-sm text-gray-300/90 line-clamp-3 mb-3">
+                                        {post.content || "내용이 없습니다."}
+                                      </p>
+                                      {post.tags && (
+                                        <div className="mt-auto flex flex-wrap gap-2">
+                                          {(Array.isArray(post.tags)
+                                            ? post.tags
+                                            : post.tags.split(",")
+                                          )
+                                            .slice(0, 3)
+                                            .map((tag, i) => (
+                                              <span
+                                                key={i}
+                                                className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-purple-200 border border-white/20"
+                                              >
+                                                #{String(tag).trim()}
+                                              </span>
+                                            ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </NeonCard>
+                                );
+                              })}
+                          </div>
                         </div>
-
-                        {/* 데스크톱: 테이블 형식 */}
-                        <div className="hidden md:block">
-                          <PostTable
-                            posts={posts.filter(
-                              (post) => post.priority !== "notice"
-                            )}
-                            onLikeUpdate={handleLikeUpdate}
-                            onPostUpdate={handlePostUpdate}
-                            onPostDelete={handlePostDelete}
-                            onPostClick={handlePostClick}
-                            currentUserId={currentUserId}
-                            onEditPost={handleEditPost}
-                          />
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <NeonCard

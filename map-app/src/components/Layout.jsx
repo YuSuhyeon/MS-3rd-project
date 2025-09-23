@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import BrandLogo from "components/BrandLogo";
 import LanguageButtons from "components/ui/LanguageButtons";
 import { useAuth } from "context/AuthContext";
@@ -123,7 +124,7 @@ const UI = {
     stopVoice: "음성 중지",
     current: "현재 위치",
     directions: "길찾기",
-    chatbot: "관광 챗봇",
+    chatbot: "Klover AI",
     askQuestion: "궁금한 것을 물어보세요",
     send: "전송",
     examples: {
@@ -164,7 +165,7 @@ const UI = {
     stopVoice: "Stop voice",
     current: "Current location",
     directions: "Directions",
-    chatbot: "Tourism Chatbot",
+    chatbot: "Klover AI",
     askQuestion: "Ask me anything",
     send: "Send",
     examples: {
@@ -292,19 +293,19 @@ const BannerWidget = () => {
   const banners = [
     {
       id: 1,
-      image: "../../img/seoul_kdh_policies.jpg",
+      image: "../../img/banner1.jpg",
     },
     {
       id: 2,
-      image: "../../img/seoul_kdh_policies_1.jpg",
+      image: "../../img/banner2.png",
     },
     {
       id: 3,
-      image: "../../img/seoul_kdh_policies_2.jpg",
+      image: "../../img/banner3.png",
     },
     {
       id: 4,
-      image: "../../img/seoul_kdh_policies_3.jpg",
+      image: "../../img/seoul_kdh_policies.jpg",
     },
   ];
 
@@ -699,7 +700,7 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
     </div>
   );
 };
-
+// 플로팅 챗봇 - docent 페이지가 아닐 때만 렌더링
 const FloatingChatbot = ({ selectedLang = "ko" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -1089,7 +1090,10 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
       {/* 플로팅 버튼 */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
         <motion.button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            if (!isOpen) setIsMinimized(false);
+            setIsOpen(!isOpen);
+          }}
           className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-300"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
@@ -1102,16 +1106,16 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
 
       {/* 챗봇 창 */}
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && !isMinimized && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 0.3 }}
-            className={`fixed z-40 bg-gray-900/95 backdrop-blur-lg border border-purple-500/30 rounded-2xl shadow-2xl ${
+            className={`fixed z-40 bg-gray-900/95 backdrop-blur-lg border border-purple-500/30 rounded-2xl shadow-2xl flex flex-col ${
               isMinimized
                 ? "bottom-24 right-6 w-96 h-16"
-                : "bottom-24 right-6 w-96 h-[500px]"
+                : "bottom-24 right-6 w-96 h-[380px] max-h-[70vh]"
             }`}
           >
             {/* 헤더 */}
@@ -1124,7 +1128,7 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setIsMinimized(!isMinimized)}
+                  onClick={() => setIsMinimized(true)}
                   className="p-1 text-gray-400 hover:text-white transition-colors"
                 >
                   {isMinimized ? (
@@ -1145,7 +1149,7 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
             {!isMinimized && (
               <>
                 {/* 메시지 영역 */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-80">
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.map((message) => (
                     <div
                       key={message.id}
@@ -1205,24 +1209,24 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
 
                 {/* 입력 영역 */}
                 <div className="p-4 border-t border-purple-500/20">
-                  <div className="flex gap-2 mb-3">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                      title="갤러리에서 선택"
-                    >
-                      <ImageIcon size={16} className="text-purple-400" />
-                    </button>
-                    <button
-                      onClick={() => cameraInputRef.current?.click()}
-                      className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                      title="카메라로 촬영"
-                    >
-                      <Camera size={16} className="text-purple-400" />
-                    </button>
-                  </div>
-
-                  <div className="flex gap-2">
+                  {/* All screens: inline icons + input + send */}
+                  <div className="flex items-stretch gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                        title="갤러리에서 선택"
+                      >
+                        <ImageIcon size={16} className="text-purple-400" />
+                      </button>
+                      <button
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                        title="카메라로 촬영"
+                      >
+                        <Camera size={16} className="text-purple-400" />
+                      </button>
+                    </div>
                     <textarea
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
@@ -1300,6 +1304,10 @@ export default function Layout({ children }) {
   // docent 페이지 체크
   const isDocentPage =
     location.pathname === "/docent" || location.pathname.startsWith("/docent/");
+  //페르소나 페이지 체크
+  const isPersonaPage =
+    location.pathname === "/persona" ||
+    location.pathname.startsWith("/persona/");
 
   const sidebarVariants = {
     closed: {
@@ -1527,165 +1535,175 @@ export default function Layout({ children }) {
             </motion.button>
           )}
           {/* 오른쪽 버튼들 (언어 버튼 + 홈 버튼) */}
-          <div className="flex items-center gap-3">
-            {/* 언어 버튼 */}
-            <motion.div
-              className="h-10 flex items-center justify-center"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <LanguageButtons />
-            </motion.div>
+          {!menuOpen && (
+            <div className="flex items-center gap-3">
+              {/* 언어 버튼 */}
+              <motion.div
+                className="h-10 flex items-center justify-center"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <LanguageButtons />
+              </motion.div>
 
-            {/* 홈 버튼 */}
-            <motion.button
-              onClick={() => navigate("/")}
-              className="neon-menu-toggle"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              style={{
-                width: 45,
-                height: 45,
-              }}
-              title="홈으로 이동"
-            >
-              <img
-                src="/img/Home.png"
-                alt="홈"
-                className="menu-icon"
-                style={{ filter: "brightness(0) invert(1)" }}
-              />
-              <div className="neon-glow" />
-            </motion.button>
-          </div>
+              {/* 홈 버튼 */}
+              <motion.button
+                onClick={() => navigate("/")}
+                className="neon-menu-toggle"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                style={{
+                  width: 45,
+                  height: 45,
+                }}
+                title="홈으로 이동"
+              >
+                <img
+                  src="/img/Home.png"
+                  alt="홈"
+                  className="menu-icon"
+                  style={{ filter: "brightness(0) invert(1)" }}
+                />
+                <div className="neon-glow" />
+              </motion.button>
+            </div>
+          )}
         </div>
 
         {/* 오버레이 */}
         <AnimatePresence>
-          {menuOpen && (
-            <motion.div
-              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
-              variants={overlayVariants}
-              initial="closed"
-              animate="open"
-              exit="closed"
-              onClick={closeMenu}
-            />
-          )}
+          {menuOpen &&
+            createPortal(
+              <motion.div
+                className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+                variants={overlayVariants}
+                initial="closed"
+                animate="open"
+                exit="closed"
+                onClick={closeMenu}
+              />,
+              document.body
+            )}
         </AnimatePresence>
 
         {/* 사이드바 */}
-        <motion.aside
-          className="fixed inset-y-0 left-0 z-50 w-72 neon-sidebar flex flex-col"
-          variants={sidebarVariants}
-          initial="closed"
-          animate={menuOpen ? "open" : "closed"}
-        >
-          <div className="p-3 flex-1 overflow-y-auto">
-            <div className="text-xs font-medium text-purple-400 uppercase tracking-wider px-3 py-2">
-              {t("menu")}
-            </div>
-            <nav className="px-2">
-              {navigationItems.map((item, index) => {
-                const active = isActive(item.url, item.exact);
-                return (
-                  <motion.div
-                    key={item.title}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{
-                      opacity: menuOpen ? 1 : 0,
-                      x: menuOpen ? 0 : -20,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      delay: menuOpen ? index * 0.1 : 0,
-                    }}
-                  >
-                    <Link
-                      to={item.url}
-                      onClick={closeMenu}
-                      className={`neon-menu-item flex items-center gap-3 px-4 py-3 rounded-xl mb-1 ${
-                        active ? "active" : ""
-                      }`}
+        {menuOpen &&
+          createPortal(
+            <motion.aside
+              className="fixed inset-y-0 left-0 z-50 w-72 neon-sidebar flex flex-col"
+              variants={sidebarVariants}
+              initial="closed"
+              animate={menuOpen ? "open" : "closed"}
+            >
+              <div className="p-3 flex-1 overflow-y-auto">
+                <div className="text-xs font-medium text-purple-400 uppercase tracking-wider px-3 py-2">
+                  {t("menu")}
+                </div>
+                <nav className="px-2">
+                  {navigationItems.map((item, index) => {
+                    const active = isActive(item.url, item.exact);
+                    return (
+                      <motion.div
+                        key={item.title}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{
+                          opacity: menuOpen ? 1 : 0,
+                          x: menuOpen ? 0 : -20,
+                        }}
+                        transition={{
+                          duration: 0.3,
+                          delay: menuOpen ? index * 0.1 : 0,
+                        }}
+                      >
+                        <Link
+                          to={item.url}
+                          onClick={closeMenu}
+                          className={`neon-menu-item flex items-center gap-3 px-4 py-3 rounded-xl mb-1 ${
+                            active ? "active" : ""
+                          }`}
+                        >
+                          <span className="font-medium">{item.title}</span>
+                          <div className="neon-border" />
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </nav>
+
+                <div className="mt-6">
+                  <BannerWidget />
+                </div>
+              </div>
+
+              <div className="mt-auto">
+                <LiveInfoWidget
+                  isCollapsed={isLiveInfoCollapsed}
+                  onToggle={toggleLiveInfo}
+                  t={t}
+                />
+                <div className="border-t border-purple-500/20 p-6">
+                  {profile ? (
+                    <motion.div
+                      className="flex items-center gap-3"
+                      whileHover={{ scale: 1.02 }}
                     >
-                      <span className="font-medium">{item.title}</span>
-                      <div className="neon-border" />
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </nav>
-
-            <div className="mt-6">
-              <BannerWidget />
-            </div>
-          </div>
-
-          <div className="mt-auto">
-            <LiveInfoWidget
-              isCollapsed={isLiveInfoCollapsed}
-              onToggle={toggleLiveInfo}
-              t={t}
-            />
-            <div className="border-t border-purple-500/20 p-6">
-              {profile ? (
-                <motion.div
-                  className="flex items-center gap-3"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <img
-                    src={profile.picture}
-                    alt={profile.name}
-                    className="w-8 h-8 rounded-full border-2 border-purple-400"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm truncate">
-                      {profile.name}
-                    </p>
-                    <p className="text-xs neon-text-secondary truncate">
-                      {profile.email}
-                    </p>
-                  </div>
-                  <button
-                    onClick={logout}
-                    title={t("log_out")}
-                    className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
-                  >
-                    <LogOut size={18} />
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  className="flex items-center gap-3"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">?</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm truncate">
-                      {t("welcome_traveler")}
-                    </p>
-                    <p className="text-xs neon-text-secondary truncate">
-                      {t("plan_your_trip_with_ai")}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => login()}
-                    title={t("log_in")}
-                    className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
-                  >
-                    <LogIn size={18} />
-                  </button>
-                </motion.div>
-              )}
-            </div>
-          </div>
-        </motion.aside>
+                      <img
+                        src={profile.picture}
+                        alt={profile.name}
+                        className="w-8 h-8 rounded-full border-2 border-purple-400"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white text-sm truncate">
+                          {profile.name}
+                        </p>
+                        <p className="text-xs neon-text-secondary truncate">
+                          {profile.email}
+                        </p>
+                      </div>
+                      <button
+                        onClick={logout}
+                        title={t("log_out")}
+                        className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
+                      >
+                        <LogOut size={18} />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      className="flex items-center gap-3"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <span className="text-white font-medium text-sm">
+                          ?
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white text-sm truncate">
+                          {t("welcome_traveler")}
+                        </p>
+                        <p className="text-xs neon-text-secondary truncate">
+                          {t("plan_your_trip_with_ai")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => login()}
+                        title={t("log_in")}
+                        className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
+                      >
+                        <LogIn size={18} />
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </motion.aside>,
+            document.body
+          )}
 
         {/* 메인 콘텐츠 */}
         <motion.main
@@ -1714,8 +1732,10 @@ export default function Layout({ children }) {
           </div>
         </motion.main>
 
-        {/* 플로팅 챗봇 - docent 페이지가 아닐 때만 렌더링 */}
-        {!isDocentPage && <FloatingChatbot selectedLang={selectedLang} />}
+        {/* 플로팅 챗봇 - docent, persona 페이지에서는 숨김 */}
+        {!(isDocentPage || isPersonaPage) && (
+          <FloatingChatbot selectedLang={selectedLang} />
+        )}
       </div>
     </>
   );

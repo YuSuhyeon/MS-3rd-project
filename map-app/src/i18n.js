@@ -73,6 +73,57 @@ const resources = {
       "modal.disclaimer.suffix": "에 동의하는 것으로 간주됩니다.",
       "cta.title": "이제, 당신의 완벽한 여행을 시작할 시간",
       "cta.start": "5가지 질문으로 시작하기",
+      home: {
+        persona: {
+          title: "어떤 여행을 꿈꾸시나요?",
+          desc: "단 5개의 질문으로 당신의 여행 스타일을 완벽하게 분석하고, 잊지 못할 경험을 찾아드려요.",
+          cta: "페르소나 분석 시작하기",
+          card1: {
+            title: "어떤 여행 스타일을 선호하시나요?",
+            pill1: "모험적",
+            pill2: "문화적",
+            pill3: "휴양",
+          },
+          card2: {
+            title: "누구와 함께 여행하시나요?",
+            pill1: "혼자서",
+            pill2: "연인/부부",
+            pill3: "가족",
+          },
+          card3: {
+            title: "관심 있는 활동은?",
+            pill1: "#맛집",
+            pill2: "#쇼핑",
+            pill3: "#휴양",
+          },
+        },
+        ai_reco: {
+          title: "AI가 실시간으로 만드는 맞춤 코스",
+          desc: "분석된 당신의 성향을 기반으로, 세상에 단 하나뿐인 최적의 동선과 일정을 추천해 드립니다.",
+          tag1: "#맛집",
+          tag2: "#쇼핑",
+          tag3: "#휴양",
+          tag4: "#문화",
+          tag5: "#사진",
+        },
+        map: {
+          preview_label: "최적 동선 미리보기",
+        },
+        editing: {
+          title: "물론, 수정도 내 마음대로",
+          desc: "AI의 추천이 전부가 아니에요. 드래그 앤 드롭으로 일정을 쉽게 편집하고 나만의 플랜을 완성할 수 있어요.",
+        },
+        itinerary: {
+          item1: "인천공항 → 호텔 체크인",
+          item2: "광장시장 맛집 탐방",
+          item3: "덕수궁 산책",
+          item4: "남산타워 야경",
+        },
+        controls: {
+          undo: "되돌리기",
+          save: "저장",
+        },
+      },
     },
     QuickTranslator: {
       all: "전체",
@@ -520,7 +571,7 @@ const resources = {
       "login.welcome": "Welcome!",
       "login.logout": "Logout",
       "login.login": "Login",
-      "main.title.k_travel": "K-Travel",
+      "main.title.k_travel": "Travel", //K-Travel을 수정
       "main.title.connector": "",
       "main.title.ai_creates": "AI creates for you",
       "main.subtitle":
@@ -567,6 +618,57 @@ const resources = {
       "modal.disclaimer.suffix": ".",
       "cta.title": "Now, it's time to start your perfect trip",
       "cta.start": "Start with 5 questions",
+      home: {
+        persona: {
+          title: "What kind of trip do you dream of?",
+          desc: "Analyze your travel style with just 5 questions and find unforgettable experiences.",
+          cta: "Start persona analysis",
+          card1: {
+            title: "Which travel style do you prefer?",
+            pill1: "Adventurous",
+            pill2: "Cultural",
+            pill3: "Relaxing",
+          },
+          card2: {
+            title: "Who are you traveling with?",
+            pill1: "Solo",
+            pill2: "Couple",
+            pill3: "Family",
+          },
+          card3: {
+            title: "What activities interest you?",
+            pill1: "#Food",
+            pill2: "#Shopping",
+            pill3: "#Relax",
+          },
+        },
+        ai_reco: {
+          title: "AI-generated custom course in real-time",
+          desc: "Based on your analyzed preferences, we recommend the optimal route and schedule, one-of-a-kind.",
+          tag1: "#Food",
+          tag2: "#Shopping",
+          tag3: "#Relax",
+          tag4: "#Culture",
+          tag5: "#Photo",
+        },
+        map: {
+          preview_label: "Preview optimal route",
+        },
+        editing: {
+          title: "Edit freely as you like",
+          desc: "AI recommendations aren't everything. Easily edit your schedule with drag-and-drop and complete your own plan.",
+        },
+        itinerary: {
+          item1: "Incheon Airport → Hotel Check-in",
+          item2: "Gwangjang Market Food Tour",
+          item3: "Deoksugung Palace Walk",
+          item4: "Namsan Tower Night View",
+        },
+        controls: {
+          undo: "Undo",
+          save: "Save",
+        },
+      },
     },
     QuickTranslator: {
       all: "All",
@@ -966,6 +1068,58 @@ const resources = {
       "modal.disclaimer.suffix": "に同意したものとみなされます。",
       "cta.title": "今こそ、あなたの完璧な旅行を始める時",
       "cta.start": "5つの質問で始める",
+
+      home: {
+        persona: {
+          title: "どんな旅行を夢見ていますか？",
+          desc: "わずか5つの質問で旅行スタイルを分析し、忘れられない体験を見つけます。",
+          cta: "ペルソナ分析を始める",
+          card1: {
+            title: "どの旅行スタイルを好みますか？",
+            pill1: "冒険的",
+            pill2: "文化的",
+            pill3: "休養",
+          },
+          card2: {
+            title: "誰と旅行しますか？",
+            pill1: "一人で",
+            pill2: "カップル",
+            pill3: "家族",
+          },
+          card3: {
+            title: "興味のあるアクティビティは？",
+            pill1: "#グルメ",
+            pill2: "#ショッピング",
+            pill3: "#休養",
+          },
+        },
+        ai_reco: {
+          title: "AIがリアルタイムで作るカスタムコース",
+          desc: "分析結果に基づき、唯一無二の最適なルートと日程をおすすめします。",
+          tag1: "#グルメ",
+          tag2: "#ショッピング",
+          tag3: "#休養",
+          tag4: "#文化",
+          tag5: "#写真",
+        },
+        map: {
+          preview_label: "最適ルートのプレビュー",
+        },
+        editing: {
+          title: "もちろん、編集も自由自在",
+          desc: "AIのおすすめが全てではありません。ドラッグ＆ドロップで簡単に編集し、自分だけのプランを完成できます。",
+        },
+        itinerary: {
+          item1: "仁川空港 → ホテルチェックイン",
+          item2: "広蔵市場グルメ探訪",
+          item3: "徳寿宮の散策",
+          item4: "南山タワーの夜景",
+        },
+        controls: {
+          undo: "元に戻す",
+          save: "保存",
+        },
+      },
     },
     QuickTranslator: {
       all: "すべて",
@@ -1402,6 +1556,58 @@ const resources = {
       "modal.disclaimer.suffix": "。",
       "cta.title": "现在，是开始您完美旅行的时候了",
       "cta.start": "通过5个问题开始",
+
+      home: {
+        persona: {
+          title: "您梦想怎样的旅行？",
+          desc: "通过 5 个问题完整分析您的旅行风格，帮您找到难忘的体验。",
+          cta: "开始人格分析",
+          card1: {
+            title: "您更偏好哪种旅行风格？",
+            pill1: "冒险",
+            pill2: "文化",
+            pill3: "休闲",
+          },
+          card2: {
+            title: "与谁一起旅行？",
+            pill1: "独自",
+            pill2: "情侣/夫妻",
+            pill3: "家庭",
+          },
+          card3: {
+            title: "感兴趣的活动？",
+            pill1: "#美食",
+            pill2: "#购物",
+            pill3: "#休闲",
+          },
+        },
+        ai_reco: {
+          title: "AI 实时生成的定制行程",
+          desc: "基于您的偏好分析，推荐独一无二的最优路线和日程。",
+          tag1: "#美食",
+          tag2: "#购物",
+          tag3: "#休闲",
+          tag4: "#文化",
+          tag5: "#拍照",
+        },
+        map: {
+          preview_label: "最优路线预览",
+        },
+        editing: {
+          title: "当然，编辑也由你做主",
+          desc: "AI 的推荐并非全部。通过拖拽轻松编辑日程，完成你的专属计划。",
+        },
+        itinerary: {
+          item1: "仁川机场 → 酒店入住",
+          item2: "广藏市场美食探索",
+          item3: "德寿宫漫步",
+          item4: "南山塔夜景",
+        },
+        controls: {
+          undo: "撤销",
+          save: "保存",
+        },
+      },
     },
     QuickTranslator: {
       all: "全部",

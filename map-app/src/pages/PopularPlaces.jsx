@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import Menu from "components/ui/Menu";
+//import Menu from "components/ui/Menu";
 import {
   motion,
   AnimatePresence,
@@ -433,51 +433,7 @@ const PopularPlaces = () => {
   return (
     <BackgroundEffect>
       {/* Navigation  */}
-      <AnimatePresence>
-        {isNavVisible && (
-          <motion.nav
-            className="fixed top-0 left-0 right-0 z-50"
-            style={{
-              background: "transparent",
-              backdropFilter: "none",
-              borderBottom: "none",
-              outline: "none",
-              zIndex: 40,
-            }}
-            initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            exit={{ y: -100, transition: { duration: 0.3 } }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-              <div className="flex items-center justify-between h-10">
-                <div className="flex items-center h-10">
-                  <Menu />
-                </div>
-                <div className="flex items-center gap-3 h-10">
-                  <div className="h-10 flex items-center">
-                    <div className="h-10 flex items-center justify-center">
-                      <LanguageButtons />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 h-10">
-                    <Link
-                      to="/"
-                      className="h-10 w-10 flex items-center justify-center rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-300 hover:scale-105"
-                    >
-                      <img
-                        src="/img/home.png"
-                        alt="홈으로"
-                        className="w-5 h-5"
-                      />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.nav>
-        )}
-      </AnimatePresence>
+      {/* Top navigation removed: using global Layout header */}
 
       {/* Hero Section */}
       <HeroSection placeData={placeData} areaName={areaName} />

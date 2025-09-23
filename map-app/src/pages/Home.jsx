@@ -36,6 +36,17 @@ import {
   NeonScrollbarStyles,
 } from "../components/ui/NeonTheme";
 import "../styles/custom_detail.css";
+import i18n from "../i18n";
+
+// Reusable Section wrapper from Home_basic.jsx
+const Section = ({ id, children, className = "" }) => (
+  <section
+    id={id}
+    className={`relative min-h-screen w-full flex items-center justify-center px-6 md:px-10 ${className}`}
+  >
+    <div className="w-full max-w-6xl">{children}</div>
+  </section>
+);
 
 const KPopTravelHome = () => {
   const { t } = useTranslation("common");
@@ -55,6 +66,10 @@ const KPopTravelHome = () => {
 
   // 내비게이션 바를 숨기거나 보이게 하는 상태
   const [isNavVisible, setIsNavVisible] = useState(true);
+
+  useEffect(() => {
+    i18n.changeLanguage("ko");
+  }, []);
 
   // 스크롤 방향 감지 및 버튼 표시 로직 통합
   useEffect(() => {
@@ -275,6 +290,7 @@ const KPopTravelHome = () => {
     <BackgroundEffect className="min-h-screen neon-scrollbar">
       <NeonScrollbarStyles />
       <AnimatePresence>
+        {/* Herosection */}
         {isNavVisible && (
           <motion.nav
             className="fixed top-0 left-0 right-0 z-50"
@@ -389,6 +405,7 @@ const KPopTravelHome = () => {
               {t("main.subtitle")}
             </motion.p>
           </motion.div>
+          {/* Simple animated map preview */}
           <motion.div
             className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20"
             initial={{ opacity: 0, y: 50 }}
@@ -416,181 +433,250 @@ const KPopTravelHome = () => {
           </motion.div>
         </div>
       </motion.section>
-      <section
-        id="features"
-        className="relative py-32 px-6"
-        style={{
-          border: "none",
-          outline: "none",
-          margin: 0,
-        }}
-      >
-        <div className="max-w-6xl mx-auto">
+      {/* Sections from Home_basic.jsx (Persona, AI reco, Editing, CTA) */}
+      {/* Section 2: Persona */}
+      <Section id="persona">
+        <div className="grid md:grid-cols-2 gap-10 items-center">
           <motion.div
-            className="text-center mb-20"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.6 }}
           >
-            <GradientText variant="primary" size="5xl" className="mb-6 block">
-              {t("main.title.ai_action")} {t("main.title.experience")}
-            </GradientText>
-            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-              {t("main.subtitle.ai_action")}
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+              {t("home.persona.title")}
+            </h2>
+            <p className="mt-5 text-lg text-gray-600">
+              {t("home.persona.desc")}
             </p>
-          </motion.div>
-          <ResponsiveGrid>
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+            <div className="mt-8">
+              <Link
+                to="/persona"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               >
-                <NeonCard
-                  icon={feature.icon}
-                  title={feature.title}
-                  variant={feature.variant}
-                  delay={index * 0.1}
-                  className="h-full"
-                >
-                  <p className="leading-relaxed mb-4">{feature.description}</p>
-                  <motion.div
-                    className="text-purple-400 flex items-center gap-2 cursor-pointer"
-                    whileHover={{ x: 5 }}
-                  >
-                    <span className="text-sm font-medium">
-                      {t("main.more.view")}
-                    </span>
-                    <ChevronRight className="w-4 h-4" />
-                  </motion.div>
-                </NeonCard>
-              </motion.div>
-            ))}
-          </ResponsiveGrid>
-        </div>
-      </section>
-      <section
-        id="how-it-works"
-        className="relative py-32 px-6"
-        style={{
-          border: "none",
-          outline: "none",
-          margin: 0,
-        }}
-      >
-        <div className="max-w-6xl mx-auto">
+                {t("home.persona.cta")}
+                <Wand2 className="w-4 h-4" />
+              </Link>
+            </div>
+          </motion.div>
+
           <motion.div
-            className="text-center mb-20"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.6 }}
+            className="relative"
           >
-            <GradientText variant="primary" size="5xl" className="mb-6 block">
-              {t("steps.title")} {t("steps.completion")}
-            </GradientText>
-          </motion.div>
-          <ResponsiveGrid className="md:grid-cols-3">
-            {[
-              {
-                title: t("steps.step1.title"),
-                description: t("steps.step1.description"),
-                icon: <Sparkles className="w-8 h-8" />,
-                variant: "default",
-              },
-              {
-                title: t("steps.step2.title"),
-                description: t("steps.step2.description"),
-                icon: <Wand2 className="w-8 h-8" />,
-                variant: "primary",
-              },
-              {
-                title: t("steps.step3.title"),
-                description: t("steps.step3.description"),
-                icon: <Edit3 className="w-8 h-8" />,
-                variant: "danger",
-              },
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-              >
-                <NeonCard
-                  icon={item.icon}
-                  title={item.title}
-                  variant={item.variant}
-                  delay={index * 0.2}
-                  className="text-center h-full"
+            <div className="relative grid grid-cols-1 gap-4">
+              {/* Mock of question cards */}
+              {[
+                {
+                  title: t("home.persona.card1.title"),
+                  pills: [
+                    t("home.persona.card1.pill1"),
+                    t("home.persona.card1.pill2"),
+                    t("home.persona.card1.pill3"),
+                  ],
+                  accent: "from-purple-500 to-pink-500",
+                },
+                {
+                  title: t("home.persona.card2.title"),
+                  pills: [
+                    t("home.persona.card2.pill1"),
+                    t("home.persona.card2.pill2"),
+                    t("home.persona.card2.pill3"),
+                  ],
+                  accent: "from-indigo-500 to-blue-500",
+                },
+                {
+                  title: t("home.persona.card3.title"),
+                  pills: [
+                    t("home.persona.card3.pill1"),
+                    t("home.persona.card3.pill2"),
+                    t("home.persona.card3.pill3"),
+                  ],
+                  accent: "from-fuchsia-500 to-pink-500",
+                },
+              ].map((card, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-5 rounded-2xl bg-white shadow-xl border border-gray-100"
                 >
-                  <p className="leading-relaxed">{item.description}</p>
-                </NeonCard>
-              </motion.div>
-            ))}
-          </ResponsiveGrid>
-        </div>
-      </section>
-      <section
-        className="relative py-32 px-6"
-        style={{
-          border: "none",
-          outline: "none",
-          margin: 0,
-        }}
-      >
-        <motion.div
-          className="max-w-4xl mx-auto text-center"
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <NeonCard variant="primary" className="text-center" delay={0.3}>
-            <GradientText variant="primary" size="4xl" className="mb-6 block">
-              {t("popular.title")} {t("popular.highlight")}
-              {t("popular.action.join")}
-            </GradientText>
-            <GradientText variant="secondary" size="2xl" className="mb-6 block">
-              {t("popular.action")}
-            </GradientText>
-            <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">
-              {t("popular.description")}
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-              {places.map((place, index) => (
-                <Link
-                  to={`/popular-places/${encodeURIComponent(place.areaName)}`}
-                  key={place.id}
-                >
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <NeonCard
-                      variant="success"
-                      delay={index * 0.1}
-                      className="text-center hover:scale-105 transition-transform cursor-pointer"
-                    >
-                      <div className="text-4xl mb-3">{place.icon}</div>
-                      <h3 className="font-semibold text-lg text-white">
-                        {place.name}
-                      </h3>
-                    </NeonCard>
-                  </motion.div>
-                </Link>
+                  <div className="text-sm font-semibold text-gray-900 mb-3">
+                    {card.title}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {card.pills.map((p, j) => (
+                      <span
+                        key={j}
+                        className={`px-3 py-1 text-sm rounded-full text-white bg-gradient-to-r ${card.accent}`}
+                      >
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                </motion.div>
               ))}
             </div>
-          </NeonCard>
-        </motion.div>
-      </section>
-      <section id="cta">
+          </motion.div>
+        </div>
+      </Section>
+
+      {/* Section 3: AI 맞춤 코스 추천 */}
+      <Section id="ai-reco">
+        <div className="grid md:grid-cols-2 gap-10 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+              {t("home.ai_reco.title")}
+            </h2>
+            <p className="mt-5 text-lg text-gray-600">
+              {t("home.ai_reco.desc")}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {[
+                t("home.ai_reco.tag1"),
+                t("home.ai_reco.tag2"),
+                t("home.ai_reco.tag3"),
+                t("home.ai_reco.tag4"),
+                t("home.ai_reco.tag5"),
+              ].map((t) => (
+                <span
+                  key={t}
+                  className="px-3 py-1 rounded-full bg-white border text-gray-700 shadow-sm"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Simple animated map preview */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.6 }}
+            className="relative"
+          >
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-100">
+              <div className="w-full h-[360px] bg-[radial-gradient(1200px_600px_at_80%_10%,rgba(99,102,241,0.12),transparent),radial-gradient(900px_500px_at_0%_100%,rgba(99,102,241,0.08),transparent)] bg-gray-100">
+                {/* Path */}
+                <svg
+                  className="absolute inset-0 w-full h-full"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M40,300 C120,220 180,240 240,180 C300,120 360,100 460,160"
+                    stroke="#8b5cf6"
+                    strokeWidth="6"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray="6 10"
+                  />
+                </svg>
+                {/* Pins */}
+                <div className="absolute left-8 bottom-8 w-8 h-8 rounded-full bg-purple-600 border-4 border-white shadow-xl flex items-center justify-center text-white font-bold">
+                  S
+                </div>
+                <div className="absolute left-[45%] top-[45%] w-8 h-8 rounded-full bg-pink-500 border-4 border-white shadow-xl flex items-center justify-center text-white font-bold">
+                  1
+                </div>
+                <div className="absolute right-10 top-16 w-8 h-8 rounded-full bg-indigo-600 border-4 border-white shadow-xl flex items-center justify-center text-white font-bold">
+                  E
+                </div>
+              </div>
+              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/90 border text-sm flex items-center gap-2 shadow">
+                <Map className="w-4 h-4 text-purple-600" />
+                {t("home.map.preview_label")}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </Section>
+
+      {/* Section 4: 자유로운 편집 기능 */}
+      <Section id="editing">
+        <div className="grid md:grid-cols-2 gap-10 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+              {t("home.editing.title")}
+            </h2>
+            <p className="mt-5 text-lg text-gray-600">
+              {t("home.editing.desc")}
+            </p>
+          </motion.div>
+
+          {/* Phone mockup */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.6 }}
+            className="flex justify-center"
+          >
+            <div className="relative w-[280px] h-[540px] rounded-[36px] bg-gray-900 shadow-2xl p-3">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-5 bg-gray-800 rounded-full" />
+              <div className="bg-white w-full h-full rounded-[28px] p-4 flex flex-col gap-3 overflow-hidden">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white">
+                    <Edit3 className="w-4 h-4" />
+                  </div>
+                  <div className="font-semibold">나의 일정</div>
+                </div>
+                <div className="flex-1 space-y-3 overflow-hidden">
+                  {[
+                    t("home.itinerary.item1"),
+                    t("home.itinerary.item2"),
+                    t("home.itinerary.item3"),
+                    t("home.itinerary.item4"),
+                  ].map((t, i) => (
+                    <motion.div
+                      key={t}
+                      initial={{ y: 10, opacity: 0 }}
+                      whileInView={{ y: 0, opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.05 }}
+                      className="p-3 rounded-2xl border bg-white shadow-sm flex items-center gap-3"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-700">
+                        {i + 1}
+                      </div>
+                      <div className="text-sm font-medium text-gray-800 truncate">
+                        {t}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="mt-auto grid grid-cols-2 gap-2">
+                  <div className="px-3 py-2 rounded-xl text-center text-sm font-semibold border">
+                    {t("home.controls.undo")}
+                  </div>
+                  <div className="px-3 py-2 rounded-xl text-center text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600">
+                    {t("home.controls.save")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </Section>
+
+      {/* Section 5: Final CTA */}
+      <Section id="cta">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -599,68 +685,18 @@ const KPopTravelHome = () => {
           className="text-center"
         >
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-            {t("cta.title")}
+            이제, 당신의 완벽한 여행을 시작할 시간
           </h2>
           <div className="mt-8">
             <Link
               to="/persona"
               className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-white shadow-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg"
             >
-              {t("cta.start")}
+              5가지 질문으로 시작하기
             </Link>
           </div>
         </motion.div>
-      </section>
-      <footer
-        className="relative py-16 px-6"
-        style={{
-          borderTop: "none",
-          border: "none",
-          outline: "none",
-          margin: 0,
-        }}
-      >
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex justify-center mb-8">
-            <motion.div
-              className="flex items-center gap-3"
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                <Sparkles className="w-7 h-7 text-white" />
-              </div>
-              <div className="text-left">
-                <GradientText
-                  variant="primary"
-                  size="2xl"
-                  className="font-bold"
-                >
-                  KLover
-                </GradientText>
-                <p className="text-sm text-gray-400">{t("main.badge")}</p>
-              </div>
-            </motion.div>
-          </div>
-          <p className="text-gray-400 mb-8">{t("footer.slogan")}</p>
-          <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-400">
-            <a href="#" className="hover:text-purple-300 transition-colors">
-              {t("footer.privacy_policy")}
-            </a>
-            <a href="#" className="hover:text-purple-300 transition-colors">
-              {t("footer.terms_of_service")}
-            </a>
-            <a href="#" className="hover:text-purple-300 transition-colors">
-              {t("footer.customer_center")}
-            </a>
-            <a href="#" className="hover:text-purple-300 transition-colors">
-              {t("footer.partnership")}
-            </a>
-          </div>
-          <div className="mt-8 pt-8 border-t border-purple-500/30 text-gray-500 text-sm">
-            {t("footer.copyright")}
-          </div>
-        </div>
-      </footer>
+      </Section>
       <AnimatePresence>
         {showScrollButton && (
           <motion.button

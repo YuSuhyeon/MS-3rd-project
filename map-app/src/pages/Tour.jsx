@@ -298,7 +298,7 @@ const MobileTourCard = ({ item, onDetailClick }) => {
 };
 
 // PartnershipSection 컴포넌트
-// PartnershipSection 컴포넌트 - 수정된 버전
+
 const PartnershipSection = () => {
   return (
     <NeonCard className="mb-8">
@@ -308,9 +308,9 @@ const PartnershipSection = () => {
         </div>
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
-            기업 제휴 파트너
+            Klover 제휴사
           </h2>
-          <p className="text-gray-300">신뢰할 수 있는 파트너사</p>
+          <p className="text-gray-300"></p>
         </div>
       </div>
       <div className="relative overflow-hidden">
@@ -402,16 +402,17 @@ export default function Tour() {
   // 카테고리 배열
   const categories = [
     { value: "all", label: "전체", emoji: "🌟" },
-    { value: "location", label: "촬영지", emoji: "📍" },
-    { value: "goods", label: "굿즈", emoji: "🛍️" },
-    { value: "experience", label: "체험", emoji: "🎭" },
-    { value: "food", label: "먹방", emoji: "🍜" },
+    { value: "entertainment", label: "Entertainment", emoji: "🎢" },
+    { value: "location", label: "Filming", emoji: "📍" },
+    { value: "experience", label: "Experience", emoji: "🎭" },
     { value: "it", label: "IT", emoji: "🖥️" },
-    { value: "sports", label: "스포츠", emoji: "⚾" },
-    { value: "beauty", label: "뷰티", emoji: "💄" },
-    { value: "culture", label: "문화", emoji: "🏛️" },
-    { value: "adventure", label: "모험", emoji: "🏔️" },
-    { value: "entertainment", label: "엔터", emoji: "🎢" },
+    { value: "sports", label: "Sports", emoji: "⚾" },
+    { value: "beauty", label: "Beauty", emoji: "💄" },
+    { value: "culture", label: "Culture", emoji: "🏛️" },
+
+    // { value: "goods", label: "Shopping", emoji: "🛍️" },
+    // { value: "food", label: "MeokBang", emoji: "🍜" },
+    //  { value: "adventure", label: "Outdoor", emoji: "🏔️" },
   ];
 
   return (
@@ -426,8 +427,8 @@ export default function Tour() {
             className="text-center mb-8 sm:mb-12"
           >
             <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4 px-4">
-              한국의 숨겨진 매력을
-              <br className="sm:hidden" /> 발견하세요
+              Klover에서만 만날 수 있는
+              <br className="sm:hidden" /> 특별한 투어
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 sm:mb-8 px-4">
               프리미엄 한국 문화 체험 투어
@@ -521,7 +522,7 @@ export default function Tour() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
-                    인기 투어 상품
+                    Klover 여행 상품
                   </h2>
                 </div>
               </div>

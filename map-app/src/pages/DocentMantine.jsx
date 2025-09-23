@@ -6,8 +6,6 @@ import {
   Navigation,
   VolumeX,
   Send,
-  Mic,
-  MicOff,
   Camera,
   Bot,
   User,
@@ -71,7 +69,7 @@ const UI = {
     stopVoice: "음성 중지",
     current: "현재 위치",
     directions: "길찾기",
-    chatbot: "관광 챗봇",
+    chatbot: "Klover AI",
     askQuestion: "궁금한 것을 물어보세요",
     send: "전송",
     examples: {
@@ -113,7 +111,7 @@ const UI = {
     stopVoice: "Stop voice",
     current: "Current location",
     directions: "Directions",
-    chatbot: "Tourism Chatbot",
+    chatbot: "Klover AI",
     askQuestion: "Ask me anything",
     send: "Send",
     examples: {
@@ -156,7 +154,7 @@ const UI = {
     stopVoice: "音声停止",
     current: "現在地",
     directions: "経路検索",
-    chatbot: "観光チャットボット",
+    chatbot: "Klover AI",
     askQuestion: "何でもお聞きください",
     send: "送信",
     examples: {
@@ -199,7 +197,7 @@ const UI = {
     stopVoice: "停止语音",
     current: "当前位置",
     directions: "路线",
-    chatbot: "旅游聊天机器人",
+    chatbot: "Klover AI",
     askQuestion: "请问您想了解什么",
     send: "发送",
     examples: {
@@ -290,7 +288,6 @@ const FixedChatbot = ({
   ]);
   const navigate = useNavigate();
   const [inputMessage, setInputMessage] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   // const [expanded, setExpanded] = useState(false);
   const messagesEndRef = useRef(null);
@@ -484,18 +481,6 @@ const FixedChatbot = ({
   };
 
   const handleTextSend = () => handleSendMessage(inputMessage);
-
-  // 음성 토글(샘플)
-  const handleVoiceRecording = () => {
-    setIsRecording(!isRecording);
-    if (!isRecording) {
-      setTimeout(() => {
-        const transcribedText = ui.examples.items[0];
-        setIsRecording(false);
-        handleSendMessage(transcribedText);
-      }, 2000);
-    }
-  };
 
   const checkIfShouldRedirectToTour = (response) => {
     //투어 단어 감지
@@ -925,25 +910,6 @@ const FixedChatbot = ({
               />
             </NeonButton>
 
-            {/* 음성 */}
-            <NeonButton
-              size="icon"
-              variant="ghost"
-              onClick={() => {
-                if (!expanded) {
-                  setExpanded(true);
-                }
-                handleVoiceRecording();
-              }}
-              className={isRecording ? "bg-red-100 text-red-600" : ""}
-              disabled={isProcessing}
-            >
-              {isRecording ? (
-                <MicOff className="w-5 h-5" />
-              ) : (
-                <Mic className="w-5 h-5" />
-              )}
-            </NeonButton>
             {/* 텍스트 */}
             <div className="flex-1 relative">
               <input
