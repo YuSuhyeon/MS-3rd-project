@@ -7,12 +7,20 @@ export default function POIDetails({
   poi,
   userLocation,
   onPlayTTS,
+  onStopTTS,
   isDocentActive,
+  isPlaying = false,
   isMobile = false,
-  ui = null,
   selectedLang = "ko",
+  t = null,
 }) {
   const [translatedName, setTranslatedName] = useState(poi?.name || "");
+  const [isVoiceActive, setIsVoiceActive] = useState(isDocentActive);
+
+  // AI 도슨트 상태에 따라 버튼 상태 업데이트
+  useEffect(() => {
+    setIsVoiceActive(isDocentActive);
+  }, [isDocentActive]);
 
   // POI 제목 번역 처리
   useEffect(() => {
@@ -41,8 +49,8 @@ export default function POIDetails({
 
   if (!poi) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
-        장소를 선택하세요
+      <div className="h-full flex items-center justify-center text-purple-300">
+        {t("selectPlace")}
       </div>
     );
   }
@@ -68,16 +76,31 @@ export default function POIDetails({
         <p className="text-sm text-gray-600 mb-4">{poi.description}</p>
         <div className="flex gap-2">
           {isDocentActive && (
-            <Button onClick={() => onPlayTTS?.(poi)} className="flex-1">
-              {ui?.voiceGuide || "음성 안내"}
+            <Button 
+              onClick={() => {
+                if (isVoiceActive) {
+                  // 음성 중지
+                  setIsVoiceActive(false);
+                  onStopTTS?.();
+                } else {
+                  // 음성 재생
+                  setIsVoiceActive(true);
+                  onPlayTTS?.();
+                }
+              }} 
+              className={`flex-1 text-xs py-1 px-2 h-8 whitespace-nowrap ${
+                isVoiceActive ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              {isVoiceActive ? t("stopVoice") : t("voiceGuide")}
             </Button>
           )}
           <Button
             variant="outline"
             onClick={openKakaoDirections}
-            className="flex-1"
+            className="flex-1 text-xs py-1 px-2 h-8"
           >
-            {ui?.directions || "길찾기"}
+            {t("directions")}
           </Button>
         </div>
       </CardContent>

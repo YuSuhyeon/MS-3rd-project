@@ -1,27 +1,25 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { POI } from "Entities/POI";
-import { Button } from "components/ui/button";
 import { Switch } from "components/ui/switch";
 import {
   Navigation,
   VolumeX,
   Send,
+  RefreshCw,
   Camera,
   Bot,
-  User,
   Maximize2,
   Minimize2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card } from "components/ui/card";
 import { translateText } from "integrations/translator";
 import { speakText, stopTTS } from "integrations/tts";
 import Papa from "papaparse";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 // NeonTheme 컴포넌트들을 import
 import {
   BackgroundEffect,
-  NeonCard,
   NeonCardJH,
   NeonCardJHMobile,
   NeonButton,
@@ -29,7 +27,7 @@ import {
   NeonScrollbarStyles,
 } from "../components/ui/NeonTheme";
 
-import POIList, { POIListJH } from "components/docent/POIList";
+import { POIListJH } from "components/docent/POIList";
 import LocationMap from "components/docent/LocationMap";
 import POIDetails from "components/docent/POIDetails";
 
@@ -60,179 +58,6 @@ const useIsMobile = (breakpoint = 768) => {
   return isMobile;
 };
 
-// ========= 다국어 UI
-const UI = {
-  ko: {
-    title: "AI 도슨트",
-    subtitle: "실시간 위치 기반 가이드",
-    aiDocent: "AI 도슨트",
-    stopVoice: "음성 중지",
-    current: "현재 위치",
-    directions: "길찾기",
-    chatbot: "Klover AI",
-    askQuestion: "궁금한 것을 물어보세요",
-    send: "전송",
-    examples: {
-      title: "예시 질문:",
-      items: [
-        "케이팝 데몬 헌터스 촬영지",
-        "명동 맛집 추천",
-        "북촌한옥마을 정보",
-      ],
-    },
-    chatbotPlaceholder: "궁금한 것을 물어보세요...",
-    chatbotInitialMessage:
-      "안녕하세요! 저는 당신의 AI 여행 도슨트입니다. 궁금한 장소나 여행 정보를 물어보세요. 사진을 보내주시면 그 장소에 대한 자세한 설명도 드릴 수 있어요!",
-    imageQueryText: "이 장소에 대해 알려주세요",
-    voiceRecStart: "음성 녹음을 시작합니다...",
-    voiceRecResult: "음성 인식 결과:",
-    voiceRecStop: "음성 녹음을 중지합니다.",
-    errorReply:
-      "죄송합니다. 답변을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-    filePick: "파일",
-    categories: {
-      all: "전체",
-      museum: "미술관&박물관",
-      palace: "고궁",
-      landmark: "랜드마크",
-      historic: "역사적 장소",
-    },
-    allTourismSpots: "전체 관광지",
-    detailedInfo: "상세 정보",
-    tourismList: "관광지 목록",
-    locationTracking: "위치 추적",
-    location: "위치",
-    voiceGuide: "음성 안내",
-  },
-  en: {
-    title: "AI Docent",
-    subtitle: "Real-time location guide",
-    aiDocent: "AI Docent",
-    stopVoice: "Stop voice",
-    current: "Current location",
-    directions: "Directions",
-    chatbot: "Klover AI",
-    askQuestion: "Ask me anything",
-    send: "Send",
-    examples: {
-      title: "Example questions:",
-      items: [
-        "K-pop Demon Hunters filming locations",
-        "Myeongdong restaurant recommendations",
-        "Bukchon Hanok Village info",
-        "Squid Game filming locations",
-      ],
-    },
-    chatbotPlaceholder: "Ask me anything...",
-    chatbotInitialMessage:
-      "Hello! I am your AI travel docent. Ask me about places or travel information. You can also send a photo for a detailed explanation of the location!",
-    imageQueryText: "Tell me about this place",
-    voiceRecStart: "Starting voice recording...",
-    voiceRecResult: "Voice recognition result:",
-    voiceRecStop: "Stopping voice recording.",
-    errorReply:
-      "Sorry, an error occurred while generating a response. Please try again later.",
-    filePick: "File",
-    categories: {
-      all: "All",
-      museum: "Museum",
-      palace: "Palace",
-      landmark: "Landmark",
-      historic: "Historic",
-    },
-    allTourismSpots: "All Tourism Spots",
-    detailedInfo: "Detailed Information",
-    tourismList: "Tourism List",
-    locationTracking: "Location Tracking",
-    location: "Location",
-    voiceGuide: "Voice Guide",
-  },
-  ja: {
-    title: "AI ドーセント",
-    subtitle: "リアルタイム位置ガイド",
-    aiDocent: "AI ドーセント",
-    stopVoice: "音声停止",
-    current: "現在地",
-    directions: "経路検索",
-    chatbot: "Klover AI",
-    askQuestion: "何でもお聞きください",
-    send: "送信",
-    examples: {
-      title: "質問例:",
-      items: [
-        "ケイポップデーモンハンターズ撮影地",
-        "明洞グルメ推薦",
-        "北村韓屋村情報",
-        "イカゲーム撮影地",
-      ],
-    },
-    chatbotPlaceholder: "ご質問をどうぞ...",
-    chatbotInitialMessage:
-      "こんにちは！私はあなたのAI旅行ドーセントです。場所や旅行情報について何でも尋ねてください。写真を送ってください。その場所について詳しく説明します！",
-    imageQueryText: "この場所について教えてください",
-    voiceRecStart: "音声録音を開始します...",
-    voiceRecResult: "音声認識結果:",
-    voiceRecStop: "音声録音を停止します。",
-    errorReply:
-      "申し訳ありませんが、応答の生成中にエラーが発生しました。後でもう一度お試しください。",
-    filePick: "ファイル",
-    categories: {
-      all: "すべて",
-      museum: "美術館＆博物館",
-      palace: "古宮",
-      landmark: "ランドマーク",
-      historic: "歴史的な場所",
-    },
-    allTourismSpots: "全観光スポット",
-    detailedInfo: "詳細情報",
-    tourismList: "観光地リスト",
-    locationTracking: "位置追跡",
-    location: "位置",
-    voiceGuide: "音声ガイド",
-  },
-  zh: {
-    title: "AI 讲解",
-    subtitle: "实时位置导览",
-    aiDocent: "AI 讲解",
-    stopVoice: "停止语音",
-    current: "当前位置",
-    directions: "路线",
-    chatbot: "Klover AI",
-    askQuestion: "请问您想了解什么",
-    send: "发送",
-    examples: {
-      title: "示例问题:",
-      items: [
-        "K-pop恶魔猎人拍摄地",
-        "明洞美食推荐",
-        "北村韩屋村信息",
-        "鱿鱼游戏拍摄地",
-      ],
-    },
-    chatbotPlaceholder: "请输入您的问题...",
-    chatbotInitialMessage:
-      "您好！我是您的AI旅行讲解员。您可以询问任何关于地点或旅行信息的问题。您也可以发送照片，我会为您提供该地点的详细说明！",
-    imageQueryText: "请介绍一下这个地方",
-    voiceRecStart: "开始录音...",
-    voiceRecResult: "语音识别结果：",
-    voiceRecStop: "停止录音。",
-    errorReply: "抱歉，生成回复时出错。请稍后再试。",
-    filePick: "文件",
-    categories: {
-      all: "全部",
-      museum: "美术馆&博物馆",
-      palace: "故宫",
-      landmark: "地标",
-      historic: "历史遗址",
-    },
-    allTourismSpots: "全部景点",
-    detailedInfo: "详细信息",
-    tourismList: "景点列表",
-    locationTracking: "位置追踪",
-    location: "位置",
-    voiceGuide: "语音导览",
-  },
-};
 // ── 라벨 정규화/허용 목록
 const TAG_ALIASES = {
   "63스퀘어": "63스퀘어",
@@ -246,12 +71,14 @@ const TAG_ALIASES = {
   LWT: "롯데월드타워",
   경복궁: "경복궁",
 };
+
 const ALLOWED_POIS = new Set([
   "63스퀘어",
   "경복궁",
   "남산서울타워",
   "롯데월드타워",
 ]);
+
 const prettyPct = (p = 0) => (p * 100).toFixed(1) + "%";
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // km
@@ -272,20 +99,37 @@ function getDistance(lat1, lon1, lat2, lon2) {
 // #################################################################
 const FixedChatbot = ({
   callApi,
-  ui,
+  t,
   isMobile,
-  selectedLang = "ko",
+  selectedLang,
   expanded,
   setExpanded,
 }) => {
-  const [messages, setMessages] = useState([
-    {
-      id: "initial",
-      type: "ai",
-      content: ui.chatbotInitialMessage,
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState(() => {
+    // 페이지 로드 시 저장된 대화 내역 복원
+    const savedMessages = sessionStorage.getItem('docentChatHistory');
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages);
+        // timestamp를 Date 객체로 변환
+        return parsed.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      } catch (error) {
+        console.error('Failed to parse saved messages:', error);
+      }
+    }
+    // 저장된 대화 내역이 없으면 초기 메시지로 시작
+    return [
+      {
+        id: "initial",
+        type: "ai",
+        content: t("chatbotInitialMessage"),
+        timestamp: new Date(),
+      },
+    ];
+  });
   const navigate = useNavigate();
   const [inputMessage, setInputMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -302,7 +146,7 @@ const FixedChatbot = ({
         // 초기 메시지만 새 언어로 업데이트
         return prev.map((msg) =>
           msg.id === "initial"
-            ? { ...msg, content: ui.chatbotInitialMessage }
+            ? { ...msg, content: t("chatbotInitialMessage") }
             : msg
         );
       } else {
@@ -311,7 +155,7 @@ const FixedChatbot = ({
           {
             id: "initial",
             type: "ai",
-            content: ui.chatbotInitialMessage,
+            content: t("chatbotInitialMessage"),
             timestamp: new Date(),
           },
           ...prev,
@@ -319,7 +163,14 @@ const FixedChatbot = ({
       }
     });
     setInputMessage("");
-  }, [ui.chatbotInitialMessage]);
+  }, [t("chatbotInitialMessage")]);
+
+  // 대화 내역을 sessionStorage에 저장
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem('docentChatHistory', JSON.stringify(messages));
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -365,7 +216,8 @@ const FixedChatbot = ({
     return dets;
   };
 
-  // 텍스트 메시지에서도 투어 키워드 감지 개선
+  // 텍스트 메시지에서도 투어 키워드 감지 개선 (사용되지 않음 - handleSendMessage에 통합됨)
+  /*
   const handleSendMessageEnhanced = async (content, attachments) => {
     if (!content.trim() && !attachments) return;
 
@@ -392,14 +244,7 @@ const FixedChatbot = ({
 
       // 🔥 텍스트 질문에서도 투어 키워드 체크
       if (checkIfShouldRedirectToTour(koResult)) {
-        const tourMessages = {
-          ko: "🎯 투어 관련 질문이시군요! 전문 가이드 투어 서비스와 맞춤 코스 추천은 투어 페이지에서 확인하실 수 있습니다.",
-          en: "🎯 I see you're asking about tours! Professional guided tour services and custom course recommendations are available on our tour page.",
-          ja: "🎯 ツアーに関するご質問ですね！専門ガイドツアーサービスとカスタムコース推薦は、ツアーページでご確認いただけます。",
-          zh: "🎯 看起来您在咨询旅游相关问题！专业导游服务和定制路线推荐可在旅游页面查看。",
-        };
-
-        const tourMessage = tourMessages[selectedLang] || tourMessages.ko;
+        const tourMessage = t("tourDetection.message");
 
         setMessages((prev) => [
           ...prev,
@@ -430,6 +275,7 @@ const FixedChatbot = ({
       setIsProcessing(false);
     }
   };
+  */
 
   // 기존 텍스트 질문 처리
   const handleSendMessage = async (content, attachments) => {
@@ -455,6 +301,25 @@ const FixedChatbot = ({
 
       const koQuery = await toKo(content || "");
       const koResult = await callApi(koQuery);
+
+      // 🔥 텍스트 질문에서도 투어 키워드 체크
+      if (checkIfShouldRedirectToTour(koResult)) {
+        const tourMessage = t("tourDetection.message");
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            type: "ai-tour",
+            content: tourMessage,
+            showTourButton: true,
+            originalResponse: koResult,
+            timestamp: new Date(),
+          },
+        ]);
+        return;
+      }
+
       const result = await fromKo(koResult); //0917진희님 파일 통합때 이걸로 살림
 
       // const result = await callApi(content);  0917 주영 주석처리
@@ -471,7 +336,7 @@ const FixedChatbot = ({
         {
           id: (Date.now() + 1).toString(),
           type: "ai",
-          content: ui.errorReply,
+          content: t("errorReply"),
           timestamp: new Date(),
         },
       ]);
@@ -481,6 +346,7 @@ const FixedChatbot = ({
   };
 
   const handleTextSend = () => handleSendMessage(inputMessage);
+
 
   const checkIfShouldRedirectToTour = (response) => {
     //투어 단어 감지
@@ -503,13 +369,42 @@ const FixedChatbot = ({
 
   // 투어 페이지로 이동하는 함수
   const handleTourRedirect = () => {
+    // 현재 페이지 정보를 세션 스토리지에 저장 (타임스탬프 포함)
+    sessionStorage.setItem('previousPage', window.location.pathname);
+    sessionStorage.setItem('previousPageTitle', 'AI Docent');
+    sessionStorage.setItem('previousPageTimestamp', Date.now().toString());
     navigate("/tour");
+  };
+
+  // 대화 내역 초기화 함수 (필요시 사용)
+  const clearChatHistory = () => {
+    const initialMessage = {
+      id: "initial",
+      type: "ai",
+      content: t("chatbotInitialMessage"),
+      timestamp: new Date(),
+    };
+    setMessages([initialMessage]);
+    sessionStorage.removeItem('docentChatHistory');
+  };
+
+  // 파일을 base64로 변환하는 함수
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
   };
 
   // 파일/카메라 입력 공통 처리 (YOLO + RAG Azure Function)
   const processImage = async (file) => {
     if (!file) return;
-    const imageUrl = URL.createObjectURL(file);
+    
+    // 이미지를 base64로 변환하여 저장
+    const imageBase64 = await fileToBase64(file);
+    
     setExpanded(true); // 업로드하면 자동 확대
 
     // 1) 사용자 말풍선 (이미지)
@@ -518,8 +413,8 @@ const FixedChatbot = ({
       {
         id: String(Date.now()),
         type: "user",
-        content: ui.imageQueryText,
-        attachments: [{ type: "image", url: imageUrl, caption: file.name }],
+        content: t("imageQueryText"),
+        attachments: [{ type: "image", url: imageBase64, caption: file.name }],
         timestamp: new Date(),
       },
     ]);
@@ -662,20 +557,12 @@ const FixedChatbot = ({
       ]);
     } finally {
       setIsProcessing(false);
-      setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
     }
   };
 
   //여기 투어버튼
   const renderTourButton = (message) => {
     if (message.type === "ai-tour" && message.showTourButton) {
-      const buttonTexts = {
-        ko: "🎯 투어 서비스 페이지로 이동",
-        en: "🎯 Go to Tour Service Page",
-        ja: "🎯 ツアーサービスページへ移動",
-        zh: "🎯 前往旅游服务页面",
-      };
-
       return (
         <div className="mt-3 space-y-2">
           {/* 메인 투어 페이지 버튼 */}
@@ -694,23 +581,41 @@ const FixedChatbot = ({
               minHeight: isMobile ? "44px" : "36px",
             }}
           >
-            {buttonTexts[selectedLang] || buttonTexts.ko}
+            {t("tourDetection.buttonText")}
           </button>
 
           {/* 추가: 원본 응답도 보여주는 옵션 */}
           {message.originalResponse && (
             <button
-              onClick={() => {
+              onClick={async () => {
                 // 원본 응답을 새 메시지로 추가
+                let content = message.originalResponse;
+                
+                // 한국어가 아닌 경우에만 번역
+                if (selectedLang !== "ko") {
+                  const cacheKey = `${message.originalResponse}_${selectedLang}`;
+                  
+                  // 캐시에서 먼저 확인
+                  if (translationCache.has(cacheKey)) {
+                    content = translationCache.get(cacheKey);
+                  } else {
+                    try {
+                      content = await translateText(message.originalResponse, selectedLang);
+                      // 번역 결과를 캐시에 저장
+                      translationCache.set(cacheKey, content);
+                    } catch (error) {
+                      console.error("Translation error:", error);
+                      content = message.originalResponse; // 번역 실패 시 원본 사용
+                    }
+                  }
+                }
+                
                 setMessages((prev) => [
                   ...prev,
                   {
                     id: String(Date.now() + 1000),
                     type: "ai",
-                    content:
-                      selectedLang === "ko"
-                        ? message.originalResponse
-                        : translateText(message.originalResponse, selectedLang),
+                    content: content,
                     timestamp: new Date(),
                   },
                 ]);
@@ -722,7 +627,7 @@ const FixedChatbot = ({
               ${isMobile ? "text-sm" : "text-xs"}
             `}
             >
-              {selectedLang === "ko" ? "📝 상세 정보 보기" : "📝 View Details"}
+              {t("viewDetails")}
             </button>
           )}
         </div>
@@ -796,24 +701,7 @@ const FixedChatbot = ({
                   <p className="whitespace-pre-wrap">{message.content}</p>
 
                   {/* 투어 버튼 추가  */}
-                  {(message.type === "ai-tour" ||
-                    message.content.includes("투어 서비스 페이지") ||
-                    message.content.includes("Tour Service Page")) && (
-                    <div className="mt-3">
-                      <button
-                        onClick={() => {
-                          window.location.href = "/tour"; // 간단한 방법
-                          // 또는 navigate('/tour'); // useNavigate 훅 사용하는 경우
-                        }}
-                        className="w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg"
-                      >
-                        🎯{" "}
-                        {selectedLang === "ko"
-                          ? "투어 서비스 페이지로 이동"
-                          : "Go to Tour Service Page"}
-                      </button>
-                    </div>
-                  )}
+                  {renderTourButton(message)}
                 </div>
               </div>
             ))}
@@ -910,6 +798,21 @@ const FixedChatbot = ({
               />
             </NeonButton>
 
+            {/* 새로고침 */}
+            <NeonButton
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                if (!expanded) {
+                  setExpanded(true);
+                }
+                clearChatHistory();
+              }}
+              disabled={isProcessing}
+              title="대화 내역 새로고침"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </NeonButton>
             {/* 텍스트 */}
             <div className="flex-1 relative">
               <input
@@ -922,7 +825,7 @@ const FixedChatbot = ({
                     setExpanded(true);
                   }
                 }}
-                placeholder={ui.chatbotPlaceholder}
+                placeholder={t("chatbotPlaceholder")}
                 className="w-full px-4 py-2.5 border border-purple-500/30 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-sm bg-gray-800/70 text-white placeholder-gray-400 backdrop-blur-sm shadow-lg"
                 disabled={isProcessing}
               />
@@ -964,6 +867,9 @@ const FixedChatbot = ({
 // ## 메인 DocentMantine
 // #################################################################
 const CATEGORY_OPTIONS = ["all", "museum", "palace", "landmark", "historic"];
+
+// 번역 캐시
+const translationCache = new Map();
 const guessCategoryKey = (raw) => {
   const s = (raw || "").toString().toLowerCase();
   if (/museum|미술|박물|gallery/.test(s)) return "museum";
@@ -973,22 +879,40 @@ const guessCategoryKey = (raw) => {
   return "landmark";
 };
 export default function DocentMantine() {
+  const { t, i18n } = useTranslation("DocentMantine");
   const [pois, setPOIs] = useState([]);
   const [selectedPOI, setSelectedPOI] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [isDocentActive, setIsDocentActive] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [csvData, setCsvData] = useState([]);
-  const [selectedLang, setSelectedLang] = useState("ko");
+  const [selectedLang, setSelectedLang] = useState(i18n.language || "ko");
   const [translatedDesc, setTranslatedDesc] = useState("");
   const [category, setCategory] = useState("all");
   const [expanded, setExpanded] = useState(false);
   const [isLocationTracking, setIsLocationTracking] = useState(false);
-
-  const ui = UI[selectedLang] || UI.ko;
   const isMobile = useIsMobile();
   const watchId = useRef(null);
   const poisRef = useRef([]);
+
+  // i18n 언어 변경 감지 - 상단 드롭다운 메뉴와 동기화
+  useEffect(() => {
+    const handleLanguageChanged = (lng) => {
+      console.log("Language changed to:", lng); // 디버깅용
+      setSelectedLang(lng);
+    };
+
+    // 초기 언어 설정
+    setSelectedLang(i18n.language);
+
+    // i18n 언어 변경 이벤트 리스너 등록
+    i18n.on("languageChanged", handleLanguageChanged);
+
+    // 컴포넌트 언마운트 시 이벤트 리스너 제거
+    return () => {
+      i18n.off("languageChanged", handleLanguageChanged);
+    };
+  }, [i18n]);
 
   useEffect(() => {
     poisRef.current = pois;
@@ -1155,6 +1079,7 @@ export default function DocentMantine() {
     })();
   }, [selectedPOI, selectedLang]);
 
+  // AI 도슨트가 ON이고 POI가 선택되었을 때 자동으로 음성 재생
   useEffect(() => {
     (async () => {
       if (isDocentActive && selectedPOI && translatedDesc) {
@@ -1219,37 +1144,28 @@ export default function DocentMantine() {
       throw error;
     }
   };
-  // 카테고리 버튼
-  const CategoryBar = ({ ui, category, setCategory }) => (
-    <div className="bg-gray-900/80 backdrop-blur-lg border-b border-purple-500/30 px-4 py-3">
-      <div className={`flex flex-wrap ${isMobile ? "gap-1" : "gap-2"}`}>
-        {CATEGORY_OPTIONS.map((key) => (
-          <NeonButton
-            key={key}
-            size="sm"
-            variant={category === key ? "primary" : "outline"}
-            onClick={() => {
-              setCategory(key);
-              setExpanded(false); // 카테고리 변경 시 챗봇창 축소
-              setSelectedPOI(null); // 카테고리 변경 시 상세정보 닫기
-            }}
-            className={`rounded-full transition-all duration-300 ${
-              isMobile
-                ? `px-2 py-1 text-xs ${
-                    category === key
-                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
-                      : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"
-                  }`
-                : `px-4 py-2 text-sm ${
-                    category === key
-                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
-                      : "border-purple-500/30 text-gray-300 hover:text-white hover:border-purple-400"
-                  }`
-            }`}
-          >
-            {ui?.categories?.[key] || key}
-          </NeonButton>
-        ))}
+  // 카테고리 드롭다운
+  const CategoryDropdown = ({ t, category, setCategory }) => (
+    <div className="bg-gray-900/80 backdrop-blur-lg px-4 py-3">
+      <div className="flex items-center gap-2">
+        <select
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setExpanded(false); // 카테고리 변경 시 챗봇창 축소
+            setSelectedPOI(null); // 카테고리 변경 시 상세정보 닫기
+          }}
+          className={`
+            border border-purple-500/30 rounded-md px-3 py-2 text-sm bg-gray-800/50 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 hover:border-purple-400 transition-all duration-200 cursor-pointer
+            ${isMobile ? "text-xs px-2 py-1" : "text-sm px-3 py-2"}
+          `}
+        >
+          {CATEGORY_OPTIONS.map((key) => (
+            <option key={key} value={key}>
+              {t(`categories.${key}`) || key}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );
@@ -1277,20 +1193,29 @@ export default function DocentMantine() {
                   size="lg"
                   className="font-bold"
                 >
-                  {ui.title}
+                  {t("title")}
                 </GradientText>
               </div>
               <div className="flex items-center gap-1">
+                {/* 카테고리 드롭다운 - 모바일 헤더용 */}
                 <select
-                  value={selectedLang}
-                  onChange={(e) => setSelectedLang(e.target.value)}
+                  value={category}
+                  onChange={(e) => {
+                    console.log('카테고리 변경:', e.target.value);
+                    setCategory(e.target.value);
+                    setExpanded(false); // 카테고리 변경 시 챗봇창 축소
+                    setSelectedPOI(null); // 카테고리 변경 시 상세정보 닫기
+                  }}
                   className="border border-purple-500/30 rounded px-1 py-0.5 text-xs bg-gray-800/50 text-white backdrop-blur-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
                 >
-                  <option value="ko">한국어</option>
-                  <option value="en">Eng</option>
-                  <option value="ja">日本語</option>
-                  <option value="zh">中文</option>
+                  {CATEGORY_OPTIONS.map((key) => (
+                    <option key={key} value={key}>
+                      {t(`categories.${key}`) || key}
+                    </option>
+                  ))}
                 </select>
+
+                
                 <div className="flex items-center gap-1">
                   <Switch
                     checked={isDocentActive}
@@ -1309,15 +1234,14 @@ export default function DocentMantine() {
                     className="data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:bg-gradient-to-r scale-75"
                   />
                   <span className="text-xs text-gray-300">
-                    {ui?.location || "위치"}
+                    {t("location") || "위치"}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 카테고리 바를 헤더 밖으로 이동 */}
-          <CategoryBar ui={ui} category={category} setCategory={setCategory} />
+          
 
           {/* 콘텐츠 영역 */}
           <div className="flex-1 flex flex-col min-h-0">
@@ -1337,7 +1261,7 @@ export default function DocentMantine() {
                   setExpanded(false); // POI 선택 시 챗봇창 축소
                 }}
                 showSelectedPopup
-                directionsLabel={ui.directions}
+                directionsLabel={t("directions")}
                 selectedLang={selectedLang}
               />
             </div>
@@ -1348,22 +1272,32 @@ export default function DocentMantine() {
                 <div className="p-3 pb-1 flex flex-col h-full">
                   <h3 className="text-lg font-semibold text-white mb-3 flex-shrink-0">
                     {selectedPOI
-                      ? ui?.detailedInfo || "상세 정보"
+                      ? t("detailedInfo") || "상세 정보"
                       : category === "all"
-                      ? ui?.allTourismSpots || "전체 관광지"
-                      : ui?.categories?.[category] || category}
+                      ? t("allTourismSpots") || "전체 관광지"
+                      : t(`categories.${category}`) || category}
                   </h3>
                   <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
                     {selectedPOI ? (
                       <POIDetails
                         poi={{ ...selectedPOI, description: translatedDesc }}
                         userLocation={userLocation}
-                        onPlayTTS={() =>
-                          speakText(translatedDesc, selectedLang)
-                        }
+                        onPlayTTS={async () => {
+                          setIsPlaying(true);
+                          try {
+                            await speakText(translatedDesc, selectedLang);
+                          } finally {
+                            setIsPlaying(false);
+                          }
+                        }}
+                        onStopTTS={() => {
+                          stopAllTTS();
+                          setIsPlaying(false);
+                        }}
                         isDocentActive={isDocentActive}
+                        isPlaying={isPlaying}
                         isMobile={isMobile}
-                        ui={ui}
+                        t={t}
                         selectedLang={selectedLang}
                       />
                     ) : (
@@ -1394,7 +1328,7 @@ export default function DocentMantine() {
             >
               <FixedChatbot
                 callApi={callTourismAPI}
-                ui={ui}
+                t={t}
                 isMobile={true}
                 selectedLang={selectedLang}
                 expanded={expanded}
@@ -1403,7 +1337,7 @@ export default function DocentMantine() {
             </div>
             {/* <FixedChatbot
               callApi={callTourismAPI}
-              ui={ui}
+              t={t}
               isMobile
               selectedLang={selectedLang}
               expanded={expanded}
@@ -1420,11 +1354,11 @@ export default function DocentMantine() {
   // =========================
 
   return (
-    <BackgroundEffect>
+    <>
       <NeonScrollbarStyles />
       <div className="h-screen flex flex-col">
         {/* 헤더 - 기존과 동일 */}
-        <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-6 py-4 shadow-lg">
+        <div className="relative z-50 bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-6 py-4 shadow-lg" style={{ pointerEvents: 'auto' }}>
           {/* 헤더 내용 그대로 */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1437,23 +1371,16 @@ export default function DocentMantine() {
                   size="xl"
                   className="font-bold"
                 >
-                  {ui.title}
+                  {t("title")}
                 </GradientText>
-                <p className="text-xs text-gray-400">{ui.subtitle}</p>
+                <p className="text-xs text-gray-400">{t("subtitle")}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <select
-                value={selectedLang}
-                onChange={(e) => setSelectedLang(e.target.value)}
-                className="border border-purple-500/30 rounded-md px-2 py-1 text-sm bg-gray-800/50 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="ko">한국어</option>
-                <option value="en">English</option>
-                <option value="ja">日本語</option>
-                <option value="zh">中文(简体)</option>
-              </select>
+             
               <div className="flex items-center gap-2">
+                {/* 카테고리 바  */}
+                <CategoryDropdown t={t} category={category} setCategory={setCategory} />
                 <Switch
                   checked={isDocentActive}
                   onCheckedChange={(v) => {
@@ -1461,8 +1388,8 @@ export default function DocentMantine() {
                     setIsDocentActive(v);
                   }}
                 />
-                <span className="data-[state=checked]:from-indigo-500 data-[state=checked]:to-purple-500 data-[state=checked]:bg-gradient-to-r">
-                  {ui.aiDocent}
+                <span className="text-white data-[state=checked]:from-indigo-500 data-[state=checked]:to-purple-500 data-[state=checked]:bg-gradient-to-r">
+                  {t("aiDocent")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -1470,11 +1397,11 @@ export default function DocentMantine() {
                   checked={isLocationTracking}
                   onCheckedChange={toggleLocationTracking}
                 />
-                <span className="data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:bg-gradient-to-r">
-                  {ui?.locationTracking || "위치 추적"}
+                <span className="text-white data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:bg-gradient-to-r">
+                  {t("locationTracking") || "위치 추적"}
                 </span>
               </div>
-              {isPlaying && (
+              {/* {(isPlaying || isDocentActive) && (
                 <NeonButton
                   variant="outline"
                   size="sm"
@@ -1482,14 +1409,13 @@ export default function DocentMantine() {
                   className="flex items-center gap-1"
                 >
                   <VolumeX className="w-4 h-4 mr-1" />
-                  {ui.stopVoice}
+                  {t("stopVoice")}
                 </NeonButton>
-              )}
+              )} */}
             </div>
           </div>
         </div>
-        {/* 카테고리 바  */}
-        <CategoryBar ui={ui} category={category} setCategory={setCategory} />
+        
         {/* 메인 콘텐츠 - 수직으로 60%/40% 분할 */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* 상단 영역 (60%) - POI리스트 + 지도 + 상세정보 */}
@@ -1499,7 +1425,7 @@ export default function DocentMantine() {
               <NeonCardJH className="h-full overflow-hidden">
                 <div className="p-3 pb-1 h-full flex flex-col">
                   <h3 className="text-lg font-semibold text-white mb-3">
-                    {ui?.tourismList || "관광지 목록"}
+                    {t("tourismList") || "관광지 목록"}
                   </h3>
                   <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
                     <POIListJH
@@ -1535,7 +1461,7 @@ export default function DocentMantine() {
                     setExpanded(false); // POI 선택 시 챗봇창 축소
                   }}
                   showSelectedPopup
-                  directionsLabel={ui.directions}
+                  directionsLabel={t("directions")}
                   selectedLang={selectedLang}
                 />
               </div>
@@ -1546,7 +1472,7 @@ export default function DocentMantine() {
               <NeonCardJH className="h-full">
                 <div className="p-3 pb-0 h-full">
                   <h3 className="text-lg font-semibold text-white mb-3">
-                    {ui?.detailedInfo || "상세 정보"}
+                    {t("detailedInfo") || "상세 정보"}
                   </h3>
 
                   {/* 강제 높이 제한으로 스크롤 보장 */}
@@ -1565,11 +1491,21 @@ export default function DocentMantine() {
                             : null
                         }
                         userLocation={userLocation}
-                        onPlayTTS={() =>
-                          speakText(translatedDesc, selectedLang)
-                        }
+                        onPlayTTS={async () => {
+                          setIsPlaying(true);
+                          try {
+                            await speakText(translatedDesc, selectedLang);
+                          } finally {
+                            setIsPlaying(false);
+                          }
+                        }}
+                        onStopTTS={() => {
+                          stopAllTTS();
+                          setIsPlaying(false);
+                        }}
                         isDocentActive={isDocentActive}
-                        ui={ui}
+                        isPlaying={isPlaying}
+                        t={t}
                         selectedLang={selectedLang}
                       />
                     </div>
@@ -1630,7 +1566,7 @@ export default function DocentMantine() {
           >
             <FixedChatbot
               callApi={callTourismAPI}
-              ui={ui}
+              t={t}
               isMobile={false}
               selectedLang={selectedLang}
               expanded={expanded}
@@ -1639,6 +1575,6 @@ export default function DocentMantine() {
           </div>
         </div>
       </div>
-    </BackgroundEffect>
+    </>
   );
 }

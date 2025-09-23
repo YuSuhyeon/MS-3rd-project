@@ -259,33 +259,6 @@ const KPopTravelHome = () => {
     },
   ];
 
-  const places = [
-    {
-      id: "place1",
-      name: t("place1"),
-      icon: "🛍️",
-      areaName: "명동 관광특구",
-    },
-    {
-      id: "place2",
-      name: t("place2"),
-      icon: "🏛️",
-      areaName: "광화문·덕수궁",
-    },
-    {
-      id: "place3",
-      name: t("place3"),
-      icon: "🌍",
-      areaName: "이태원 관광특구",
-    },
-    {
-      id: "place4",
-      name: t("place4"),
-      icon: "🎡",
-      areaName: "잠실 관광특구",
-    },
-  ];
-
   return (
     <BackgroundEffect className="min-h-screen neon-scrollbar">
       <NeonScrollbarStyles />
@@ -397,7 +370,7 @@ const KPopTravelHome = () => {
               {t("main.title.ai_creates")}
             </motion.h1>
             <motion.p
-              className="text-lg md:text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed"
+              className="text-lg md:text-xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1 }}
@@ -443,20 +416,22 @@ const KPopTravelHome = () => {
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               {t("home.persona.title")}
             </h2>
-            <p className="mt-5 text-lg text-gray-600">
+            <p className="mt-5 text-lg text-white/80">
               {t("home.persona.desc")}
             </p>
             <div className="mt-8">
-              <Link
-                to="/persona"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              <NeonButton
+                onClick={() => navigate("/persona")}
+                variant="primary"
+                size="lg"
+                className="inline-flex items-center gap-2"
               >
                 {t("home.persona.cta")}
                 <Wand2 className="w-4 h-4" />
-              </Link>
+              </NeonButton>
             </div>
           </motion.div>
 
@@ -504,9 +479,9 @@ const KPopTravelHome = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-5 rounded-2xl bg-white shadow-xl border border-gray-100"
+                  className="p-5 rounded-2xl bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/30 shadow-2xl"
                 >
-                  <div className="text-sm font-semibold text-gray-900 mb-3">
+                  <div className="text-sm font-semibold text-white mb-3">
                     {card.title}
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -535,10 +510,10 @@ const KPopTravelHome = () => {
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               {t("home.ai_reco.title")}
             </h2>
-            <p className="mt-5 text-lg text-gray-600">
+            <p className="mt-5 text-lg text-white/80">
               {t("home.ai_reco.desc")}
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
@@ -551,7 +526,7 @@ const KPopTravelHome = () => {
               ].map((t) => (
                 <span
                   key={t}
-                  className="px-3 py-1 rounded-full bg-white border text-gray-700 shadow-sm"
+                  className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white/90 shadow-sm"
                 >
                   {t}
                 </span>
@@ -567,8 +542,8 @@ const KPopTravelHome = () => {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-100">
-              <div className="w-full h-[360px] bg-[radial-gradient(1200px_600px_at_80%_10%,rgba(99,102,241,0.12),transparent),radial-gradient(900px_500px_at_0%_100%,rgba(99,102,241,0.08),transparent)] bg-gray-100">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-purple-500/30">
+              <div className="w-full h-[360px] bg-[radial-gradient(1200px_600px_at_80%_10%,rgba(168,85,247,0.15),transparent),radial-gradient(900px_500px_at_0%_100%,rgba(236,72,153,0.12),transparent)] bg-gradient-to-br from-gray-900 to-black">
                 {/* Path */}
                 <svg
                   className="absolute inset-0 w-full h-full"
@@ -594,8 +569,8 @@ const KPopTravelHome = () => {
                   E
                 </div>
               </div>
-              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/90 border text-sm flex items-center gap-2 shadow">
-                <Map className="w-4 h-4 text-purple-600" />
+              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white/90 text-sm flex items-center gap-2 shadow">
+                <Map className="w-4 h-4 text-purple-400" />
                 {t("home.map.preview_label")}
               </div>
             </div>
@@ -612,10 +587,10 @@ const KPopTravelHome = () => {
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               {t("home.editing.title")}
             </h2>
-            <p className="mt-5 text-lg text-gray-600">
+            <p className="mt-5 text-lg text-white/80">
               {t("home.editing.desc")}
             </p>
           </motion.div>
@@ -628,14 +603,16 @@ const KPopTravelHome = () => {
             transition={{ duration: 0.6 }}
             className="flex justify-center"
           >
-            <div className="relative w-[280px] h-[540px] rounded-[36px] bg-gray-900 shadow-2xl p-3">
+            <div className="relative w-[280px] h-[540px] rounded-[36px] bg-gradient-to-br from-gray-900 to-black shadow-2xl border border-purple-500/30 p-3">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-5 bg-gray-800 rounded-full" />
-              <div className="bg-white w-full h-full rounded-[28px] p-4 flex flex-col gap-3 overflow-hidden">
+              <div className="bg-gradient-to-br from-gray-900/90 to-black/90 backdrop-blur-lg w-full h-full rounded-[28px] p-4 flex flex-col gap-3 overflow-hidden border border-purple-500/20">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white">
                     <Edit3 className="w-4 h-4" />
                   </div>
-                  <div className="font-semibold">나의 일정</div>
+                  <div className="font-semibold text-white">
+                    {t("home.itinerary.title")}
+                  </div>
                 </div>
                 <div className="flex-1 space-y-3 overflow-hidden">
                   {[
@@ -650,19 +627,19 @@ const KPopTravelHome = () => {
                       whileInView={{ y: 0, opacity: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.05 }}
-                      className="p-3 rounded-2xl border bg-white shadow-sm flex items-center gap-3"
+                      className="p-3 rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-500/10 to-pink-500/10 shadow-sm flex items-center gap-3"
                     >
-                      <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-700">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white">
                         {i + 1}
                       </div>
-                      <div className="text-sm font-medium text-gray-800 truncate">
+                      <div className="text-sm font-medium text-white/90 truncate">
                         {t}
                       </div>
                     </motion.div>
                   ))}
                 </div>
                 <div className="mt-auto grid grid-cols-2 gap-2">
-                  <div className="px-3 py-2 rounded-xl text-center text-sm font-semibold border">
+                  <div className="px-3 py-2 rounded-xl text-center text-sm font-semibold border border-purple-500/30 text-white/80 bg-gradient-to-r from-gray-800/50 to-gray-700/50">
                     {t("home.controls.undo")}
                   </div>
                   <div className="px-3 py-2 rounded-xl text-center text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600">
@@ -684,16 +661,18 @@ const KPopTravelHome = () => {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-            이제, 당신의 완벽한 여행을 시작할 시간
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            {t("cta.title")}
           </h2>
           <div className="mt-8">
-            <Link
-              to="/persona"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-white shadow-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg"
+            <NeonButton
+              onClick={() => navigate("/persona")}
+              variant="primary"
+              size="xl"
+              className="inline-flex items-center gap-2"
             >
-              5가지 질문으로 시작하기
-            </Link>
+              {t("cta.start")}
+            </NeonButton>
           </div>
         </motion.div>
       </Section>
@@ -701,8 +680,8 @@ const KPopTravelHome = () => {
         {showScrollButton && (
           <motion.button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="fixed bottom-8 right-8 p-3 rounded-full bg-purple-600 text-white shadow-lg
-                          hover:bg-pink-600 transition-colors duration-300 z-50 focus:outline-none"
+            className="fixed bottom-8 right-8 p-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg
+                          hover:from-purple-700 hover:to-pink-700 transition-all duration-300 z-50 focus:outline-none border border-purple-400/30"
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
@@ -727,7 +706,7 @@ const KPopTravelHome = () => {
               onClick={() => setShowLoginModal(false)}
             />
             <motion.div
-              className="relative bg-gray-900 border border-white/20 rounded-3xl p-8 max-w-md w-full shadow-2xl"
+              className="relative bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-lg border border-purple-500/30 rounded-3xl p-8 max-w-md w-full shadow-2xl"
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -760,7 +739,7 @@ const KPopTravelHome = () => {
                 <h2 className="text-2xl font-bold text-white mb-2">
                   {t("modal.welcome")}
                 </h2>
-                <p className="text-gray-300">{t("modal.instruction")}</p>
+                <p className="text-white/80">{t("modal.instruction")}</p>
               </div>
               <div className="space-y-4">
                 <motion.button
@@ -796,7 +775,7 @@ const KPopTravelHome = () => {
                 </motion.button>
                 <motion.button
                   onClick={() => login("microsoft")}
-                  className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+                  className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:from-blue-700 hover:to-blue-800 transition-all border border-blue-500/30"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -815,13 +794,19 @@ const KPopTravelHome = () => {
                 </motion.button>
               </div>
               <div className="mt-6 text-center">
-                <p className="text-gray-400 text-sm">
+                <p className="text-white/60 text-sm">
                   {t("modal.disclaimer.prefix")}{" "}
-                  <a href="#" className="text-purple-400 hover:text-purple-300">
+                  <a
+                    href="#"
+                    className="text-purple-400 hover:text-purple-300 transition-colors"
+                  >
                     {t("modal.disclaimer.terms")}
                   </a>
                   {t("modal.disclaimer.and")}{" "}
-                  <a href="#" className="text-purple-400 hover:text-purple-300">
+                  <a
+                    href="#"
+                    className="text-purple-400 hover:text-purple-300 transition-colors"
+                  >
                     {t("modal.disclaimer.privacy")}
                   </a>
                   {t("modal.disclaimer.suffix")}

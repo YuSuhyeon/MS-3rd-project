@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Heart,
@@ -48,8 +49,10 @@ import {
 
 // 기존 할인 홍보 팝업 컴포넌트 (그대로 유지)
 const OfferPopup = ({ isOpen, onClose, tourId }) => {
+  const { t } = useTranslation("tourDetail");
   const [timeLeft, setTimeLeft] = useState({ minutes: 10, seconds: 0 });
   const [progress, setProgress] = useState(0);
+  const [isGrabbed, setIsGrabbed] = useState(false);
 
   // mockTourData에서 투어별 할인 정보 가져오기
   const offerInfo = getTourOffer(tourId);
@@ -227,7 +230,7 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
                 {/* 실시간 카운트다운 타이머 */}
                 <div className="mb-4">
                   <div className="text-xs text-gray-400 mb-2">
-                    OFFER EXPIRES IN
+                    {t("offer.expiresIn")}
                   </div>
                   <motion.div
                     key={`${timeLeft.minutes}-${timeLeft.seconds}`}
@@ -266,22 +269,35 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
                 </h2>
 
                 <p className="text-gray-300 mb-4 text-sm">
-                  Limited time offer - Book now and save big!
+                  {t("offer.limitedTime")}
                 </p>
 
                 <div className="bg-gradient-to-r from-orange-900/50 to-pink-900/50 rounded-2xl p-4 mb-4 border border-orange-500/30">
                   <div className="text-2xl font-bold text-orange-400 mb-1">
-                    <span className="text-lg line-through text-gray-500">
-                      {offerInfo.originalPrice}
-                    </span>
-                    {" → "}
-                    {offerInfo.discountPrice}
+                    {isGrabbed ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-3xl text-green-400">✓</span>
+                        <span className="text-3xl">
+                          {offerInfo.discountPrice}
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-lg line-through text-gray-500">
+                          {offerInfo.originalPrice}
+                        </span>
+                        {" → "}
+                        {offerInfo.discountPrice}
+                      </>
+                    )}
                   </div>
                   <div className="text-sm text-gray-300 mb-2">
-                    {offerInfo.savings}
+                    {isGrabbed ? t("offer.dealGrabbed") : offerInfo.savings}
                   </div>
                   <div className="text-xs text-orange-400 font-medium">
-                    {offerInfo.description}
+                    {isGrabbed
+                      ? t("offer.priceSecured")
+                      : offerInfo.description}
                   </div>
                 </div>
 
@@ -290,13 +306,20 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
                     onClick={handleDoNotShowToday}
                     className="flex-1 bg-gray-800/50 text-gray-300 py-3 px-4 rounded-xl text-sm font-medium hover:bg-gray-700/50 transition-colors border border-gray-600/50"
                   >
-                    Do not show today
+                    {t("offer.doNotShowToday")}
                   </button>
                   <NeonButton
                     variant="warning"
                     className="flex-1 py-3 px-4 text-sm"
+                    onClick={() => {
+                      setIsGrabbed(true);
+                      // 가격 확정 UI를 잠시 보여준 뒤 닫기 (0.8초)
+                      setTimeout(() => {
+                        onClose();
+                      }, 800);
+                    }}
                   >
-                    Grab Deal
+                    {isGrabbed ? t("offer.grabbed") : t("offer.grabDeal")}
                   </NeonButton>
                 </div>
 
@@ -310,9 +333,10 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
                 >
                   🔥{" "}
                   {offerInfo.urgencyText ||
-                    `Only ${timeLeft.minutes}:${String(
-                      timeLeft.seconds
-                    ).padStart(2, "0")} left!`}
+                    t("offer.urgencyText", {
+                      minutes: timeLeft.minutes,
+                      seconds: String(timeLeft.seconds).padStart(2, "0"),
+                    })}
                 </motion.div>
               </div>
             </div>
@@ -349,14 +373,15 @@ const Card = ({ children, className = "" }) => (
 );
 
 const Tabs = ({ activeTab, onTabChange, children }) => {
+  const { t } = useTranslation("tourDetail");
   const [tabPositions, setTabPositions] = useState({});
   const tabRefs = useRef({});
   const containerRef = useRef(null);
 
   const tabs = [
-    { id: "overview", label: "일정" },
-    { id: "details", label: "상세정보" },
-    { id: "reviews", label: "리뷰" },
+    { id: "overview", label: t("tabs.overview") || "일정" },
+    { id: "details", label: t("tabs.details") || "상세정보" },
+    { id: "reviews", label: t("tabs.reviews") || "리뷰" },
   ];
 
   // 탭 위치 계산
@@ -447,140 +472,153 @@ const Tabs = ({ activeTab, onTabChange, children }) => {
   );
 };
 // 일정 탭 내용 (포함사항 2열 배치)
-const OverviewTab = ({ itinerary, included }) => (
-  <div className="space-y-8">
-    {/* 일정 */}
-    <div>
-      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        <Clock className="w-5 h-5 text-purple-400" />
-        투어 일정
-      </h3>
-      <div className="space-y-4">
-        {itinerary?.map((item, index) => (
-          <div
-            key={index}
-            className="flex gap-4 p-4 bg-gray-800/30 rounded-xl border border-gray-700/30"
-          >
-            <div className="flex-shrink-0 text-center">
-              <div className="text-purple-400  text-center text-sm  mb-1 font-medium">
-                {item.time}
+const OverviewTab = ({ itinerary, included }) => {
+  const { t } = useTranslation("tourDetail");
+  return (
+    <div className="space-y-8">
+      {/* 일정 */}
+      <div>
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Clock className="w-5 h-5 text-purple-400" />
+          {t("overview.itinerary")}
+        </h3>
+        <div className="space-y-4">
+          {itinerary?.map((item, index) => (
+            <div
+              key={index}
+              className="flex gap-4 p-4 bg-gray-800/30 rounded-xl border border-gray-700/30"
+            >
+              <div className="flex-shrink-0 text-center">
+                <div className="text-purple-400  text-center text-sm  mb-1 font-medium">
+                  {item.time}
+                </div>
+              </div>
+              <div>
+                <h4 className="font-bold text-white  mb-1">{item.location}</h4>
+                <p className="text-gray-300 text-sm">{item.description}</p>
               </div>
             </div>
-            <div>
-              <h4 className="font-bold text-white  mb-1">{item.location}</h4>
-              <p className="text-gray-300 text-sm">{item.description}</p>
+          )) || (
+            <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
+              {t("overview.noItinerary")}
             </div>
-          </div>
-        )) || (
-          <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
-            일정 정보가 준비 중입니다.
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
 
-    {/* 포함사항 - 2열 배치 */}
-    <div>
-      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        <CheckCircle className="w-5 h-5 text-green-400" />
-        포함 사항
-      </h3>
-      <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-          {included?.map((item, index) => (
-            <div key={index} className="flex items-center gap-3">
-              <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span className="text-gray-300 text-sm">{item}</span>
-            </div>
-          )) ||
-            [
-              "전문 가이드",
-              "점심 식사",
-              "기념품",
-              "교통비",
-              "체험 활동비",
-              "보험",
-            ].map((item, index) => (
+      {/* 포함사항 - 2열 배치 */}
+      <div>
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-green-400" />
+          {t("overview.included")}
+        </h3>
+        <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+            {included?.map((item, index) => (
               <div key={index} className="flex items-center gap-3">
                 <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
                 <span className="text-gray-300 text-sm">{item}</span>
               </div>
-            ))}
+            )) ||
+              [
+                t("overview.includedItems.guide"),
+                t("overview.includedItems.lunch"),
+                t("overview.includedItems.souvenirs"),
+                t("overview.includedItems.transportation"),
+                t("overview.includedItems.activities"),
+                t("overview.includedItems.insurance"),
+              ].map((item, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-gray-300 text-sm">{item}</span>
+                </div>
+              ))}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // 상세정보 탭 내용
-const DetailsTab = ({ detailSections }) => (
-  <div className="space-y-6">
-    {detailSections?.map((section, index) => (
-      <div key={index} className="overflow-hidden rounded-xl">
-        <img
-          src={section.image}
-          alt={section.title}
-          className="w-full h-48 object-cover rounded-t-xl"
-        />
-        <div className="p-4 bg-gray-800/30 rounded-b-xl border border-gray-600/30 border-t-0">
-          <h4 className="text-lg font-bold text-white mb-2">{section.title}</h4>
-          <p className="text-gray-300 text-sm">{section.text}</p>
+const DetailsTab = ({ detailSections }) => {
+  const { t } = useTranslation("tourDetail");
+  return (
+    <div className="space-y-6">
+      {detailSections?.map((section, index) => (
+        <div key={index} className="overflow-hidden rounded-xl">
+          <img
+            src={section.image}
+            alt={section.title}
+            className="w-full h-48 object-cover rounded-t-xl"
+          />
+          <div className="p-4 bg-gray-800/30 rounded-b-xl border border-gray-600/30 border-t-0">
+            <h4 className="text-lg font-bold text-white mb-2">
+              {section.title}
+            </h4>
+            <p className="text-gray-300 text-sm">{section.text}</p>
+          </div>
         </div>
-      </div>
-    )) || (
-      <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
-        상세 정보가 준비 중입니다.
-      </div>
-    )}
-  </div>
-);
+      )) || (
+        <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
+          {t("details.noDetails")}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // 리뷰 탭 내용
-const ReviewsTab = ({ reviews }) => (
-  <div className="space-y-4">
-    {reviews?.map((review, index) => (
-      <div
-        key={review.id}
-        className="p-4 bg-gradient-to-r from-gray-800/50 to-gray-900/80 rounded-xl border border-gray-600/30"
-      >
-        <div className="flex items-center gap-3 mb-3">
-          <div
-            className={`w-10 h-10 bg-gradient-to-r ${
-              review.gradient || "from-purple-600 to-pink-600"
-            } rounded-full flex items-center justify-center text-white font-bold shadow-lg text-sm`}
-          >
-            {review.avatar || review.name?.charAt(0) || "U"}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div className="font-bold text-white text-sm">{review.name}</div>
-              <div className="text-xs text-gray-400">{review.date}</div>
+const ReviewsTab = ({ reviews }) => {
+  const { t } = useTranslation("tourDetail");
+  return (
+    <div className="space-y-4">
+      {reviews?.map((review, index) => (
+        <div
+          key={review.id}
+          className="p-4 bg-gradient-to-r from-gray-800/50 to-gray-900/80 rounded-xl border border-gray-600/30"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`w-10 h-10 bg-gradient-to-r ${
+                review.gradient || "from-purple-600 to-pink-600"
+              } rounded-full flex items-center justify-center text-white font-bold shadow-lg text-sm`}
+            >
+              {review.avatar || review.name?.charAt(0) || "U"}
             </div>
-            <div className="flex items-center gap-1 mt-1">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-3 h-3 ${
-                    i < (review.rating || 5)
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-500"
-                  }`}
-                />
-              ))}
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div className="font-bold text-white text-sm">
+                  {review.name}
+                </div>
+                <div className="text-xs text-gray-400">{review.date}</div>
+              </div>
+              <div className="flex items-center gap-1 mt-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3 h-3 ${
+                      i < (review.rating || 5)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-500"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
+          <p className="text-gray-200 text-sm leading-relaxed">
+            {review.content}
+          </p>
         </div>
-        <p className="text-gray-200 text-sm leading-relaxed">
-          {review.content}
-        </p>
-      </div>
-    )) || (
-      <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
-        리뷰가 아직 없습니다.
-      </div>
-    )}
-  </div>
-);
+      )) || (
+        <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
+          {t("reviews.noReviews")}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ImageWithFallback = ({
   src,
@@ -608,6 +646,7 @@ const ImageWithFallback = ({
 
 // 메인 TourDetail 컴포넌트
 export default function TourDetail({ onBack }) {
+  const { t } = useTranslation("tourDetail");
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
@@ -617,6 +656,15 @@ export default function TourDetail({ onBack }) {
   const [showOfferPopup, setShowOfferPopup] = useState(false);
 
   const tourId = parseInt(id) || 1;
+
+  // 상세 페이지 진입 시 최상단으로 스크롤
+  useEffect(() => {
+    try {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    } catch (e) {
+      window.scrollTo(0, 0);
+    }
+  }, []);
 
   // 팝업 로직
   useEffect(() => {
@@ -672,11 +720,9 @@ export default function TourDetail({ onBack }) {
             <NeonCard className="p-12">
               <AlertCircle className="w-20 h-20 text-gray-400 mx-auto mb-6" />
               <h2 className="text-2xl font-bold text-white mb-4">
-                투어를 찾을 수 없습니다
+                {t("notFound.title")}
               </h2>
-              <p className="text-gray-300">
-                요청하신 투어 정보가 존재하지 않습니다.
-              </p>
+              <p className="text-gray-300">{t("notFound.description")}</p>
             </NeonCard>
           </motion.div>
         </div>
@@ -711,8 +757,8 @@ export default function TourDetail({ onBack }) {
         tourId={tourId}
       />
 
-      {/* Header */}
-      <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 sticky top-0 z-50">
+      {/* Header (모바일에서는 non-sticky로 여백 문제 방지, 데스크탑에서는 sticky) 
+      <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 md:sticky md:top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <motion.button
             onClick={handleBack}
@@ -725,7 +771,7 @@ export default function TourDetail({ onBack }) {
             </div>
           </motion.button>
         </div>
-      </div>
+      </div>*/}
 
       {/* Main Content - 완전한 반응형 레이아웃 */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
@@ -896,7 +942,8 @@ export default function TourDetail({ onBack }) {
                   {tourData.rating}
                 </span>
                 <span className="text-gray-400 text-xs">
-                  ({tourData.reviewCount}개 리뷰)
+                  ({tourData.reviewCount}
+                  {t("booking.reviews")})
                 </span>
               </div>
 
@@ -946,7 +993,7 @@ export default function TourDetail({ onBack }) {
                         size="xs"
                         className="font-bold"
                       >
-                        {tourData.discount} 할인
+                        {tourData.discount} {t("booking.discount")}
                       </GradientText>
                     )}
                   </div>
@@ -975,7 +1022,7 @@ export default function TourDetail({ onBack }) {
                       window.open(tourData.bookingUrl || "#", "_blank")
                     }
                   >
-                    지금 예약하기
+                    {t("booking.bookNow")}
                   </NeonButton>
                 </div>
               </div>
@@ -1232,7 +1279,8 @@ export default function TourDetail({ onBack }) {
                           {tourData.rating}
                         </span>
                         <span className="text-gray-400 text-sm">
-                          ({tourData.reviewCount}개 리뷰)
+                          ({tourData.reviewCount}
+                          {t("booking.reviews")})
                         </span>
                       </div>
                     </div>
@@ -1284,7 +1332,7 @@ export default function TourDetail({ onBack }) {
                               size="sm"
                               className="font-bold"
                             >
-                              {tourData.discount} 할인
+                              {tourData.discount} {t("booking.discount")}
                             </GradientText>
                           )}
                         </div>
@@ -1313,7 +1361,7 @@ export default function TourDetail({ onBack }) {
                             window.open(tourData.bookingUrl || "#", "_blank")
                           }
                         >
-                          지금 예약하기
+                          {t("booking.bookNow")}
                         </NeonButton>
                         {/* <NeonButton
                           variant="secondary"

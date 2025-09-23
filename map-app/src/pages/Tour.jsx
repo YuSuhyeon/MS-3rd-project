@@ -298,7 +298,7 @@ const MobileTourCard = ({ item, onDetailClick }) => {
 };
 
 // PartnershipSection 컴포넌트
-
+// PartnershipSection 컴포넌트 - 수정된 버전
 const PartnershipSection = () => {
   return (
     <NeonCard className="mb-8">
@@ -308,9 +308,9 @@ const PartnershipSection = () => {
         </div>
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
-            Klover 제휴사
+            기업 제휴 파트너
           </h2>
-          <p className="text-gray-300"></p>
+          <p className="text-gray-300">신뢰할 수 있는 파트너사</p>
         </div>
       </div>
       <div className="relative overflow-hidden">
@@ -373,6 +373,18 @@ export default function Tour() {
   const navigate = useNavigate();
   const itemsPerPage = 4; // 모바일에서 한 번에 4개씩 표시
 
+  // 컴포넌트 마운트 시 세션 스토리지 정리
+  useEffect(() => {
+    // URL이 직접 /tour로 접근한 경우 세션 스토리지 정리
+    if (
+      window.location.pathname === "/tour" &&
+      !sessionStorage.getItem("previousPage")
+    ) {
+      sessionStorage.removeItem("previousPage");
+      sessionStorage.removeItem("previousPageTitle");
+    }
+  }, []);
+
   const handleDetailClick = (item) => {
     navigate(`/tour/${item.id}`);
   };
@@ -402,23 +414,69 @@ export default function Tour() {
   // 카테고리 배열
   const categories = [
     { value: "all", label: "전체", emoji: "🌟" },
-    { value: "entertainment", label: "Entertainment", emoji: "🎢" },
-    { value: "location", label: "Filming", emoji: "📍" },
-    { value: "experience", label: "Experience", emoji: "🎭" },
+    { value: "location", label: "촬영지", emoji: "📍" },
+    { value: "goods", label: "굿즈", emoji: "🛍️" },
+    { value: "experience", label: "체험", emoji: "🎭" },
+    { value: "food", label: "먹방", emoji: "🍜" },
     { value: "it", label: "IT", emoji: "🖥️" },
-    { value: "sports", label: "Sports", emoji: "⚾" },
-    { value: "beauty", label: "Beauty", emoji: "💄" },
-    { value: "culture", label: "Culture", emoji: "🏛️" },
-
-    // { value: "goods", label: "Shopping", emoji: "🛍️" },
-    // { value: "food", label: "MeokBang", emoji: "🍜" },
-    //  { value: "adventure", label: "Outdoor", emoji: "🏔️" },
+    { value: "sports", label: "스포츠", emoji: "⚾" },
+    { value: "beauty", label: "뷰티", emoji: "💄" },
+    { value: "culture", label: "문화", emoji: "🏛️" },
+    { value: "adventure", label: "모험", emoji: "🏔️" },
+    { value: "entertainment", label: "엔터", emoji: "🎢" },
   ];
+
+  // 뒤로가기 함수
+  const handleBackToDocent = () => {
+    const previousPage = sessionStorage.getItem("previousPage");
+    const previousPageTitle = sessionStorage.getItem("previousPageTitle");
+
+    if (previousPage && previousPageTitle === "AI Docent") {
+      navigate(previousPage);
+      // 사용 후 세션 스토리지 정리 (타임스탬프 포함)
+      sessionStorage.removeItem("previousPage");
+      sessionStorage.removeItem("previousPageTitle");
+      sessionStorage.removeItem("previousPageTimestamp");
+    } else {
+      navigate("/docent"); // 기본적으로 도슨트 페이지로 이동
+    }
+  };
+
+  // 챗봇에서 온 경우인지 확인 (더 정확한 검증)
+  const isFromDocent = () => {
+    const previousPage = sessionStorage.getItem("previousPage");
+    const previousPageTitle = sessionStorage.getItem("previousPageTitle");
+    const timestamp = sessionStorage.getItem("previousPageTimestamp");
+
+    // 세션 스토리지에 데이터가 있고, AI Docent에서 왔으며, 최근 5분 이내인 경우만
+    if (previousPage && previousPageTitle === "AI Docent" && timestamp) {
+      const now = Date.now();
+      const storedTime = parseInt(timestamp);
+      const fiveMinutes = 5 * 60 * 1000; // 5분을 밀리초로 변환
+
+      return now - storedTime < fiveMinutes;
+    }
+
+    return false;
+  };
 
   return (
     <BackgroundEffect className="w-full min-h-screen">
       <section className="relative overflow-hidden">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          {/* 뒤로가기 버튼 - 챗봇에서 온 경우에만 표시 */}
+          {isFromDocent() && (
+            <div className="mb-4">
+              <button
+                onClick={handleBackToDocent}
+                className="flex items-center justify-center w-10 h-10 bg-gray-800/80 hover:bg-gray-700/80 text-white rounded-lg transition-colors"
+                title="AI Docent로 돌아가기"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            </div>
+          )}
+
           {/* 헤더 */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -427,8 +485,8 @@ export default function Tour() {
             className="text-center mb-8 sm:mb-12"
           >
             <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4 px-4">
-              Klover에서만 만날 수 있는
-              <br className="sm:hidden" /> 특별한 투어
+              한국의 숨겨진 매력을
+              <br className="sm:hidden" /> 발견하세요
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 sm:mb-8 px-4">
               프리미엄 한국 문화 체험 투어
@@ -522,7 +580,7 @@ export default function Tour() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
-                    Klover 여행 상품
+                    인기 투어 상품
                   </h2>
                 </div>
               </div>

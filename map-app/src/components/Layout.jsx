@@ -32,6 +32,7 @@ import {
   ArrowUp,
   Minimize2,
   Maximize2,
+  ArrowLeft,
 } from "lucide-react";
 
 const getNavigationItems = (t) => [
@@ -1290,6 +1291,46 @@ export default function Layout({ children }) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // 스마트 뒤로가기 - Docent 세션 우선
+  const isFromDocent = () => {
+    try {
+      const previousPage = sessionStorage.getItem("previousPage");
+      const previousPageTitle = sessionStorage.getItem("previousPageTitle");
+      const timestamp = sessionStorage.getItem("previousPageTimestamp");
+      if (previousPage && previousPageTitle === "AI Docent" && timestamp) {
+        const now = Date.now();
+        const storedTime = parseInt(timestamp);
+        const fiveMinutes = 5 * 60 * 1000;
+        return now - storedTime < fiveMinutes;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleSmartBack = () => {
+    try {
+      const previousPage = sessionStorage.getItem("previousPage");
+      const previousPageTitle = sessionStorage.getItem("previousPageTitle");
+      if (isFromDocent() && previousPage && previousPageTitle === "AI Docent") {
+        navigate(previousPage);
+        sessionStorage.removeItem("previousPage");
+        sessionStorage.removeItem("previousPageTitle");
+        sessionStorage.removeItem("previousPageTimestamp");
+        return;
+      }
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        // 기본 폴백: 도슨트가 최우선, 아니면 투어
+        navigate("/docent");
+      }
+    } catch {
+      navigate("/docent");
+    }
+  };
+
   const toggleLiveInfo = () => setIsLiveInfoCollapsed((prev) => !prev);
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const closeMenu = () => setMenuOpen(false);
@@ -1534,7 +1575,7 @@ export default function Layout({ children }) {
               <div className="neon-glow" />
             </motion.button>
           )}
-          {/* 오른쪽 버튼들 (언어 버튼 + 홈 버튼) */}
+          {/* 오른쪽 버튼들 (언어 버튼 + 홈/뒤로 버튼) */}
           {!menuOpen && (
             <div className="flex items-center gap-3">
               {/* 언어 버튼 */}
@@ -1547,29 +1588,68 @@ export default function Layout({ children }) {
                 <LanguageButtons />
               </motion.div>
 
-              {/* 홈 버튼 */}
-              <motion.button
-                onClick={() => navigate("/")}
-                className="neon-menu-toggle"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                style={{
-                  width: 45,
-                  height: 45,
-                }}
-                title="홈으로 이동"
-              >
-                <img
-                  src="/img/Home.png"
-                  alt="홈"
-                  className="menu-icon"
-                  style={{ filter: "brightness(0) invert(1)" }}
-                />
-                <div className="neon-glow" />
-              </motion.button>
+              {/* 모바일: 홈 대신 스마트 뒤로가기 (홈 경로 '/'에서는 숨김) */}
+              {isMobile ? (
+                location.pathname !== "/" && (
+                  <motion.button
+                    onClick={handleSmartBack}
+                    className="neon-menu-toggle"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    style={{ width: 45, height: 45 }}
+                    title="뒤로가기"
+                  >
+                    <ArrowLeft className="menu-icon" />
+                    <div className="neon-glow" />
+                  </motion.button>
+                )
+              ) : // 데스크탑: 투어 상세에서만 뒤로, 그 외 홈 유지
+              location.pathname.startsWith("/tour/") ? (
+                <motion.button
+                  onClick={() => {
+                    try {
+                      if (window.history.length > 1) navigate(-1);
+                      else navigate("/tour");
+                    } catch (e) {
+                      navigate("/tour");
+                    }
+                  }}
+                  className="neon-menu-toggle"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  style={{ width: 45, height: 45 }}
+                  title="뒤로가기"
+                >
+                  <ArrowLeft className="menu-icon" />
+                  <div className="neon-glow" />
+                </motion.button>
+              ) : (
+                <motion.button
+                  onClick={() => navigate("/")}
+                  className="neon-menu-toggle"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  style={{ width: 45, height: 45 }}
+                  title="홈으로 이동"
+                >
+                  <img
+                    src="/img/Home.png"
+                    alt="홈"
+                    className="menu-icon"
+                    style={{ filter: "brightness(0) invert(1)" }}
+                  />
+                  <div className="neon-glow" />
+                </motion.button>
+              )}
             </div>
           )}
         </div>

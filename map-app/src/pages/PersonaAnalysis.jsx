@@ -530,20 +530,19 @@ export default function PersonaAnalysis() {
             <div className="bg-black/60 p-3 rounded-[14px]">
               <Sparkles className="w-8 h-8 text-pink-300" />
             </div>
-            <div></div>
-            <h1 className="mb-4">
-              <GradientText
-                size={isMobile ? "3xl" : "5xl"}
-                className="block leading-tight text-center"
-              >
-                당신만의 여행 페르소나 찾기
-              </GradientText>
-            </h1>
-            <p className="text-lg text-slate-200/80 max-w-xl mx-auto">
-              몇 가지 질문에 답하면 AI가 당신의 여행 스타일에 맞는 코스를 추천해
-              드릴게요.
-            </p>
           </div>
+          <h1 className="mb-4">
+            <GradientText
+              size={isMobile ? "3xl" : "5xl"}
+              className="block leading-tight text-center"
+            >
+              당신만의 여행 페르소나 찾기
+            </GradientText>
+          </h1>
+          <p className="text-lg text-slate-200/80 max-w-xl mx-auto">
+            몇 가지 질문에 답하면 AI가 당신의 여행 스타일에 맞는 코스를 추천해
+            드릴게요.
+          </p>
         </motion.div>
 
         <NeonCard className="backdrop-blur-xl border-purple-500/30">
