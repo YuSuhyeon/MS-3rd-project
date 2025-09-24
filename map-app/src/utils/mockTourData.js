@@ -8,13 +8,14 @@ import {
   Award,
   Bus,
 } from "lucide-react";
+import i18n from "../i18n";
 
 // 투어 상품 데이터
 export const tourProducts = [
   {
     id: 1,
     title: "Netflix x Interpark Global",
-    image: "/img/tour_mock_01.jpg",
+    image: "/img/everland_kdh_1.jpg",
     price: "₩100,000",
     category: "experience",
     kpopGroup: "K-Pop Demon Hunters",
@@ -212,16 +213,15 @@ export const tourDetailData = {
     location: "에버랜드, 낙산공원, N서울타워, 국립중앙박물관",
     images: [
       "/img/kdh_video.mp4",
-      "/img/kdh_namsan.jpg",
-      "/img/tour_mock_01.jpg",
+      "/img/everland_kdh_1.jpg",
       "/img/banpo_rainbow.jpg",
     ],
     price: "₩89,000",
     originalPrice: "₩100,000",
-    discount: "22%",
+    discount: "11%",
     rating: 4.9,
-    reviewCount: 387,
-    duration: "10시간 (에버랜드 입장권 포함)",
+    reviewCount: 100,
+    duration: "10시간",
     groupSize: "최대 12명",
     language: "한국어, 영어, 중국어",
     partnership: {
@@ -234,7 +234,6 @@ export const tourDetailData = {
       "에버랜드 1일 자유이용권 포함",
       "K-Pop 데몬 헌터즈 한정 굿즈 세트",
       "AR 포토존 무제한 이용",
-      "드라마 OST 플레이리스트 제공",
       "촬영지 가이드 오디오 투어",
     ],
     itinerary: [
@@ -265,20 +264,6 @@ export const tourDetailData = {
         description: "인터랙티브 마법 체험관 & AR 포토존",
         icon: "Sparkles",
         duration: "60분",
-      },
-      {
-        time: "12:30",
-        location: "데몬 헌터즈 레스토랑",
-        description: "드라마 테마 런치 세트 & 한정 디저트",
-        icon: "UtensilsCrossed",
-        duration: "90분",
-      },
-      {
-        time: "14:00",
-        location: "낙산공원 이동",
-        description: "루미♥진우 데이트 장면 촬영지 재현",
-        icon: "Heart",
-        duration: "90분",
       },
       {
         time: "16:00",
@@ -957,65 +942,192 @@ export const tourOffers = {
     hasOffer: true,
     originalPrice: "₩100,000",
     discountPrice: "₩89,000",
-    savings: "Save ₩10,000 per person!",
-    description: "Get exclusive K-Pop photo cards + Everland tickets",
-    title: "Netflix K-Pop Special Deal!",
+    savings: {
+      ko: "1인당 ₩10,000 할인!",
+      en: "Save ₩10,000 per person!",
+      ja: "お一人様あたり₩10,000お得！",
+      zh: "每人立减₩10,000！",
+    },
+    description: {
+      ko: "K-팝 포토카드 + 에버랜드 입장권 포함",
+      en: "Exclusive K-Pop photo cards + Everland tickets",
+      ja: "K-POPフォトカード＋エバーランド入場券付き",
+      zh: "K-Pop照片卡＋爱宝乐园门票包含",
+    },
+    title: {
+      ko: "넷플릭스 K-팝 스페셜 딜!",
+      en: "Netflix K-Pop Special Deal!",
+      ja: "Netflix K-POPスペシャルディール！",
+      zh: "Netflix K-Pop 特惠！",
+    },
     image: "/img/everland_kdh.jpg",
-    urgencyText: "Limited K-Pop merchandise available!",
+    urgencyText: {
+      ko: "한정 K-팝 굿즈 수량 한정!",
+      en: "Limited K-Pop merchandise available!",
+      ja: "K-POPグッズは数量限定！",
+      zh: "K-Pop周边数量有限！",
+    },
   },
   2: {
     hasOffer: true,
     originalPrice: "₩125,000",
     discountPrice: "₩90,000",
-    savings: "Save ₩25,000 per person!",
-    description: "Free AI workshop materials included",
-    title: "Microsoft AI Bootcamp Deal!",
+    savings: {
+      ko: "1인당 ₩25,000 할인!",
+      en: "Save ₩25,000 per person!",
+      ja: "お一人様あたり₩25,000お得！",
+      zh: "每人立减₩25,000！",
+    },
+    description: {
+      ko: "AI 워크숍 자료 무료 제공",
+      en: "Free AI workshop materials included",
+      ja: "AIワークショップ資料無料付き",
+      zh: "附赠AI工作坊资料",
+    },
+    title: {
+      ko: "Microsoft AI 부트캠프 특가!",
+      en: "Microsoft AI Bootcamp Deal!",
+      ja: "Microsoft AIブートキャンプ特価！",
+      zh: "Microsoft AI 训练营优惠！",
+    },
     image: "/img/thumbnail_ms.jpg",
-    urgencyText: "Exclusive tech workshop access!",
+    urgencyText: {
+      ko: "단독 테크 워크숍 액세스!",
+      en: "Exclusive tech workshop access!",
+      ja: "限定テックワークショップ参加！",
+      zh: "独家科技工作坊名额！",
+    },
   },
   3: {
     hasOffer: true,
     originalPrice: "₩85,000",
     discountPrice: "₩72,000",
-    savings: "Save ₩13,000 per person!",
-    description: "Free AI workshop materials included",
-    title: "Microsoft AI Bootcamp Deal!",
+    savings: {
+      ko: "1인당 ₩13,000 할인!",
+      en: "Save ₩13,000 per person!",
+      ja: "お一人様あたり₩13,000お得！",
+      zh: "每人立减₩13,000！",
+    },
+    description: {
+      ko: "AI 워크숍 자료 무료 제공",
+      en: "Free AI workshop materials included",
+      ja: "AIワークショップ資料無料付き",
+      zh: "附赠AI工作坊资料",
+    },
+    title: {
+      ko: "Microsoft AI 부트캠프 특가!",
+      en: "Microsoft AI Bootcamp Deal!",
+      ja: "Microsoft AIブートキャンプ特価！",
+      zh: "Microsoft AI 训练营优惠！",
+    },
     image: "/img/thumbnail_ms.jpg",
-    urgencyText: "Exclusive tech workshop access!",
+    urgencyText: {
+      ko: "단독 테크 워크숍 액세스!",
+      en: "Exclusive tech workshop access!",
+      ja: "限定テックワークショップ参加！",
+      zh: "独家科技工作坊名额！",
+    },
   },
   4: {
     hasOffer: true,
     originalPrice: "₩100,000",
     discountPrice: "₩84,000",
-    savings: "Save ₩16,000 per person!",
-    description: "Premium stadium seats + unlimited chicken & beer",
-    title: "Baseball Premium Deal!",
+    savings: {
+      ko: "1인당 ₩16,000 할인!",
+      en: "Save ₩16,000 per person!",
+      ja: "お一人様あたり₩16,000お得！",
+      zh: "每人立减₩16,000！",
+    },
+    description: {
+      ko: "프리미엄 좌석 + 무제한 치킨&맥주",
+      en: "Premium stadium seats + unlimited chicken & beer",
+      ja: "プレミアム席＋チキン＆ビール食べ飲み放題",
+      zh: "高端球场座位＋鸡肉和啤酒不限量",
+    },
+    title: {
+      ko: "야구 프리미엄 특가!",
+      en: "Baseball Premium Deal!",
+      ja: "野球プレミアムディール！",
+      zh: "棒球尊享特惠！",
+    },
     image: "/img/baseball_tour.jpg",
-    urgencyText: "VIP stadium experience!",
+    urgencyText: {
+      ko: "VIP 경기장 경험!",
+      en: "VIP stadium experience!",
+      ja: "VIPスタジアム体験！",
+      zh: "VIP 球场体验！",
+    },
   },
   5: {
     hasOffer: true,
     originalPrice: "₩135,000",
     discountPrice: "₩109,000",
-    savings: "Save ₩26,000 per person!",
-    description: "Free premium skincare products worth ₩50,000",
-    title: "K-Beauty VIP Deal!",
+    savings: {
+      ko: "1인당 ₩26,000 할인!",
+      en: "Save ₩26,000 per person!",
+      ja: "お一人様あたり₩26,000お得！",
+      zh: "每人立减₩26,000！",
+    },
+    description: {
+      ko: "₩50,000 상당 프리미엄 스킨케어 증정",
+      en: "Free premium skincare products worth ₩50,000",
+      ja: "₩50,000相当のプレミアムスキンケアをプレゼント",
+      zh: "赠送价值₩50,000的高端护肤品",
+    },
+    title: {
+      ko: "K-뷰티 VIP 특가!",
+      en: "K-Beauty VIP Deal!",
+      ja: "K-Beauty VIPディール！",
+      zh: "K-Beauty VIP 特惠！",
+    },
     image: "/img/kbeauty_wellness_tour.jpg",
-    urgencyText: "Exclusive beauty treatment included!",
+    urgencyText: {
+      ko: "단독 뷰티 케어 포함!",
+      en: "Exclusive beauty treatment included!",
+      ja: "限定ビューティートリートメント付き！",
+      zh: "含独家美容护理！",
+    },
   },
   6: {
     hasOffer: true,
     originalPrice: "₩85,000",
     discountPrice: "₩72,000",
-    savings: "Save ₩13,000 per person!",
-    description: "Professional photo editing + 20 high-res photos",
-    title: "Instagram Hotspot Deal!",
+    savings: {
+      ko: "1인당 ₩13,000 할인!",
+      en: "Save ₩13,000 per person!",
+      ja: "お一人様あたり₩13,000お得！",
+      zh: "每人立减₩13,000！",
+    },
+    description: {
+      ko: "전문 보정 + 고해상도 사진 20장 제공",
+      en: "Professional photo editing + 20 high-res photos",
+      ja: "プロによるレタッチ＋高解像度写真20枚",
+      zh: "专业修图＋提供20张高清照片",
+    },
+    title: {
+      ko: "인스타그램 핫스팟 특가!",
+      en: "Instagram Hotspot Deal!",
+      ja: "インスタホットスポットディール！",
+      zh: "Instagram 热门打卡优惠！",
+    },
     image: "/img/hangang_hotplace_tour.jpg",
-    urgencyText: "Professional photographer included!",
+    urgencyText: {
+      ko: "전문 사진작가 동행!",
+      en: "Professional photographer included!",
+      ja: "プロのフォトグラファー同行！",
+      zh: "配专业摄影师！",
+    },
   },
 };
 
 // 할인 정보를 가져오는 헬퍼 함수
+const resolveLocalized = (value) => {
+  if (!value) return value;
+  if (typeof value !== "object") return value;
+  const lang = i18n?.language || "ko";
+  return value[lang] || value.en || value.ko || Object.values(value)[0];
+};
+
 export const getTourOffer = (tourId) => {
   console.log("getTourOffer called with tourId:", tourId); // 디버깅용
   const offer = tourOffers[tourId];
@@ -1026,7 +1138,13 @@ export const getTourOffer = (tourId) => {
     return { hasOffer: false };
   }
 
-  return offer;
+  return {
+    ...offer,
+    title: resolveLocalized(offer.title),
+    description: resolveLocalized(offer.description),
+    savings: resolveLocalized(offer.savings),
+    urgencyText: resolveLocalized(offer.urgencyText),
+  };
 };
 
 // 헬퍼 함수들

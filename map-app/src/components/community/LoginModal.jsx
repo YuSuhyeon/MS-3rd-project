@@ -1,14 +1,33 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, Sparkles } from "lucide-react";
+import { X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const LoginModal = ({ onClose }) => {
-  const { login } = useAuth();
+  const { login, profile } = useAuth();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // 로그인 성공 시 모달 자동 닫기
+  useEffect(() => {
+    if (profile) {
+      onClose();
+    }
+  }, [profile, onClose]);
+
+  const handleLogin = async (provider) => {
+    setIsLoggingIn(true);
+    try {
+      await login(provider);
+    } catch (error) {
+      console.error("로그인 오류:", error);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -38,9 +57,11 @@ const LoginModal = ({ onClose }) => {
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-              <Sparkles className="w-8 h-8 text-white" />
-            </div>
+            <img
+              src="/img/main_logo.png"
+              alt="Logo"
+              className="w-28 h-28 object-contain rounded-xl"
+            />
           </div>
           {/* <h2 className="text-2xl font-bold text-white mb-2">
           
@@ -52,10 +73,11 @@ const LoginModal = ({ onClose }) => {
 
         <div className="space-y-4">
           <motion.button
-            onClick={() => login("google")}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white text-gray-900 font-semibold hover:bg-gray-100 transition-colors"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            onClick={() => handleLogin("google")}
+            disabled={isLoggingIn}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white text-gray-900 font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={{ scale: isLoggingIn ? 1 : 1.02 }}
+            whileTap={{ scale: isLoggingIn ? 1 : 0.98 }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -80,13 +102,14 @@ const LoginModal = ({ onClose }) => {
                 d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.089,5.571l6.19,5.238C44.591,35.021,48,29.412,48,24C48,22.659,47.862,21.35,47.611,20.083z"
               />
             </svg>
-            Google로 계속하기
+            {isLoggingIn ? "로그인 중..." : "Google로 계속하기"}
           </motion.button>
           <motion.button
-            onClick={() => login("microsoft")}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            onClick={() => handleLogin("microsoft")}
+            disabled={isLoggingIn}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={{ scale: isLoggingIn ? 1 : 1.02 }}
+            whileTap={{ scale: isLoggingIn ? 1 : 0.98 }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +122,7 @@ const LoginModal = ({ onClose }) => {
               <path fill="#05a6f0" d="M1 12h10v10H1z" />
               <path fill="#ffba08" d="M12 12h10v10H12z" />
             </svg>
-            Microsoft로 계속하기
+            {isLoggingIn ? "로그인 중..." : "Microsoft로 계속하기"}
           </motion.button>
         </div>
 

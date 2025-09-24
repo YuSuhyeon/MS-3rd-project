@@ -276,7 +276,7 @@ const HeroSection = ({ placeData, areaName }) => {
           </div>
 
           <h1 className="text-4xl md:text-6xl font-black mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-            지금 {placeData.AREA_NM?._text}는
+            {placeData.AREA_NM?._text}
           </h1>
 
           {info?.description && (
@@ -519,57 +519,6 @@ const PopularPlaces = () => {
             </NeonInfoCard>
           )}
 
-          {/* 투어 상품 섹션 - 새로 추가 */}
-          {areaTourProducts.length > 0 && (
-            <NeonInfoCard icon={<Gift />} title="추천 투어 상품" delay={0.5}>
-              <div className="space-y-4">
-                {areaTourProducts.map((tour) => (
-                  <motion.div
-                    key={tour.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * tour.id }}
-                    className="p-4 rounded-xl bg-gradient-to-r from-pink-900/30 to-purple-900/30 border border-pink-500/20 hover:border-pink-400/50 transition-colors cursor-pointer"
-                    onClick={() => handleTourClick(tour.id)}
-                  >
-                    <div className="flex gap-4">
-                      {tour.image && (
-                        <img
-                          src={tour.image}
-                          alt={tour.title}
-                          className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <h3 className="font-bold text-pink-300 mb-1">
-                          {tour.title}
-                        </h3>
-                        <p className="text-sm text-gray-300 mb-2">
-                          {tour.description}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Star
-                              className="text-yellow-400"
-                              size={14}
-                              fill="currentColor"
-                            />
-                            <span className="text-sm text-gray-300">
-                              {tour.rating} ({tour.reviews})
-                            </span>
-                          </div>
-                          <div className="font-bold text-pink-400">
-                            {tour.price}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </NeonInfoCard>
-          )}
-
           {/* 문화행사 */}
           {eventList.length > 0 && (
             <NeonInfoCard icon={<Calendar />} title="주변 문화행사" delay={0.3}>
@@ -651,6 +600,57 @@ const PopularPlaces = () => {
               {placeData.WEATHER_STTS?.WEATHER_STTS?.AIR_MSG?._text}
             </p>
           </NeonInfoCard>
+
+          {/* 투어 상품 섹션 - 우측 사이드바로 이동 */}
+          {areaTourProducts.length > 0 && (
+            <NeonInfoCard icon={<Gift />} title="추천 투어 상품" delay={0.7}>
+              <div className="space-y-4">
+                {areaTourProducts.map((tour) => (
+                  <motion.div
+                    key={tour.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * tour.id }}
+                    className="p-4 rounded-xl bg-gradient-to-r from-pink-900/30 to-purple-900/30 border border-pink-500/20 hover:border-pink-400/50 transition-colors cursor-pointer"
+                    onClick={() => handleTourClick(tour.id)}
+                  >
+                    <div className="flex gap-4">
+                      {tour.image && (
+                        <img
+                          src={tour.image}
+                          alt={tour.title}
+                          className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-bold text-pink-300 mb-1">
+                          {tour.title}
+                        </h3>
+                        <p className="text-sm text-gray-300 mb-2">
+                          {tour.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Star
+                              className="text-yellow-400"
+                              size={14}
+                              fill="currentColor"
+                            />
+                            <span className="text-sm text-gray-300">
+                              {tour.rating} ({tour.reviews})
+                            </span>
+                          </div>
+                          <div className="font-bold text-pink-400">
+                            {tour.price}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </NeonInfoCard>
+          )}
         </div>
       </div>
       {/* '상단으로 이동' 플로팅 버튼 */}

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import BrandLogo from "components/BrandLogo";
+import LoginModal from "components/community/LoginModal";
 import LanguageButtons from "components/ui/LanguageButtons";
 import { useAuth } from "context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -137,7 +138,8 @@ const UI = {
       ],
     },
     chatbotPlaceholder: "궁금한 것을 물어보세요...",
-    chatbotInitialMessage: "안녕하세요! 저는 당신의 AI 여행 도슨트입니다. !",
+    chatbotInitialMessage:
+      "안녕하세요! 저는 서울 관광 안내 챗봇 Klover AI 예요. 서울 여행에 대해 궁금한 점이 있나요? 🤗 ",
     imageQueryText: "이 장소에 대해 알려주세요",
     voiceRecStart: "음성 녹음을 시작합니다...",
     voiceRecResult: "음성 인식 결과:",
@@ -180,7 +182,7 @@ const UI = {
     },
     chatbotPlaceholder: "Ask me anything...",
     chatbotInitialMessage:
-      "Hello! I am your AI travel docent. Ask me about places or travel information. You can also send a photo for a detailed explanation of the location!",
+      "Hello! I'm Klover AI, your Seoul tourism guide chatbot. Do you have any questions about traveling in Seoul?😊",
     imageQueryText: "Tell me about this place",
     voiceRecStart: "Starting voice recording...",
     voiceRecResult: "Voice recognition result:",
@@ -223,7 +225,7 @@ const UI = {
     },
     chatbotPlaceholder: "ご質問をどうぞ...",
     chatbotInitialMessage:
-      "こんにちは！私はあなたのAI旅行ドーセントです。場所や旅行情報について何でも尋ねてください。写真を送ってください。その場所について詳しく説明します！",
+      "こんにちは！私はソウル観光案内チャットボットの Klover AI です。ソウル旅行について何かご質問はありますか？グルメ、ショッピング、祭り、名所まで個別におすすめできますよ☺️",
     imageQueryText: "この場所について教えてください",
     voiceRecStart: "音声録音を開始します...",
     voiceRecResult: "音声認識結果:",
@@ -266,7 +268,7 @@ const UI = {
     },
     chatbotPlaceholder: "请输入您的问题...",
     chatbotInitialMessage:
-      "您好！我是您的AI旅行讲解员。您可以询问任何关于地点或旅行信息的问题。您也可以发送照片，我会为您提供该地点的详细说明！",
+      "您好！我是首尔旅游指南聊天机器人 Klover AI。您对首尔旅行有什么疑问吗？我可以为您提供餐厅、购物、节庆、景点的定制推荐😄",
     imageQueryText: "请介绍一下这个地方",
     voiceRecStart: "开始录音...",
     voiceRecResult: "语音识别结果：",
@@ -716,12 +718,42 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
   const [inputMessage, setInputMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const navigate = useNavigate();
   const ui = UI[selectedLang];
+
+  // 모바일 감지
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // 언어 변경 시, 대화가 시작되지 않았다면 초기 메시지를 선택된 언어로 동기화
+  useEffect(() => {
+    setMessages((prev) => {
+      if (
+        Array.isArray(prev) &&
+        prev.length === 1 &&
+        prev[0]?.id === "initial" &&
+        prev[0]?.type === "ai"
+      ) {
+        return [
+          {
+            ...prev[0],
+            content: UI[selectedLang].chatbotInitialMessage,
+            timestamp: new Date(),
+          },
+        ];
+      }
+      return prev;
+    });
+  }, [selectedLang]);
 
   // 모든 기존 함수들을 그대로 가져옴
   const callTourismAPI = async (userQuery) => {
@@ -1019,6 +1051,9 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
   };
 
   const renderTourButton = (message) => {
+    // 사용자 메시지에는 버튼을 표시하지 않음
+    if (message.type === "user") return null;
+
     const shouldShowButton =
       message.type === "ai-tour" ||
       message.showTourButton ||
@@ -1089,19 +1124,29 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
   return (
     <>
       {/* 플로팅 버튼 */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+      <div
+        className={`fixed z-50 flex flex-col gap-3 ${
+          isMobile ? "bottom-4 right-4" : "bottom-6 right-6"
+        }`}
+      >
         <motion.button
           onClick={() => {
             if (!isOpen) setIsMinimized(false);
             setIsOpen(!isOpen);
           }}
-          className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-300"
+          className={`${
+            isMobile ? "w-12 h-12" : "w-14 h-14"
+          } bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-300`}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+          {isOpen ? (
+            <X size={isMobile ? 20 : 24} />
+          ) : (
+            <MessageCircle size={isMobile ? 20 : 24} />
+          )}
         </motion.button>
       </div>
 
@@ -1115,15 +1160,31 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
             transition={{ duration: 0.3 }}
             className={`fixed z-40 bg-gray-900/95 backdrop-blur-lg border border-purple-500/30 rounded-2xl shadow-2xl flex flex-col ${
               isMinimized
-                ? "bottom-24 right-6 w-96 h-16"
-                : "bottom-24 right-6 w-96 h-[380px] max-h-[70vh]"
+                ? isMobile
+                  ? "bottom-20 right-4 w-80 h-12"
+                  : "bottom-24 right-6 w-96 h-16"
+                : isMobile
+                ? "bottom-20 right-4 w-80 h-[320px] max-h-[60vh]"
+                : "bottom-24 right-6 w-96 h-[420px] max-h-[70vh]"
             }`}
           >
             {/* 헤더 */}
-            <div className="flex items-center justify-between p-4 border-b border-purple-500/20">
+            <div
+              className={`flex items-center justify-between border-b border-purple-500/20 ${
+                isMobile ? "p-3" : "p-4"
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-white font-medium text-sm">
+                <div
+                  className={`${
+                    isMobile ? "w-2 h-2" : "w-3 h-3"
+                  } bg-green-400 rounded-full animate-pulse`}
+                ></div>
+                <span
+                  className={`text-white font-medium ${
+                    isMobile ? "text-xs" : "text-sm"
+                  }`}
+                >
                   {ui.chatbot}
                 </span>
               </div>
@@ -1133,16 +1194,16 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
                   className="p-1 text-gray-400 hover:text-white transition-colors"
                 >
                   {isMinimized ? (
-                    <Maximize2 size={16} />
+                    <Maximize2 size={isMobile ? 14 : 16} />
                   ) : (
-                    <Minimize2 size={16} />
+                    <Minimize2 size={isMobile ? 14 : 16} />
                   )}
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-1 text-gray-400 hover:text-white transition-colors"
                 >
-                  <X size={16} />
+                  <X size={isMobile ? 14 : 16} />
                 </button>
               </div>
             </div>
@@ -1150,7 +1211,11 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
             {!isMinimized && (
               <>
                 {/* 메시지 영역 */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div
+                  className={`flex-1 overflow-y-auto space-y-3 ${
+                    isMobile ? "p-3" : "p-4"
+                  }`}
+                >
                   {messages.map((message) => (
                     <div
                       key={message.id}
@@ -1161,7 +1226,9 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
                       }`}
                     >
                       <div
-                        className={`max-w-[80%] p-3 rounded-xl text-sm ${
+                        className={`max-w-[80%] rounded-xl ${
+                          isMobile ? "p-2 text-xs" : "p-3 text-sm"
+                        } ${
                           message.type === "user"
                             ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                             : "bg-gray-800 text-gray-100 border border-gray-700"
@@ -1173,32 +1240,49 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
                               <img
                                 src={attachment.url}
                                 alt={attachment.caption}
-                                className="w-full h-32 object-cover rounded-lg"
+                                className={`w-full object-cover rounded-lg ${
+                                  isMobile ? "h-24" : "h-32"
+                                }`}
                               />
                             )}
                           </div>
                         ))}
                         <p className="whitespace-pre-wrap">{message.content}</p>
 
-                        {/* 투어 버튼 렌더링 - 조건 확장 */}
-                        {(message.type === "ai-tour" ||
-                          message.showTourButton ||
-                          checkIfShouldRedirectToTour(message.content || "")) &&
+                        {/* 투어 버튼은 AI 메시지에서만 조건부 렌더링 */}
+                        {message.type !== "user" &&
+                          (message.type === "ai-tour" ||
+                            message.showTourButton ||
+                            checkIfShouldRedirectToTour(
+                              message.content || ""
+                            )) &&
                           renderTourButton(message)}
                       </div>
                     </div>
                   ))}
                   {isProcessing && (
                     <div className="flex justify-start">
-                      <div className="bg-gray-800 border border-gray-700 p-3 rounded-xl">
+                      <div
+                        className={`bg-gray-800 border border-gray-700 rounded-xl ${
+                          isMobile ? "p-2" : "p-3"
+                        }`}
+                      >
                         <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
                           <div
-                            className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                            className={`${
+                              isMobile ? "w-1.5 h-1.5" : "w-2 h-2"
+                            } bg-purple-400 rounded-full animate-bounce`}
+                          ></div>
+                          <div
+                            className={`${
+                              isMobile ? "w-1.5 h-1.5" : "w-2 h-2"
+                            } bg-purple-400 rounded-full animate-bounce`}
                             style={{ animationDelay: "0.1s" }}
                           ></div>
                           <div
-                            className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                            className={`${
+                              isMobile ? "w-1.5 h-1.5" : "w-2 h-2"
+                            } bg-purple-400 rounded-full animate-bounce`}
                             style={{ animationDelay: "0.2s" }}
                           ></div>
                         </div>
@@ -1209,23 +1293,37 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
                 </div>
 
                 {/* 입력 영역 */}
-                <div className="p-4 border-t border-purple-500/20">
+                <div
+                  className={`border-t border-purple-500/20 ${
+                    isMobile ? "p-3" : "p-4"
+                  }`}
+                >
                   {/* All screens: inline icons + input + send */}
                   <div className="flex items-stretch gap-2">
                     <div className="flex gap-2">
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                        className={`bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors ${
+                          isMobile ? "p-1.5" : "p-2"
+                        }`}
                         title="갤러리에서 선택"
                       >
-                        <ImageIcon size={16} className="text-purple-400" />
+                        <ImageIcon
+                          size={isMobile ? 14 : 16}
+                          className="text-purple-400"
+                        />
                       </button>
                       <button
                         onClick={() => cameraInputRef.current?.click()}
-                        className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                        className={`bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors ${
+                          isMobile ? "p-1.5" : "p-2"
+                        }`}
                         title="카메라로 촬영"
                       >
-                        <Camera size={16} className="text-purple-400" />
+                        <Camera
+                          size={isMobile ? 14 : 16}
+                          className="text-purple-400"
+                        />
                       </button>
                     </div>
                     <textarea
@@ -1233,16 +1331,20 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder={ui.chatbotPlaceholder}
-                      className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-purple-500"
+                      className={`flex-1 bg-gray-800 border border-gray-700 rounded-lg text-white resize-none focus:outline-none focus:border-purple-500 ${
+                        isMobile ? "px-2 py-1.5 text-xs" : "px-3 py-2 text-sm"
+                      }`}
                       rows="1"
                       disabled={isProcessing}
                     />
                     <button
                       onClick={() => handleSendMessage(inputMessage)}
                       disabled={!inputMessage.trim() || isProcessing}
-                      className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${
+                        isMobile ? "p-1.5" : "p-2"
+                      }`}
                     >
-                      <Send size={16} />
+                      <Send size={isMobile ? 14 : 16} />
                     </button>
                   </div>
                 </div>
@@ -1281,9 +1383,23 @@ export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLiveInfoCollapsed, setIsLiveInfoCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const navigationItems = getNavigationItems(t);
   // 현재 선택된 언어
   const selectedLang = i18n.language || "ko"; //0921주영
+
+  // 로그인 성공 시 모달 닫기
+  useEffect(() => {
+    if (profile && showLoginModal) {
+      setShowLoginModal(false);
+    }
+  }, [profile, showLoginModal]);
+
+  // 터치 이벤트를 위한 ref
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchStartTime = useRef(0);
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -1334,6 +1450,61 @@ export default function Layout({ children }) {
   const toggleLiveInfo = () => setIsLiveInfoCollapsed((prev) => !prev);
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const closeMenu = () => setMenuOpen(false);
+
+  // 터치 이벤트 핸들러
+  const handleTouchStart = (e) => {
+    if (!menuOpen) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchStartTime.current = Date.now();
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!menuOpen) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaX = touchStartX.current - touchEndX;
+    const deltaY = Math.abs(touchStartY.current - touchEndY);
+    const deltaTime = Date.now() - touchStartTime.current;
+
+    // 왼쪽으로 스와이프 조건:
+    // 1. 최소 50px 이상 왼쪽으로 이동
+    // 2. 수직 움직임은 100px 이하 (수평 스와이프임을 보장)
+    // 3. 1초 이내에 완료 (빠른 스와이프)
+    if (deltaX > 50 && deltaY < 100 && deltaTime < 1000) {
+      closeMenu();
+    }
+  };
+
+  // 오버레이 클릭/터치 핸들러
+  const handleOverlayClick = (e) => {
+    // 터치 이벤트와 클릭 이벤트 모두 처리
+    if (e.type === "touchstart" || e.type === "click") {
+      closeMenu();
+    }
+  };
+
+  // 메인 콘텐츠 클릭/터치 핸들러 (사이드 메뉴가 열려있을 때만)
+  const handleMainContentClick = (e) => {
+    if (menuOpen) {
+      closeMenu();
+    }
+  };
+
+  // ESC 키로 메뉴 닫기
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && menuOpen) {
+        closeMenu();
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [menuOpen]);
 
   const isActive = (path, exact) => {
     if (exact) return location.pathname === path;
@@ -1552,7 +1723,11 @@ export default function Layout({ children }) {
         }
       `}</style>
 
-      <div className="flex flex-col min-h-screen bg-[#18102a] relative">
+      <div
+        className="flex flex-col min-h-screen bg-[#18102a] relative"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* 상단 고정 버튼들 */}
         <div className="fixed top-4 left-0 right-0 z-50 flex items-center justify-between px-4">
           {/* 메뉴버튼 (왼쪽) */}
@@ -1593,17 +1768,15 @@ export default function Layout({ children }) {
                 location.pathname !== "/" && (
                   <motion.button
                     onClick={handleSmartBack}
-                    className="neon-menu-toggle"
+                    className="text-white hover:text-purple-300 transition-colors p-2"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    style={{ width: 45, height: 45 }}
                     title="뒤로가기"
                   >
-                    <ArrowLeft className="menu-icon" />
-                    <div className="neon-glow" />
+                    <ArrowLeft className="w-6 h-6" />
                   </motion.button>
                 )
               ) : // 데스크탑: 투어 상세에서만 뒤로, 그 외 홈 유지
@@ -1617,17 +1790,15 @@ export default function Layout({ children }) {
                       navigate("/tour");
                     }
                   }}
-                  className="neon-menu-toggle"
+                  className="text-white hover:text-purple-300 transition-colors p-2"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  style={{ width: 45, height: 45 }}
                   title="뒤로가기"
                 >
-                  <ArrowLeft className="menu-icon" />
-                  <div className="neon-glow" />
+                  <ArrowLeft className="w-6 h-6" />
                 </motion.button>
               ) : (
                 <motion.button
@@ -1664,7 +1835,9 @@ export default function Layout({ children }) {
                 initial="closed"
                 animate="open"
                 exit="closed"
-                onClick={closeMenu}
+                onClick={handleOverlayClick}
+                onTouchStart={handleOverlayClick}
+                onTouchEnd={(e) => e.stopPropagation()}
               />,
               document.body
             )}
@@ -1678,6 +1851,30 @@ export default function Layout({ children }) {
               variants={sidebarVariants}
               initial="closed"
               animate={menuOpen ? "open" : "closed"}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                // 사이드바 내부에서 터치 시작 시 좌표 저장
+                touchStartX.current = e.touches[0].clientX;
+                touchStartY.current = e.touches[0].clientY;
+                touchStartTime.current = Date.now();
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                // 사이드바 내부에서 좌측 스와이프 감지
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const deltaX = touchStartX.current - touchEndX;
+                const deltaY = Math.abs(touchStartY.current - touchEndY);
+                const deltaTime = Date.now() - touchStartTime.current;
+
+                // 왼쪽으로 스와이프 조건:
+                // 1. 최소 50px 이상 왼쪽으로 이동
+                // 2. 수직 움직임은 100px 이하 (수평 스와이프임을 보장)
+                // 3. 1초 이내에 완료 (빠른 스와이프)
+                if (deltaX > 50 && deltaY < 100 && deltaTime < 1000) {
+                  closeMenu();
+                }
+              }}
             >
               <div className="p-3 flex-1 overflow-y-auto">
                 <div className="text-xs font-medium text-purple-400 uppercase tracking-wider px-3 py-2">
@@ -1732,7 +1929,11 @@ export default function Layout({ children }) {
                       whileHover={{ scale: 1.02 }}
                     >
                       <img
-                        src={profile.picture}
+                        src={
+                          profile?.picture ||
+                          profile?.profile_image ||
+                          "/img/default_profile_purple_img.png"
+                        }
                         alt={profile.name}
                         className="w-8 h-8 rounded-full border-2 border-purple-400"
                       />
@@ -1771,7 +1972,10 @@ export default function Layout({ children }) {
                         </p>
                       </div>
                       <button
-                        onClick={() => login()}
+                        onClick={() => {
+                          console.log("로그인 버튼 클릭됨");
+                          setShowLoginModal(true);
+                        }}
                         title={t("log_in")}
                         className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
                       >
@@ -1796,6 +2000,8 @@ export default function Layout({ children }) {
             stiffness: 300,
             damping: 40,
           }}
+          onClick={handleMainContentClick}
+          onTouchStart={handleMainContentClick}
         >
           <div
             className="main-content content-shift"
@@ -1816,6 +2022,13 @@ export default function Layout({ children }) {
         {!(isDocentPage || isPersonaPage) && (
           <FloatingChatbot selectedLang={selectedLang} />
         )}
+
+        {/* 로그인 모달 */}
+        <AnimatePresence>
+          {showLoginModal && (
+            <LoginModal onClose={() => setShowLoginModal(false)} />
+          )}
+        </AnimatePresence>
       </div>
     </>
   );

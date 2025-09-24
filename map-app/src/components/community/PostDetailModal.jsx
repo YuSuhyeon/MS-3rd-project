@@ -367,7 +367,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center pt-28 md:pt-4"
         >
           <div className="text-white text-lg">인증 확인 중...</div>
         </motion.div>
@@ -381,7 +381,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 pt-28 md:pt-4"
         onClick={onClose}
       >
         <motion.div
@@ -565,8 +565,8 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                           댓글 {comments.length}개
                         </h4>
 
-                        {/* 댓글 작성 */}
-                        {currentUserId && (
+                        {/* 댓글 작성 - 정보탭(mock 데이터)이 아닐 때만 표시 */}
+                        {!isMockData(postId) && currentUserId && (
                           <div className="mb-6">
                             <div className="flex gap-3">
                               <div className="flex-1 relative">
@@ -596,7 +596,7 @@ const PostDetailModal = ({ postId, onClose, isOpen }) => {
                           </div>
                         )}
 
-                        {!currentUserId && (
+                        {!isMockData(postId) && !currentUserId && (
                           <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                             <p className="text-yellow-400 text-sm">
                               댓글을 작성하려면 로그인이 필요합니다.

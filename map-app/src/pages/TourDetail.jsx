@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -47,7 +47,7 @@ import {
   getTourOffer,
 } from "../utils/mockTourData";
 
-// 기존 할인 홍보 팝업 컴포넌트 (그대로 유지)
+//할인 팝업 컴
 const OfferPopup = ({ isOpen, onClose, tourId }) => {
   const { t } = useTranslation("tourDetail");
   const [timeLeft, setTimeLeft] = useState({ minutes: 10, seconds: 0 });
@@ -472,7 +472,7 @@ const Tabs = ({ activeTab, onTabChange, children }) => {
   );
 };
 // 일정 탭 내용 (포함사항 2열 배치)
-const OverviewTab = ({ itinerary, included }) => {
+const OverviewTab = ({ itinerary, included, tourId }) => {
   const { t } = useTranslation("tourDetail");
   return (
     <div className="space-y-8">
@@ -494,8 +494,16 @@ const OverviewTab = ({ itinerary, included }) => {
                 </div>
               </div>
               <div>
-                <h4 className="font-bold text-white  mb-1">{item.location}</h4>
-                <p className="text-gray-300 text-sm">{item.description}</p>
+                <h4 className="font-bold text-white  mb-1">
+                  {t(`data.${tourId}.itinerary.${index}.location`, {
+                    defaultValue: item.location,
+                  })}
+                </h4>
+                <p className="text-gray-300 text-sm">
+                  {t(`data.${tourId}.itinerary.${index}.description`, {
+                    defaultValue: item.description,
+                  })}
+                </p>
               </div>
             </div>
           )) || (
@@ -541,7 +549,7 @@ const OverviewTab = ({ itinerary, included }) => {
 };
 
 // 상세정보 탭 내용
-const DetailsTab = ({ detailSections }) => {
+const DetailsTab = ({ detailSections, tourId }) => {
   const { t } = useTranslation("tourDetail");
   return (
     <div className="space-y-6">
@@ -554,9 +562,15 @@ const DetailsTab = ({ detailSections }) => {
           />
           <div className="p-4 bg-gray-800/30 rounded-b-xl border border-gray-600/30 border-t-0">
             <h4 className="text-lg font-bold text-white mb-2">
-              {section.title}
+              {t(`data.${tourId}.details.${index}.title`, {
+                defaultValue: section.title,
+              })}
             </h4>
-            <p className="text-gray-300 text-sm">{section.text}</p>
+            <p className="text-gray-300 text-sm">
+              {t(`data.${tourId}.details.${index}.text`, {
+                defaultValue: section.text,
+              })}
+            </p>
           </div>
         </div>
       )) || (
@@ -639,6 +653,12 @@ const ImageWithFallback = ({
     }
   };
 
+  // 선택된 이미지가 바뀌면 실제 표시 src 갱신 (모바일 화살표/도트 이동 시 반영)
+  useEffect(() => {
+    setImgSrc(src);
+    setHasError(false);
+  }, [src]);
+
   return (
     <img src={imgSrc} alt={alt} className={className} onError={handleError} />
   );
@@ -654,6 +674,7 @@ export default function TourDetail({ onBack }) {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showOfferPopup, setShowOfferPopup] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const tourId = parseInt(id) || 1;
 
@@ -708,6 +729,35 @@ export default function TourDetail({ onBack }) {
 
   const tourData = tourDetailData[tourId];
 
+  // 화면 크기 감지 (모바일 여부)
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // 모바일에서는 비디오(.mp4 등) 제외한 이미지 리스트 계산
+  const displayImages = useMemo(() => {
+    const images = tourData?.images || [];
+    if (!isMobile) return images;
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".avi", ".mov", ".wmv"];
+    return images.filter((media) => {
+      if (typeof media === "string") {
+        const lower = media.toLowerCase();
+        return !videoExtensions.some((ext) => lower.includes(ext));
+      }
+      return media?.type !== "video";
+    });
+  }, [tourData?.images, isMobile]);
+
+  // 투어 변경 또는 이미지 목록 변경 시, 선택 인덱스 안전하게 초기화
+  useEffect(() => {
+    if (selectedImage >= (displayImages?.length || 0)) {
+      setSelectedImage(0);
+    }
+  }, [tourId, displayImages, selectedImage]);
+
   if (!tourData) {
     return (
       <BackgroundEffect>
@@ -738,10 +788,16 @@ export default function TourDetail({ onBack }) {
           <OverviewTab
             itinerary={tourData.itinerary}
             included={tourData.included}
+            tourId={tourId}
           />
         );
       case "details":
-        return <DetailsTab detailSections={tourData.detailSections} />;
+        return (
+          <DetailsTab
+            detailSections={tourData.detailSections}
+            tourId={tourId}
+          />
+        );
       case "reviews":
         return <ReviewsTab reviews={tourData.reviews} />;
       default:
@@ -788,16 +844,23 @@ export default function TourDetail({ onBack }) {
                 {tourData.partnership && (
                   <div className="flex items-center gap-2 mb-2">
                     <span className="px-2 py-1 bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 text-xs rounded-full font-semibold border border-purple-500/30">
-                      {tourData.partnership.primary} ×{" "}
-                      {tourData.partnership.secondary}
+                      {t(`data.${tourId}.partnership.primary`, {
+                        defaultValue: tourData.partnership.primary,
+                      })}
+                      {" × "}
+                      {t(`data.${tourId}.partnership.secondary`, {
+                        defaultValue: tourData.partnership.secondary,
+                      })}
                     </span>
                   </div>
                 )}
-                <h1 className="text-xl font-bold text-white mb-2 leading-tight">
-                  {tourData.title}
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-2 leading-tight">
+                  {t(`data.${tourId}.title`, { defaultValue: tourData.title })}
                 </h1>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  {tourData.subtitle}
+                <p className="text-base sm:text-lg md:text-xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent leading-relaxed">
+                  {t(`data.${tourId}.subtitle`, {
+                    defaultValue: tourData.subtitle,
+                  })}
                 </p>
               </div>
               {/* 2. 이미지 갤러리 - 모바일용 (비디오 필터링) */}
@@ -809,113 +872,67 @@ export default function TourDetail({ onBack }) {
                 <div className="overflow-hidden rounded-2xl">
                   <div className="relative group">
                     {(() => {
-                      const filteredImages =
-                        tourData.images?.filter((media) => {
-                          const isVideo =
-                            typeof media === "string"
-                              ? [
-                                  ".mp4",
-                                  ".webm",
-                                  ".ogg",
-                                  ".avi",
-                                  ".mov",
-                                  ".wmv",
-                                ].some((ext) =>
-                                  media.toLowerCase().includes(ext)
-                                )
-                              : media?.type === "video";
-                          return !isVideo;
-                        }) || [];
-
-                      const safeSelectedImage =
-                        selectedImage >= filteredImages.length
+                      const safeSelected =
+                        selectedImage >= (displayImages?.length || 0)
                           ? 0
                           : selectedImage;
-                      const currentImage =
-                        filteredImages[safeSelectedImage] ||
-                        "/img/default-tour.jpg";
+                      const currentImage = displayImages?.[safeSelected];
 
                       return (
                         <ImageWithFallback
                           src={
                             typeof currentImage === "string"
                               ? currentImage
-                              : currentImage.src || currentImage
+                              : currentImage?.src || currentImage
                           }
                           alt={tourData.title}
-                          className="w-full h-64 object-cover"
-                          fallbackSrc="/img/default-tour.jpg"
+                          className="w-full h-72 object-cover"
                         />
                       );
                     })()}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
                     {/* 이미지 네비게이션 - 필터링된 배열 기준 */}
                     {(() => {
-                      const filteredImages =
-                        tourData.images?.filter((media) => {
-                          const isVideo =
-                            typeof media === "string"
-                              ? [
-                                  ".mp4",
-                                  ".webm",
-                                  ".ogg",
-                                  ".avi",
-                                  ".mov",
-                                  ".wmv",
-                                ].some((ext) =>
-                                  media.toLowerCase().includes(ext)
-                                )
-                              : media?.type === "video";
-                          return !isVideo;
-                        }) || [];
-
-                      if (filteredImages.length <= 1) return null;
+                      if (!displayImages || displayImages.length <= 1)
+                        return null;
 
                       return (
                         <>
                           <motion.button
                             onClick={() => {
-                              const safeSelectedImage =
-                                selectedImage >= filteredImages.length
-                                  ? 0
-                                  : selectedImage;
-                              setSelectedImage(
-                                safeSelectedImage === 0
-                                  ? filteredImages.length - 1
-                                  : safeSelectedImage - 1
+                              const len = displayImages.length;
+                              if (len <= 1) return;
+                              setSelectedImage((prev) =>
+                                prev <= 0 ? len - 1 : prev - 1
                               );
                             }}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200 z-10 pointer-events-auto"
                           >
                             <ChevronLeft className="w-5 h-5" />
                           </motion.button>
 
                           <motion.button
                             onClick={() => {
-                              const safeSelectedImage =
-                                selectedImage >= filteredImages.length
-                                  ? 0
-                                  : selectedImage;
-                              setSelectedImage(
-                                safeSelectedImage === filteredImages.length - 1
-                                  ? 0
-                                  : safeSelectedImage + 1
+                              const len = displayImages.length;
+                              if (len <= 1) return;
+                              setSelectedImage((prev) =>
+                                prev >= len - 1 ? 0 : prev + 1
                               );
                             }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200 z-10 pointer-events-auto"
                           >
                             <ChevronRight className="w-5 h-5" />
                           </motion.button>
 
-                          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-                            {filteredImages.map((_, index) => (
+                          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                            {displayImages.map((_, index) => (
                               <motion.button
                                 key={index}
                                 onClick={() => setSelectedImage(index)}
                                 className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                  (selectedImage >= filteredImages.length
+                                  (selectedImage >= displayImages.length
                                     ? 0
                                     : selectedImage) === index
                                     ? "bg-purple-500 scale-125"
@@ -933,39 +950,53 @@ export default function TourDetail({ onBack }) {
               <div className="flex items-center gap-2 mb-3">
                 <MapPin className="w-4 h-4 text-gray-400" />
                 <span className="text-gray-300 text-sm">
-                  {tourData.location}
+                  {t(`data.${tourId}.location`, {
+                    defaultValue: tourData.location,
+                  })}
                 </span>
               </div>
-              <div className="flex items-center gap-2 mb-4">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-bold text-white text-sm">
-                  {tourData.rating}
-                </span>
-                <span className="text-gray-400 text-xs">
-                  ({tourData.reviewCount}
-                  {t("booking.reviews")})
-                </span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span className="font-bold text-white text-sm">
+                    {tourData.rating}
+                  </span>
+                  <span className="text-gray-400 text-xs">
+                    ({tourData.reviewCount}
+                    {t("booking.reviews")})
+                  </span>
+                </div>
               </div>
 
               {/* 투어 정보를 하나의 컨테이너에 통합 */}
-              <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 border border-purple-500/30 mb-4">
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-sm font-medium">
-                      {tourData.duration}
-                    </span>
-
-                    <Users className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-sm font-medium">
-                      {tourData.groupSize}
-                    </span>
-
-                    <Calendar className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-sm font-medium">
-                      {tourData.language}
-                    </span>
-                  </div>
+              <div className="px-1 mb-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Clock className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-200 text-xs sm:text-[11px] leading-snug">
+                    {t(`data.${tourId}.meta.duration`, {
+                      defaultValue: tourData.duration,
+                    })}
+                  </span>
+                </div>
+              </div>
+              <div className="px-1 mb-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Users className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-200 text-xs sm:text-[11px] leading-snug">
+                    {t(`data.${tourId}.meta.groupSize`, {
+                      defaultValue: tourData.groupSize,
+                    })}
+                  </span>
+                </div>
+              </div>
+              <div className="px-1 mb-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Calendar className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-200 text-xs sm:text-[11px] leading-snug">
+                    {t(`data.${tourId}.meta.language`, {
+                      defaultValue: tourData.language,
+                    })}
+                  </span>
                 </div>
               </div>
 
@@ -1252,23 +1283,34 @@ export default function TourDetail({ onBack }) {
                       {tourData.partnership && (
                         <div className="flex items-center gap-2 mb-3">
                           <span className="px-3 py-1 bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 text-sm rounded-full font-semibold border border-purple-500/30">
-                            {tourData.partnership.primary} ×{" "}
-                            {tourData.partnership.secondary}
+                            {t(`data.${tourId}.partnership.primary`, {
+                              defaultValue: tourData.partnership.primary,
+                            })}
+                            {" × "}
+                            {t(`data.${tourId}.partnership.secondary`, {
+                              defaultValue: tourData.partnership.secondary,
+                            })}
                           </span>
                         </div>
                       )}
-                      <h1 className="text-2xl font-bold text-white mb-3 leading-tight">
-                        {tourData.title}
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-3 leading-tight">
+                        {t(`data.${tourId}.title`, {
+                          defaultValue: tourData.title,
+                        })}
                       </h1>
-                      <p className="text-gray-300 leading-relaxed text-sm">
-                        {tourData.subtitle}
+                      <p className="text-base sm:text-lg md:text-xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent leading-relaxed">
+                        {t(`data.${tourId}.subtitle`, {
+                          defaultValue: tourData.subtitle,
+                        })}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2 mb-4">
                       <MapPin className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-300 text-sm font-medium">
-                        {tourData.location}
+                        {t(`data.${tourId}.location`, {
+                          defaultValue: tourData.location,
+                        })}
                       </span>
                     </div>
 

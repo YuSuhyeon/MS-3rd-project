@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -21,6 +22,8 @@ import {
   User,
   Eye,
   ArrowUp,
+  ArrowLeft,
+  ArrowRight,
   ArrowDown,
   Pin,
 } from "lucide-react";
@@ -58,7 +61,79 @@ const useMediaQuery = (query) => {
   return matches;
 };
 
+// 터치 스와이프 Hook
+const useSwipeScroll = (ref) => {
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleTouchStart = (e) => {
+    setIsScrolling(true);
+    setStartX(e.touches[0].clientX);
+    setScrollLeft(ref.current.scrollLeft);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isScrolling) return;
+    e.preventDefault();
+    const x = e.touches[0].clientX;
+    const walk = (startX - x) * 2; // 스크롤 속도 조절
+    ref.current.scrollLeft = scrollLeft + walk;
+  };
+
+  const handleTouchEnd = () => {
+    setIsScrolling(false);
+  };
+
+  const handleMouseDown = (e) => {
+    setIsScrolling(true);
+    setStartX(e.clientX);
+    setScrollLeft(ref.current.scrollLeft);
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isScrolling) return;
+    e.preventDefault();
+    const x = e.clientX;
+    const walk = (startX - x) * 2;
+    ref.current.scrollLeft = scrollLeft + walk;
+  };
+
+  const handleMouseUp = () => {
+    setIsScrolling(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsScrolling(false);
+  };
+
+  return {
+    onTouchStart: handleTouchStart,
+    onTouchMove: handleTouchMove,
+    onTouchEnd: handleTouchEnd,
+    onMouseDown: handleMouseDown,
+    onMouseMove: handleMouseMove,
+    onMouseUp: handleMouseUp,
+    onMouseLeave: handleMouseLeave,
+  };
+};
+
 const API_BASE_URL = "/api";
+const CITY_API_BASE =
+  "https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api/CityDataDetailAPI";
+
+// 기본 서울 지역 목록 (아이콘/표시명 유지)
+const DEFAULT_SEOUL_AREAS = [
+  { name: "강남", areaName: "강남 MICE 관광특구", icon: "🏢" },
+  { name: "광화문", areaName: "광화문·덕수궁", icon: "🏛️" },
+  { name: "명동", areaName: "명동 관광특구", icon: "🛍️" },
+  { name: "서울역", areaName: "서울역", icon: "🚂" },
+  { name: "이태원", areaName: "이태원 관광특구", icon: "🌍" },
+  { name: "잠실", areaName: "잠실 관광특구", icon: "🎡" },
+  { name: "종로", areaName: "종로·청계 관광특구", icon: "🛒" },
+  { name: "홍대", areaName: "홍대 관광특구", icon: "🎨" },
+];
 
 const fetchPosts = async (page = 1, limit = 4, searchParams = {}) => {
   // "정보" 탭(official)일 때는 목업 데이터 사용
@@ -726,9 +801,9 @@ const MobilePostCard = ({
               .map((tag, tagIndex) => (
                 <span
                   key={tagIndex}
-                  className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs border border-purple-400/30"
+                  className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs border border-purple-400/30 truncate whitespace-nowrap"
                 >
-                  #{tag.trim()}
+                  {String(tag).trim()}
                 </span>
               ))}
           </div>
@@ -946,9 +1021,9 @@ const PostRow = ({
                   .map((tag, tagIndex) => (
                     <span
                       key={tagIndex}
-                      className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs"
+                      className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs truncate whitespace-nowrap"
                     >
-                      #{tag.trim()}
+                      {String(tag).trim()}
                     </span>
                   ))}
               </div>
@@ -1067,6 +1142,108 @@ const PostRow = ({
   );
 };
 
+// Live Seoul 섹션 컴포넌트
+const LiveSeoulSection = ({ isMobile, liveAreas = [] }) => {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const places = liveAreas.length > 0 ? liveAreas : DEFAULT_SEOUL_AREAS;
+
+  const checkScrollButtons = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  const scrollTo = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = isMobile ? 120 : 150;
+      const newScrollLeft =
+        scrollRef.current.scrollLeft +
+        (direction === "left" ? -scrollAmount : scrollAmount);
+      scrollRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  useEffect(() => {
+    checkScrollButtons();
+    const handleScroll = () => checkScrollButtons();
+
+    if (scrollRef.current) {
+      scrollRef.current.addEventListener("scroll", handleScroll);
+      return () => {
+        if (scrollRef.current) {
+          scrollRef.current.removeEventListener("scroll", handleScroll);
+        }
+      };
+    }
+  }, [places]);
+
+  return (
+    <div className={`${isMobile ? "mb-6 mt-6" : "mb-8"}`}>
+      {/* 통합된 박스 */}
+      <div>
+        {/* 헤더 */}
+        <div className="flex items-center gap-2 mb-4 text-sm text-gray-300">
+          <div className="px-3 py-1.5 bg-red-600 rounded-full border border-red-400 shadow-lg">
+            <span className="text-white text-xs font-bold">● LIVE </span>
+          </div>
+          <span className="text-white font-medium">인기 여행지</span>
+        </div>
+
+        <div className="relative">
+          <div
+            ref={scrollRef}
+            className={`flex gap-3 pb-2 flex-nowrap ${
+              isMobile
+                ? "gap-3 mobile-horizontal-scroll"
+                : "gap-4 overflow-x-auto scrollbar-hide"
+            }`}
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              WebkitOverflowScrolling: "touch",
+              scrollBehavior: "smooth",
+            }}
+          >
+            {(isMobile ? places.slice(0, 8) : places).map((place) => (
+              <Link
+                key={place.areaName}
+                to={`/popular-places/${encodeURIComponent(place.areaName)}`}
+                className="flex-shrink-0"
+              >
+                <NeonCard
+                  variant="success"
+                  className={`text-center hover:scale-105 transition-all duration-300 cursor-pointer border  ${
+                    isMobile ? "py-2 px-2 w-16 min-w-16" : "py-4 w-24"
+                  }`}
+                >
+                  <div
+                    className={`${isMobile ? "text-lg mb-1" : "text-2xl mb-2"}`}
+                  >
+                    {place.icon}
+                  </div>
+                  <div
+                    className={`text-xs text-white font-medium leading-tight truncate whitespace-nowrap`}
+                  >
+                    {place.name}
+                  </div>
+                </NeonCard>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // 게시판 테이블 컴포넌트
 
 const PostTable = ({ posts, ...props }) => {
@@ -1091,10 +1268,11 @@ const PostTable = ({ posts, ...props }) => {
                 번호
               </th>
               <th className="px-4 py-3 text-left text-gray-300 text-sm font-medium w-96">
-                {/* 고정 너비 설정 */}
                 제목
               </th>
-              <th className="px-4 py-3 text-center text-gray-300 text-sm font-medium w-24"></th>
+              <th className="px-4 py-3 text-center text-gray-300 text-sm font-medium w-24">
+                작성자
+              </th>
               <th
                 className="px-4 py-3 text-center text-gray-300 text-sm font-medium w-20 cursor-pointer hover:text-white transition-colors"
                 onClick={() => handleSort("created_at")}
@@ -1143,6 +1321,7 @@ const PostTable = ({ posts, ...props }) => {
 };
 
 export default function CommunitySocial() {
+  const { t } = useTranslation("common");
   const { profile, logout } = useAuth();
   //  const isMobile = useMediaQuery("(max-width: 768px)");
   const isMobile = useIsMobile();
@@ -1157,6 +1336,7 @@ export default function CommunitySocial() {
   });
   const [trendingTags, setTrendingTags] = useState([]);
   const [trendingPosts, setTrendingPosts] = useState([]);
+  const [liveAreas, setLiveAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentSearchTerm, setCurrentSearchTerm] = useState("");
@@ -1171,6 +1351,27 @@ export default function CommunitySocial() {
   const [selectedTab, setSelectedTab] = useState("official");
 
   const currentUserId = profile?.sub || profile?.id || profile?.user_id;
+
+  // 공식(정보) 탭 mock 데이터 다국어 매핑
+  const getTranslatedTitle = (post) => {
+    const keyId = post.id || post.board_id;
+    if (post.category === "official") {
+      return t(`community.info.posts.${keyId}.title`, {
+        defaultValue: post.title || "제목 없음",
+      });
+    }
+    return post.title || "제목 없음";
+  };
+
+  const getTranslatedContent = (post) => {
+    const keyId = post.id || post.board_id;
+    if (post.category === "official") {
+      return t(`community.info.posts.${keyId}.content`, {
+        defaultValue: post.content || "",
+      });
+    }
+    return post.content || "";
+  };
 
   const loadPosts = async (searchParams = {}, category = "all", page = 1) => {
     setLoading(true);
@@ -1240,6 +1441,38 @@ export default function CommunitySocial() {
     setIsSearchMode(false);
     loadPosts({}, "official", 1);
     loadTrendingData();
+    // 실시간 서울 지역 데이터 로드
+    const loadLiveAreas = async () => {
+      try {
+        const results = await Promise.all(
+          DEFAULT_SEOUL_AREAS.map(async (area) => {
+            try {
+              const res = await fetch(
+                `${CITY_API_BASE}?areaName=${encodeURIComponent(area.areaName)}`
+              );
+              if (!res.ok) throw new Error("city api error");
+              const data = await res.json();
+              const ppltnMax = Number(
+                data?.LIVE_PPLTN_STTS?.LIVE_PPLTN_STTS?.AREA_PPLTN_MAX?._text ||
+                  0
+              );
+              const lvl =
+                data?.LIVE_PPLTN_STTS?.LIVE_PPLTN_STTS?.AREA_CONGEST_LVL
+                  ?._text || "";
+              return { ...area, ppltnMax, lvl };
+            } catch (e) {
+              return { ...area, ppltnMax: 0, lvl: "" };
+            }
+          })
+        );
+        // 인구 최대값 기준 내림차순 정렬
+        results.sort((a, b) => b.ppltnMax - a.ppltnMax);
+        setLiveAreas(results);
+      } catch (e) {
+        setLiveAreas([]);
+      }
+    };
+    loadLiveAreas();
   }, []);
 
   // 로그인 상태 변경 시 모달 닫기
@@ -1411,7 +1644,7 @@ export default function CommunitySocial() {
   }
 
   return (
-    <BackgroundEffect className="flex-1 min-h-screen neon-scrollbar overflow-y-auto">
+    <BackgroundEffect className="flex-1 min-h-screen neon-scrollbar overflow-y-auto overflow-x-hidden">
       <NeonScrollbarStyles />
       <style jsx>{`
         .scrollbar-hide {
@@ -1420,6 +1653,26 @@ export default function CommunitySocial() {
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        .swipe-scroll {
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+        }
+        .swipe-scroll::-webkit-scrollbar {
+          display: none;
+        }
+        .mobile-horizontal-scroll {
+          overflow-x: auto;
+          overflow-y: hidden;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .mobile-horizontal-scroll::-webkit-scrollbar {
+          display: none;
+        }
+        .mobile-horizontal-scroll > * {
+          flex-shrink: 0;
         }
       `}</style>
 
@@ -1448,79 +1701,59 @@ export default function CommunitySocial() {
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="relative z-10 p-6 pt-24 md:pt-28">
+      <div className="relative z-10 p-6 pt-12 md:pt-16 w-full max-w-7xl mx-auto">
         <div className="flex gap-6 flex-col lg:flex-row">
           {/* 왼쪽 메인 콘텐츠 */}
           <div className="flex-1">
-            {/* 게시판 헤더 */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-              <div>
-                <GradientText
-                  variant="primary"
-                  size="3xl"
-                  className="font-bold"
-                >
-                  커뮤니티 게시판
-                </GradientText>
-                <p className="text-white/70 mt-2">
-                  서울과 함께한 우리들의 이야기
-                </p>
-              </div>
+            {/* 헤더: Tour와 동일한 톤의 제목/부제 */}
+            <div className="mb-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight">
+                Klover Community
+              </h1>
+              <p className="text-gray-400 text-sm sm:text-base mt-1">
+                {t("community.subtitle", {
+                  defaultValue:
+                    " Editor's Pick과 실시간 정보들, 서울을 여행하는 여행자들과 함께해보세요",
+                })}
+              </p>
+            </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                {/* 로그인 상태 표시 */}
-                {profile ? (
-                  <div className="flex items-center gap-3 px-4 py-2 bg-white/10 rounded-lg border border-purple-400/30 w-full sm:w-auto">
-                    <img
-                      src={profile.picture || "/img/default_profile_img.png"}
-                      alt="프로필"
-                      className="w-8 h-8 rounded-full border border-purple-400"
-                      onError={(e) => {
-                        e.target.src = "/img/default_profile_img.png";
-                      }}
-                    />
-                    {/* <div className="text-sm flex-1">
-                      <p className="text-white font-medium">
-                        {profile.name || profile.nickname || "사용자"}님
-                      </p>
-                      <p className="text-green-400 text-xs">로그인됨</p>
-                    </div> */}
-                    <div className="text-sm flex-1">
-                      <p className="font-medium bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                        {profile.name || profile.nickname || "사용자"}님
-                      </p>
-                      <p className="text-green-400 text-xs">로그인됨</p>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="p-1 text-gray-400 hover:text-red-400 transition-colors"
-                      title="로그아웃"
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-end w-full sm:w-auto">
-                    <NeonButton
-                      onClick={() => setShowLoginModal(true)}
-                      variant="primary"
-                      size="sm"
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                    </NeonButton>
-                  </div>
-                )}
+            {/* 상단 검색 입력 (모바일 전용) */}
+            <div className="mb-4 md:hidden">
+              <div className="relative w-full sm:max-w-xs">
+                <input
+                  type="text"
+                  placeholder={t("community.search_placeholder", {
+                    defaultValue: "검색...",
+                  })}
+                  value={currentSearchTerm}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setCurrentSearchTerm(value);
+                    if (window.searchTimeout) {
+                      clearTimeout(window.searchTimeout);
+                    }
+                    window.searchTimeout = setTimeout(() => {
+                      if (value.trim()) {
+                        handleSearch({ query: value.trim() });
+                      } else {
+                        handleSearch({});
+                      }
+                    }, 400);
+                  }}
+                  className="w-full bg-white/10 text-white placeholder-white/50 pl-9 pr-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:border-purple-400 text-sm"
+                />
+                <Search className="w-4 h-4 text-purple-300 absolute left-3 top-2.5" />
               </div>
             </div>
 
             {/* 탭 메뉴 + 검색 */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               {/* 탭 메뉴 */}
-              <div className="flex justify-start gap-2 sm:gap-6 w-full sm:w-auto">
+              <div className="flex justify-start gap-1 sm:gap-6 w-full sm:w-auto">
                 <button
                   onClick={() => handleTabChange("official")}
-                  className={`px-3 py-2 rounded-lg font-medium transition-all flex-1 sm:flex-none ${
+                  className={`px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all flex-1 sm:flex-none ${
                     selectedTab === "official"
                       ? "bg-purple-500/20 text-purple-300 border border-purple-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -1530,7 +1763,7 @@ export default function CommunitySocial() {
                 </button>
                 <button
                   onClick={() => handleTabChange("travel")}
-                  className={`px-3 py-2 rounded-lg font-medium transition-all flex-1 sm:flex-none ${
+                  className={`px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all flex-1 sm:flex-none ${
                     selectedTab === "travel"
                       ? "bg-purple-500/20 text-purple-300 border border-purple-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -1542,77 +1775,34 @@ export default function CommunitySocial() {
 
               {/* 검색 + 글쓰기 버튼 */}
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                {/* 실시간 검색 입력창 */}
-                <div className="relative flex-1 sm:flex-none">
-                  <input
-                    type="text"
-                    placeholder="검색..."
-                    value={currentSearchTerm}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCurrentSearchTerm(value);
-
-                      // 디바운스 효과를 위해 기존 타이머 클리어
-                      if (window.searchTimeout) {
-                        clearTimeout(window.searchTimeout);
-                      }
-
-                      // 500ms 후에 검색 실행
-                      window.searchTimeout = setTimeout(() => {
-                        if (value.trim()) {
-                          handleSearch({ query: value.trim() });
-                        } else {
-                          handleSearch({});
+                {/* 데스크톱 검색 입력 (탭 우측 정렬) */}
+                <div className="hidden md:block ml-auto">
+                  <div className="relative w-64">
+                    <input
+                      type="text"
+                      placeholder={t("community.search_placeholder", {
+                        defaultValue: "검색...",
+                      })}
+                      value={currentSearchTerm}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCurrentSearchTerm(value);
+                        if (window.searchTimeout) {
+                          clearTimeout(window.searchTimeout);
                         }
-                      }, 500);
-                    }}
-                    className={`w-full ${
-                      profile ? "sm:w-40" : "sm:w-48"
-                    } bg-white/10 text-white placeholder-white/50 px-3 py-2 pl-8 rounded-lg border border-white/20 focus:outline-none focus:border-purple-400 text-sm`}
-                  />
-                  <Search className="w-4 h-4 text-purple-400 absolute left-2.5 top-2.5" />
+                        window.searchTimeout = setTimeout(() => {
+                          if (value.trim()) {
+                            handleSearch({ query: value.trim() });
+                          } else {
+                            handleSearch({});
+                          }
+                        }, 400);
+                      }}
+                      className="w-full bg-white/10 text-white placeholder-white/50 pl-9 pr-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:border-purple-400 text-sm"
+                    />
+                    <Search className="w-4 h-4 text-purple-300 absolute left-3 top-2.5" />
+                  </div>
                 </div>
-
-                {/* 모바일 글쓰기 버튼  */}
-                {/* {profile && (
-                  <motion.div
-                    className="block sm:hidden"
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                  >
-                    <NeonButton
-                      onClick={handleCreatePostClick}
-                      variant="primary"
-                      size="sm"
-                      className="flex items-center gap-1 px-3 py-2 whitespace-nowrap"
-                    >
-                      <Plus className="w-4 h-4" />
-                      글쓰기
-                    </NeonButton>
-                  </motion.div>
-                )} */}
-                {/* 모바일 글쓰기 버튼 (검색창 옆에 배치) */}
-                {profile && selectedTab !== "official" && (
-                  <motion.div
-                    className="block sm:hidden"
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                  >
-                    <NeonButton
-                      onClick={handleCreatePostClick}
-                      variant="primary"
-                      size="sm"
-                      className="flex items-center gap-1 px-3 py-2 whitespace-nowrap"
-                    >
-                      <Plus className="w-4 h-4" />
-                      글쓰기
-                    </NeonButton>
-                  </motion.div>
-                )}
               </div>
             </div>
 
@@ -1637,94 +1827,14 @@ export default function CommunitySocial() {
                 // 정보 탭일 때는 공지사항을 구분해서 표시
                 posts.length > 0 ? (
                   <div className="space-y-6">
-                    {/* 모바일: 실시간 인기여행지 → 공지 → Editor's Pick */}
+                    {/* 모바일 */}
                     <div className="block md:hidden">
-                      {/* 실시간 인기 여행지 - 모바일용 가로 스크롤 */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3 text-sm text-gray-300">
-                          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                          <span>실시간 인기 여행지</span>
-                        </div>
-                        <div className="relative">
-                          <div
-                            className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
-                            style={{
-                              scrollbarWidth: "none",
-                              msOverflowStyle: "none",
-                            }}
-                          >
-                            {[
-                              {
-                                name: "명동",
-                                areaName: "명동 관광특구",
-                                icon: "🛍️",
-                              },
-                              {
-                                name: "광화문",
-                                areaName: "광화문·덕수궁",
-                                icon: "🏛️",
-                              },
-                              {
-                                name: "이태원",
-                                areaName: "이태원 관광특구",
-                                icon: "🌍",
-                              },
-                              {
-                                name: "잠실",
-                                areaName: "잠실 관광특구",
-                                icon: "🎡",
-                              },
-                              {
-                                name: "홍대",
-                                areaName: "홍대 관광특구",
-                                icon: "🎨",
-                              },
-                              {
-                                name: "강남",
-                                areaName: "강남 관광특구",
-                                icon: "🏢",
-                              },
-                              {
-                                name: "동대문",
-                                areaName: "동대문 관광특구",
-                                icon: "🛒",
-                              },
-                              {
-                                name: "인사동",
-                                areaName: "인사동",
-                                icon: "🏮",
-                              },
-                            ].map((place) => (
-                              <Link
-                                key={place.areaName}
-                                to={`/popular-places/${encodeURIComponent(
-                                  place.areaName
-                                )}`}
-                                className="flex-shrink-0"
-                              >
-                                <NeonCard
-                                  variant="success"
-                                  className="text-center hover:scale-105 transition-transform cursor-pointer py-2 px-2 w-16 min-w-16"
-                                >
-                                  <div className="text-lg mb-1">
-                                    {place.icon}
-                                  </div>
-                                  <div className="text-xs text-white font-medium leading-tight">
-                                    {place.name}
-                                  </div>
-                                </NeonCard>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
                       {/* 공지사항 - 모바일용 간략 버전 */}
                       {posts.filter((post) => post.priority === "notice")
                         .length > 0 && (
-                        <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-yellow-400/30">
+                        <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-yellow-500/30 hover:border-yellow-400/50 hover:shadow-yellow-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-4">
                           <div className="flex items-center gap-2 mb-3">
-                            <Pin className="w-4 h-4 text-yellow-400" />
+                            <div className="w-2 h-5 animate-pulse mr-1">📌</div>
                             <h3 className="text-base font-semibold text-white">
                               공지사항
                             </h3>
@@ -1732,7 +1842,7 @@ export default function CommunitySocial() {
                           <div className="space-y-2">
                             {posts
                               .filter((post) => post.priority === "notice")
-                              .slice(0, 2) // 모바일에서는 2개만 표시
+                              .slice(0, 3) // 모바일에서는 최대 3개 표시
                               .map((post, index) => (
                                 <div
                                   key={post.id || post.board_id}
@@ -1744,10 +1854,14 @@ export default function CommunitySocial() {
                                       handlePostClick(post.id || post.board_id)
                                     }
                                   >
-                                    {post.title}
+                                    {getTranslatedTitle(post)}
                                   </h4>
                                   <p className="text-gray-300 text-xs line-clamp-1">
-                                    {post.content?.substring(0, 50)}...
+                                    {getTranslatedContent(post)?.substring(
+                                      0,
+                                      50
+                                    )}
+                                    ...
                                   </p>
                                 </div>
                               ))}
@@ -1755,31 +1869,78 @@ export default function CommunitySocial() {
                         </div>
                       )}
 
+                      {/* LIVE Seoul - 모바일용 가로 스크롤 */}
+                      <LiveSeoulSection isMobile={true} />
+
                       {/* Editor's Pick 섹션 */}
                       {posts.filter((post) => post.priority !== "notice")
                         .length > 0 && (
                         <div className="mt-6">
-                          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <Hash className="w-5 h-5 text-purple-400" />
-                            Editor's Pick!
-                          </h3>
-                          <div className="space-y-3">
-                            {posts
-                              .filter((post) => post.priority !== "notice")
-                              .slice(0, 2) // 모바일에서는 2개만 표시
-                              .map((post, index) => (
-                                <MobilePostCard
-                                  key={post.id || post.board_id}
-                                  post={post}
-                                  index={index}
-                                  onLikeUpdate={handleLikeUpdate}
-                                  onPostUpdate={handlePostUpdate}
-                                  onPostDelete={handlePostDelete}
-                                  onPostClick={handlePostClick}
-                                  currentUserId={currentUserId}
-                                  onEditPost={handleEditPost}
-                                />
-                              ))}
+                          <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/30 hover:border-purple-400/50 hover:shadow-purple-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-4">
+                            <div className="flex items-center gap-2 mb-4">
+                              <div className="w-2 h-5 animate-pulse mr-1">
+                                ✨
+                              </div>
+                              <h3 className="text-base font-semibold text-white">
+                                Klover Editor's Pick!
+                              </h3>
+                            </div>
+                            <div className="space-y-3">
+                              {posts
+                                .filter((post) => post.priority !== "notice")
+                                .slice(0, 2) // 모바일에서는 2개만 표시
+                                .map((post, index) => (
+                                  <MobilePostCard
+                                    key={post.id || post.board_id}
+                                    post={post}
+                                    index={index}
+                                    onLikeUpdate={handleLikeUpdate}
+                                    onPostUpdate={handlePostUpdate}
+                                    onPostDelete={handlePostDelete}
+                                    onPostClick={handlePostClick}
+                                    currentUserId={currentUserId}
+                                    onEditPost={handleEditPost}
+                                  />
+                                ))}
+                            </div>
+
+                            {/* 정보탭 페이지네이션 - Editor's Pick 안에 */}
+                            {pagination.totalPages > 1 && (
+                              <div className="mt-6 flex justify-center items-center gap-2">
+                                <button
+                                  onClick={() =>
+                                    handlePageChange(pagination.currentPage - 1)
+                                  }
+                                  disabled={!pagination.hasPrev}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    !pagination.hasPrev
+                                      ? "text-gray-500 cursor-not-allowed"
+                                      : "text-white hover:bg-white/10"
+                                  }`}
+                                >
+                                  <ArrowLeft className="w-5 h-5" />
+                                </button>
+
+                                <span className="px-4 py-2 text-sm text-gray-300">
+                                  {pagination.currentPage} /{" "}
+                                  {pagination.totalPages}
+                                </span>
+
+                                <button
+                                  onClick={() =>
+                                    handlePageChange(pagination.currentPage + 1)
+                                  }
+                                  disabled={!pagination.hasNext}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    !pagination.hasNext
+                                      ? "text-gray-500 cursor-not-allowed"
+                                      : "text-white hover:bg-white/10"
+                                  }`}
+                                >
+                                  <ArrowUp className="w-5 h-5 rotate-90" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -1790,9 +1951,9 @@ export default function CommunitySocial() {
                       {/* 공지사항 섹션 */}
                       {posts.filter((post) => post.priority === "notice")
                         .length > 0 && (
-                        <div className="bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm border border-yellow-400/30 mb-8">
+                        <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-yellow-500/30 hover:border-yellow-400/50 hover:shadow-yellow-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-6 mb-8">
                           <div className="flex items-center gap-2 mb-4">
-                            <Pin className="w-5 h-5 text-yellow-400" />
+                            <div className="w-2 h-5 animate-pulse mr-1">📌</div>
                             <h3 className="text-lg font-semibold text-white">
                               공지사항
                             </h3>
@@ -1801,6 +1962,7 @@ export default function CommunitySocial() {
                           <div className="space-y-3">
                             {posts
                               .filter((post) => post.priority === "notice")
+                              .slice(0, 3) // 데스크톱에서도 최대 3개 표시
                               .map((post, index) => (
                                 <div
                                   key={post.id || post.board_id}
@@ -1817,11 +1979,15 @@ export default function CommunitySocial() {
                                             )
                                           }
                                         >
-                                          {post.title}
+                                          {getTranslatedTitle(post)}
                                         </h4>
                                       </div>
                                       <p className="text-gray-300 text-sm line-clamp-2 mb-3">
-                                        {post.content?.substring(0, 100)}...
+                                        {getTranslatedContent(post)?.substring(
+                                          0,
+                                          100
+                                        )}
+                                        ...
                                       </p>
                                       <div className="flex items-center gap-4 text-xs text-gray-400">
                                         <span>{post.user_name}</span>
@@ -1839,184 +2005,158 @@ export default function CommunitySocial() {
                       )}
 
                       {/* 실시간 인기 여행지 - 데스크톱용 가로 스크롤 */}
-                      <div className="mb-8">
-                        <div className="flex items-center gap-2 mb-3 text-sm text-gray-300">
-                          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                          <span>실시간 인기 여행지</span>
-                        </div>
-                        <div className="relative">
-                          <div
-                            className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
-                            style={{
-                              scrollbarWidth: "none",
-                              msOverflowStyle: "none",
-                            }}
-                          >
-                            {[
-                              {
-                                name: "명동",
-                                areaName: "명동 관광특구",
-                                icon: "🛍️",
-                              },
-                              {
-                                name: "광화문",
-                                areaName: "광화문·덕수궁",
-                                icon: "🏛️",
-                              },
-                              {
-                                name: "이태원",
-                                areaName: "이태원 관광특구",
-                                icon: "🌍",
-                              },
-                              {
-                                name: "잠실",
-                                areaName: "잠실 관광특구",
-                                icon: "🎡",
-                              },
-                              {
-                                name: "홍대",
-                                areaName: "홍대 관광특구",
-                                icon: "🎨",
-                              },
-                              {
-                                name: "강남",
-                                areaName: "강남 관광특구",
-                                icon: "🏢",
-                              },
-                              {
-                                name: "동대문",
-                                areaName: "동대문 관광특구",
-                                icon: "🛒",
-                              },
-                              {
-                                name: "인사동",
-                                areaName: "인사동",
-                                icon: "🏮",
-                              },
-                            ].map((place) => (
-                              <Link
-                                key={place.areaName}
-                                to={`/popular-places/${encodeURIComponent(
-                                  place.areaName
-                                )}`}
-                                className="flex-shrink-0"
-                              >
-                                <NeonCard
-                                  variant="success"
-                                  className="text-center hover:scale-105 transition-transform cursor-pointer py-4 w-24"
-                                >
-                                  <div className="text-2xl mb-2">
-                                    {place.icon}
-                                  </div>
-                                  <div className="text-sm text-white font-medium">
-                                    {place.name}
-                                  </div>
-                                </NeonCard>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+                      <LiveSeoulSection
+                        isMobile={false}
+                        liveAreas={liveAreas}
+                      />
 
                       {/* Editor's Pick 섹션 */}
                       {posts.filter((post) => post.priority !== "notice")
                         .length > 0 && (
                         <div>
-                          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <Hash className="w-5 h-5 text-purple-400" />
-                            Editor's Pick!
-                          </h3>
+                          <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/30 hover:border-purple-400/50 hover:shadow-purple-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-6">
+                            <div className="flex items-center gap-2 mb-6">
+                              <div className="w-2 h-5 animate-pulse mr-1">
+                                ✨
+                              </div>
+                              <h3 className="text-lg font-semibold text-white">
+                                Editor's Pick!
+                              </h3>
+                            </div>
 
-                          {/* 데스크톱: 매거진 카드 형식 */}
-                          <div className="grid grid-cols-3 gap-6">
-                            {posts
-                              .filter((post) => post.priority !== "notice")
-                              .map((post, index) => {
-                                const cover =
-                                  post.image_url ||
-                                  post.cover_image ||
-                                  post.thumbnail_url ||
-                                  post.image ||
-                                  null;
-                                return (
-                                  <NeonCard
-                                    key={post.id || post.board_id}
-                                    variant="primary"
-                                    className="relative group overflow-hidden cursor-pointer h-full"
-                                    onClick={() =>
-                                      handlePostClick(post.id || post.board_id)
-                                    }
-                                  >
-                                    {cover && (
-                                      <div className="relative h-32 w-full overflow-hidden">
-                                        <img
-                                          src={cover}
-                                          alt="cover"
-                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                          onError={(e) => {
-                                            e.currentTarget.style.display =
-                                              "none";
-                                          }}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                                      </div>
-                                    )}
-                                    <div className="relative z-10 p-5 flex flex-col h-full">
-                                      <div className="flex items-center gap-3 mb-3">
-                                        <img
-                                          src={
-                                            post.user_profile_image ||
-                                            "/img/default_profile_img.png"
-                                          }
-                                          alt="프로필"
-                                          className="w-8 h-8 rounded-full border border-purple-400/50"
-                                          onError={(e) => {
-                                            e.currentTarget.src =
-                                              "/img/default_profile_img.png";
-                                          }}
-                                        />
-                                        <div className="text-xs text-gray-300">
-                                          <div className="font-medium text-white/90">
-                                            {post.user_name ||
-                                              post.author ||
-                                              "익명"}
-                                          </div>
-                                          <div className="text-gray-400">
-                                            {post.created_at
-                                              ? new Date(
-                                                  post.created_at
-                                                ).toLocaleDateString()
-                                              : ""}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <h4 className="text-xl font-extrabold leading-snug bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-2 line-clamp-2">
-                                        {post.title || "제목 없음"}
-                                      </h4>
-                                      <p className="text-sm text-gray-300/90 line-clamp-3 mb-3">
-                                        {post.content || "내용이 없습니다."}
-                                      </p>
-                                      {post.tags && (
-                                        <div className="mt-auto flex flex-wrap gap-2">
-                                          {(Array.isArray(post.tags)
-                                            ? post.tags
-                                            : post.tags.split(",")
-                                          )
-                                            .slice(0, 3)
-                                            .map((tag, i) => (
-                                              <span
-                                                key={i}
-                                                className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-purple-200 border border-white/20"
-                                              >
-                                                #{String(tag).trim()}
-                                              </span>
-                                            ))}
+                            {/* 데스크톱: 매거진 카드 형식 */}
+                            <div className="grid grid-cols-3 gap-6">
+                              {posts
+                                .filter((post) => post.priority !== "notice")
+                                .slice(0, 3)
+                                .map((post, index) => {
+                                  const cover =
+                                    post.image_url ||
+                                    post.cover_image ||
+                                    post.thumbnail_url ||
+                                    post.image ||
+                                    null;
+                                  return (
+                                    <NeonCard
+                                      key={post.id || post.board_id}
+                                      variant="primary"
+                                      className="relative group overflow-hidden cursor-pointer h-full"
+                                      onClick={() =>
+                                        handlePostClick(
+                                          post.id || post.board_id
+                                        )
+                                      }
+                                    >
+                                      {cover && (
+                                        <div className="relative h-32 w-full overflow-hidden">
+                                          <img
+                                            src={cover}
+                                            alt="cover"
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            onError={(e) => {
+                                              e.currentTarget.style.display =
+                                                "none";
+                                            }}
+                                          />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                                         </div>
                                       )}
-                                    </div>
-                                  </NeonCard>
-                                );
-                              })}
+                                      <div className="relative z-10 p-5 flex flex-col h-full">
+                                        <div className="flex items-center gap-3 mb-3">
+                                          <img
+                                            src={
+                                              post.user_profile_image ||
+                                              "/img/default_profile_img.png"
+                                            }
+                                            alt="프로필"
+                                            className="w-8 h-8 rounded-full border border-purple-400/50"
+                                            onError={(e) => {
+                                              e.currentTarget.src =
+                                                "/img/default_profile_img.png";
+                                            }}
+                                          />
+                                          <div className="text-xs text-gray-300">
+                                            <div className="font-medium text-white/90">
+                                              {post.user_name ||
+                                                post.author ||
+                                                "익명"}
+                                            </div>
+                                            <div className="text-gray-400">
+                                              {post.created_at
+                                                ? new Date(
+                                                    post.created_at
+                                                  ).toLocaleDateString()
+                                                : ""}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <h4 className="text-lg font-extrabold leading-snug bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1 line-clamp-2">
+                                          {getTranslatedTitle(post)}
+                                        </h4>
+                                        <p className="text-xs text-gray-300/90 line-clamp-2 mb-2">
+                                          {getTranslatedContent(post) ||
+                                            "내용이 없습니다."}
+                                        </p>
+                                        {post.tags && (
+                                          <div className="mt-auto flex flex-wrap gap-2">
+                                            {(Array.isArray(post.tags)
+                                              ? post.tags
+                                              : post.tags.split(",")
+                                            )
+                                              .slice(0, 3)
+                                              .map((tag, i) => (
+                                                <span
+                                                  key={i}
+                                                  className="px-2 py-0.5 rounded-full text-[10px] bg-white/10 text-purple-200 border border-white/20 truncate whitespace-nowrap"
+                                                >
+                                                  {String(tag).trim()}
+                                                </span>
+                                              ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </NeonCard>
+                                  );
+                                })}
+                            </div>
+
+                            {/* 정보탭 페이지네이션 - Editor's Pick 안에 */}
+                            {pagination.totalPages > 1 && (
+                              <div className="mt-6 flex justify-center items-center gap-2">
+                                <button
+                                  onClick={() =>
+                                    handlePageChange(pagination.currentPage - 1)
+                                  }
+                                  disabled={!pagination.hasPrev}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    !pagination.hasPrev
+                                      ? "text-gray-500 cursor-not-allowed"
+                                      : "text-white hover:bg-white/10"
+                                  }`}
+                                >
+                                  <ArrowLeft className="w-5 h-5" />
+                                </button>
+
+                                <span className="px-4 py-2 text-sm text-gray-300">
+                                  {pagination.currentPage} /{" "}
+                                  {pagination.totalPages}
+                                </span>
+
+                                <button
+                                  onClick={() =>
+                                    handlePageChange(pagination.currentPage + 1)
+                                  }
+                                  disabled={!pagination.hasNext}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    !pagination.hasNext
+                                      ? "text-gray-500 cursor-not-allowed"
+                                      : "text-white hover:bg-white/10"
+                                  }`}
+                                >
+                                  <ArrowUp className="w-5 h-5 rotate-90" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -2049,13 +2189,36 @@ export default function CommunitySocial() {
               ) : // 다른 탭일 때는 기존 로직
               posts.length > 0 ? (
                 <>
-                  {/* 모바일: 카드 형식 */}
-                  <div className="block md:hidden">
-                    {posts.map((post, index) => (
-                      <MobilePostCard
-                        key={post.id || post.board_id}
-                        post={post}
-                        index={index}
+                  {/* 후기 게시글 섹션 */}
+                  <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-4 md:p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-2 h-5 animate-pulse mr-1">💬</div>
+                      <h3 className="text-base md:text-lg font-semibold text-white">
+                        여행 후기
+                      </h3>
+                    </div>
+
+                    {/* 모바일: 카드 형식 */}
+                    <div className="block md:hidden">
+                      {posts.map((post, index) => (
+                        <MobilePostCard
+                          key={post.id || post.board_id}
+                          post={post}
+                          index={index}
+                          onLikeUpdate={handleLikeUpdate}
+                          onPostUpdate={handlePostUpdate}
+                          onPostDelete={handlePostDelete}
+                          onPostClick={handlePostClick}
+                          currentUserId={currentUserId}
+                          onEditPost={handleEditPost}
+                        />
+                      ))}
+                    </div>
+
+                    {/* 데스크톱: 테이블 형식 */}
+                    <div className="hidden md:block">
+                      <PostTable
+                        posts={posts}
                         onLikeUpdate={handleLikeUpdate}
                         onPostUpdate={handlePostUpdate}
                         onPostDelete={handlePostDelete}
@@ -2063,20 +2226,58 @@ export default function CommunitySocial() {
                         currentUserId={currentUserId}
                         onEditPost={handleEditPost}
                       />
-                    ))}
-                  </div>
+                    </div>
 
-                  {/* 데스크톱: 테이블 형식 */}
-                  <div className="hidden md:block">
-                    <PostTable
-                      posts={posts}
-                      onLikeUpdate={handleLikeUpdate}
-                      onPostUpdate={handlePostUpdate}
-                      onPostDelete={handlePostDelete}
-                      onPostClick={handlePostClick}
-                      currentUserId={currentUserId}
-                      onEditPost={handleEditPost}
-                    />
+                    {/* 글쓰기 버튼 - 후기탭에서만 표시 */}
+                    {profile && (
+                      <div className="mt-6 flex justify-center">
+                        <NeonButton
+                          onClick={handleCreatePostClick}
+                          variant="primary"
+                          size="base"
+                          className="flex items-center gap-2 px-6 py-3"
+                        >
+                          <Plus className="w-5 h-5" />새 게시글 작성
+                        </NeonButton>
+                      </div>
+                    )}
+
+                    {/* 후기탭 페이지네이션 - 글 목록 섹션 안에 */}
+                    {pagination.totalPages > 1 && (
+                      <div className="mt-6 flex justify-center items-center gap-2">
+                        <button
+                          onClick={() =>
+                            handlePageChange(pagination.currentPage - 1)
+                          }
+                          disabled={!pagination.hasPrev}
+                          className={`p-2 rounded-lg transition-colors ${
+                            !pagination.hasPrev
+                              ? "text-gray-500 cursor-not-allowed"
+                              : "text-white hover:bg-white/10"
+                          }`}
+                        >
+                          <ArrowLeft className="w-5 h-5" />
+                        </button>
+
+                        <span className="px-4 py-2 text-sm text-gray-300">
+                          {pagination.currentPage} / {pagination.totalPages}
+                        </span>
+
+                        <button
+                          onClick={() =>
+                            handlePageChange(pagination.currentPage + 1)
+                          }
+                          disabled={!pagination.hasNext}
+                          className={`p-2 rounded-lg transition-colors ${
+                            !pagination.hasNext
+                              ? "text-gray-500 cursor-not-allowed"
+                              : "text-white hover:bg-white/10"
+                          }`}
+                        >
+                          <ArrowRight className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
@@ -2112,79 +2313,6 @@ export default function CommunitySocial() {
                 </NeonCard>
               )}
             </motion.section>
-
-            {/* 페이지네이션 */}
-            <div className="mt-8 flex justify-center items-center gap-2">
-              {pagination.totalPages > 1 && (
-                <>
-                  <button
-                    onClick={() => handlePageChange(pagination.currentPage - 1)}
-                    disabled={!pagination.hasPrev}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                      !pagination.hasPrev
-                        ? "text-gray-500 cursor-not-allowed"
-                        : "text-white hover:bg-white/10"
-                    }`}
-                  >
-                    이전
-                  </button>
-
-                  {/* 페이지 번호들 */}
-                  {[...Array(pagination.totalPages)].map((_, index) => {
-                    const page = index + 1;
-                    const isCurrentPage = page === pagination.currentPage;
-                    const isVisible =
-                      page === 1 ||
-                      page === pagination.totalPages ||
-                      Math.abs(page - pagination.currentPage) <= 1;
-
-                    if (!isVisible) {
-                      // 생략 표시
-                      if (
-                        page === pagination.currentPage - 2 ||
-                        page === pagination.currentPage + 2
-                      ) {
-                        return (
-                          <span
-                            key={page}
-                            className="px-2 text-gray-500 text-sm"
-                          >
-                            ...
-                          </span>
-                        );
-                      }
-                      return null;
-                    }
-
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                          isCurrentPage
-                            ? "bg-purple-500 text-white font-bold"
-                            : "text-gray-300 hover:bg-white/10"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-
-                  <button
-                    onClick={() => handlePageChange(pagination.currentPage + 1)}
-                    disabled={!pagination.hasNext}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                      !pagination.hasNext
-                        ? "text-gray-500 cursor-not-allowed"
-                        : "text-white hover:bg-white/10"
-                    }`}
-                  >
-                    다음
-                  </button>
-                </>
-              )}
-            </div>
           </div>
         </div>
       </div>

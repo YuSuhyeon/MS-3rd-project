@@ -1,0 +1,3577 @@
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+
+const resources = {
+  ko: {
+    tourDetail: {
+      data: {
+        1: {
+          title: "K-Pop 데몬 헌터즈 × 에버랜드 스페셜 콜라보 투어",
+          subtitle:
+            "넷플릭스 오리지널 시리즈 × 한국 대표 테마파크 완벽 컬래버레이션",
+          location: "에버랜드, 낙산공원, N서울타워, 국립중앙박물관",
+          listDescription: "에버랜드 입장권 포함, 드라마 촬영지 투어",
+          partnership: {
+            primary: "NETFLIX",
+            secondary: "Samsung Everland",
+            tertiary: "Seoul Tourism Organization",
+          },
+          meta: {
+            duration: "10시간",
+            groupSize: "최대 12명",
+            language: "한국어, 영어, 중국어",
+          },
+          itinerary: [
+            {
+              location: "강남역 집결",
+              description: "전용 버스 탑승 및 투어 브리핑",
+            },
+            {
+              location: "에버랜드 입장",
+              description: "K-Pop 데몬 헌터즈 테마존 체험 시작",
+            },
+          ],
+          details: [
+            {
+              title: "에버랜드 X K-Pop 데몬 헌터즈 테마존",
+              text: "몰입형 어트랙션에서 드라마 속 액션을 직접 체험",
+            },
+          ],
+        },
+        2: {
+          title: "마이크로소프트 AI 투어 서울",
+          subtitle: "AI 기술과 문화재 복원의 만남",
+          location: "서울 중구 마이크로소프트 코리아",
+          listDescription: "AI 데모, 문화재 복원 체험, 굿즈샵",
+          partnership: {
+            primary: "Microsoft Korea",
+            secondary: "국가유산청",
+          },
+          meta: {
+            duration: "4시간",
+            groupSize: "최대 20명",
+            language: "한국어, 영어",
+          },
+          itinerary: [
+            {
+              location: "마이크로소프트 코리아 사무실",
+              description: "AI 기술 소개 및 투어 시작",
+            },
+            {
+              location: "AI 데모 센터",
+              description: "문화재 복원 AI 기술 체험",
+            },
+          ],
+          details: [
+            {
+              title: "MS AI 컨퍼런스 주요 일정",
+              text: "기조 세션과 실습 워크샵으로 AI 혁신을 체험",
+            },
+          ],
+        },
+        3: {
+          title: "한강 버스 X 인스타그램 서울 핫플 투어",
+          subtitle: "한강을 따라 펼쳐지는 서울 대표 포토스팟 완전 정복",
+          location: "한강공원 (여의도-잠실-반포-마포)",
+          listDescription: "포토 팁, 한강버스, 야경 타임랩스",
+          meta: {
+            duration: "3.5시간",
+            groupSize: "최대 25명",
+            language: "한국어, 영어",
+          },
+          partnership: {
+            primary: "서울관광재단",
+            secondary: "한강사업본부",
+          },
+          itinerary: [
+            {
+              location: "여의도 한강공원",
+              description: "투어 시작 및 인스타그램 포토 팁 강의",
+            },
+            {
+              location: "한강버스 (여의도→잠실)",
+              description: "63빌딩 & IFC몰 배경 버스 내 촬영",
+            },
+          ],
+          details: [
+            {
+              title: "여의도 한강공원",
+              text: "강변 자전거·피크닉과 스카이라인 뷰를 즐길 수 있는 휴식 공간",
+            },
+            {
+              title: "반포 무지개분수",
+              text: "밤에는 조명과 음악이 어우러진 로맨틱 야경 명소",
+            },
+          ],
+        },
+        4: {
+          title: "LG 트윈스 프리미엄 야구 관람 투어",
+          subtitle: "잠실야구장에서 즐기는 완벽한 야구 체험",
+          location: "잠실야구장, 롯데월드타워",
+          listDescription: "팬샵, 박스석 치킨&맥주, 포토 투어",
+          meta: {
+            duration: "6시간",
+            groupSize: "최대 25명",
+            language: "한국어, 영어, 일본어",
+          },
+          itinerary: [
+            {
+              location: "잠실역 2번 출구",
+              description: "투어 시작 및 야구 문화 소개",
+            },
+            {
+              location: "LG 트윈스 팬샵",
+              description: "유니폼 착용 및 응원용품 준비",
+            },
+          ],
+          details: [
+            {
+              title: "잠실 야구 경기",
+              text: "3만석 규모의 응원 문화와 열기를 현장에서 경험",
+            },
+            {
+              title: "LG 트윈스",
+              text: "에너지 넘치는 응원전과 잊지 못할 경기 분위기",
+            },
+          ],
+        },
+        5: {
+          title: "K-뷰티 & 웰니스 프리미엄 투어",
+          subtitle: "한국 최고의 뷰티 기술과 전통 웰니스의 완벽한 조합",
+          location: "강남구 (압구정-청담-신사)",
+          listDescription: "퍼스널컬러, 피부과 케어, K-뷰티, 한방 스파",
+          meta: {
+            duration: "6시간",
+            groupSize: "최대 12명",
+            language: "한국어, 영어, 중국어, 일본어",
+          },
+          itinerary: [
+            {
+              location: "퍼스널컬러 진단",
+              description: "컬러 분석 & 맞춤 메이크업 추천",
+            },
+            {
+              location: "압구정 프리미엄 피부과",
+              description: "피부 분석 & 하이드라페이셜 케어",
+            },
+          ],
+          details: [
+            {
+              title: "K-뷰티 퍼스널 컬러",
+              text: "전문가 분석으로 나만의 최적 컬러를 찾는 경험",
+            },
+            {
+              title: "K-뷰티 in 올리브영",
+              text: "퍼스널 쇼퍼와 함께 트렌드 상품을 큐레이션",
+            },
+          ],
+        },
+        6: {
+          title: "서울 전통 문화 투어",
+          subtitle: "경복궁·인사동·광장시장에서 즐기는 전통 체험 하루",
+          location: "서울 종로구 일대",
+          listDescription: "한복 스냅, 다도 체험, 시장 먹거리",
+          meta: {
+            duration: "4.5시간",
+            groupSize: "최대 6명",
+            language: "한국어, 영어, 중국어",
+          },
+          itinerary: [
+            {
+              location: "경복궁 입구",
+              description: "한복 대여 후 고궁 관람 및 여행 스냅",
+            },
+            { location: "인사동", description: "다도 체험 및 전통 거리 산책" },
+          ],
+          details: [
+            {
+              title: "경복궁 여행스냅",
+              text: "웅장한 전각과 정원을 배경으로 특별한 순간 기록",
+            },
+            {
+              title: "인사동 다도 체험",
+              text: "전문가 안내로 한국 차 문화를 깊이 체험",
+            },
+          ],
+        },
+      },
+      offer: {
+        expiresIn: "마감까지 남은 시간",
+        limitedTime: "⏳ 한정 시간 특가",
+        doNotShowToday: "오늘 하루 보지 않기",
+        grabDeal: "예약하기",
+        grabbed: "확정됨",
+        dealGrabbed: "딜이 확정되었습니다!",
+        priceSecured: "현재 가격이 잠시 동안 보장됩니다",
+        urgencyText: "서두르세요! {{minutes}}분 {{seconds}}초 뒤 종료",
+      },
+      booking: {
+        bookNow: "지금 예약",
+        reviews: "개의 리뷰",
+        discount: "할인",
+      },
+      tabs: {
+        overview: "일정",
+        details: "상세정보",
+        reviews: "리뷰",
+      },
+      overview: {
+        itinerary: "일정",
+        noItinerary: "일정 정보가 없습니다",
+        included: "포함 사항",
+        includedItems: {
+          guide: "전문 가이드",
+          lunch: "점심 식사",
+          souvenirs: "기념품",
+          transportation: "교통",
+          activities: "체험 활동",
+          insurance: "보험",
+        },
+      },
+      details: {
+        noDetails: "상세 정보가 없습니다",
+      },
+      reviews: {
+        noReviews: "리뷰가 없습니다",
+      },
+      notFound: {
+        title: "투어를 찾을 수 없습니다",
+        description: "요청하신 투어 정보를 불러올 수 없습니다.",
+      },
+    },
+    tour: {
+      header: {
+        klover: "K-lover",
+        tour: "Tour",
+        subtitle: "Premium Personal Tour",
+      },
+      list: {
+        title: "K-lover 투어",
+      },
+      search: { placeholder: "검색어를 입력하세요" },
+      categories: {
+        all: "All",
+        experience: "Experience",
+        it: "IT",
+        sports: "Sports",
+        beauty: "Beauty",
+        culture: "History",
+      },
+      pagination: { prev: "이전", next: "다음" },
+      empty: {
+        title: "검색 결과가 없습니다",
+        description: "다른 검색어나 필터를 시도해보세요.",
+      },
+      partners: {
+        title: "기업 제휴 파트너",
+        subtitle: "신뢰할 수 있는 파트너사",
+      },
+    },
+    common: {
+      community: {
+        info_reviews_label: "정보 & 후기",
+        info_reviews_desc: "여행 정보와 후기를 공유하는 공간",
+        info: {
+          posts: {
+            10001: {
+              title: "✈️ 서울 도심공항터미널 스마트 이용 가이드",
+              content:
+                "공항 가기 전 도심에서 체크인, 수하물 위탁, 출국 심사를 빠르게! 서울역/B2, 광명역 도심공항터미널 이용 정보와 운영시간, 유의사항을 안내합니다.",
+            },
+            10002: {
+              title: "🎆 2025 서울세계불꽃축제 개최 안내",
+              content:
+                "2025년 10월 4일(토) 19:30~21:00, 여의도 한강공원 일대에서 열리는 서울세계불꽃축제 주요 정보와 교통, 관람 포인트를 확인하세요.",
+            },
+            10003: {
+              title: "🌟 서울 지하철 2025년 추석 단축 운영",
+              content:
+                "추석 연휴 기간 서울지하철 1~9호선 막차가 오후 11시로 단축 운행됩니다. 자세한 시간표는 서울교통공사 홈페이지 참고.",
+            },
+            1001: {
+              title: "케이팝 데몬 헌터스 – 3일 서울 여행 코스",
+              content:
+                "웹툰 ‘케이팝 데몬 헌터스’ 배경 명소를 3일에 걸쳐 둘러보는 성지순례 루트. 강남·삼성, 한강·홍대, 광화문·익선동·낙산 일정과 꿀팁 제공.",
+            },
+          },
+        },
+      },
+      // Home.jsx
+      place1: "명동",
+      place2: "광화문",
+      place3: "이태원",
+      place4: "잠실",
+      "features.title1": "AI 페르소나 분석",
+      "features.title2": "맞춤 코스 추천",
+      "features.title3": "K-Pop 플레이리스트",
+      "features.title4": "AI 도슨트",
+      "features.desc1": "5가지 질문으로 당신만의 여행 스타일 발견",
+      "features.desc2": "AI가 실시간으로 생성하는 완벽한 여행 루트",
+      "features.desc3": "여행지별 분위기에 맞는 나만의 K-Pop 음악",
+      "features.desc4": "RAG 기반 챗봇으로 현지 문화 깊이 체험",
+      "stats.label1": "맞춤 여행 생성",
+      "stats.label2": "만족도",
+      "stats.label3": "AI 지원",
+      "stats.label4": "평균 평점",
+      "main.badge": "AI 맞춤형 여행 플래너",
+      // "nav.features": "기능",
+      // "nav.howto": "사용법",
+      // "nav.community": "커뮤니티",
+      "login.welcome": " 환영합니다!",
+      "login.logout": "로그아웃",
+      "login.login": "로그인",
+      "main.title.k_travel": "여행",
+      "main.title.connector": "을",
+      "main.title.ai_creates": "AI가 만들어드려요",
+      "main.subtitle":
+        "5가지 질문으로 여행 스타일을 분석하고, K-Pop과 함께하는 완벽한 코스를 추천받으세요. 복잡한 계획은 AI에게, 당신은 설렘만 준비하세요.",
+      "main.start.persona": "페르소나 분석 시작",
+      "main.start.start": "시작하기",
+      // "now.playing": "Now Playing",
+      // "main.recommend.spot": "추천 스팟",
+      // "main.recommend.spot.name": "홍대 K-Pop 스퀘어",
+      "main.title.ai_action": "AI가 만드는",
+      "main.title.experience": "특별한 경험",
+      "main.subtitle.ai_action":
+        "혁신적인 AI 기술로 당신만의 완벽한 한국 여행을 설계합니다",
+      "main.more.view": "자세히 보기",
+      "steps.title": "간단한 3단계로",
+      "steps.completion": "완성",
+      "steps.step1.title": "페르소나 분석",
+      "steps.step1.description": "5가지 질문으로 여행 스타일 분석",
+      "steps.step2.title": "AI 맞춤 추천",
+      "steps.step2.description": "분석 결과 기반 완벽한 코스 생성",
+      "steps.step3.title": "자유로운 편집",
+      "steps.step3.description": "드래그 & 드롭으로 나만의 플랜 완성",
+      "popular.title": "실시간 인기",
+      "popular.highlight": "여행지",
+      "popular.action.join": "를",
+      "popular.action": "만나보세요",
+      "popular.description": "다른 여행자들이 선택한 인기 코스를 확인해보세요",
+      "footer.slogan": "AI와 함께하는 완벽한 한국 여행을 경험해보세요",
+      "footer.privacy_policy": "개인정보처리방침",
+      "footer.terms_of_service": "이용약관",
+      "footer.customer_center": "고객센터",
+      "footer.partnership": "파트너십",
+      "footer.copyright": "© 2025 TravelK. All rights reserved.",
+      "modal.welcome": "TravelK에 오신 것을 환영합니다",
+      "modal.instruction": "AI 맞춤 여행 플래너를 시작하려면 로그인하세요",
+      "modal.continue_google": "Google로 계속하기",
+      "modal.continue_microsoft": "Microsoft로 계속하기",
+      "modal.disclaimer.prefix": "계속 진행하시면",
+      "modal.disclaimer.terms": "이용약관",
+      "modal.disclaimer.and": "과",
+      "modal.disclaimer.privacy": "개인정보처리방침",
+      "modal.disclaimer.suffix": "에 동의하는 것으로 간주됩니다.",
+      "cta.title": "이제, 당신의 완벽한 여행을 시작할 시간",
+      "cta.start": "5가지 질문으로 시작하기",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "당신만의 여행 페르소나를 발견하세요",
+      "home.persona.desc":
+        "5가지 질문으로 여행 스타일을 분석하고, AI가 맞춤형 코스를 추천해드립니다.",
+      "home.persona.cta": "페르소나 분석 시작하기",
+      "home.persona.card1.title": "여행 스타일은?",
+      "home.persona.card1.pill1": "모험 추구형",
+      "home.persona.card1.pill2": "여유 만끽형",
+      "home.persona.card1.pill3": "계획적 탐방형",
+      "home.persona.card2.title": "관심 있는 활동은?",
+      "home.persona.card2.pill1": "문화 체험",
+      "home.persona.card2.pill2": "음식 탐방",
+      "home.persona.card2.pill3": "쇼핑",
+      "home.persona.card3.title": "선호하는 분위기는?",
+      "home.persona.card3.pill1": "트렌디한",
+      "home.persona.card3.pill2": "전통적인",
+      "home.persona.card3.pill3": "자연친화적",
+
+      "home.ai_reco.title": "AI가 만드는 완벽한 여행 코스",
+      "home.ai_reco.desc":
+        "개인 맞춤 분석을 바탕으로 최적의 여행 루트를 실시간으로 생성합니다.",
+      "home.ai_reco.tag1": "실시간 생성",
+      "home.ai_reco.tag2": "맞춤형 추천",
+      "home.ai_reco.tag3": "최적 경로",
+      "home.ai_reco.tag4": "시간 효율",
+      "home.ai_reco.tag5": "현지 정보",
+
+      "home.editing.title": "자유롭게 편집하고 완성하세요",
+      "home.editing.desc":
+        "드래그 앤 드롭으로 여행 일정을 자유롭게 수정하고 나만의 완벽한 플랜을 만들어보세요.",
+
+      "home.map.preview_label": "맞춤 여행 루트",
+
+      "home.itinerary.title": "여행 일정",
+      "home.itinerary.item1": "경복궁 관람",
+      "home.itinerary.item2": "북촌 한옥마을",
+      "home.itinerary.item3": "인사동 문화거리",
+      "home.itinerary.item4": "명동 쇼핑",
+
+      "home.controls.undo": "실행취소",
+      "home.controls.save": "저장하기",
+    },
+    QuickTranslator: {
+      all: "전체",
+      greeting: "인사",
+      location: "위치",
+      price: "가격",
+      help: "도움",
+      transport: "교통",
+      food: "음식",
+      status: "상태",
+      payment: "결제",
+      menu: "메뉴",
+      language_detection_error: "언어 감지 중 오류가 발생했습니다.",
+      speech_recognition_error: "음성 인식 오류",
+      real_time_translator: "실시간 번역기",
+      stop_listening: "음성 인식 중지",
+      processing_listening: "음성 인식 처리 중...",
+      start_listening: "음성 인식 시작",
+      listening: "음성을 듣고 있습니다... 말씀해주세요",
+      processing_text_conversion: "음성을 텍스트로 변환하고 있습니다...",
+      input_text: "번역할 텍스트를 입력하세요... (언어가 자동으로 감지됩니다)",
+      detecting_language: "언어를 감지하고 있습니다...",
+      detected_language: "감지된 언어",
+      translating: "번역 중...",
+      translate: "번역하기",
+      translation_results: "번역 결과",
+      listen_to_audio: "음성으로 듣기",
+      frequently_used_expressions: "자주 쓰는 표현",
+      phrases1: "Hello",
+      phrases2: "Thank you",
+      phrases3: "Sorry",
+      phrases4: "Where is the bathroom?",
+      phrases5: "How much is it?",
+      phrases6: "Help me",
+      phrases7: "Where is the subway station?",
+      phrases8: "It's delicious",
+      phrases9: "I've arrived",
+      phrases10: "Can I pay by card?",
+      phrases11: "Please give me a receipt",
+      phrases12: "Please give me the menu",
+      phrases13: "Please give me water",
+      phrases14: "Please give me the bill",
+      phrases15: "Please wrap it up",
+    },
+    Navigation: {
+      persona_analysis: "페르소나 분석",
+      result_dashboard: "결과 대시보드",
+      itinerary_planner: "여행 일정 계획",
+      ai_docent: "AI 도슨트",
+      community: "커뮤니티",
+      tour: "여행상품",
+      survival: "서바이벌",
+      survival_kit: "서바이벌 키트",
+      playlists: "플레이리스트",
+      menu: "메뉴",
+      personalized_travel_planning: "맞춤형 여행 계획",
+      live_info: "실시간 정보",
+      exchange_rate_krw: "환율 (원)",
+      seoul_weather: "서울 날씨",
+      temp: "온도",
+      humidity: "습도",
+      wind: "바람",
+      refresh_data: "데이터 새로고침",
+      expand: "펼치기",
+      collapse: "접기",
+      welcome_traveler: "여행자님, 환영합니다!",
+      plan_your_trip_with_ai: "AI와 함께 여행을 계획하세요",
+      log_out: "로그아웃",
+      log_in: "로그인",
+      mypage: "마이 페이지",
+    },
+    SurvivalKit: {
+      // Hero 섹션
+      hero_tagline: "여행자 필수 도구",
+      hero_title: "서바이벌 키트",
+      hero_subtitle:
+        "한국 여행 중 필요한 모든 도구와 정보를 한 곳에서 만나보세요",
+
+      // 섹션 설명
+      section_vision_benefit: "이미지 텍스트 인식 및 번역",
+      section_translator_benefit: "실시간 음성 및 텍스트 번역",
+      section_culture_benefit: "한국 문화와 예절 가이드",
+
+      vision_ocr: "비전 OCR",
+      quick_translator: "빠른 통역",
+      culture_guide: "한국 문화 가이드",
+      // 문화 가이드 번역
+      greeting: "인사 예절",
+      greeting_content:
+        "한국에서는 나이가 많은 사람에게 먼저 인사하고, 고개를 숙여 인사합니다.",
+      greeting_extra:
+        "보통 가벼운 목례만으로도 충분하며, 두 손으로 악수하면 더 공손하게 보입니다.",
+      greeting_modal_title: "한국의 존댓말과 기본 인사 표현",
+      greeting_modal_paragraphs:
+        "한국에는 존댓말과 반말이 있어서 인사 표현도 상황에 따라 달라집니다.",
+      greeting_modal_paragraphs_2:
+        "친구끼리는 '안녕'이라고 하지만, 어른이나 처음 만난 사람에게는 반드시 '안녕하세요'라고 해야 예의입니다.",
+      greeting_modal_list_1: "안녕하세요 (일상 존댓말)",
+      greeting_modal_list_2: "안녕하십니까 (격식)",
+      greeting_modal_list_3: "안녕 (친한 사이, 반말)",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해",
+      greeting_modal_link_1: "한국 사람들에게 인사하는 방법",
+
+      meal: "식사 예절",
+      meal_content:
+        "어른이 먼저 수저를 들고, 밥그릇을 들고 먹지 않습니다. 술은 양손으로 받습니다.",
+      meal_extra:
+        "밥을 다 먹은 후에는 젓가락을 그릇 위에 가지런히 올려두는 것이 예의입니다.",
+      meal_modal_title: "한국의 식사 예절",
+      meal_modal_paragraphs:
+        "한국에서 식사는 단순히 음식을 먹는 것이 아니라 상대방을 존중하는 중요한 자리입니다.",
+      meal_modal_paragraphs_2:
+        "식사 전에는 '잘 먹겠습니다', 식사 후에는 '잘 먹었습니다'라고 인사하며, 이는 준비한 사람과 함께한 사람 모두에 대한 존중을 의미합니다.",
+      meal_modal_list_1: "자리에 앉을 때는 연장자나 손님이 먼저 앉습니다.",
+      meal_modal_list_2: "젓가락을 밥그릇에 꽂지 않습니다.",
+      meal_modal_list_3: "술을 마실 때는 고개를 살짝 돌려서 마십니다.",
+      meal_modal_list_4:
+        "큰 소리로 씹거나 젓가락으로 사람을 가리키는 것은 실례입니다.",
+      meal_modal_list_5: "그릇은 식탁 위에 놓고 먹습니다.",
+      meal_modal_link_1: "한국인의 식사 예절",
+
+      transportation: "대중교통",
+      transportation_content:
+        "지하철에서는 노약자석을 양보하고, 큰 소리로 통화하지 않습니다.",
+      transportation_extra:
+        "혼잡한 시간대에는 가방을 앞으로 메는 것이 배려하는 태도입니다.",
+      transportation_modal_title: "한국의 대중교통",
+      transportation_modal_paragraphs:
+        "한국의 지하철과 버스는 매우 편리하지만, 좌석과 행동 예절을 지키는 것이 중요합니다.",
+      transportation_modal_paragraphs_2:
+        "특히 노약자석과 임산부 배려석은 외국인들이 헷갈리기 쉬운데, 비어 있어도 앉지 않는 것이 일반적인 문화입니다.",
+      transportation_modal_list_1:
+        "노약자석은 노인, 장애인, 임산부 전용 좌석으로, 젊은 사람은 사용하지 않습니다.",
+      transportation_modal_list_2:
+        "임산부 배려석(핑크좌석)은 임산부가 언제든 사용할 수 있도록 비워둡니다.",
+      transportation_modal_list_3:
+        "대중교통 내에서는 큰 소리로 통화하지 않습니다.",
+      transportation_modal_list_4:
+        "가방은 앞으로 메거나 내려놓아 다른 승객을 배려합니다.",
+      transportation_modal_list_5:
+        "탑승 시에는 하차 승객이 먼저 내린 후 차례대로 승차합니다.",
+      transportation_modal_link_1: "한국 대중교통 이용",
+      transportation_modal_link_2: "서울에서 지하철 이용하기",
+
+      tip: "팁 문화",
+      tip_content:
+        "한국은 팁 문화가 없습니다. 서비스 요금이 이미 포함되어 있어요.",
+      tip_extra:
+        "관광지 일부 호텔은 예외적으로 소액의 팁을 주기도 하지만 필수는 아닙니다.",
+      tip_modal_title: "한국의 팁 문화",
+      tip_modal_paragraphs:
+        "한국의 팁 문화는 서양과 달리 거의 존재하지 않습니다.",
+      tip_modal_list_1: "식당·카페: 팁 불필요",
+      tip_modal_list_2: "택시: 정해진 요금만 지불",
+      tip_modal_list_3: "미용실·마사지 등 서비스업: 팁 문화 없음",
+
+      footwear: "신발 벗기",
+      footwear_content: "한국 가정이나 일부 식당에서는 신발을 벗고 들어갑니다.",
+      footwear_extra:
+        "신발장은 보통 입구에 있으며, 실내화가 준비되어 있는 경우가 많습니다.",
+      footwear_modal_title: "한국의 신발 벗기 문화",
+      footwear_modal_paragraphs:
+        "한국에서는 집에 들어갈 때 신발을 벗는 것이 당연한 문화로 자리 잡고 있습니다.",
+      footwear_modal_paragraphs_2:
+        "이는 실내를 청결하게 유지하고 가족의 건강을 지키기 위한 전통적인 습관입니다.",
+      footwear_modal_paragraphs_3:
+        "실내에서는 신발 대신 슬리퍼를 신거나 양말만 신고 생활하는 경우가 많습니다.",
+      footwear_modal_list_1: "가정집: 현관에서 신발을 벗고 들어감",
+      footwear_modal_list_2:
+        "전통 한식당·한옥: 좌식 구조 때문에 신발 벗는 경우 많음.",
+
+      gift: "선물 예절",
+      gift_content:
+        "선물을 받을 때는 양손으로 받고, 바로 뜯지 않는 것이 예의입니다.",
+      gift_extra:
+        "특히 어른이나 상사에게는 술, 건강식품, 차 등이 무난한 선물입니다.",
+      gift_modal_title: "한국의 선물 예절",
+      gift_modal_paragraphs:
+        "한국에서 선물은 단순한 물건이 아니라 관계와 존중의 의미를 담습니다.",
+      gift_modal_paragraphs_2:
+        "선물을 줄 때와 받을 때는 반드시 양손을 사용하는 것이 예의입니다.",
+      gift_modal_list_1: "양손으로 주고받기",
+      gift_modal_list_2:
+        "명절·집들이·감사 인사 등 다양한 상황에서 선물 주고받음",
+    },
+    VisionOCR: {
+      image_upload: "이미지 업로드",
+      image_support: "JPG, PNG 파일을 지원합니다",
+      image_preview: "이미지 미리보기",
+      image_preview_desc: "분석할 이미지를 확인하세요",
+      cancel: "취소",
+      analyzing: "분석 중...",
+      analyze_start: "분석 시작",
+      analyze_result: "분석 결과",
+      analyze_result_desc: "텍스트를 클릭해보세요",
+      analyze_result_image: "분석된 이미지",
+      menu_info: "메뉴 정보",
+      ai_generating_answer: "AI가 답변을 생성하고 있습니다...",
+      ai_analyze_result: "AI 분석 결과",
+      ai_generated_answer_desc: "이 정보는 AI가 생성한 참고용 답변입니다",
+      source_info: "출처: 한식진흥원, '한식메뉴 외국어표기 길라잡이 800선'",
+      menu_name: "메뉴명",
+      description: "설명",
+      source_info_2: "출처: 한국국제교류재단 한국음식정보",
+      food_name: "음식명",
+      translating: "번역 중...",
+      source_info_3:
+        "출처: AI Hub (한국지능정보사회진흥원), 관광 음식메뉴판 데이터",
+      main_ingredients: "주요 성분",
+      allergy_info: "알러지 정보",
+      menu_select: "메뉴를 선택해주세요",
+      menu_select_desc: "이미지에서 메뉴 텍스트를 터치하면",
+      menu_select_desc_2: "AI가 분석한 상세한 메뉴 정보",
+      menu_select_desc_3: "가",
+      menu_select_desc_4: "표시됩니다",
+      new_start: "새로 시작하기",
+      // 파일 선택 관련 번역
+      file_select: "파일 선택",
+      no_file_selected: "선택된 파일 없음",
+      // 안내 문구
+      disclaimer:
+        "※ 제공되는 정보는 참고용입니다. 성분, 알러지 등 메뉴에 대한 정확한 정보는 매장에 문의해 주세요!",
+      file_selected: "선택된 파일",
+    },
+    cultureGuide: {
+      greeting: "인사 예절",
+      greeting_content:
+        "한국에서는 나이가 많은 사람에게 먼저 인사하고, 고개를 숙여 인사합니다.",
+      greeting_extra:
+        "보통 가벼운 목례만으로도 충분하며, 두 손으로 악수하면 더 공손하게 보입니다.",
+      greeting_modal_title: "한국의 존댓말과 기본 인사 표현",
+      greeting_modal_paragraphs:
+        "한국에는 존댓말과 반말이 있어서 인사 표현도 상황에 따라 달라집니다.",
+      greeting_modal_paragraphs_2:
+        "친구끼리는 '안녕'이라고 하지만, 어른이나 처음 만난 사람에게는 반드시 '안녕하세요'라고 해야 예의입니다.",
+      greeting_modal_list_1: "안녕하세요 (일상 존댓말)",
+      greeting_modal_list_2: "안녕하십니까 (격식)",
+      greeting_modal_list_3: "안녕 (친한 사이, 반말)",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해",
+      greeting_modal_link_1: "한국 사람들에게 인사하는 방법",
+      meal: "식사 예절",
+      meal_content:
+        "어른이 먼저 수저를 들고, 밥그릇을 들고 먹지 않습니다. 술은 양손으로 받습니다.",
+      meal_extra:
+        "밥을 다 먹은 후에는 젓가락을 그릇 위에 가지런히 올려두는 것이 예의입니다.",
+      meal_modal_title: "한국의 식사 예절",
+      meal_modal_paragraphs:
+        "한국에서 식사는 단순히 음식을 먹는 것이 아니라 상대방을 존중하는 중요한 자리입니다.",
+      meal_modal_paragraphs_2:
+        "식사 전에는 '잘 먹겠습니다', 식사 후에는 '잘 먹었습니다'라고 인사하며, 이는 준비한 사람과 함께한 사람 모두에 대한 존중을 의미합니다.",
+      meal_modal_list_1: "자리에 앉을 때는 연장자나 손님이 먼저 앉습니다.",
+      meal_modal_list_2: "젓가락을 밥그릇에 꽂지 않습니다.",
+      meal_modal_list_3: "술을 마실 때는 고개를 살짝 돌려서 마십니다.",
+      meal_modal_list_4:
+        "큰 소리로 씹거나 젓가락으로 사람을 가리키는 것은 실례입니다.",
+      meal_modal_list_5: "그릇은 식탁 위에 놓고 먹습니다.",
+      meal_modal_link_1: "한국인의 식사 예절",
+      transportation: "대중교통",
+      transportation_content:
+        "지하철에서는 노약자석을 양보하고, 큰 소리로 통화하지 않습니다.",
+      transportation_extra:
+        "혼잡한 시간대에는 가방을 앞으로 메는 것이 배려하는 태도입니다.",
+      transportation_modal_title: "한국의 대중교통",
+      transportation_modal_paragraphs:
+        "한국의 지하철과 버스는 매우 편리하지만, 좌석과 행동 예절을 지키는 것이 중요합니다.",
+      transportation_modal_paragraphs_2:
+        "특히 노약자석과 임산부 배려석은 외국인들이 헷갈리기 쉬운데, 비어 있어도 앉지 않는 것이 일반적인 문화입니다.",
+      transportation_modal_list_1:
+        "노약자석은 노인, 장애인, 임산부 전용 좌석으로, 젊은 사람은 사용하지 않습니다.",
+      transportation_modal_list_2:
+        "임산부 배려석(핑크좌석)은 임산부가 언제든 사용할 수 있도록 비워둡니다.",
+      transportation_modal_list_3:
+        "대중교통 내에서는 큰 소리로 통화하지 않습니다.",
+      transportation_modal_list_4:
+        "가방은 앞으로 메거나 내려놓아 다른 승객을 배려합니다.",
+      transportation_modal_list_5:
+        "탑승 시에는 하차 승객이 먼저 내린 후 차례대로 승차합니다.",
+      transportation_modal_link_1: "한국 대중교통 이용",
+      transportation_modal_link_2: "서울에서 지하철 이용하기",
+      tip: "팁 문화",
+      tip_content:
+        "한국은 팁 문화가 없습니다. 서비스 요금이 이미 포함되어 있어요.",
+      tip_extra:
+        "관광지 일부 호텔은 예외적으로 소액의 팁을 주기도 하지만 필수는 아닙니다.",
+      tip_modal_title: "한국의 팁 문화",
+      tip_modal_paragraphs:
+        "한국의 팁 문화는 서양과 달리 거의 존재하지 않습니다.",
+      tip_modal_list_1: "식당·카페: 팁 불필요",
+      tip_modal_list_2: "택시: 정해진 요금만 지불",
+      tip_modal_list_3: "미용실·마사지 등 서비스업: 팁 문화 없음",
+      footwear: "신발 벗기",
+      footwear_content: "한국 가정이나 일부 식당에서는 신발을 벗고 들어갑니다.",
+      footwear_extra:
+        "신발장은 보통 입구에 있으며, 실내화가 준비되어 있는 경우가 많습니다.",
+      footwear_modal_title: "한국의 신발 벗기 문화",
+      footwear_modal_paragraphs:
+        "한국에서는 집에 들어갈 때 신발을 벗는 것이 당연한 문화로 자리 잡고 있습니다.",
+      footwear_modal_paragraphs_2:
+        "이는 실내를 청결하게 유지하고 가족의 건강을 지키기 위한 전통적인 습관입니다.",
+      footwear_modal_paragraphs_3:
+        "실내에서는 신발 대신 슬리퍼를 신거나 양말만 신고 생활하는 경우가 많습니다.",
+      footwear_modal_list_1: "가정집: 현관에서 신발을 벗고 들어감",
+      footwear_modal_list_2:
+        "전통 한식당·한옥: 좌식 구조 때문에 신발 벗는 경우 많음.",
+      gift: "선물 예절",
+      gift_content:
+        "선물을 받을 때는 양손으로 받고, 바로 뜯지 않는 것이 예의입니다.",
+      gift_extra:
+        "특히 어른이나 상사에게는 술, 건강식품, 차 등이 무난한 선물입니다.",
+      gift_modal_title: "한국의 선물 예절",
+      gift_modal_paragraphs:
+        "한국에서 선물은 단순한 물건이 아니라 관계와 존중의 의미를 담습니다.",
+      gift_modal_paragraphs_2:
+        "선물을 줄 때와 받을 때는 반드시 양손을 사용하는 것이 예의입니다.",
+      gift_modal_list_1: "양손으로 주고받기",
+      gift_modal_list_2:
+        "명절·집들이·감사 인사 등 다양한 상황에서 선물 주고받음",
+    },
+    playlists: {
+      themes1: "도시여행",
+      themes1_desc: "활기찬 도심 탐험을 위한 에너지 넘치는 K-pop",
+      themes2: "여름 바캉스",
+      themes2_desc: "시원한 바다와 따뜻한 햇살을 느낄 수 있는 청량한 음악",
+      themes3: "야시장",
+      themes3_desc: "화려한 네온사인 아래 흥겨운 밤거리 분위기",
+      themes4: "차분한 여행",
+      themes4_desc: "마음을 편안하게 하는 잔잔하고 감성적인 멜로디",
+      themes5: "운동/워크아웃",
+      themes5_desc: "강렬한 비트로 운동 효과를 극대화하는 파워풀한 음악",
+      themes6: "카페/독서",
+      themes6_desc: "집중력을 높이는 차분하고 감각적인 어쿠스틱 사운드",
+      kpop_artists1: "4세대 걸그룹",
+      kpop_artists2: "4세대 보이그룹",
+      kpop_artists3: "3세대 레전드",
+      kpop_artists4: "솔로 아티스트",
+      mock_playlists1: "서울 도시 바이브",
+      mock_playlists1_desc: "서울 도심 여행할 때 듣기 좋은 어반 K-pop",
+      mock_playlists2: "여름 바람",
+      mock_playlists2_desc: "청량한 여름 바캉스 K-pop",
+      play: "재생",
+      title: "K-pop 여행 플레이리스트",
+      description:
+        "Spotify에 로그인하고 AI가 만든 플레이리스트를 생성하세요. 지금 바로 경험해보세요! ✨",
+      login: "Spotify 로그인",
+      my_playlist: "내 플레이리스트",
+      playlist_preview: "플레이리스트 미리보기",
+      your_playlist: "AI가 만든 당신만의 특별한 플레이리스트",
+      make_playlist: "Spotify에 로그인한 후 당신만의 플레이리스트를 만드세요",
+      preview: "미리보기",
+      create_playlist: "첫 번째 플레이리스트 만들기",
+      create_playlist_description:
+        "AI가 당신을 위해 완벽한 K-pop 플레이리스트를 생성합니다",
+      start_now: "지금 시작하기",
+      create_new_playlist: "새 플레이리스트 만들기",
+      create_new_playlist_description:
+        "다른 테마나 아티스트로 새로운 플레이리스트를 만드세요",
+      featured_youtube_mix: "추천 YouTube 믹스",
+      latest_k_pop_travel_playlists:
+        "당신의 여행을 위해 엄선된 최신 K-pop 여행 플레이리스트",
+      view_full_playlist: "전체 플레이리스트 보기",
+      create_your_own_playlist: "나만의 플레이리스트 만들기",
+      create_your_own_playlist_description:
+        "AI가 당신의 취향과 여행 테마에 맞는 완벽한 K-pop 플레이리스트를 생성합니다. 수천 곡의 데이터베이스에서 최적의 조합을 찾아 Spotify에 바로 저장하세요.",
+      ai_custom_recommend: "AI 맞춤 추천",
+      unlimited_creation: "무제한 생성",
+      spotify_auto_save: "Spotify 자동 저장",
+    },
+    DocentMantine: {
+      title: "AI 도슨트",
+      subtitle: "실시간 위치 기반 가이드",
+      aiDocent: "AI 도슨트",
+      stopVoice: "음성 중지",
+      current: "현재 위치",
+      directions: "길찾기",
+      chatbot: "관광 챗봇",
+      askQuestion: "궁금한 것을 물어보세요",
+      send: "전송",
+      examples: {
+        title: "예시 질문:",
+        items: [
+          "케이팝 데몬 헌터스 촬영지",
+          "명동 맛집 추천",
+          "북촌한옥마을 정보",
+        ],
+      },
+      chatbotPlaceholder: "궁금한 것을 물어보세요...",
+      chatbotInitialMessage:
+        "안녕하세요! 저는 당신의 AI 여행 도슨트입니다. 궁금한 장소나 여행 정보를 물어보세요. 사진을 보내주시면 그 장소에 대한 자세한 설명도 드릴 수 있어요!",
+      imageQueryText: "이 장소에 대해 알려주세요",
+      voiceRecStart: "음성 녹음을 시작합니다...",
+      voiceRecResult: "음성 인식 결과:",
+      voiceRecStop: "음성 녹음을 중지합니다.",
+      errorReply:
+        "죄송합니다. 답변을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      filePick: "파일",
+      categories: {
+        all: "전체",
+        museum: "미술관&박물관",
+        palace: "고궁",
+        landmark: "랜드마크",
+        historic: "역사적 장소",
+      },
+      allTourismSpots: "전체 관광지",
+      detailedInfo: "상세 정보",
+      tourismList: "관광지 목록",
+      locationTracking: "위치 추적",
+      location: "위치",
+      voiceGuide: "음성 안내",
+      tourDetection: {
+        message:
+          "🎯 투어 관련 질문이시군요! 전문 가이드 투어 서비스와 맞춤 코스 추천은 투어 페이지에서 확인하실 수 있습니다.",
+        buttonText: "🎯 투어 서비스 페이지로 이동",
+      },
+      viewDetails: "📝 상세 정보 보기",
+      selectPlace: "장소를 선택하세요",
+    },
+    persona: {
+      choice: "선택",
+      checking_login_status: "로그인 상태를 확인하고 있습니다...",
+      login_required: "로그인이 필요합니다",
+      login_required_description:
+        "페르소나 분성 기능을 사용하려면 Google 또는 Microsoft 계정으로 로그인해주세요.",
+      google_login: "Google로 로그인",
+      microsoft_login: "Microsoft로 로그인",
+      loading_questions: "질문을 불러오고 있습니다...",
+      loading_questions_failed: "질문 로드 실패",
+      retry: "다시 시도",
+      empty_questions: "질문 목록이 비어 있습니다",
+      empty_questions_description:
+        "백엔드가 실행 중인지, 질문 데이터가 정상적으로 반환되는지 확인해주세요.",
+      refresh: "새로고침",
+      your_ai_travel_persona: "당신의 AI 여행 페르소나",
+      your_ai_travel_persona_description:
+        "몇 가지 질문에 답하면 AI가 당신의 여행 스타일에 맞는 코스를 추천해드릴게요.",
+      previous: "이전",
+      next: "다음",
+      analyzing: "분석 중...",
+      check_result: "결과 확인하기",
+    },
+    dashboard: {
+      edit_route: "경로 편집",
+      detail: "상세",
+      checking_login_status: "로그인 상태를 확인하고 있습니다...",
+      login_required: "로그인이 필요합니다",
+      google_login: "Google로 로그인",
+      microsoft_login: "Microsoft로 로그인",
+      no_analysis_result: "분석 결과가 없습니다",
+      no_analysis_result_description:
+        "최근 생성된 페르소나 분석 결과를 찾을 수 없어, 새로운 여행 계획을 다시 분석해보세요.",
+      start_analysis: "분석 시작하기",
+      // 섹션 1: 상단 (페르소나 결과 카드)
+      login_required_description:
+        "여행 페르소나 분석 및 추천 코스를 확인하려면 로그인해주세요.",
+      your_ai_travel_persona: "당신의 AI 여행 페르소나",
+      analyzing: "분석 중...",
+      // 섹션 2: 중간 (여행 페르소나 분석 패널)
+      travel_persona: "여행 페르소나",
+      // 섹션 3: 하단 (추천 스팟, 추천 코스)
+      custom_recommended_spots: "맞춤 추천 스팟",
+      custom_recommended_spots_description:
+        "페르소나에 맞는 서울의 장소들을 랜덤으로 골라 보여드릴게요.",
+      refresh: "새로고침",
+      no_recommended_spots: "추천 스팟을 불러오지 못했어요.",
+      custom_recommended_courses: "맞춤 코스",
+      course_search_placeholder: "코스 이름, 장소 검색...",
+      card_view: "카드 뷰",
+      list_view: "리스트 뷰",
+      no_recommended_courses: "추천 코스가 없거나 검색 결과가 없습니다.",
+      // Travel Persona 라벨들
+      visit_count: "방문 횟수",
+      stay_period: "체류 기간",
+      travel_budget: "여행 예산",
+      visit_purpose: "방문 목적",
+      interests_activities: "관심 활동",
+    },
+    directions: {
+      days: "일차",
+      add_recommended_course: "에 추천 코스를 추가했어요.",
+      delete_day: "일정을 삭제하시겠어요?",
+      search_start: "출발지 검색",
+      search_end: "도착지 검색",
+      search_waypoint: "경유지 검색",
+      route_planner: "경로 플래너",
+      calculate_route: "경로 계산",
+      calculating_route: "경로 계산 중...",
+      save_route: "경로 저장",
+      more: "더보기",
+      duplicate_day: "일정 복제",
+      add_day_menu: "일차 추가 메뉴",
+      add_day: "새 일차 추가",
+      add_recommended_course: "추천 코스 추가",
+      set_start: "출발지를 설정하세요",
+      set_end: "도착지를 설정하세요",
+      add_waypoint: "경유지 추가",
+      remove_waypoint: "경유지 삭제",
+      add_waypoint_description:
+        "경유지를 추가하면 더 정교한 경로를 만들 수 있어요.",
+      map_provider: "지도 제공자",
+      kakao_map: "카카오맵",
+      t_map: "T map",
+      car: "자동차",
+      pedestrian: "도보",
+      transit: "대중교통",
+      transportation_mode: "이동 수단",
+      route_order_adjustment: "경로 순서 조정",
+      drag_to_adjust_order: "드래그하여 순서를 변경하세요",
+      start: "출발",
+      end: "도착",
+      waypoint: "경유",
+      add_start: "출발지 추가",
+      add_end: "도착지 추가",
+      add_waypoint: "경유지 추가",
+      select_start: "출발지를 선택하세요",
+      select_end: "도착지를 선택하세요",
+      select_waypoint: "경유지를 선택하세요",
+      travel_summary: "이동 요약",
+      total_distance: "총 이동거리",
+      estimated_duration: "예상 소요시간",
+      minutes: "분",
+      stay_time: "체류 시간(분)",
+      load_recommended_course: "추천 코스 불러오기",
+      load_recommended_course_description:
+        "추가하고 싶은 코스를 선택하면 새 일차로 준비됩니다.",
+      loading_recommended_course: "추천 코스를 불러오는 중입니다...",
+      load_recommended_course_failed: "추천 코스를 불러오지 못했어요.",
+      try_again: "다시 시도",
+      no_recommended_course: "사용할 수 있는 추천 코스가 없습니다.",
+      stops: "곳",
+      keyword_input: "키워드를 입력하세요",
+      search_result_select_place: "검색된 목록에서 장소를 선택하면",
+      waypoint_added: "경유지가 추가됩니다.",
+      start_set: "출발지가 설정됩니다.",
+      end_set: "도착지가 설정됩니다.",
+    },
+  },
+  en: {
+    tour: {
+      header: {
+        klover: "K-lover",
+        tour: "Tour",
+        subtitle: "Premium Personal Tour",
+      },
+      list: { title: "K-lover Tours" },
+      search: { placeholder: "Search tours..." },
+      categories: {
+        all: "All",
+        experience: "Experience",
+        it: "IT",
+        sports: "Sports",
+        beauty: "Beauty",
+        culture: "History",
+      },
+      pagination: { prev: "Prev", next: "Next" },
+      empty: {
+        title: "No results",
+        description: "Try a different search or filter.",
+      },
+      partners: { title: "Partners", subtitle: "Trusted partners" },
+    },
+    tourDetail: {
+      data: {
+        1: {
+          title: "K‑Pop Demon Hunters × Everland Special Collaboration Tour",
+          subtitle:
+            "Netflix Original Series × Korea's top theme park collaboration",
+          location: "Everland, Naksan Park, N Seoul Tower, National Museum",
+          listDescription: "Everland ticket included, filming location tour",
+          partnership: {
+            primary: "NETFLIX",
+            secondary: "Samsung Everland",
+            tertiary: "Seoul Tourism Organization",
+          },
+          meta: {
+            duration: "10 hours",
+            groupSize: "Up to 12 people",
+            language: "Korean, English, Chinese",
+          },
+          itinerary: [
+            {
+              location: "Gangnam Station Meeting Point",
+              description: "Board the private bus and receive a tour briefing",
+            },
+            {
+              location: "Enter Everland",
+              description:
+                "Begin the K‑Pop Demon Hunters theme zone experience",
+            },
+            {
+              location: "Demon Hunters Attraction",
+              description: "Experience the thrilling ‘Chase of the Devil’ ride",
+            },
+            {
+              location: "LUMI’s Magic School",
+              description: "Interactive magic zone & unlimited AR photo spots",
+            },
+            {
+              location: "N Seoul Tower",
+              description: "Final boss battle filming site & observatory visit",
+            },
+            {
+              location: "National Museum of Korea",
+              description:
+                "Tour the filming spots from the ancient relics episode",
+            },
+          ],
+          details: [
+            {
+              title: "Everland × K‑Pop Demon Hunters Theme Zone",
+              text: "Experience the series’ thrilling action first‑hand in the world’s first K‑Pop Demon Hunters theme zone. LUMI’s Magic School, Jinwoo’s Training Center, and demon‑hunting missions are faithfully recreated as immersive attractions awaiting you.",
+            },
+            {
+              title: "Recreate the Romantic Date Scene at Naksan Park",
+              text: "Relive LUMI and Jinwoo’s most memorable date scene at Naksan Park. Enjoy dramatic photo time with panoramic views of Seoul, guided by a dedicated photographer to capture your best shots.",
+            },
+            {
+              title: "Finale Stage at N Seoul Tower",
+              text: "Experience the season finale’s final boss battle in VR at N Seoul Tower and take in the city’s nightscape like the drama’s protagonist. A limited‑edition couple lock experience is also included.",
+            },
+          ],
+        },
+        2: {
+          title: "Microsoft AI Tour Seoul",
+          subtitle: "Where AI meets cultural heritage restoration",
+          location: "Microsoft Korea, Jung-gu, Seoul",
+          listDescription: "AI demos, heritage restoration, goods shop",
+          partnership: {
+            primary: "Microsoft Korea",
+            secondary: "Cultural Heritage Administration",
+          },
+          meta: {
+            duration: "4 hours",
+            groupSize: "Up to 20 people",
+            language: "Korean, English",
+          },
+          itinerary: [
+            {
+              location: "Microsoft Korea Office",
+              description: "AI intro and tour start",
+            },
+            {
+              location: "AI Demo Center",
+              description: "Hands-on heritage restoration AI",
+            },
+          ],
+          details: [
+            {
+              title: "MS AI Conference Highlights",
+              text: "Keynotes and hands-on workshops to explore AI innovation",
+            },
+          ],
+        },
+        3: {
+          title: "Han River Bus × Instagram Hot Spots Tour",
+          subtitle: "Conquer Seoul’s signature photo spots along the Han River",
+          location: "Han River Parks (Yeouido–Jamsil–Banpo–Mapo)",
+          listDescription: "Photo tips, river bus, night views & time-lapse",
+          meta: {
+            duration: "3.5 hours",
+            groupSize: "Up to 25 people",
+            language: "Korean, English",
+          },
+          partnership: {
+            primary: "Seoul Tourism Organization",
+            secondary: "Hangang Project Headquarters",
+          },
+          itinerary: [
+            {
+              location: "Yeouido Han River Park",
+              description: "Tour start & Instagram photo tips",
+            },
+            {
+              location: "Han River Bus (Yeouido→Jamsil)",
+              description: "On-bus shooting with 63 Building & IFC background",
+            },
+            {
+              location: "Jamsil Lotte World Tower Photo Zone",
+              description: "Iconic skyline shots",
+            },
+            {
+              location: "Han River Bus (Jamsil→Banpo)",
+              description: "Cinematic cruise-style video shots",
+            },
+            {
+              location: "Banpo Rainbow Fountain",
+              description: "Golden-hour time-lapse",
+            },
+            {
+              location: "Sebitseom LED Show",
+              description: "Night view fireworks & group photos",
+            },
+          ],
+          details: [
+            {
+              title: "Yeouido Han River Park",
+              text: "Bike along the riverside and enjoy picnic-friendly lawns with skyline views.",
+            },
+            {
+              title: "Banpo Rainbow Fountain",
+              text: "World’s longest bridge fountain – colorful lights and music at night.",
+            },
+            {
+              title: "Sebitseom (Some Sevit)",
+              text: "Floating islands with LED nightscapes, dining, and photo ops.",
+            },
+          ],
+        },
+        4: {
+          title: "LG Twins Premium Baseball Experience",
+          subtitle: "A perfect baseball day at Jamsil Baseball Stadium",
+          location: "Jamsil Stadium, Lotte World Tower",
+          listDescription:
+            "Merch shop, box seats with chicken & beer, photo tour",
+          meta: {
+            duration: "6 hours",
+            groupSize: "Up to 25 people",
+            language: "Korean, English, Japanese",
+          },
+          itinerary: [
+            {
+              location: "Jamsil Station Exit 2",
+              description: "Tour start & intro to Korean baseball culture",
+            },
+            {
+              location: "LG Twins Fan Shop",
+              description: "Try on uniforms & prepare cheering items",
+            },
+            {
+              location: "Kyochon Chicken Premium Box Seats",
+              description: "Watch the game with chicken & beer",
+            },
+            {
+              location: "Photo Zone",
+              description: "Stadium background snap tour",
+            },
+          ],
+          details: [
+            {
+              title: "Jamsil Baseball Stadium",
+              text: "Feel the passion of K‑baseball with 30,000+ seats and unique cheering culture.",
+            },
+            {
+              title: "LG Twins",
+              text: "Experience energetic cheering and unforgettable game-day vibes in Seoul.",
+            },
+          ],
+        },
+        5: {
+          title: "K‑Beauty & Wellness Premium Tour",
+          subtitle:
+            "The perfect blend of top Korean beauty and traditional wellness",
+          location: "Gangnam (Apgujeong–Cheongdam–Sinsa)",
+          listDescription:
+            "Personal color, clinic care, K‑beauty brands, Korean spa",
+          meta: {
+            duration: "6 hours",
+            groupSize: "Up to 12 people",
+            language: "Korean, English, Chinese, Japanese",
+          },
+          itinerary: [
+            {
+              location: "Personal Color Diagnosis",
+              description: "Color analysis & tailored makeup recommendations",
+            },
+            {
+              location: "Apgujeong Premium Skin Clinic",
+              description: "Skin analysis & HydraFacial care",
+            },
+            {
+              location: "Cheongdam Korean Restaurant",
+              description: "Healthy herbal lunch",
+            },
+            {
+              location: "Sinsa K‑Beauty Experience Center",
+              description: "Brand‑by‑brand tailored care",
+            },
+            {
+              location: "Apgujeong Traditional Korean Spa",
+              description: "Loess sauna & aroma massage (90m)",
+            },
+            {
+              location: "OLIVE YOUNG VIP Shopping",
+              description: "Personalized product picks & duty‑free shopping",
+            },
+          ],
+          details: [
+            {
+              title: "K‑Beauty Personal Color Experience",
+              text: "Find colors that best suit you with expert analysis for makeup and styling.",
+            },
+            {
+              title: "K‑Beauty in OLIVE YOUNG",
+              text: "Shop trending items with a personal shopper guiding global K‑beauty picks.",
+            },
+            {
+              title: "Korean Dermatology",
+              text: "World‑class skincare/laser programs with meticulous and safe care.",
+            },
+          ],
+        },
+        6: {
+          title: "Seoul Traditional Culture Tour",
+          subtitle:
+            "Royal culture at Gyeongbokgung, tea ceremony in Insadong, and local foods at Gwangjang Market",
+          location: "Jongno‑gu, Seoul",
+          listDescription:
+            "Hanbok snap at palace, tea ceremony, market food tour",
+          meta: {
+            duration: "4.5 hours",
+            groupSize: "Up to 6 people",
+            language: "Korean, English, Chinese",
+          },
+          itinerary: [
+            {
+              location: "Gyeongbokgung Entrance",
+              description: "Hanbok rental, palace tour, travel snap",
+            },
+            {
+              location: "Traditional Korean Lunch",
+              description: "Korean set menu at a traditional restaurant",
+            },
+            {
+              location: "Insadong Tea Ceremony & Stroll",
+              description: "Tea ceremony and traditional crafts",
+            },
+            {
+              location: "Gwangjang Market",
+              description: "Taste bindaetteok, mayak gimbap, yukhoe and more",
+            },
+            {
+              location: "Cheonggyecheon Night Walk",
+              description: "Relaxing riverside stroll",
+            },
+          ],
+          details: [
+            {
+              title: "Gyeongbokgung Travel Snap",
+              text: "Capture special moments in hanbok amidst grand pavilions and serene gardens.",
+            },
+            {
+              title: "Insadong Tea Ceremony",
+              text: "Savor Korean tea culture in a tranquil tea house with expert guidance.",
+            },
+            {
+              title: "Gwangjang Market Food Tour",
+              text: "Enjoy beloved local street foods in one of Seoul’s liveliest markets.",
+            },
+          ],
+        },
+      },
+      offer: {
+        expiresIn: "Time left",
+        limitedTime: "⏳ Limited-time offer",
+        doNotShowToday: "Don't show today",
+        grabDeal: "Grab deal",
+        grabbed: "Secured",
+        dealGrabbed: "Deal secured!",
+        priceSecured: "Current price is secured for a moment",
+        urgencyText: "Hurry! Ends in {{minutes}}m {{seconds}}s",
+      },
+      booking: {
+        bookNow: "Book now",
+        reviews: " reviews",
+        discount: "off",
+      },
+      tabs: {
+        overview: "Overview",
+        details: "Details",
+        reviews: "Reviews",
+      },
+      overview: {
+        itinerary: "Itinerary",
+        noItinerary: "No itinerary available",
+        included: "Included",
+        includedItems: {
+          guide: "Professional guide",
+          lunch: "Lunch",
+          souvenirs: "Souvenirs",
+          transportation: "Transportation",
+          activities: "Activities",
+          insurance: "Insurance",
+        },
+      },
+      details: {
+        noDetails: "No details available",
+      },
+      reviews: {
+        noReviews: "No reviews yet",
+      },
+      notFound: {
+        title: "Tour not found",
+        description: "We couldn't load the requested tour information.",
+      },
+    },
+    playlists: {
+      title: "K-pop Travel Playlist",
+      description:
+        "Log in to Spotify and create AI-generated playlists. Experience it now! ✨",
+      login: "Spotify Login",
+      my_playlist: "My Playlist",
+      playlist_preview: "Playlist Preview",
+      your_playlist: "Your own special playlist created by AI",
+      make_playlist: "Create your own playlist after logging in to Spotify",
+      preview: "Preview",
+      create_playlist: "Create Your First Playlist",
+      create_playlist_description:
+        "AI creates a perfect K-pop playlist tailored for you",
+      start_now: "Start Now",
+      create_new_playlist: "Create New Playlist",
+      create_new_playlist_description:
+        "Create a new playlist with different themes or artists",
+      featured_youtube_mix: "Featured YouTube Mix",
+      latest_k_pop_travel_playlists:
+        "Latest K-pop travel playlists curated for your journey",
+      view_full_playlist: "View Full Playlist",
+      create_your_own_playlist: "Create Your Own Playlist",
+      create_your_own_playlist_description:
+        "AI generates the perfect K-pop playlist that matches your taste and travel theme. Find the optimal combination from thousands of songs and save directly to Spotify.",
+      ai_custom_recommend: "AI Custom Recommendation",
+      unlimited_creation: "Unlimited Creation",
+      spotify_auto_save: "Spotify Auto Save",
+      themes1: "City Travel",
+      themes1_desc: "Energetic K-pop for vibrant urban exploration",
+      themes2: "Summer Vacation",
+      themes2_desc:
+        "Refreshing music that captures cool ocean breezes and warm sunshine",
+      themes3: "Night Market",
+      themes3_desc: "Exciting night street vibes under colorful neon signs",
+      themes4: "Peaceful Travel",
+      themes4_desc: "Calm and emotional melodies that soothe the mind",
+      themes5: "Exercise/Workout",
+      themes5_desc:
+        "Powerful music with intense beats to maximize workout effects",
+      themes6: "Cafe/Reading",
+      themes6_desc: "Calm and sophisticated acoustic sounds that enhance focus",
+      kpop_artists1: "4th Gen Girl Groups",
+      kpop_artists2: "4th Gen Boy Groups",
+      kpop_artists3: "3rd Gen Legends",
+      kpop_artists4: "Solo Artists",
+      mock_playlists1: "Seoul City Vibes",
+      mock_playlists1_desc:
+        "Urban K-pop perfect for exploring Seoul's city center",
+      mock_playlists2: "Summer Breeze",
+      mock_playlists2_desc: "Refreshing summer vacation K-pop",
+      play: "Play",
+    },
+    DocentMantine: {
+      title: "AI Docent",
+      subtitle: "Real-time location guide",
+      aiDocent: "AI Docent",
+      stopVoice: "Stop voice",
+      current: "Current location",
+      directions: "Directions",
+      chatbot: "Tourism Chatbot",
+      askQuestion: "Ask me anything",
+      send: "Send",
+      examples: {
+        title: "Example questions:",
+        items: [
+          "K-pop Demon Hunters filming locations",
+          "Myeongdong restaurant recommendations",
+          "Bukchon Hanok Village info",
+          "Squid Game filming locations",
+        ],
+      },
+      chatbotPlaceholder: "Ask me anything...",
+      chatbotInitialMessage:
+        "Hello! I am your AI travel docent. Ask me about places or travel information. You can also send a photo for a detailed explanation of the location!",
+      imageQueryText: "Tell me about this place",
+      voiceRecStart: "Starting voice recording...",
+      voiceRecResult: "Voice recognition result:",
+      voiceRecStop: "Stopping voice recording.",
+      errorReply:
+        "Sorry, an error occurred while generating a response. Please try again later.",
+      filePick: "File",
+      categories: {
+        all: "All",
+        museum: "Museum",
+        palace: "Palace",
+        landmark: "Landmark",
+        historic: "Historic",
+      },
+      allTourismSpots: "All Tourism Spots",
+      detailedInfo: "Detailed Information",
+      tourismList: "Tourism List",
+      locationTracking: "Location Tracking",
+      location: "Location",
+      voiceGuide: "Voice Guide",
+      tourDetection: {
+        message:
+          "🎯 I see you're asking about tours! Professional guided tour services and custom course recommendations are available on our tour page.",
+        buttonText: "🎯 Go to Tour Service Page",
+      },
+      viewDetails: "📝 View Details",
+      selectPlace: "Select a place",
+    },
+    common: {
+      community: {
+        info_reviews_label: "Info & Reviews",
+        info_reviews_desc: "A space to share travel information and reviews",
+        info: {
+          posts: {
+            10001: {
+              title: "✈️ Seoul City Airport Terminal Smart Usage Guide",
+              content:
+                "Check in, drop baggage, and complete immigration in the city before heading to the airport. Details on Seoul Station/Gwangmyeong CAT hours, services, and notes.",
+            },
+            10002: {
+              title: "🎆 2025 Seoul International Fireworks Festival",
+              content:
+                "Oct 4, 2025 (Sat) 19:30–21:00 around Yeouido Hangang Park. See viewing spots, transport tips, and event highlights.",
+            },
+            10003: {
+              title: "🌟 Seoul Subway Early Closing during 2025 Chuseok",
+              content:
+                "Lines 1–9 operate until 23:00 during Chuseok. Refer to Seoul Metro website for detailed timetable.",
+            },
+            1001: {
+              title: "K‑pop Demon Hunters – 3‑day Seoul Pilgrimage Course",
+              content:
+                "Visit the series’ iconic spots over 3 days: Day1 Gangnam/Samseong, Day2 Hangang/Hongdae, Day3 Gwanghwamun/Ikseon/Naksan, plus pro tips.",
+            },
+          },
+        },
+      },
+      // Home.jsx
+      place1: "Myeongdong",
+      place2: "Gwanghwamun",
+      place3: "Itaewon",
+      place4: "Jamsil",
+      "features.title1": "AI Persona Analysis",
+      "features.title2": "Custom Course Recommendation",
+      "features.title3": "K-Pop Playlist",
+      "features.title4": "AI Docent",
+      "features.desc1": "Discover your unique travel style with 5 questions",
+      "features.desc2": "AI generates a perfect course in real-time.",
+      "features.desc3": "K-Pop playlist for each travel destination.",
+      "features.desc4": "RAG-based chatbot for deep cultural experience.",
+      "stats.label1": "Custom trips created",
+      "stats.label2": "Satisfaction",
+      "stats.label3": "AI Support",
+      "stats.label4": "Average Rating",
+      "main.badge": "AI Custom Travel Planner",
+      "nav.features": "Features",
+      "nav.howto": "How to Use",
+      "nav.community": "Community",
+      "login.welcome": "Welcome!",
+      "login.logout": "Logout",
+      "login.login": "Login",
+      "main.title.k_travel": "Travel",
+      "main.title.connector": "",
+      "main.title.ai_creates": "AI creates for you",
+      "main.subtitle":
+        "Analyze your travel style with 5 questions and receive a perfect course with K-Pop. Let AI handle the complex planning, and you just prepare for the excitement.",
+      "main.start.persona": "Persona Analysis Start",
+      "main.start.start": "Start",
+      "now.playing": "Now Playing",
+      "main.recommend.spot": "Recommended Spot",
+      "main.recommend.spot.name": "Hongdae K-Pop Square",
+      "main.title.ai_action": "AI creates",
+      "main.title.experience": "special experiences",
+      "main.subtitle.ai_action":
+        "Innovative AI technology to design your perfect Korean trip.",
+      "main.more.view": "View more",
+      "steps.title": "Complete in",
+      "steps.completion": "3 Simple Steps",
+      "steps.step1.title": "Persona Analysis",
+      "steps.step1.description": "Analyze travel style with 5 questions",
+      "steps.step2.title": "AI Custom Recommendation",
+      "steps.step2.description": "Generate perfect course based on analysis",
+      "steps.step3.title": "Free Editing",
+      "steps.step3.description": "Complete your plan with drag & drop",
+      "popular.title": "Discover Real-time",
+      "popular.highlight": "Popular Destinations",
+      "popular.action.join": "",
+      "popular.action": "meet",
+      "popular.description":
+        "Check out popular courses chosen by other travelers",
+      "footer.slogan": "Experience the perfect Korean trip with AI",
+      "footer.privacy_policy": "Privacy Policy",
+      "footer.terms_of_service": "Terms of Service",
+      "footer.customer_center": "Customer Center",
+      "footer.partnership": "Partnership",
+      "footer.copyright": "© 2024 TravelK. All rights reserved.",
+      "modal.welcome": "Welcome to TravelK",
+      "modal.instruction":
+        "Please log in to start your AI custom travel planner",
+      "modal.continue_google": "Continue with Google",
+      "modal.continue_microsoft": "Continue with Microsoft",
+      "modal.disclaimer.prefix": "By continuing, you agree to our",
+      "modal.disclaimer.terms": "Terms of Service",
+      "modal.disclaimer.and": "and",
+      "modal.disclaimer.privacy": "Privacy Policy",
+      "modal.disclaimer.suffix": ".",
+      "cta.title": "Now, it's time to start your perfect trip",
+      "cta.start": "Start with 5 questions",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "Discover Your Travel Persona",
+      "home.persona.desc":
+        "Analyze your travel style with 5 questions and get AI-customized course recommendations.",
+      "home.persona.cta": "Start Persona Analysis",
+      "home.persona.card1.title": "Travel Style?",
+      "home.persona.card1.pill1": "Adventure Seeker",
+      "home.persona.card1.pill2": "Leisure Enjoyer",
+      "home.persona.card1.pill3": "Planned Explorer",
+      "home.persona.card2.title": "Interests?",
+      "home.persona.card2.pill1": "Cultural Experience",
+      "home.persona.card2.pill2": "Food Tour",
+      "home.persona.card2.pill3": "Shopping",
+      "home.persona.card3.title": "Preferred Atmosphere?",
+      "home.persona.card3.pill1": "Trendy",
+      "home.persona.card3.pill2": "Traditional",
+      "home.persona.card3.pill3": "Nature-friendly",
+
+      "home.ai_reco.title": "Perfect Travel Course Created by AI",
+      "home.ai_reco.desc":
+        "Generate optimal travel routes in real-time based on personalized analysis.",
+      "home.ai_reco.tag1": "Real-time Generation",
+      "home.ai_reco.tag2": "Customized Recommendations",
+      "home.ai_reco.tag3": "Optimal Routes",
+      "home.ai_reco.tag4": "Time Efficient",
+      "home.ai_reco.tag5": "Local Information",
+
+      "home.editing.title": "Edit Freely and Complete",
+      "home.editing.desc":
+        "Freely modify your travel itinerary with drag and drop to create your perfect plan.",
+
+      "home.map.preview_label": "Custom Travel Route",
+
+      "home.itinerary.title": "Travel Itinerary",
+      "home.itinerary.item1": "Gyeongbokgung Tour",
+      "home.itinerary.item2": "Bukchon Hanok Village",
+      "home.itinerary.item3": "Insadong Culture Street",
+      "home.itinerary.item4": "Myeongdong Shopping",
+
+      "home.controls.undo": "Undo",
+      "home.controls.save": "Save",
+    },
+    QuickTranslator: {
+      all: "All",
+      greeting: "Greeting",
+      location: "Location",
+      price: "Price",
+      help: "Help",
+      transport: "Transport",
+      food: "Food",
+      status: "Status",
+      payment: "Payment",
+      menu: "Menu",
+      language_detection_error: "An error occurred while detecting language.",
+      speech_recognition_error: "Speech recognition error",
+      real_time_translator: "Real-time Translator",
+      stop_listening: "Stop listening",
+      processing_listening: "Processing speech recognition...",
+      start_listening: "Start listening",
+      listening: "Listening... Please speak",
+      processing_text_conversion: "Converting speech to text...",
+      input_text:
+        "Enter text to translate... (language will be detected automatically)",
+      detecting_language: "Detecting language...",
+      detected_language: "Detected language",
+      translating: "Translating...",
+      translate: "Translate",
+      translation_results: "Translation Results",
+      listen_to_audio: "Listen to audio",
+      frequently_used_expressions: "Frequently Used Expressions",
+      use: "Use",
+      phrases1: "Hello",
+      phrases2: "Thank you",
+      phrases3: "Sorry",
+      phrases4: "Where is the bathroom?",
+      phrases5: "How much is it?",
+      phrases6: "Help me",
+      phrases7: "Where is the subway station?",
+      phrases8: "It's delicious",
+      phrases9: "I've arrived",
+      phrases10: "Can I pay by card?",
+      phrases11: "Please give me a receipt",
+      phrases12: "Please give me the menu",
+      phrases13: "Please give me water",
+      phrases14: "Please give me the bill",
+      phrases15: "Please wrap it up",
+    },
+    Navigation: {
+      persona_analysis: "Persona Analysis",
+      result_dashboard: "Result Dashboard",
+      itinerary_planner: "Itinerary Planner",
+      ai_docent: "AI Docent",
+      community: "Community",
+      tour: "Tour",
+      survival: "Survival",
+      survival_kit: "Survival Kit",
+      playlists: "Playlists",
+      menu: "Menu",
+      personalized_travel_planning: "Personalized Travel Planning",
+      live_info: "Live Info",
+      exchange_rate_krw: "Exchange Rate (KRW)",
+      seoul_weather: "Seoul Weather",
+      temp: "Temp",
+      humidity: "Humidity",
+      wind: "Wind",
+      refresh_data: "Refresh Data",
+      expand: "Expand",
+      collapse: "Collapse",
+      welcome_traveler: "Welcome, Traveler!",
+      plan_your_trip_with_ai: "Plan your trip with AI",
+      log_out: "Log Out",
+      log_in: "Log In",
+    },
+    dashboard: {
+      edit_route: "Edit Route",
+      detail: "Detail",
+      checking_login_status: "Checking login status...",
+      login_required: "Login Required",
+      google_login: "Login with Google",
+      microsoft_login: "Login with Microsoft",
+      no_analysis_result: "No Analysis Results",
+      no_analysis_result_description:
+        "No recent persona analysis results found. Please analyze your travel plan again.",
+      start_analysis: "Start Analysis",
+      login_required_description:
+        "Please log in to view your travel persona analysis and recommended courses.",
+      your_ai_travel_persona: "Your AI Travel Persona",
+      analyzing: "Analyzing...",
+      travel_persona: "Travel Persona",
+      custom_recommended_spots: "Custom Recommended Spots",
+      custom_recommended_spots_description:
+        "I'll randomly select places in Seoul that match your persona.",
+      refresh: "Refresh",
+      no_recommended_spots: "Failed to load recommended spots.",
+      custom_recommended_courses: "Custom Courses",
+      course_search_placeholder: "Search course name, places...",
+      card_view: "Card View",
+      list_view: "List View",
+      no_recommended_courses: "No recommended courses or search results found.",
+      visit_count: "Visit Count",
+      stay_period: "Stay Period",
+      travel_budget: "Travel Budget",
+      visit_purpose: "Visit Purpose",
+      interests_activities: "Interests & Activities",
+    },
+    persona: {
+      choice: "selected",
+      checking_login_status: "Checking login status...",
+      login_required: "Login Required",
+      login_required_description:
+        "Please log in with Google or Microsoft account to use the persona analysis feature.",
+      google_login: "Login with Google",
+      microsoft_login: "Login with Microsoft",
+      loading_questions: "Loading questions...",
+      loading_questions_failed: "Failed to load questions",
+      retry: "Retry",
+      empty_questions: "Question list is empty",
+      empty_questions_description:
+        "Please check if the backend is running and question data is returned properly.",
+      refresh: "Refresh",
+      your_ai_travel_persona: "Find Your AI Travel Persona",
+      your_ai_travel_persona_description:
+        "Answer a few questions and AI will recommend courses that match your travel style.",
+      previous: "Previous",
+      next: "Next",
+      analyzing: "Analyzing...",
+      check_result: "Check Results",
+      custom_recommended_spots: "Custom Recommended Spots",
+      custom_recommended_spots_description:
+        "We'll randomly select places in Seoul that match your persona.",
+      refresh: "Refresh",
+      no_recommended_spots: "Failed to load recommended spots.",
+      custom_recommended_courses: "Custom Courses",
+      course_search_placeholder: "Search course names, places...",
+      card_view: "Card View",
+      list_view: "List View",
+      no_recommended_courses: "No recommended courses or search results found.",
+      // Travel Persona 라벨들
+      visit_count: "Number of Visits",
+      stay_period: "Stay Period",
+      travel_budget: "Travel Budget",
+      visit_purpose: "Purpose of Visit",
+      interests_activities: "Interests/Activities",
+    },
+    SurvivalKit: {
+      // Hero 섹션
+      hero_tagline: "Essential Travel Tools",
+      hero_title: "Survival Kit",
+      hero_subtitle:
+        "Meet all the tools and information you need during your trip to Korea in one place",
+
+      // 섹션 설명
+      section_vision_benefit: "Image text recognition and translation",
+      section_translator_benefit: "Real-time voice and text translation",
+      section_culture_benefit: "Korean culture and etiquette guide",
+
+      vision_ocr: "Vision OCR",
+      quick_translator: "Quick Translator",
+      culture_guide: "Culture Guide",
+      // 문화 가이드 번역
+      greeting: "Greeting Etiquette",
+      greeting_content:
+        "In Korea, greet older people first and bow your head when greeting.",
+      greeting_extra:
+        "Usually a light nod is sufficient, and shaking hands with both hands appears more polite.",
+      greeting_modal_title: "Korean Honorifics and Basic Greeting Expressions",
+      greeting_modal_paragraphs:
+        "Korea has honorifics and informal speech, so greeting expressions vary depending on the situation.",
+      greeting_modal_paragraphs_2:
+        "Friends say 'annyeong' to each other, but you must say 'annyeonghaseyo' to adults or people you meet for the first time to be polite.",
+      greeting_modal_list_1: "안녕하세요 (Daily honorific)",
+      greeting_modal_list_2: "안녕하십니까 (Formal)",
+      greeting_modal_list_3: "안녕 (Close friends, informal)",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워 (Thank you)",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해 (Sorry)",
+      greeting_modal_link_1: "How to greet Korean people",
+
+      meal: "Dining Etiquette",
+      meal_content:
+        "Adults pick up utensils first, don't hold the rice bowl while eating. Receive alcohol with both hands.",
+      meal_extra:
+        "After finishing your meal, it's polite to place chopsticks neatly on the bowl.",
+      meal_modal_title: "Korean Dining Etiquette",
+      meal_modal_paragraphs:
+        "In Korea, dining is not just about eating food but an important occasion to respect others.",
+      meal_modal_paragraphs_2:
+        "Before eating, say 'jal meokgesseumnida' (I will eat well), and after eating, say 'jal meogeosseumnida' (I ate well), which shows respect for both the person who prepared the food and those who shared the meal.",
+      meal_modal_list_1: "Elders or guests sit first when taking seats.",
+      meal_modal_list_2: "Don't stick chopsticks into the rice bowl.",
+      meal_modal_list_3: "When drinking alcohol, turn your head slightly.",
+      meal_modal_list_4:
+        "Chewing loudly or pointing at people with chopsticks is impolite.",
+      meal_modal_list_5: "Place bowls on the table and eat.",
+      meal_modal_link_1: "Korean dining etiquette",
+
+      transportation: "Public Transportation",
+      transportation_content:
+        "Give up priority seats on the subway and don't talk loudly on the phone.",
+      transportation_extra:
+        "During rush hours, carrying bags in front is a considerate attitude.",
+      transportation_modal_title: "Korean Public Transportation",
+      transportation_modal_paragraphs:
+        "Korean subways and buses are very convenient, but it's important to follow seat and behavior etiquette.",
+      transportation_modal_paragraphs_2:
+        "Especially priority seats and pregnant women's seats are confusing for foreigners - it's common culture not to sit even if they're empty.",
+      transportation_modal_list_1:
+        "Priority seats are for elderly, disabled, and pregnant women only - young people don't use them.",
+      transportation_modal_list_2:
+        "Pregnant women's seats (pink seats) are kept empty so pregnant women can use them anytime.",
+      transportation_modal_list_3:
+        "Don't talk loudly on public transportation.",
+      transportation_modal_list_4:
+        "Carry bags in front or put them down to be considerate of other passengers.",
+      transportation_modal_list_5:
+        "When boarding, let passengers exit first, then board in order.",
+      transportation_modal_link_1: "Using Korean public transportation",
+      transportation_modal_link_2: "Using Seoul subway",
+
+      tip: "Tipping Culture",
+      tip_content:
+        "Korea has no tipping culture. Service charges are already included.",
+      tip_extra:
+        "Some hotels in tourist areas may accept small tips as an exception, but it's not mandatory.",
+      tip_modal_title: "Korean Tipping Culture",
+      tip_modal_paragraphs:
+        "Korea's tipping culture is very different from the West and barely exists.",
+      tip_modal_list_1: "Restaurants/Cafes: No tip needed",
+      tip_modal_list_2: "Taxis: Pay only the set fare",
+      tip_modal_list_3: "Hair salons/Massage services: No tipping culture",
+
+      footwear: "Removing Shoes",
+      footwear_content:
+        "In Korean homes or some restaurants, you take off your shoes before entering.",
+      footwear_extra:
+        "Shoe cabinets are usually at the entrance, and indoor slippers are often prepared.",
+      footwear_modal_title: "Korean Shoe Removal Culture",
+      footwear_modal_paragraphs:
+        "In Korea, removing shoes when entering homes is a natural cultural practice.",
+      footwear_modal_paragraphs_2:
+        "This is a traditional habit to keep the interior clean and protect family health.",
+      footwear_modal_paragraphs_3:
+        "Indoors, people often wear slippers instead of shoes or just socks.",
+      footwear_modal_list_1: "Homes: Remove shoes at the entrance",
+      footwear_modal_list_2:
+        "Traditional Korean restaurants/Hanok: Often remove shoes due to floor seating structure",
+
+      gift: "Gift Etiquette",
+      gift_content:
+        "When receiving gifts, accept them with both hands and don't open them immediately.",
+      gift_extra:
+        "Especially for adults or superiors, alcohol, health foods, and tea are safe gift choices.",
+      gift_modal_title: "Korean Gift Etiquette",
+      gift_modal_paragraphs:
+        "In Korea, gifts carry meaning of relationship and respect, not just objects.",
+      gift_modal_paragraphs_2:
+        "When giving and receiving gifts, you must use both hands as etiquette.",
+      gift_modal_list_1: "Give and receive with both hands",
+      gift_modal_list_2:
+        "Exchange gifts in various situations like holidays, housewarming, gratitude",
+    },
+    VisionOCR: {
+      image_upload: "Image Upload",
+      image_support: "Supports JPG, PNG files",
+      image_preview: "Image Preview",
+      image_preview_desc: "Check the image to analyze",
+      cancel: "Cancel",
+      analyzing: "Analyzing...",
+      analyze_start: "Start Analysis",
+      analyze_result: "Analysis Result",
+      analyze_result_desc: "Click the text",
+      analyze_result_image: "Analyzed Image",
+      menu_info: "Menu Information",
+      ai_generating_answer: "AI is generating an answer...",
+      ai_analyze_result: "AI Analysis Result",
+      ai_generated_answer_desc:
+        "This information is a reference answer generated by AI",
+      source_info:
+        "Source: Korean Food Promotion Institute, 'Guide to Foreign Language Notation of Korean Menus 800 Selections'",
+      menu_name: "Menu Name",
+      description: "Description",
+      source_info_2: "Source: Korea Foundation Korean Food Information",
+      food_name: "Food Name",
+      translating: "Translating...",
+      source_info_3:
+        "Source: AI Hub (Korea National Information Society Agency), Tourism Food Menu Board Data",
+      main_ingredients: "Main Ingredients",
+      allergy_info: "Allergy Information",
+      menu_select: "Please select a menu",
+      menu_select_desc: "Touch the menu text in the image",
+      menu_select_desc_2: "Detailed menu information analyzed by AI",
+      menu_select_desc_3: "will",
+      menu_select_desc_4: "be displayed",
+      new_start: "Start New",
+      // 파일 선택 관련 번역
+      file_select: "File Select",
+      no_file_selected: "No file selected",
+      // 안내 문구
+      disclaimer:
+        "※ The provided information is for reference only. For accurate information about ingredients, allergies, and other menu details, please contact the restaurant!",
+      file_selected: "Selected file",
+    },
+    cultureGuide: {
+      greeting: "Greeting Etiquette",
+      greeting_content:
+        "In Korea, greet older people first and bow your head when greeting.",
+      greeting_extra:
+        "Usually a light nod is sufficient, and shaking hands with both hands appears more polite.",
+      greeting_modal_title: "Korean Honorifics and Basic Greeting Expressions",
+      greeting_modal_paragraphs:
+        "Korea has honorifics and informal speech, so greeting expressions vary depending on the situation.",
+      greeting_modal_paragraphs_2:
+        "Friends say 'annyeong' to each other, but you must say 'annyeonghaseyo' to adults or people you meet for the first time to be polite.",
+      greeting_modal_list_1: "안녕하세요 (Daily honorific)",
+      greeting_modal_list_2: "안녕하십니까 (Formal)",
+      greeting_modal_list_3: "안녕 (Close friends, informal)",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워 (Thank you)",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해 (Sorry)",
+      greeting_modal_link_1: "How to greet Korean people",
+      meal: "Dining Etiquette",
+      meal_content:
+        "Adults pick up utensils first, don't hold the rice bowl while eating. Receive alcohol with both hands.",
+      meal_extra:
+        "After finishing your meal, it's polite to place chopsticks neatly on the bowl.",
+      meal_modal_title: "Korean Dining Etiquette",
+      meal_modal_paragraphs:
+        "In Korea, dining is not just about eating food but an important occasion to respect others.",
+      meal_modal_paragraphs_2:
+        "Before eating, say 'jal meokgesseumnida' (I will eat well), and after eating, say 'jal meogeosseumnida' (I ate well), which shows respect for both the person who prepared the food and those who shared the meal.",
+      meal_modal_list_1: "Elders or guests sit first when taking seats.",
+      meal_modal_list_2: "Don't stick chopsticks into the rice bowl.",
+      meal_modal_list_3: "When drinking alcohol, turn your head slightly.",
+      meal_modal_list_4:
+        "Chewing loudly or pointing at people with chopsticks is impolite.",
+      meal_modal_list_5: "Place bowls on the table and eat.",
+      meal_modal_link_1: "Korean dining etiquette",
+      transportation: "Public Transportation",
+      transportation_content:
+        "Give up priority seats on the subway and don't talk loudly on the phone.",
+      transportation_extra:
+        "During rush hours, carrying bags in front is a considerate attitude.",
+      transportation_modal_title: "Korean Public Transportation",
+      transportation_modal_paragraphs:
+        "Korean subways and buses are very convenient, but it's important to follow seat and behavior etiquette.",
+      transportation_modal_paragraphs_2:
+        "Especially priority seats and pregnant women's seats are confusing for foreigners - it's common culture not to sit even if they're empty.",
+      transportation_modal_list_1:
+        "Priority seats are for elderly, disabled, and pregnant women only - young people don't use them.",
+      transportation_modal_list_2:
+        "Pregnant women's seats (pink seats) are kept empty so pregnant women can use them anytime.",
+      transportation_modal_list_3:
+        "Don't talk loudly on public transportation.",
+      transportation_modal_list_4:
+        "Carry bags in front or put them down to be considerate of other passengers.",
+      transportation_modal_list_5:
+        "When boarding, let passengers exit first, then board in order.",
+      transportation_modal_link_1: "Using Korean public transportation",
+      transportation_modal_link_2: "Using Seoul subway",
+      tip: "Tipping Culture",
+      tip_content:
+        "Korea has no tipping culture. Service charges are already included.",
+      tip_extra:
+        "Some hotels in tourist areas may accept small tips as an exception, but it's not mandatory.",
+      tip_modal_title: "Korean Tipping Culture",
+      tip_modal_paragraphs:
+        "Korea's tipping culture is very different from the West and barely exists.",
+      tip_modal_list_1: "Restaurants/Cafes: No tip needed",
+      tip_modal_list_2: "Taxis: Pay only the set fare",
+      tip_modal_list_3: "Hair salons/Massage services: No tipping culture",
+      footwear: "Removing Shoes",
+      footwear_content:
+        "In Korean homes or some restaurants, you take off your shoes before entering.",
+      footwear_extra:
+        "Shoe cabinets are usually at the entrance, and indoor slippers are often prepared.",
+      footwear_modal_title: "Korean Shoe Removal Culture",
+      footwear_modal_paragraphs:
+        "In Korea, removing shoes when entering homes is a natural cultural practice.",
+      footwear_modal_paragraphs_2:
+        "This is a traditional habit to keep the interior clean and protect family health.",
+      footwear_modal_paragraphs_3:
+        "Indoors, people often wear slippers instead of shoes or just socks.",
+      footwear_modal_list_1: "Homes: Remove shoes at the entrance",
+      footwear_modal_list_2:
+        "Traditional Korean restaurants/Hanok: Often remove shoes due to floor seating structure",
+      gift: "Gift Etiquette",
+      gift_content:
+        "When receiving gifts, accept them with both hands and don't open them immediately.",
+      gift_extra:
+        "Especially for adults or superiors, alcohol, health foods, and tea are safe gift choices.",
+      gift_modal_title: "Korean Gift Etiquette",
+      gift_modal_paragraphs:
+        "In Korea, gifts carry meaning of relationship and respect, not just objects.",
+      gift_modal_paragraphs_2:
+        "When giving and receiving gifts, you must use both hands as etiquette.",
+      gift_modal_list_1: "Give and receive with both hands",
+      gift_modal_list_2:
+        "Exchange gifts in various situations like holidays, housewarming, gratitude",
+    },
+    directions: {
+      days: "Day",
+      add_recommended_course: "Added recommended course to",
+      delete_day: "Delete this day?",
+      search_start: "Search departure point",
+      search_end: "Search destination",
+      search_waypoint: "Search waypoint",
+      route_planner: "Route Planner",
+      calculate_route: "Calculate Route",
+      calculating_route: "Calculating route...",
+      save_route: "Save Route",
+      more: "More",
+      duplicate_day: "Duplicate Day",
+      add_day_menu: "Add Day Menu",
+      add_day: "Add New Day",
+      add_recommended_course: "Add Recommended Course",
+      set_start: "Set departure point",
+      set_end: "Set destination",
+      add_waypoint: "Add Waypoint",
+      remove_waypoint: "Remove Waypoint",
+      add_waypoint_description:
+        "Adding waypoints allows you to create more precise routes.",
+      map_provider: "Map Provider",
+      kakao_map: "Kakao Map",
+      t_map: "T Map",
+      car: "Car",
+      pedestrian: "Walking",
+      transit: "Public Transit",
+      transportation_mode: "Transportation Mode",
+      route_order_adjustment: "Route Order Adjustment",
+      drag_to_adjust_order: "Drag to change order",
+      start: "Start",
+      end: "End",
+      waypoint: "Waypoint",
+      add_start: "Add Start Point",
+      add_end: "Add End Point",
+      add_waypoint: "Add Waypoint",
+      select_start: "Select departure point",
+      select_end: "Select destination",
+      select_waypoint: "Select waypoint",
+      travel_summary: "Travel Summary",
+      total_distance: "Total Distance",
+      estimated_duration: "Estimated Duration",
+      minutes: "minutes",
+      stay_time: "Stay Time (minutes)",
+      load_recommended_course: "Load Recommended Course",
+      load_recommended_course_description:
+        "Select a course to add as a new day.",
+      loading_recommended_course: "Loading recommended course...",
+      load_recommended_course_failed: "Failed to load recommended course.",
+      try_again: "Try Again",
+      no_recommended_course: "No recommended courses available.",
+      stops: "places",
+      keyword_input: "Enter keyword",
+      search_result_select_place: "Select a place from the search results",
+      waypoint_added: "Waypoint will be added.",
+      start_set: "Departure point will be set.",
+      end_set: "Destination will be set.",
+    },
+  },
+  ja: {
+    tour: {
+      header: {
+        klover: "K-lover",
+        tour: "ツアー",
+        subtitle: "プレミアムパーソナルツアー",
+      },
+      list: { title: "K-lover ツアー" },
+      search: { placeholder: "ツアーを検索..." },
+      categories: {
+        all: "すべて",
+        experience: "体験",
+        it: "IT",
+        sports: "スポーツ",
+        beauty: "ビューティー",
+        culture: "歴史",
+      },
+      pagination: { prev: "前へ", next: "次へ" },
+      empty: {
+        title: "結果がありません",
+        description: "他の検索語やフィルターをお試しください。",
+      },
+      partners: { title: "提携パートナー", subtitle: "信頼できるパートナー" },
+    },
+    tourDetail: {
+      data: {
+        1: {
+          title:
+            "K-POPデーモンハンターズ × エバーランド スペシャルコラボツアー",
+          subtitle: "Netflixオリジナル × 韓国代表テーマパークの完璧なコラボ",
+          location: "エバーランド、駱山公園、Nソウルタワー、国立中央博物館",
+          listDescription: "エバーランド入場券付き、ドラマ撮影地ツアー",
+          itinerary: [
+            {
+              location: "江南駅集合",
+              description: "専用バス乗車およびツアーブリーフィング",
+            },
+            {
+              location: "エバーランド入場",
+              description: "デーモンハンターズテーマゾーン体験開始",
+            },
+          ],
+          details: [
+            {
+              title: "エバーランド × K-POPデーモンハンターズ テーマゾーン",
+              text: "ドラマのアクションを体感できる没入型アトラクション",
+            },
+          ],
+        },
+        2: {
+          title: "マイクロソフト AI ツアー ソウル",
+          subtitle: "AI 技術と文化財修復の出会い",
+          location: "ソウル市中区 マイクロソフト コリア",
+          listDescription: "AIデモ、文化財修復体験、グッズショップ",
+          meta: {
+            duration: "4時間",
+            groupSize: "最大20名",
+            language: "韓国語、英語",
+          },
+          itinerary: [
+            {
+              location: "マイクロソフト コリア オフィス",
+              description: "AI紹介およびツアー開始",
+            },
+            { location: "AI デモ センター", description: "文化財修復AIの体験" },
+          ],
+          details: [
+            {
+              title: "MS AI カンファレンスのハイライト",
+              text: "基調講演とハンズオンでAI革新を体験",
+            },
+          ],
+        },
+      },
+      offer: {
+        expiresIn: "終了までの時間",
+        limitedTime: "⏳ 期間限定オファー",
+        doNotShowToday: "今日は表示しない",
+        grabDeal: "今すぐ獲得",
+        grabbed: "確定",
+        dealGrabbed: "ディールが確定しました！",
+        priceSecured: "現在の価格がしばらく保証されます",
+        urgencyText: "お急ぎください！残り {{minutes}}分 {{seconds}}秒",
+      },
+      booking: {
+        bookNow: "今すぐ予約",
+        reviews: "件のレビュー",
+        discount: "割引",
+      },
+      tabs: {
+        overview: "日程",
+        details: "詳細",
+        reviews: "レビュー",
+      },
+      overview: {
+        itinerary: "日程",
+        noItinerary: "日程情報がありません",
+        included: "含まれるもの",
+        includedItems: {
+          guide: "プロガイド",
+          lunch: "ランチ",
+          souvenirs: "お土産",
+          transportation: "交通",
+          activities: "アクティビティ",
+          insurance: "保険",
+        },
+      },
+      details: {
+        noDetails: "詳細情報がありません",
+      },
+      reviews: {
+        noReviews: "レビューはまだありません",
+      },
+      notFound: {
+        title: "ツアーが見つかりません",
+        description: "リクエストされたツアー情報を読み込めませんでした。",
+      },
+    },
+    common: {
+      community: {
+        info_reviews_label: "情報 & レビュー",
+        info_reviews_desc: "旅行情報とレビューを共有するスペース",
+        info: {
+          posts: {
+            10001: {
+              title: "✈️ ソウル都心空港ターミナル スマート利用ガイド",
+              content:
+                "出発前に都心でチェックイン・手荷物預け・出国審査を完了！ソウル駅/光明駅CATの営業時間・サービス・注意事項を案内。",
+            },
+            10002: {
+              title: "🎆 2025 ソウル世界花火祭 開催案内",
+              content:
+                "2025年10月4日(土) 19:30〜21:00、汝矣島漢江公園一帯で開催。観覧ポイントや交通情報をチェック。",
+            },
+            10003: {
+              title: "🌟 2025年秋夕期間 ソウル地下鉄の終電繰り上げ",
+              content:
+                "秋夕期間、地下鉄1〜9号線は23:00まで短縮運行。詳細はソウル交通公社HPをご確認ください。",
+            },
+            1001: {
+              title: "K‑pop デーモンハンターズ 3日間ソウル巡礼コース",
+              content:
+                "作品の舞台となった名所を3日で巡るルート。1日目: 江南/三成、2日目: 漢江/弘大、3日目: 光化門/益善洞/駱山。旅のコツ付き。",
+            },
+          },
+        },
+      },
+      // Home.jsx
+      place1: "明洞",
+      place2: "光化門",
+      place3: "梨泰院",
+      place4: "蚕室",
+      "features.title1": "AIペルソナ分析",
+      "features.title2": "カスタムコース推薦",
+      "features.title3": "K-Popプレイリスト",
+      "features.title4": "AIドーセント",
+      "features.desc1": "5つの質問であなただけの旅行スタイルを発見",
+      "features.desc2": "AIがリアルタイムで生成する完璧な旅行ルート",
+      "features.desc3": "旅行先別の雰囲気に合ったあなただけのK-Pop音楽",
+      "features.desc4": "RAGベースのチャットボットで現地文化を深く体験",
+      "stats.label1": "カスタム旅行作成",
+      "stats.label2": "満足度",
+      "stats.label3": "AIサポート",
+      "stats.label4": "平均評価",
+      "main.badge": "AIカスタム旅行プランナー",
+      "nav.features": "機能",
+      "nav.howto": "使い方",
+      "nav.community": "コミュニティ",
+      "login.welcome": "ようこそ！",
+      "login.logout": "ログアウト",
+      "login.login": "ログイン",
+      "main.title.k_travel": "K-旅行",
+      "main.title.connector": "を",
+      "main.title.ai_creates": "AIが作ります",
+      "main.subtitle":
+        "5つの質問であなただけの旅行スタイルを発見し、K-Popとともに完璧なコースを受け取りましょう。複雑な計画はAIに任せて、あなたは興奮だけを準備してください。",
+      "main.start.persona": "ペルソナ分析開始",
+      "main.start.start": "開始",
+      "now.playing": "Now Playing",
+      "main.recommend.spot": "おすすめスポット",
+      "main.recommend.spot.name": "弘大K-Popスクエア",
+      "main.title.ai_action": "AIが作ります",
+      "main.title.experience": "特別な体験",
+      "main.subtitle.ai_action":
+        "革新的なAI技術で、あなただけの完璧な韓国旅行を設計します。",
+      "main.more.view": "詳細を見る",
+      "steps.title": "簡単な3ステップで",
+      "steps.completion": "完成",
+      "steps.step1.title": "ペルソナ分析",
+      "steps.step1.description": "5つの質問で旅行スタイルを分析",
+      "steps.step2.title": "AIカスタム推薦",
+      "steps.step2.description": "分析結果に基づく完璧なコース生成",
+      "steps.step3.title": "自由な編集",
+      "steps.step3.description": "ドラッグ&ドロップで自分のプラン完成",
+      "popular.title": "リアルタイム人気",
+      "popular.highlight": "観光地",
+      "popular.action.join": "を",
+      "popular.action": "を発見",
+      "popular.description":
+        "他の旅行者が選んだ人気コースをチェックしてみてください",
+      "footer.slogan": "AIと一緒に完璧な韓国旅行を体験してください",
+      "footer.privacy_policy": "プライバシーポリシー",
+      "footer.terms_of_service": "利用規約",
+      "footer.customer_center": "カスタマーセンター",
+      "footer.partnership": "パートナーシップ",
+      "footer.copyright": "© 2024 TravelK. All rights reserved.",
+      "modal.welcome": "TravelKへようこそ",
+      "modal.instruction":
+        "AIカスタム旅行プランナーを開始するにはログインしてください",
+      "modal.continue_google": "Googleで続行",
+      "modal.continue_microsoft": "Microsoftで続行",
+      "modal.disclaimer.prefix": "続行することで、",
+      "modal.disclaimer.terms": "利用規約",
+      "modal.disclaimer.and": "と",
+      "modal.disclaimer.privacy": "プライバシーポリシー",
+      "modal.disclaimer.suffix": "に同意したものとみなされます。",
+      "cta.title": "今こそ、あなたの完璧な旅行を始める時",
+      "cta.start": "5つの質問で始める",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "あなただけの旅行ペルソナを発見",
+      "home.persona.desc":
+        "5つの質問で旅行スタイルを分析し、AIがカスタマイズされたコースを推薦します。",
+      "home.persona.cta": "ペルソナ分析開始",
+      "home.persona.card1.title": "旅行スタイルは？",
+      "home.persona.card1.pill1": "冒険追求型",
+      "home.persona.card1.pill2": "余裕満喫型",
+      "home.persona.card1.pill3": "計画的探訪型",
+      "home.persona.card2.title": "興味のある活動は？",
+      "home.persona.card2.pill1": "文化体験",
+      "home.persona.card2.pill2": "グルメ探訪",
+      "home.persona.card2.pill3": "ショッピング",
+      "home.persona.card3.title": "好みの雰囲気は？",
+      "home.persona.card3.pill1": "トレンディー",
+      "home.persona.card3.pill2": "伝統的",
+      "home.persona.card3.pill3": "自然親和的",
+
+      "home.ai_reco.title": "AIが作る完璧な旅行コース",
+      "home.ai_reco.desc":
+        "個人カスタマイズ分析に基づいて最適な旅行ルートをリアルタイムで生成します。",
+      "home.ai_reco.tag1": "リアルタイム生成",
+      "home.ai_reco.tag2": "カスタマイズ推薦",
+      "home.ai_reco.tag3": "最適経路",
+      "home.ai_reco.tag4": "時間効率",
+      "home.ai_reco.tag5": "現地情報",
+
+      "home.editing.title": "自由に編集して完成させましょう",
+      "home.editing.desc":
+        "ドラッグ＆ドロップで旅行日程を自由に修正し、あなただけの完璧なプランを作ってみてください。",
+
+      "home.map.preview_label": "カスタム旅行ルート",
+
+      "home.itinerary.title": "旅行日程",
+      "home.itinerary.item1": "景福宮観覧",
+      "home.itinerary.item2": "北村韓屋村",
+      "home.itinerary.item3": "仁寺洞文化街",
+      "home.itinerary.item4": "明洞ショッピング",
+
+      "home.controls.undo": "元に戻す",
+      "home.controls.save": "保存",
+    },
+    QuickTranslator: {
+      all: "すべて",
+      greeting: "挨拶",
+      location: "場所",
+      price: "価格",
+      help: "ヘルプ",
+      transport: "交通",
+      food: "食べ物",
+      status: "状態",
+      payment: "支払い",
+      menu: "メニュー",
+      language_detection_error: "言語検出中にエラーが発生しました。",
+      speech_recognition_error: "音声認識エラー",
+      real_time_translator: "リアルタイム翻訳機",
+      stop_listening: "音声認識停止",
+      processing_listening: "音声認識処理中...",
+      start_listening: "音声認識開始",
+      listening: "音声を聞いています... 話してください",
+      processing_text_conversion: "音声をテキストに変換しています...",
+      input_text:
+        "翻訳するテキストを入力してください... (言語は自動検出されます)",
+      detecting_language: "言語を検出しています...",
+      detected_language: "検出された言語",
+      translating: "翻訳中...",
+      translate: "翻訳",
+      translation_results: "翻訳結果",
+      listen_to_audio: "音声で聞く",
+      frequently_used_expressions: "よく使う表現",
+      use: "使用",
+      phrases1: "こんにちは",
+      phrases2: "ありがとうございます",
+      phrases3: "すみません",
+      phrases4: "トイレはどこですか？",
+      phrases5: "いくらですか？",
+      phrases6: "助けてください",
+      phrases7: "地下鉄駅はどこですか？",
+      phrases8: "美味しいです",
+      phrases9: "到着しました",
+      phrases10: "カードで支払えますか？",
+      phrases11: "領収書をください",
+      phrases12: "メニューをください",
+      phrases13: "水をください",
+      phrases14: "お会計をお願いします",
+      phrases15: "持ち帰りにしてください",
+    },
+    Navigation: {
+      persona_analysis: "ペルソナ分析",
+      result_dashboard: "結果ダッシュボード",
+      itinerary_planner: "旅行計画",
+      ai_docent: "AIドーセント",
+      community: "コミュニティ",
+      tour: "ツアー",
+      survival: "サバイバル",
+      survival_kit: "サバイバル キット",
+      playlists: "プレイリスト",
+      menu: "メニュー",
+      personalized_travel_planning: "パーソナライズされた旅行計画",
+      live_info: "ライブ情報",
+      exchange_rate_krw: "為替レート (KRW)",
+      seoul_weather: "ソウル天気",
+      temp: "気温",
+      humidity: "湿度",
+      wind: "風",
+      refresh_data: "データ更新",
+      expand: "展開",
+      collapse: "折りたたみ",
+      welcome_traveler: "旅行者さん、ようこそ！",
+      plan_your_trip_with_ai: "AIと一緒に旅行を計画しましょう",
+      log_out: "ログアウト",
+      log_in: "ログイン",
+    },
+    dashboard: {
+      edit_route: "ルート編集",
+      detail: "詳細",
+      checking_login_status: "ログイン状態を確認中...",
+      login_required: "ログインが必要です",
+      google_login: "Googleでログイン",
+      microsoft_login: "Microsoftでログイン",
+      no_analysis_result: "分析結果がありません",
+      no_analysis_result_description:
+        "最近作成されたペルソナ分析結果が見つかりません。新しい旅行計画を再度分析してください。",
+      start_analysis: "分析開始",
+      login_required_description:
+        "旅行ペルソナ分析とおすすめコースを確認するにはログインしてください。",
+      your_ai_travel_persona: "あなたのAI旅行ペルソナ",
+      analyzing: "分析中...",
+      travel_persona: "旅行ペルソナ",
+      custom_recommended_spots: "カスタムおすすめスポット",
+      custom_recommended_spots_description:
+        "あなたのペルソナに合ったソウルの場所をランダムに選んでお見せします。",
+      refresh: "更新",
+      no_recommended_spots: "おすすめスポットの読み込みに失敗しました。",
+      custom_recommended_courses: "カスタムコース",
+      course_search_placeholder: "コース名、場所を検索...",
+      card_view: "カードビュー",
+      list_view: "リストビュー",
+      no_recommended_courses:
+        "おすすめコースがないか、検索結果が見つかりません。",
+      visit_count: "訪問回数",
+      stay_period: "滞在期間",
+      travel_budget: "旅行予算",
+      visit_purpose: "訪問目的",
+      interests_activities: "興味・活動",
+    },
+    persona: {
+      choice: "選択",
+      checking_login_status: "ログイン状態を確認中...",
+      login_required: "ログインが必要です",
+      login_required_description:
+        "ペルソナ分析機能を使用するには、GoogleまたはMicrosoftアカウントでログインしてください。",
+      google_login: "Googleでログイン",
+      microsoft_login: "Microsoftでログイン",
+      loading_questions: "質問を読み込み中...",
+      loading_questions_failed: "質問の読み込みに失敗しました",
+      retry: "再試行",
+      empty_questions: "質問リストが空です",
+      empty_questions_description:
+        "バックエンドが実行中か、質問データが正常に返されているか確認してください。",
+      refresh: "更新",
+      your_ai_travel_persona: "あなたのAI旅行ペルソナを見つける",
+      your_ai_travel_persona_description:
+        "いくつかの質問に答えると、AIがあなたの旅行スタイルに合ったコースを推薦します。",
+      previous: "前へ",
+      next: "次へ",
+      analyzing: "分析中...",
+      check_result: "結果を確認",
+      custom_recommended_spots: "カスタムおすすめスポット",
+      custom_recommended_spots_description:
+        "あなたのペルソナに合ったソウルの場所をランダムに選んでお見せします。",
+      refresh: "更新",
+      no_recommended_spots: "おすすめスポットの読み込みに失敗しました。",
+      custom_recommended_courses: "カスタムコース",
+      course_search_placeholder: "コース名、場所を検索...",
+      card_view: "カードビュー",
+      list_view: "リストビュー",
+      no_recommended_courses:
+        "おすすめコースがないか、検索結果が見つかりません。",
+      // Travel Persona 라벨들
+      visit_count: "訪問回数",
+      stay_period: "滞在期間",
+      travel_budget: "旅行予算",
+      visit_purpose: "訪問目的",
+      interests_activities: "関心活動",
+    },
+    playlists: {
+      title: "K-pop旅行プレイリスト",
+      description:
+        "SpotifyにログインしてAIが作成したプレイリストを作成しましょう。今すぐ体験してみてください！✨",
+      login: "Spotifyログイン",
+      my_playlist: "マイプレイリスト",
+      playlist_preview: "プレイリストプレビュー",
+      your_playlist: "AIが作成したあなた専用の特別なプレイリスト",
+      make_playlist: "Spotifyにログインしてあなただけのプレイリストを作成",
+      preview: "プレビュー",
+      create_playlist: "最初のプレイリストを作成",
+      create_playlist_description:
+        "AIがあなたにぴったりの完璧なK-popプレイリストを作成します",
+      start_now: "今すぐ開始",
+      create_new_playlist: "新しいプレイリストを作成",
+      create_new_playlist_description:
+        "異なるテーマやアーティストで新しいプレイリストを作成",
+      featured_youtube_mix: "注目のYouTubeミックス",
+      latest_k_pop_travel_playlists:
+        "あなたの旅のために厳選された最新のK-pop旅行プレイリスト",
+      view_full_playlist: "フルプレイリストを見る",
+      create_your_own_playlist: "あなただけのプレイリストを作成",
+      create_your_own_playlist_description:
+        "AIがあなたの好みと旅行テーマに合った完璧なK-popプレイリストを生成します。数千曲のデータベースから最適な組み合わせを見つけて、Spotifyに直接保存できます。",
+      ai_custom_recommend: "AIカスタム推薦",
+      unlimited_creation: "無制限作成",
+      spotify_auto_save: "Spotify自動保存",
+      themes1: "都市旅行",
+      themes1_desc: "活気ある都心探検のためのエネルギッシュなK-pop",
+      themes2: "夏休み",
+      themes2_desc: "涼しい海風と温かい日差しを感じられる爽やかな音楽",
+      themes3: "夜市",
+      themes3_desc: "カラフルなネオンサインの下での楽しい夜の街の雰囲気",
+      themes4: "静かな旅行",
+      themes4_desc: "心を安らげる穏やかで感情的なメロディー",
+      themes5: "運動/ワークアウト",
+      themes5_desc: "運動効果を最大化する激しいビートのパワフルな音楽",
+      themes6: "カフェ/読書",
+      themes6_desc:
+        "集中力を高める落ち着いた洗練されたアコースティックサウンド",
+      kpop_artists1: "4世代ガールグループ",
+      kpop_artists2: "4世代ボーイグループ",
+      kpop_artists3: "3世代レジェンド",
+      kpop_artists4: "ソロアーティスト",
+      mock_playlists1: "ソウル シティ バイブ",
+      mock_playlists1_desc:
+        "ソウル都心を旅行する時に聞くのに良いアーバン K-pop",
+      mock_playlists2: "サマー ブリーズ",
+      mock_playlists2_desc: "爽やかな夏休み K-pop",
+      play: "再生",
+    },
+    DocentMantine: {
+      title: "AI ドーセント",
+      subtitle: "リアルタイム位置ガイド",
+      aiDocent: "AI ドーセント",
+      stopVoice: "音声停止",
+      current: "現在地",
+      directions: "経路検索",
+      chatbot: "観光チャットボット",
+      askQuestion: "何でもお聞きください",
+      send: "送信",
+      examples: {
+        title: "質問例:",
+        items: [
+          "ケイポップデーモンハンターズ撮影地",
+          "明洞グルメ推薦",
+          "北村韓屋村情報",
+          "イカゲーム撮影地",
+        ],
+      },
+      chatbotPlaceholder: "ご質問をどうぞ...",
+      chatbotInitialMessage:
+        "こんにちは！私はあなたのAI旅行ドーセントです。場所や旅行情報について何でも尋ねてください。写真を送ってください。その場所について詳しく説明します！",
+      imageQueryText: "この場所について教えてください",
+      voiceRecStart: "音声録音を開始します...",
+      voiceRecResult: "音声認識結果:",
+      voiceRecStop: "音声録音を停止します。",
+      errorReply:
+        "申し訳ありませんが、応答の生成中にエラーが発生しました。後でもう一度お試しください。",
+      filePick: "ファイル",
+      categories: {
+        all: "すべて",
+        museum: "美術館＆博物館",
+        palace: "古宮",
+        landmark: "ランドマーク",
+        historic: "歴史的な場所",
+      },
+      allTourismSpots: "全観光スポット",
+      detailedInfo: "詳細情報",
+      tourismList: "観光地リスト",
+      locationTracking: "位置追跡",
+      location: "位置",
+      voiceGuide: "音声ガイド",
+      tourDetection: {
+        message:
+          "🎯 ツアーに関するご質問ですね！専門ガイドツアーサービスとカスタムコース推薦は、ツアーページでご確認いただけます。",
+        buttonText: "🎯 ツアーサービスページへ移動",
+      },
+      viewDetails: "📝 詳細情報を見る",
+      selectPlace: "場所を選択してください",
+    },
+    SurvivalKit: {
+      // Hero 섹션
+      hero_tagline: "旅行者必須ツール",
+      hero_title: "サバイバルキット",
+      hero_subtitle:
+        "韓国旅行中に必要なすべてのツールと情報を一か所でお会いしましょう",
+
+      // 섹션 설명
+      section_vision_benefit: "画像テキスト認識と翻訳",
+      section_translator_benefit: "リアルタイム音声・テキスト翻訳",
+      section_culture_benefit: "韓国文化とマナーガイド",
+
+      vision_ocr: "ビジョン OCR",
+      quick_translator: "クイック翻訳",
+      culture_guide: "韓国文化ガイド",
+      // 文化ガイド翻訳
+      greeting: "挨拶マナー",
+      greeting_content: "韓国では年上の人に先に挨拶し、頭を下げて挨拶します。",
+      greeting_extra:
+        "通常は軽い会釈で十分で、両手で握手するとより丁寧に見えます。",
+      greeting_modal_title: "韓国の敬語と基本的な挨拶表現",
+      greeting_modal_paragraphs:
+        "韓国には敬語とタメ語があるため、挨拶表現も状況によって変わります。",
+      greeting_modal_paragraphs_2:
+        "友達同士は「안녕」と言いますが、大人や初対面の人には必ず「안녕하세요」と言うのが礼儀です。",
+      greeting_modal_list_1: "안녕하세요（日常敬語）",
+      greeting_modal_list_2: "안녕하십니까（格式）",
+      greeting_modal_list_3: "안녕（親しい間柄、タメ語）",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워（ありがとう）",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해（ごめんなさい）",
+      greeting_modal_link_1: "韓国人への挨拶の仕方",
+
+      meal: "食事マナー",
+      meal_content:
+        "大人が先にスプーンと箸を取り、ご飯茶碗を持って食べません。お酒は両手で受け取ります。",
+      meal_extra:
+        "ご飯を食べ終えた後は、箸を茶碗の上にきちんと置くのが礼儀です。",
+      meal_modal_title: "韓国の食事マナー",
+      meal_modal_paragraphs:
+        "韓国では食事は単に食べ物を食べるだけでなく、相手を尊重する重要な場です。",
+      meal_modal_paragraphs_2:
+        "食事前には「잘 먹겠습니다」（いただきます）、食事後には「잘 먹었습니다」（ごちそうさまでした）と挨拶し、これは準備した人と一緒にいた人すべてへの尊重を意味します。",
+      meal_modal_list_1: "席に座るときは年長者やお客様が先に座ります。",
+      meal_modal_list_2: "箸をご飯茶碗に刺しません。",
+      meal_modal_list_3: "お酒を飲むときは頭を少し向けて飲みます。",
+      meal_modal_list_4: "大きな音で噛んだり、箸で人を指すのは失礼です。",
+      meal_modal_list_5: "茶碗は食卓の上に置いて食べます。",
+      meal_modal_link_1: "韓国人の食事マナー",
+
+      transportation: "公共交通機関",
+      transportation_content:
+        "地下鉄では優先席を譲り、大きな声で通話しません。",
+      transportation_extra:
+        "混雑時間帯にはバッグを前に持つことが配慮する態度です。",
+      transportation_modal_title: "韓国の公共交通機関",
+      transportation_modal_paragraphs:
+        "韓国の地下鉄とバスは非常に便利ですが、座席と行動マナーを守ることが重要です。",
+      transportation_modal_paragraphs_2:
+        "特に優先席と妊婦配慮席は外国人にとって混乱しやすいですが、空いていても座らないのが一般的な文化です。",
+      transportation_modal_list_1:
+        "優先席は老人、障害者、妊婦専用座席で、若い人は使用しません。",
+      transportation_modal_list_2:
+        "妊婦配慮席（ピンク席）は妊婦がいつでも使用できるよう空けておきます。",
+      transportation_modal_list_3: "公共交通機関内では大きな声で通話しません。",
+      transportation_modal_list_4:
+        "バッグは前に持つか下ろして他の乗客に配慮します。",
+      transportation_modal_list_5:
+        "乗車時は降車客が先に降りてから順番に乗車します。",
+      transportation_modal_link_1: "韓国公共交通機関利用",
+      transportation_modal_link_2: "ソウルで地下鉄利用",
+
+      tip: "チップ文化",
+      tip_content:
+        "韓国にはチップ文化がありません。サービス料金が既に含まれています。",
+      tip_extra:
+        "観光地の一部ホテルは例外的に少額のチップを受け取ることもありますが、必須ではありません。",
+      tip_modal_title: "韓国のチップ文化",
+      tip_modal_paragraphs:
+        "韓国のチップ文化は西洋とは異なり、ほとんど存在しません。",
+      tip_modal_list_1: "レストラン・カフェ：チップ不要",
+      tip_modal_list_2: "タクシー：定められた料金のみ支払い",
+      tip_modal_list_3: "美容院・マッサージ等サービス業：チップ文化なし",
+
+      footwear: "靴脱ぎ",
+      footwear_content: "韓国の家庭や一部レストランでは靴を脱いで入ります。",
+      footwear_extra:
+        "靴箱は通常入口にあり、室内履きが準備されている場合が多いです。",
+      footwear_modal_title: "韓国の靴脱ぎ文化",
+      footwear_modal_paragraphs:
+        "韓国では家に入るとき靴を脱ぐことが当然の文化として定着しています。",
+      footwear_modal_paragraphs_2:
+        "これは室内を清潔に保ち、家族の健康を守るための伝統的な習慣です。",
+      footwear_modal_paragraphs_3:
+        "室内では靴の代わりにスリッパを履いたり、靴下だけを履いて生活する場合が多いです。",
+      footwear_modal_list_1: "家庭：玄関で靴を脱いで入る",
+      footwear_modal_list_2:
+        "伝統韓食店・韓屋：座式構造のため靴を脱ぐ場合が多い",
+
+      gift: "贈り物マナー",
+      gift_content:
+        "贈り物を受け取るときは両手で受け取り、すぐに開けないのが礼儀です。",
+      gift_extra:
+        "特に大人や上司には酒、健康食品、お茶などが無難な贈り物です。",
+      gift_modal_title: "韓国の贈り物マナー",
+      gift_modal_paragraphs:
+        "韓国では贈り物は単純な物ではなく、関係と尊重の意味を込めます。",
+      gift_modal_paragraphs_2:
+        "贈り物を渡すときと受け取るときは必ず両手を使うのが礼儀です。",
+      gift_modal_list_1: "両手でやり取りする",
+      gift_modal_list_2:
+        "名節・引っ越し祝い・感謝挨拶など様々な状況で贈り物のやり取り",
+    },
+    VisionOCR: {
+      image_upload: "画像アップロード",
+      image_support: "JPG、PNGファイルをサポートしています",
+      image_preview: "画像プレビュー",
+      image_preview_desc: "分析する画像を確認してください",
+      cancel: "キャンセル",
+      analyzing: "分析中...",
+      analyze_start: "分析開始",
+      analyze_result: "分析結果",
+      analyze_result_desc: "テキストをクリックしてください",
+      analyze_result_image: "分析された画像",
+      menu_info: "メニュー情報",
+      ai_generating_answer: "AIが回答を生成しています...",
+      ai_analyze_result: "AI分析結果",
+      ai_generated_answer_desc: "この情報はAIが生成した参考用回答です",
+      source_info: "出典: 韓食振興院、「韓食メニュー外国語表記ガイド800選」",
+      menu_name: "メニュー名",
+      description: "説明",
+      source_info_2: "出典: 韓国国際交流財団韓国料理情報",
+      food_name: "料理名",
+      translating: "翻訳中...",
+      source_info_3:
+        "出典: AI Hub（韓国情報化振興院）、観光料理メニューボードデータ",
+      main_ingredients: "主な材料",
+      allergy_info: "アレルギー情報",
+      menu_select: "メニューを選択してください",
+      menu_select_desc: "画像のメニューテキストをタッチすると",
+      menu_select_desc_2: "AIが分析した詳細なメニュー情報",
+      menu_select_desc_3: "が",
+      menu_select_desc_4: "表示されます",
+      new_start: "新しく始める",
+      // 파일 선택 관련 번역
+      file_select: "ファイル選択",
+      no_file_selected: "選択されたファイルなし",
+      // 안내 문구
+      disclaimer:
+        "※ 提供される情報は参考用です。成分、アレルギー等のメニューに関する正確な情報は店舗にお問い合わせください！",
+      file_selected: "選択されたファイル",
+    },
+    cultureGuide: {
+      greeting: "挨拶マナー",
+      greeting_content: "韓国では年上の人に先に挨拶し、頭を下げて挨拶します。",
+      greeting_extra:
+        "通常は軽い会釈で十分で、両手で握手するとより丁寧に見えます。",
+      greeting_modal_title: "韓国の敬語と基本的な挨拶表現",
+      greeting_modal_paragraphs:
+        "韓国には敬語とタメ語があるため、挨拶表現も状況によって変わります。",
+      greeting_modal_paragraphs_2:
+        "友達同士は「안녕」と言いますが、大人や初対面の人には必ず「안녕하세요」と言うのが礼儀です。",
+      greeting_modal_list_1: "안녕하세요（日常敬語）",
+      greeting_modal_list_2: "안녕하십니까（格式）",
+      greeting_modal_list_3: "안녕（親しい間柄、タメ語）",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워（ありがとう）",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해（ごめんなさい）",
+      greeting_modal_link_1: "韓国人への挨拶の仕方",
+      meal: "食事マナー",
+      meal_content:
+        "大人が先にスプーンと箸を取り、ご飯茶碗を持って食べません。お酒は両手で受け取ります。",
+      meal_extra:
+        "ご飯を食べ終えた後は、箸を茶碗の上にきちんと置くのが礼儀です。",
+      meal_modal_title: "韓国の食事マナー",
+      meal_modal_paragraphs:
+        "韓国では食事は単に食べ物を食べるだけでなく、相手を尊重する重要な場です。",
+      meal_modal_paragraphs_2:
+        "食事前には「잘 먹겠습니다」（いただきます）、食事後には「잘 먹었습니다」（ごちそうさまでした）と挨拶し、これは準備した人と一緒にいた人すべてへの尊重を意味します。",
+      meal_modal_list_1: "席に座るときは年長者やお客様が先に座ります。",
+      meal_modal_list_2: "箸をご飯茶碗に刺しません。",
+      meal_modal_list_3: "お酒を飲むときは頭を少し向けて飲みます。",
+      meal_modal_list_4: "大きな音で噛んだり、箸で人を指すのは失礼です。",
+      meal_modal_list_5: "茶碗は食卓の上に置いて食べます。",
+      meal_modal_link_1: "韓国人の食事マナー",
+      transportation: "公共交通機関",
+      transportation_content:
+        "地下鉄では優先席を譲り、大きな声で通話しません。",
+      transportation_extra:
+        "混雑時間帯にはバッグを前に持つことが配慮する態度です。",
+      transportation_modal_title: "韓国の公共交通機関",
+      transportation_modal_paragraphs:
+        "韓国の地下鉄とバスは非常に便利ですが、座席と行動マナーを守ることが重要です。",
+      transportation_modal_paragraphs_2:
+        "特に優先席と妊婦配慮席は外国人にとって混乱しやすいですが、空いていても座らないのが一般的な文化です。",
+      transportation_modal_list_1:
+        "優先席は老人、障害者、妊婦専用座席で、若い人は使用しません。",
+      transportation_modal_list_2:
+        "妊婦配慮席（ピンク席）は妊婦がいつでも使用できるよう空けておきます。",
+      transportation_modal_list_3: "公共交通機関内では大きな声で通話しません。",
+      transportation_modal_list_4:
+        "バッグは前に持つか下ろして他の乗客に配慮します。",
+      transportation_modal_list_5:
+        "乗車時は降車客が先に降りてから順番に乗車します。",
+      transportation_modal_link_1: "韓国公共交通機関利用",
+      transportation_modal_link_2: "ソウルで地下鉄利用",
+      tip: "チップ文化",
+      tip_content:
+        "韓国にはチップ文化がありません。サービス料金が既に含まれています。",
+      tip_extra:
+        "観光地の一部ホテルは例外的に少額のチップを受け取ることもありますが、必須ではありません。",
+      tip_modal_title: "韓国のチップ文化",
+      tip_modal_paragraphs:
+        "韓国のチップ文化は西洋とは異なり、ほとんど存在しません。",
+      tip_modal_list_1: "レストラン・カフェ：チップ不要",
+      tip_modal_list_2: "タクシー：定められた料金のみ支払い",
+      tip_modal_list_3: "美容院・マッサージ等サービス業：チップ文化なし",
+      footwear: "靴脱ぎ",
+      footwear_content: "韓国の家庭や一部レストランでは靴を脱いで入ります。",
+      footwear_extra:
+        "靴箱は通常入口にあり、室内履きが準備されている場合が多いです。",
+      footwear_modal_title: "韓国の靴脱ぎ文化",
+      footwear_modal_paragraphs:
+        "韓国では家に入るとき靴を脱ぐことが当然の文化として定着しています。",
+      footwear_modal_paragraphs_2:
+        "これは室内を清潔に保ち、家族の健康を守るための伝統的な習慣です。",
+      footwear_modal_paragraphs_3:
+        "室内では靴の代わりにスリッパを履いたり、靴下だけを履いて生活する場合が多いです。",
+      footwear_modal_list_1: "家庭：玄関で靴を脱いで入る",
+      footwear_modal_list_2:
+        "伝統韓食店・韓屋：座式構造のため靴を脱ぐ場合が多い",
+      gift: "贈り物マナー",
+      gift_content:
+        "贈り物を受け取るときは両手で受け取り、すぐに開けないのが礼儀です。",
+      gift_extra:
+        "特に大人や上司には酒、健康食品、お茶などが無難な贈り物です。",
+      gift_modal_title: "韓国の贈り物マナー",
+      gift_modal_paragraphs:
+        "韓国では贈り物は単純な物ではなく、関係と尊重の意味を込めます。",
+      gift_modal_paragraphs_2:
+        "贈り物を渡すときと受け取るときは必ず両手を使うのが礼儀です。",
+      gift_modal_list_1: "両手でやり取りする",
+      gift_modal_list_2:
+        "名節・引っ越し祝い・感謝挨拶など様々な状況で贈り物のやり取り",
+    },
+    directions: {
+      days: "日目",
+      add_recommended_course: "におすすめコースを追加しました。",
+      delete_day: "この日程を削除しますか？",
+      search_start: "出発地検索",
+      search_end: "到着地検索",
+      search_waypoint: "経由地検索",
+      route_planner: "ルートプランナー",
+      calculate_route: "ルート計算",
+      calculating_route: "ルート計算中...",
+      save_route: "ルート保存",
+      more: "もっと見る",
+      duplicate_day: "日程複製",
+      add_day_menu: "日目追加メニュー",
+      add_day: "新しい日目を追加",
+      add_recommended_course: "おすすめコース追加",
+      set_start: "出発地を設定してください",
+      set_end: "到着地を設定してください",
+      add_waypoint: "経由地追加",
+      remove_waypoint: "経由地削除",
+      add_waypoint_description:
+        "経由地を追加するとより精密なルートを作成できます。",
+      map_provider: "地図提供者",
+      kakao_map: "カカオマップ",
+      t_map: "Tマップ",
+      car: "車",
+      pedestrian: "徒歩",
+      transit: "公共交通機関",
+      transportation_mode: "移動手段",
+      route_order_adjustment: "ルート順序調整",
+      drag_to_adjust_order: "ドラッグして順序を変更してください",
+      start: "出発",
+      end: "到着",
+      waypoint: "経由",
+      add_start: "出発地追加",
+      add_end: "到着地追加",
+      add_waypoint: "経由地追加",
+      select_start: "出発地を選択してください",
+      select_end: "到着地を選択してください",
+      select_waypoint: "経由地を選択してください",
+      travel_summary: "移動要約",
+      total_distance: "総移動距離",
+      estimated_duration: "予想所要時間",
+      minutes: "分",
+      stay_time: "滞在時間（分）",
+      load_recommended_course: "おすすめコース読み込み",
+      load_recommended_course_description:
+        "追加したいコースを選択すると新しい日目として準備されます。",
+      loading_recommended_course: "おすすめコースを読み込み中です...",
+      load_recommended_course_failed: "おすすめコースを読み込めませんでした。",
+      try_again: "再試行",
+      no_recommended_course: "使用可能なおすすめコースがありません。",
+      stops: "箇所",
+      keyword_input: "キーワードを入力してください",
+      search_result_select_place: "検索結果から場所を選択すると",
+      waypoint_added: "経由地が追加されます。",
+      start_set: "出発地が設定されます。",
+      end_set: "到着地が設定されます。",
+    },
+  },
+  zh: {
+    tour: {
+      header: { klover: "K-lover", tour: "旅行", subtitle: "高端私人定制旅行" },
+      list: { title: "K-lover 旅行" },
+      search: { placeholder: "搜索旅行…" },
+      categories: {
+        all: "全部",
+        experience: "体验",
+        it: "IT",
+        sports: "运动",
+        beauty: "美妆",
+        culture: "历史",
+      },
+      pagination: { prev: "上一页", next: "下一页" },
+      empty: { title: "没有结果", description: "请尝试其他搜索或筛选条件。" },
+      partners: { title: "合作伙伴", subtitle: "值得信赖的伙伴" },
+    },
+    tourDetail: {
+      data: {
+        1: {
+          title: "K-Pop恶魔猎人 × 爱宝乐园特别联动之旅",
+          subtitle: "Netflix原创 × 韩国代表主题乐园完美合作",
+          location: "爱宝乐园、骆山公园、南山塔、国立中央博物馆",
+          listDescription: "含爱宝乐园门票与拍摄地游览",
+          itinerary: [
+            {
+              location: "江南站集合",
+              description: "乘坐专车并进行行程说明",
+            },
+            {
+              location: "进入爱宝乐园",
+              description: "开启恶魔猎人主题区体验",
+            },
+          ],
+          details: [
+            {
+              title: "爱宝乐园 × K-Pop恶魔猎人主题区",
+              text: "沉浸式设施重现剧中动作场景",
+            },
+          ],
+        },
+        2: {
+          title: "微软 AI 首尔之旅",
+          subtitle: "AI 技术与文化遗产修复的结合",
+          location: "首尔中区 微软韩国",
+          listDescription: "AI 演示、文物修复体验、周边商店",
+          meta: {
+            duration: "4小时",
+            groupSize: "最多20人",
+            language: "韩语、英语",
+          },
+          itinerary: [
+            { location: "微软韩国办公室", description: "AI 介绍与行程开始" },
+            { location: "AI 演示中心", description: "体验文物修复 AI" },
+          ],
+          details: [
+            {
+              title: "MS AI 大会亮点",
+              text: "通过主题演讲与实操工作坊探索 AI 创新",
+            },
+          ],
+        },
+      },
+      offer: {
+        expiresIn: "剩余时间",
+        limitedTime: "⏳ 限时优惠",
+        doNotShowToday: "今日不再显示",
+        grabDeal: "立即抢购",
+        grabbed: "已确认",
+        dealGrabbed: "优惠已确认！",
+        priceSecured: "当前价格将短暂保留",
+        urgencyText: "抓紧时间！剩余 {{minutes}}分 {{seconds}}秒",
+      },
+      booking: {
+        bookNow: "立即预订",
+        reviews: "条评论",
+        discount: "折",
+      },
+      tabs: {
+        overview: "行程",
+        details: "详情",
+        reviews: "评价",
+      },
+      overview: {
+        itinerary: "行程",
+        noItinerary: "暂无行程信息",
+        included: "包含内容",
+        includedItems: {
+          guide: "专业导游",
+          lunch: "午餐",
+          souvenirs: "纪念品",
+          transportation: "交通",
+          activities: "体验活动",
+          insurance: "保险",
+        },
+      },
+      details: {
+        noDetails: "暂无详细信息",
+      },
+      reviews: {
+        noReviews: "暂无评价",
+      },
+      notFound: {
+        title: "未找到该旅游项目",
+        description: "无法加载请求的旅游信息。",
+      },
+    },
+    common: {
+      community: {
+        info_reviews_label: "信息 & 评价",
+        info_reviews_desc: "分享旅行信息与评价的空间",
+        info: {
+          posts: {
+            10001: {
+              title: "✈️ 首尔都心机场航站楼使用指南",
+              content:
+                "出发前在市区完成值机、行李托运和出境审查！包含首尔站/光明站CAT的服务、营业时间与注意事项。",
+            },
+            10002: {
+              title: "🎆 2025 首尔世界烟花节公告",
+              content:
+                "2025年10月4日(周六) 19:30–21:00 汝矣岛汉江公园一带。查看观赏要点与交通信息。",
+            },
+            10003: {
+              title: "🌟 2025年中秋期间 首尔地铁提前收班",
+              content:
+                "中秋期间，地铁1–9号线运营至23:00。详情请参考首尔交通公社官网。",
+            },
+            1001: {
+              title: "K‑pop 恶魔猎人 3日首尔巡礼路线",
+              content:
+                "3天打卡作品取景地：第1天 江南/三成，第2天 汉江/弘大，第3天 光化门/益善洞/骆山，并附出行小贴士。",
+            },
+          },
+        },
+      },
+      // Home.jsx
+      place1: "明洞",
+      place2: "光化门",
+      place3: "梨泰院",
+      place4: "蚕室",
+      "features.title1": "AI人格分析",
+      "features.title2": "定制路线推荐",
+      "features.title3": "K-Pop播放列表",
+      "features.title4": "AI导游",
+      "features.desc1": "通过5个问题发现您独特的旅行风格",
+      "features.desc2": "AI实时生成的完美旅行路线",
+      "features.desc3": "适合每个旅行目的地氛围的专属K-Pop音乐",
+      "features.desc4": "基于RAG的聊天机器人深度体验当地文化",
+      "stats.label1": "定制旅行创建",
+      "stats.label2": "满意度",
+      "stats.label3": "AI支持",
+      "stats.label4": "平均评分",
+      "main.badge": "AI定制旅行规划师",
+      "nav.features": "功能",
+      "nav.howto": "使用方法",
+      "nav.community": "社区",
+      "login.welcome": "欢迎！",
+      "login.logout": "登出",
+      "login.login": "登录",
+      "main.title.k_travel": "K-旅行",
+      "main.title.connector": "",
+      "main.title.ai_creates": "AI为您打造",
+      "main.subtitle":
+        "通过5个问题发现您独特的旅行风格，与K-Pop一起享受完美的旅程。让AI处理复杂的计划，您只需准备好兴奋。",
+      "main.start.persona": "人格分析开始",
+      "main.start.start": "开始",
+      "now.playing": "Now Playing",
+      "main.recommend.spot": "推荐景点",
+      "main.recommend.spot.name": "弘大K-Pop广场",
+      "main.title.ai_action": "AI为您打造",
+      "main.title.experience": "特别的体验",
+      "main.subtitle.ai_action": "创新的AI技术为您设计完美的韩国旅行。",
+      "main.more.view": "查看更多",
+      "steps.title": "简单3步",
+      "steps.completion": "完成",
+      "steps.step1.title": "人格分析",
+      "steps.step1.description": "通过5个问题分析旅行风格",
+      "steps.step2.title": "AI定制推荐",
+      "steps.step2.description": "基于分析结果生成完美路线",
+      "steps.step3.title": "自由编辑",
+      "steps.step3.description": "拖拽完成您的专属计划",
+      "popular.title": "发现实时",
+      "popular.highlight": "热门景点",
+      "popular.action.join": "",
+      "popular.action": "发现",
+      "popular.description": "查看其他旅行者选择的热门路线",
+      "footer.slogan": "与AI一起体验完美的韩国之旅",
+      "footer.privacy_policy": "隐私政策",
+      "footer.terms_of_service": "服务条款",
+      "footer.customer_center": "客户中心",
+      "footer.partnership": "合作伙伴",
+      "footer.copyright": "© 2024 TravelK. All rights reserved.",
+      "modal.welcome": "欢迎来到TravelK",
+      "modal.instruction": "请登录以开始您的AI定制旅行规划师",
+      "modal.continue_google": "使用Google继续",
+      "modal.continue_microsoft": "使用Microsoft继续",
+      "modal.disclaimer.prefix": "继续即表示您同意我们的",
+      "modal.disclaimer.terms": "服务条款",
+      "modal.disclaimer.and": "和",
+      "modal.disclaimer.privacy": "隐私政策",
+      "modal.disclaimer.suffix": "。",
+      "cta.title": "现在，是开始您完美旅行的时候了",
+      "cta.start": "通过5个问题开始",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "发现您专属的旅行人格",
+      "home.persona.desc":
+        "通过5个问题分析您的旅行风格，AI将为您推荐定制化路线。",
+      "home.persona.cta": "开始人格分析",
+      "home.persona.card1.title": "旅行风格？",
+      "home.persona.card1.pill1": "冒险追求型",
+      "home.persona.card1.pill2": "悠闲享受型",
+      "home.persona.card1.pill3": "计划探访型",
+      "home.persona.card2.title": "感兴趣的活动？",
+      "home.persona.card2.pill1": "文化体验",
+      "home.persona.card2.pill2": "美食探访",
+      "home.persona.card2.pill3": "购物",
+      "home.persona.card3.title": "偏好的氛围？",
+      "home.persona.card3.pill1": "时尚的",
+      "home.persona.card3.pill2": "传统的",
+      "home.persona.card3.pill3": "亲近自然的",
+
+      "home.ai_reco.title": "AI打造的完美旅行路线",
+      "home.ai_reco.desc": "基于个人定制分析，实时生成最优旅行路线。",
+      "home.ai_reco.tag1": "实时生成",
+      "home.ai_reco.tag2": "定制推荐",
+      "home.ai_reco.tag3": "最优路线",
+      "home.ai_reco.tag4": "时间效率",
+      "home.ai_reco.tag5": "本地信息",
+
+      "home.editing.title": "自由编辑并完成",
+      "home.editing.desc": "通过拖拽功能自由修改旅行日程，创建您的完美计划。",
+
+      "home.map.preview_label": "定制旅行路线",
+
+      "home.itinerary.title": "旅行日程",
+      "home.itinerary.item1": "景福宫参观",
+      "home.itinerary.item2": "北村韩屋村",
+      "home.itinerary.item3": "仁寺洞文化街",
+      "home.itinerary.item4": "明洞购物",
+
+      "home.controls.undo": "撤销",
+      "home.controls.save": "保存",
+    },
+    QuickTranslator: {
+      all: "全部",
+      greeting: "问候",
+      location: "位置",
+      price: "价格",
+      help: "帮助",
+      transport: "交通",
+      food: "食物",
+      status: "状态",
+      payment: "支付",
+      menu: "菜单",
+      language_detection_error: "语言检测时发生错误。",
+      speech_recognition_error: "语音识别错误",
+      real_time_translator: "实时翻译器",
+      stop_listening: "停止语音识别",
+      processing_listening: "语音识别处理中...",
+      start_listening: "开始语音识别",
+      listening: "正在听取语音... 请说话",
+      processing_text_conversion: "正在将语音转换为文本...",
+      input_text: "请输入要翻译的文本... (语言将自动检测)",
+      detecting_language: "正在检测语言...",
+      detected_language: "检测到的语言",
+      translating: "翻译中...",
+      translate: "翻译",
+      translation_results: "翻译结果",
+      listen_to_audio: "听音频",
+      frequently_used_expressions: "常用表达",
+      use: "使用",
+      phrases1: "你好",
+      phrases2: "谢谢",
+      phrases3: "对不起",
+      phrases4: "洗手间在哪里？",
+      phrases5: "多少钱？",
+      phrases6: "请帮助我",
+      phrases7: "地铁站在哪里？",
+      phrases8: "很好吃",
+      phrases9: "我到了",
+      phrases10: "可以用卡支付吗？",
+      phrases11: "请给我收据",
+      phrases12: "请给我菜单",
+      phrases13: "请给我水",
+      phrases14: "请给我账单",
+      phrases15: "请打包",
+    },
+    playlists: {
+      title: "K-pop旅行播放列表",
+      description: "登录Spotify，创建AI生成的播放列表。立即体验吧！✨",
+      login: "Spotify登录",
+      my_playlist: "我的播放列表",
+      playlist_preview: "播放列表预览",
+      your_playlist: "AI为您创建的专属特别播放列表",
+      make_playlist: "登录Spotify后创建您自己的播放列表",
+      preview: "预览",
+      create_playlist: "创建您的第一个播放列表",
+      create_playlist_description: "AI为您量身定制完美的K-pop播放列表",
+      start_now: "立即开始",
+      create_new_playlist: "创建新播放列表",
+      create_new_playlist_description: "使用不同主题或艺术家创建新播放列表",
+      featured_youtube_mix: "精选YouTube混音",
+      latest_k_pop_travel_playlists: "为您的旅程精选的最新K-pop旅行播放列表",
+      view_full_playlist: "查看完整播放列表",
+      create_your_own_playlist: "创建您自己的播放列表",
+      create_your_own_playlist_description:
+        "AI根据您的喜好和旅行主题生成完美的K-pop播放列表。从数千首歌曲的数据库中寻找最佳组合，直接保存到Spotify。",
+      ai_custom_recommend: "AI定制推荐",
+      unlimited_creation: "无限创建",
+      spotify_auto_save: "Spotify自动保存",
+      themes1: "城市旅行",
+      themes1_desc: "充满活力的城市探索K-pop音乐",
+      themes2: "夏日假期",
+      themes2_desc: "感受清凉海风和温暖阳光的清爽音乐",
+      themes3: "夜市",
+      themes3_desc: "在绚丽霓虹灯下的热闹夜街氛围",
+      themes4: "安静旅行",
+      themes4_desc: "让心灵平静的温柔感性旋律",
+      themes5: "运动/健身",
+      themes5_desc: "强烈节拍最大化运动效果的强力音乐",
+      themes6: "咖啡厅/阅读",
+      themes6_desc: "提高专注力的平静精致原声音乐",
+      kpop_artists1: "第四代女团",
+      kpop_artists2: "第四代男团",
+      kpop_artists3: "第三代传奇",
+      kpop_artists4: "独唱歌手",
+      mock_playlists1: "首尔城市氛围",
+      mock_playlists1_desc: "适合在首尔市中心旅行时听的都市K-pop",
+      mock_playlists2: "夏日微风",
+      mock_playlists2_desc: "清爽夏日假期K-pop",
+      play: "播放",
+    },
+    DocentMantine: {
+      title: "AI 讲解",
+      subtitle: "实时位置导览",
+      aiDocent: "AI 讲解",
+      stopVoice: "停止语音",
+      current: "当前位置",
+      directions: "路线",
+      chatbot: "旅游聊天机器人",
+      askQuestion: "请问您想了解什么",
+      send: "发送",
+      examples: {
+        title: "示例问题:",
+        items: [
+          "K-pop恶魔猎人拍摄地",
+          "明洞美食推荐",
+          "北村韩屋村信息",
+          "鱿鱼游戏拍摄地",
+        ],
+      },
+      chatbotPlaceholder: "请输入您的问题...",
+      chatbotInitialMessage:
+        "您好！我是您的AI旅行讲解员。您可以询问任何关于地点或旅行信息的问题。您也可以发送照片，我会为您提供该地点的详细说明！",
+      imageQueryText: "请介绍一下这个地方",
+      voiceRecStart: "开始录音...",
+      voiceRecResult: "语音识别结果：",
+      voiceRecStop: "停止录音。",
+      errorReply: "抱歉，生成回复时出错。请稍后再试。",
+      filePick: "文件",
+      categories: {
+        all: "全部",
+        museum: "美术馆&博物馆",
+        palace: "故宫",
+        landmark: "地标",
+        historic: "历史遗址",
+      },
+      allTourismSpots: "全部景点",
+      detailedInfo: "详细信息",
+      tourismList: "景点列表",
+      locationTracking: "位置追踪",
+      location: "位置",
+      voiceGuide: "语音导览",
+      tourDetection: {
+        message:
+          "🎯 看起来您在咨询旅游相关问题！专业导游服务和定制路线推荐可在旅游页面查看。",
+        buttonText: "🎯 前往旅游服务页面",
+      },
+      viewDetails: "📝 查看详细信息",
+      selectPlace: "请选择地点",
+    },
+    Navigation: {
+      persona_analysis: "人格分析",
+      result_dashboard: "结果仪表板",
+      itinerary_planner: "行程规划",
+      ai_docent: "AI导览",
+      community: "社区",
+      tour: "旅游",
+      survival: "生存",
+      survival_kit: "生存Kit",
+      playlists: "播放列表",
+      menu: "菜单",
+      personalized_travel_planning: "个性化旅行规划",
+      live_info: "实时信息",
+      exchange_rate_krw: "汇率 (韩元)",
+      seoul_weather: "首尔天气",
+      temp: "温度",
+      humidity: "湿度",
+      wind: "风力",
+      refresh_data: "刷新数据",
+      expand: "展开",
+      collapse: "折叠",
+      welcome_traveler: "欢迎，旅行者！",
+      plan_your_trip_with_ai: "与AI一起规划您的旅行",
+      log_out: "登出",
+      log_in: "登录",
+    },
+    dashboard: {
+      edit_route: "编辑路线",
+      detail: "详情",
+      checking_login_status: "正在检查登录状态...",
+      login_required: "需要登录",
+      google_login: "使用Google登录",
+      microsoft_login: "使用Microsoft登录",
+      no_analysis_result: "没有分析结果",
+      no_analysis_result_description:
+        "未找到最近创建的角色分析结果，请重新分析您的旅行计划。",
+      start_analysis: "开始分析",
+      login_required_description: "请登录以查看您的旅行角色分析和推荐课程。",
+      your_ai_travel_persona: "您的AI旅行角色",
+      analyzing: "分析中...",
+      travel_persona: "旅行角色",
+      custom_recommended_spots: "定制推荐景点",
+      custom_recommended_spots_description:
+        "我会随机选择符合您角色的首尔地点。",
+      refresh: "刷新",
+      no_recommended_spots: "加载推荐景点失败。",
+      custom_recommended_courses: "定制课程",
+      course_search_placeholder: "搜索课程名称、地点...",
+      card_view: "卡片视图",
+      list_view: "列表视图",
+      no_recommended_courses: "没有推荐课程或搜索结果。",
+      visit_count: "访问次数",
+      stay_period: "停留期间",
+      travel_budget: "旅行预算",
+      visit_purpose: "访问目的",
+      interests_activities: "兴趣与活动",
+    },
+    persona: {
+      choice: "选择",
+      checking_login_status: "正在检查登录状态...",
+      login_required: "需要登录",
+      login_required_description:
+        "要使用角色分析功能，请使用Google或Microsoft账户登录。",
+      google_login: "使用Google登录",
+      microsoft_login: "使用Microsoft登录",
+      loading_questions: "正在加载问题...",
+      loading_questions_failed: "加载问题失败",
+      retry: "重试",
+      empty_questions: "问题列表为空",
+      empty_questions_description:
+        "请检查后端是否正在运行以及问题数据是否正常返回。",
+      refresh: "刷新",
+      your_ai_travel_persona: "寻找您的AI旅行角色",
+      your_ai_travel_persona_description:
+        "回答几个问题，AI将推荐符合您旅行风格的课程。",
+      previous: "上一页",
+      next: "下一页",
+      analyzing: "分析中...",
+      check_result: "查看结果",
+      custom_recommended_spots: "定制推荐景点",
+      custom_recommended_spots_description:
+        "我们将随机选择符合您角色的首尔地点。",
+      refresh: "刷新",
+      no_recommended_spots: "无法加载推荐景点。",
+      custom_recommended_courses: "定制课程",
+      course_search_placeholder: "搜索课程名称、地点...",
+      card_view: "卡片视图",
+      list_view: "列表视图",
+      no_recommended_courses: "没有推荐课程或搜索结果。",
+      // Travel Persona 라벨들
+      visit_count: "访问次数",
+      stay_period: "停留期间",
+      travel_budget: "旅行预算",
+      visit_purpose: "访问目的",
+      interests_activities: "兴趣活动",
+    },
+    SurvivalKit: {
+      // Hero 섹션
+      hero_tagline: "旅行者必备工具",
+      hero_title: "生存工具包",
+      hero_subtitle: "在韩国旅行中需要的所有工具和信息，在一个地方相遇",
+
+      // 섹션 설명
+      section_vision_benefit: "图像文字识别与翻译",
+      section_translator_benefit: "实时语音和文本翻译",
+      section_culture_benefit: "韩国文化与礼仪指南",
+
+      vision_ocr: "视觉OCR",
+      quick_translator: "快速翻译",
+      culture_guide: "韩国文化指南",
+      // 文化指南翻译
+      greeting: "问候礼仪",
+      greeting_content: "在韩国，要先向年长者问候，并低头行礼。",
+      greeting_extra: "通常轻点头就足够了，用双手握手会显得更礼貌。",
+      greeting_modal_title: "韩国的敬语和基本问候表达",
+      greeting_modal_paragraphs:
+        "韩国有敬语和非敬语，所以问候表达也会根据情况而不同。",
+      greeting_modal_paragraphs_2:
+        "朋友之间说'안녕'，但对大人或初次见面的人必须说'안녕하세요'才是礼貌的。",
+      greeting_modal_list_1: "안녕하세요（日常敬语）",
+      greeting_modal_list_2: "안녕하십니까（正式）",
+      greeting_modal_list_3: "안녕（亲密关系，非敬语）",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워（谢谢）",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해（对不起）",
+      greeting_modal_link_1: "如何向韩国人问候",
+
+      meal: "用餐礼仪",
+      meal_content: "大人先拿起餐具，不要端着饭碗吃饭。用双手接酒。",
+      meal_extra: "吃完饭后将筷子整齐地放在碗上是礼貌的表现。",
+      meal_modal_title: "韩国的用餐礼仪",
+      meal_modal_paragraphs:
+        "在韩国，用餐不仅仅是吃食物，而是尊重对方的重要场合。",
+      meal_modal_paragraphs_2:
+        "用餐前说'잘 먹겠습니다'（我开动了），用餐后说'잘 먹었습니다'（我吃好了），这表示对准备食物的人和一起用餐的人们的尊重。",
+      meal_modal_list_1: "就座时年长者或客人先坐",
+      meal_modal_list_2: "不要把筷子插在饭碗里",
+      meal_modal_list_3: "喝酒时稍微转头喝",
+      meal_modal_list_4: "大声咀嚼或用筷子指人是失礼的",
+      meal_modal_list_5: "把碗放在餐桌上吃",
+      meal_modal_link_1: "韩国人的用餐礼仪",
+
+      transportation: "公共交通",
+      transportation_content: "在地铁上让座给老弱病残孕，不要大声通话。",
+      transportation_extra: "在拥挤时段将包放在前面是体贴的态度。",
+      transportation_modal_title: "韩国的公共交通",
+      transportation_modal_paragraphs:
+        "韩国的地铁和公交车非常方便，但遵守座位和行为礼仪很重要。",
+      transportation_modal_paragraphs_2:
+        "特别是老弱病残孕专座和孕妇专座对外国人来说容易混淆，即使空着也不坐是一般文化。",
+      transportation_modal_list_1:
+        "老弱病残孕专座是老人、残疾人、孕妇专用座位，年轻人不使用",
+      transportation_modal_list_2:
+        "孕妇专座（粉色座位）保持空着，以便孕妇随时使用",
+      transportation_modal_list_3: "在公共交通工具内不大声通话",
+      transportation_modal_list_4: "将包放在前面或放下，照顾其他乘客",
+      transportation_modal_list_5: "上车时让下车乘客先下，然后按顺序上车",
+      transportation_modal_link_1: "使用韩国公共交通",
+      transportation_modal_link_2: "在首尔使用地铁",
+
+      tip: "小费文化",
+      tip_content: "韩国没有小费文化。服务费已经包含在内。",
+      tip_extra: "旅游区的一些酒店可能例外地接受少量小费，但不是必须的。",
+      tip_modal_title: "韩国的小费文化",
+      tip_modal_paragraphs: "韩国的小费文化与西方不同，几乎不存在。",
+      tip_modal_list_1: "餐厅·咖啡厅：不需要小费",
+      tip_modal_list_2: "出租车：只支付规定费用",
+      tip_modal_list_3: "美容院·按摩等服务行业：没有小费文化",
+
+      footwear: "脱鞋",
+      footwear_content: "在韩国家庭或一些餐厅要脱鞋进入。",
+      footwear_extra: "鞋柜通常在入口处，经常准备室内拖鞋。",
+      footwear_modal_title: "韩国的脱鞋文化",
+      footwear_modal_paragraphs: "在韩国，进入家中时脱鞋是理所当然的文化。",
+      footwear_modal_paragraphs_2:
+        "这是为了保持室内清洁和保护家人健康的传统习惯。",
+      footwear_modal_paragraphs_3:
+        "在室内经常穿拖鞋而不是鞋子，或者只穿袜子生活。",
+      footwear_modal_list_1: "家庭：在玄关脱鞋进入",
+      footwear_modal_list_2: "传统韩餐厅·韩屋：由于坐式结构经常脱鞋",
+
+      gift: "礼物礼仪",
+      gift_content: "接受礼物时用双手接受，不要立即打开是礼貌的。",
+      gift_extra: "特别是对大人或上司，酒、保健品、茶等是安全的礼物选择。",
+      gift_modal_title: "韩国的礼物礼仪",
+      gift_modal_paragraphs:
+        "在韩国，礼物不仅仅是物品，而是包含关系和尊重的意义。",
+      gift_modal_paragraphs_2: "送礼物和接受礼物时必须使用双手是礼仪。",
+      gift_modal_list_1: "用双手给予和接受",
+      gift_modal_list_2: "在节日、乔迁、感谢等各种情况下交换礼物",
+    },
+    VisionOCR: {
+      image_upload: "图片上传",
+      image_support: "支持JPG、PNG文件",
+      image_preview: "图片预览",
+      image_preview_desc: "请确认要分析的图片",
+      cancel: "取消",
+      analyzing: "分析中...",
+      analyze_start: "开始分析",
+      analyze_result: "分析结果",
+      analyze_result_desc: "请点击文本",
+      analyze_result_image: "已分析的图片",
+      menu_info: "菜单信息",
+      ai_generating_answer: "AI正在生成答案...",
+      ai_analyze_result: "AI分析结果",
+      ai_generated_answer_desc: "此信息是AI生成的参考答案",
+      source_info: "来源：韩食振兴院，《韩食菜单外语标记指南800选》",
+      menu_name: "菜单名称",
+      description: "描述",
+      source_info_2: "来源：韩国国际交流财团韩国料理信息",
+      food_name: "料理名称",
+      translating: "翻译中...",
+      source_info_3: "来源：AI Hub（韩国信息化振兴院），观光料理菜单板数据",
+      main_ingredients: "主要成分",
+      allergy_info: "过敏信息",
+      menu_select: "请选择菜单",
+      menu_select_desc: "点击图片中的菜单文本",
+      menu_select_desc_2: "AI分析的详细菜单信息",
+      menu_select_desc_3: "将",
+      menu_select_desc_4: "显示",
+      new_start: "重新开始",
+      // 파일 선택 관련 번역
+      file_select: "文件选择",
+      no_file_selected: "未选择文件",
+      // 안내 문구
+      disclaimer:
+        "※ 提供的信息仅供参考。关于成分、过敏等菜单的准确信息，请联系餐厅！",
+      file_selected: "已选择文件",
+    },
+    cultureGuide: {
+      greeting: "问候礼仪",
+      greeting_content: "在韩国，要先向年长者问候，并低头行礼。",
+      greeting_extra: "通常轻微的点头就足够了，用双手握手会显得更加恭敬。",
+      greeting_modal_title: "韩国的敬语和基本问候表达",
+      greeting_modal_paragraphs:
+        "韩国有敬语和半语，问候表达也会根据情况有所不同。",
+      greeting_modal_paragraphs_2:
+        "朋友之间说'안녕'，但对长辈或初次见面的人必须说'안녕하세요'才算有礼貌。",
+      greeting_modal_list_1: "안녕하세요 (日常敬语)",
+      greeting_modal_list_2: "안녕하십니까 (正式)",
+      greeting_modal_list_3: "안녕 (亲密关系，半语)",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해",
+      greeting_modal_link_1: "如何向韩国人问候",
+      meal: "用餐礼仪",
+      meal_content: "长辈先拿起餐具，不要端着饭碗吃饭。接酒要用双手。",
+      meal_extra: "吃完饭后将筷子整齐地放在碗上是礼貌的表现。",
+      meal_modal_title: "韩国的用餐礼仪",
+      meal_modal_paragraphs:
+        "在韩国，用餐不仅仅是吃饭，而是尊重对方的重要场合。",
+      meal_modal_paragraphs_2:
+        "用餐前说'잘 먹겠습니다'，用餐后说'잘 먹었습니다'，这是对准备的人和一起用餐的人的尊重。",
+      meal_modal_list_1: "就座时让长辈或客人先坐。",
+      meal_modal_list_2: "不要把筷子插在饭碗里。",
+      meal_modal_list_3: "喝酒时要稍微转头喝。",
+      meal_modal_list_4: "大声咀嚼或用筷子指人是失礼的。",
+      meal_modal_list_5: "要把碗放在餐桌上吃。",
+      meal_modal_link_1: "韩国人的用餐礼仪",
+      transportation: "公共交通",
+      transportation_content: "在地铁上要让座给老弱病残，不要大声通话。",
+      transportation_extra: "在拥挤的时间段把包背在前面是体贴的态度。",
+      transportation_modal_title: "韩国的公共交通",
+      transportation_modal_paragraphs:
+        "韩国的地铁和公交车非常方便，但遵守座位和行为礼仪很重要。",
+      transportation_modal_paragraphs_2:
+        "特别是老弱病残专座和孕妇专座，外国人容易混淆，即使空着也不坐是一般文化。",
+      transportation_modal_list_1:
+        "老弱病残专座是老人、残疾人、孕妇专用座位，年轻人不使用。",
+      transportation_modal_list_2: "孕妇专座（粉色座位）要随时为孕妇空着。",
+      transportation_modal_list_3: "在公共交通工具内不要大声通话。",
+      transportation_modal_list_4: "不要在地铁或公交车上吃东西。",
+      transportation_modal_list_5: "拥挤时把包背在前面是礼貌的。",
+      transportation_modal_link_1: "韩国的公共交通礼仪",
+      shopping: "购物礼仪",
+      shopping_content:
+        "购物时要排队等候，不要插队。试穿衣服后要整理好放回原处。",
+      shopping_extra: "在商店里不要大声说话，要尊重其他顾客。",
+      shopping_modal_title: "韩国的购物礼仪",
+      shopping_modal_paragraphs: "韩国的购物文化注重秩序和礼貌。",
+      shopping_modal_paragraphs_2:
+        "在商场和商店里要遵守基本礼仪，这样购物体验会更好。",
+      shopping_modal_list_1: "购物时要排队等候，不要插队。",
+      shopping_modal_list_2: "试穿衣服后要整理好放回原处。",
+      shopping_modal_list_3: "不要大声说话或打电话。",
+      shopping_modal_list_4: "购物袋要小心携带，不要碰到其他顾客。",
+      shopping_modal_list_5: "结账时要准备好现金或卡。",
+      shopping_modal_link_1: "韩国的购物礼仪",
+      gift: "礼物礼仪",
+      gift_content: "送礼物时要用双手递送，收到礼物时要表示感谢。",
+      gift_extra: "在韩国，礼物包装也很重要，要选择漂亮的包装纸。",
+      gift_modal_title: "韩国的礼物礼仪",
+      gift_modal_paragraphs: "在韩国，送礼物是表达心意的重要方式。",
+      gift_modal_paragraphs_2:
+        "节日、搬家祝贺、感谢问候等各种情况下都有礼物往来。",
+      gift_modal_list_1: "送礼物时要用双手递送。",
+      gift_modal_list_2: "收到礼物时要表示感谢。",
+      gift_modal_list_3: "礼物包装要漂亮。",
+      gift_modal_list_4: "不要送过于昂贵的礼物。",
+      gift_modal_list_5: "节日、搬家祝贺、感谢问候等各种情况下都有礼物往来。",
+      gift_modal_link_1: "韩国的礼物礼仪",
+    },
+    directions: {
+      days: "第",
+      add_recommended_course: "已添加推荐路线。",
+      delete_day: "删除此日程？",
+      search_start: "搜索出发地",
+      search_end: "搜索目的地",
+      search_waypoint: "搜索途经地",
+      route_planner: "路线规划器",
+      calculate_route: "计算路线",
+      calculating_route: "正在计算路线...",
+      save_route: "保存路线",
+      more: "更多",
+      duplicate_day: "复制日程",
+      add_day_menu: "添加日程菜单",
+      add_day: "添加新日程",
+      add_recommended_course: "添加推荐路线",
+      set_start: "请设置出发地",
+      set_end: "请设置目的地",
+      add_waypoint: "添加途经地",
+      remove_waypoint: "删除途经地",
+      add_waypoint_description: "添加途经地可以创建更精确的路线。",
+      map_provider: "地图提供商",
+      kakao_map: "Kakao地图",
+      t_map: "T地图",
+      car: "汽车",
+      pedestrian: "步行",
+      transit: "公共交通",
+      transportation_mode: "交通方式",
+      route_order_adjustment: "路线顺序调整",
+      drag_to_adjust_order: "拖拽更改顺序",
+      start: "出发",
+      end: "到达",
+      waypoint: "途经",
+      add_start: "添加出发地",
+      add_end: "添加目的地",
+      add_waypoint: "添加途经地",
+      select_start: "请选择出发地",
+      select_end: "请选择目的地",
+      select_waypoint: "请选择途经地",
+      travel_summary: "行程摘要",
+      total_distance: "总距离",
+      estimated_duration: "预计用时",
+      minutes: "分钟",
+      stay_time: "停留时间（分钟）",
+      load_recommended_course: "加载推荐路线",
+      load_recommended_course_description: "选择要添加的路线将作为新日程准备。",
+      loading_recommended_course: "正在加载推荐路线...",
+      load_recommended_course_failed: "无法加载推荐路线。",
+      try_again: "重试",
+      no_recommended_course: "没有可用的推荐路线。",
+      stops: "个",
+      keyword_input: "请输入关键词",
+      search_result_select_place: "从搜索结果中选择地点",
+      waypoint_added: "将添加途经地。",
+      start_set: "将设置出发地。",
+      end_set: "将设置目的地。",
+    },
+  },
+};
+
+i18n.use(initReactI18next).init({
+  resources,
+  lng: "ko",
+  fallbackLng: "en",
+  interpolation: { escapeValue: false },
+  ns: [
+    "common",
+    "QuickTranslator",
+    "SurvivalKit",
+    "Navigation",
+    "VisionOCR",
+    "playlists",
+    "DocentMantine",
+    "dashboard",
+    "persona",
+    "directions",
+  ],
+  defaultNS: "common",
+});
+
+export default i18n;

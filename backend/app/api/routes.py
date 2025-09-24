@@ -1292,14 +1292,13 @@ def google_callback():
                 'error': 'Google 사용자 정보가 불완전합니다.'
             }), 400
         
-        # DB에서 기존 사용자 확인 또는 생성
-        print(f"DB에서 사용자 확인: google_id={google_id}")
+
         user_result = board_service.get_user_by_social('google', google_id)
         
         if user_result['success']:
             user = user_result['user']
             user_id = user['id']
-            print(f"기존 사용자 로그인 user_id={user_id}")
+
         else:
             # 신규 사용자 - DB에 저장
             create_result = board_service.create_or_update_user(

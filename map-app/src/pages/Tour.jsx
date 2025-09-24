@@ -135,19 +135,19 @@ const getCategoryInfo = (t, category) => {
 
 // 모바일 최적화된 TourCard 컴포넌트
 const MobileTourCard = ({ item, onDetailClick }) => {
-  const { t, i18n: i18nextInstance } = useTranslation("tour", {
+  const { t, i18n: i18nextInstance } = useTranslation("tourDetail", {
     useSuspense: false,
   });
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   useEffect(() => {
-    i18nextInstance.loadNamespaces(["tour"]);
+    i18nextInstance.loadNamespaces(["tourDetail"]);
   }, [i18nextInstance]);
 
   // 언어 변경 시에도 tour 네임스페이스 보장 로드
   useEffect(() => {
-    i18nextInstance.loadNamespaces(["tour"]);
+    i18nextInstance.loadNamespaces(["tourDetail"]);
   }, [i18nextInstance.language]);
 
   useEffect(() => {
@@ -183,7 +183,7 @@ const MobileTourCard = ({ item, onDetailClick }) => {
       <div className="relative h-44 sm:h-48 md:h-56 lg:h-64 overflow-hidden">
         <img
           src={item.image || "/placeholder.svg"}
-          alt={item.title}
+          alt={t(`data.${item.id}.title`, { defaultValue: item.title })}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -223,14 +223,16 @@ const MobileTourCard = ({ item, onDetailClick }) => {
       <div className="p-2.5 sm:p-3 md:p-4 space-y-1.5 flex flex-col justify-between flex-1">
         <div className="space-y-1">
           <h3 className="text-sm sm:text-base font-bold text-white line-clamp-1">
-            {item.title}
+            {t(`data.${item.id}.title`, { defaultValue: item.title })}
           </h3>
 
           <div className="flex items-center justify-between text-xs sm:text-sm">
             {/* 위치: 좌측 */}
             <div className="flex items-center gap-1 text-gray-400 min-w-0">
               <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="truncate">{item.location}</span>
+              <span className="truncate">
+                {t(`data.${item.id}.location`, { defaultValue: item.location })}
+              </span>
             </div>
             {/* 평점: 우측 */}
             <div className="flex items-center gap-1 text-gray-300 flex-shrink-0 ml-2">
@@ -240,7 +242,9 @@ const MobileTourCard = ({ item, onDetailClick }) => {
           </div>
 
           <p className="text-xs sm:text-sm text-gray-400 line-clamp-2">
-            {item.description}
+            {t(`data.${item.id}.listDescription`, {
+              defaultValue: item.description,
+            })}
           </p>
         </div>
 
@@ -279,6 +283,7 @@ const MobileTourCard = ({ item, onDetailClick }) => {
 // PartnershipSection 컴포넌트
 
 const PartnershipSection = () => {
+  const { t } = useTranslation("tour");
   return (
     <NeonCard className="mb-8">
       <div className="flex items-center gap-4 mb-8">
@@ -287,9 +292,9 @@ const PartnershipSection = () => {
         </div>
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
-            기업 제휴 파트너
+            {t("partners.title")}
           </h2>
-          <p className="text-gray-300">신뢰할 수 있는 파트너사</p>
+          <p className="text-gray-300">{t("partners.subtitle")}</p>
         </div>
       </div>
       <div className="relative overflow-hidden">
@@ -346,12 +351,13 @@ const PartnershipSection = () => {
 
 // 메인 Tour 컴포넌트 - 모바일 최적화 적용
 export default function Tour() {
+  const { t } = useTranslation("tour");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(false);
-  const itemsPerPage = isMobile ? 3 : 2; // 모바일 3개, 데스크톱 2개씩 표시
+  const itemsPerPage = isMobile ? 2 : 2; // 모바일 2개, 데스크톱 2개씩 표시
   // 컴포넌트 마운트 시 세션 스토리지 정리
   useEffect(() => {
     // URL이 직접 /tour로 접근한 경우 세션 스토리지 정리
@@ -402,18 +408,12 @@ export default function Tour() {
 
   // 카테고리 배열
   const categories = [
-    { value: "all", label: "All", emoji: "🌟" },
-    //{ value: "entertainment", label: "Entertainment", emoji: "🎢" },
-    // { value: "location", label: "Filming", emoji: "📍" },
-    { value: "experience", label: "Experience", emoji: "🎭" },
-    { value: "it", label: "IT", emoji: "🖥️" },
-    { value: "sports", label: "Sports", emoji: "⚾" },
-    { value: "beauty", label: "Beauty", emoji: "💄" },
-    { value: "culture", label: "History", emoji: "🏛️" },
-
-    // { value: "goods", label: "Shopping", emoji: "🛍️" },
-    // { value: "food", label: "MeokBang", emoji: "🍜" },
-    //  { value: "adventure", label: "Outdoor", emoji: "🏔️" },
+    { value: "all", label: t("categories.all"), emoji: "🌟" },
+    { value: "experience", label: t("categories.experience"), emoji: "🎭" },
+    { value: "it", label: t("categories.it"), emoji: "🖥️" },
+    { value: "sports", label: t("categories.sports"), emoji: "⚾" },
+    { value: "beauty", label: t("categories.beauty"), emoji: "💄" },
+    { value: "culture", label: t("categories.culture"), emoji: "🏛️" },
   ];
 
   // 뒤로가기 함수
@@ -473,12 +473,12 @@ export default function Tour() {
             transition={{ duration: 0.6 }}
             className="text-center mb-8 sm:mb-12"
           >
-            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4 px-4">
-              K-lover
-              <br className="sm:hidden" /> Tour
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4 px-4">
+              {t("header.klover")}
+              <br className="sm:hidden" /> {t("header.tour")}
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 sm:mb-8 px-4">
-              Premium Personal Tour
+            <p className="text-base sm:text-lg md:text-xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 sm:mb-8 px-4">
+              {t("header.subtitle")}
             </p>
           </motion.div>
           {/* 모바일/데스크톱 반응형 투어 카드 섹션 (데스크톱 과도한 가로 확장 방지) */}
@@ -490,7 +490,7 @@ export default function Tour() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
-                    K-lover 투어
+                    {t("list.title")}
                   </h2>
                 </div>
               </div>
@@ -503,7 +503,7 @@ export default function Tour() {
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={""}
+                    placeholder={t("search.placeholder")}
                     className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white placeholder-gray-400 shadow-lg"
                   />
                 </div>
@@ -570,7 +570,7 @@ export default function Tour() {
                         className="flex items-center gap-1 px-3 py-2 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
                       >
                         <ChevronLeft size={16} />
-                        <span className="text-sm">이전</span>
+                        <span className="text-sm">{t("pagination.prev")}</span>
                       </button>
 
                       <div className="flex space-x-1">
@@ -601,7 +601,7 @@ export default function Tour() {
                         disabled={currentPage === totalPages}
                         className="flex items-center gap-1 px-3 py-2 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
                       >
-                        <span className="text-sm">다음</span>
+                        <span className="text-sm">{t("pagination.next")}</span>
                         <ChevronRight size={16} />
                       </button>
                     </div>
@@ -617,10 +617,10 @@ export default function Tour() {
                     <ShoppingBag className="w-8 h-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-bold text-white mb-2">
-                    검색 결과가 없습니다
+                    {t("empty.title")}
                   </h3>
                   <p className="text-gray-300 text-sm">
-                    다른 검색어나 필터를 시도해보세요.
+                    {t("empty.description")}
                   </p>
                 </motion.div>
               )}
