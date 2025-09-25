@@ -53,14 +53,20 @@ const navigationItems = [
     url: createPageUrl("DocentMantine"),
     icon: Compass,
   },
+
+  {
+    title: "서바이벌키트",
+    url: createPageUrl("CommunityMain"), //서바이벌키트
+    icon: Compass,
+  },
   {
     title: "커뮤니티",
     url: createPageUrl("CommunitySocial"), //게시판
     icon: Compass,
   },
   {
-    title: "한국에서 살아남기",
-    url: createPageUrl("CommunityMain"), //서바이벌키드
+    title: "마이페이지",
+    url: createPageUrl("mypage"), //마이페이지지
     icon: Compass,
   },
 ];

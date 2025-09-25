@@ -24,13 +24,13 @@ import {
 } from "lucide-react";
 
 const getNavigationItems = (t) => [
-  { title: t("persona_analysis"), url: "/persona" },
-  { title: t("result_dashboard"), url: "/result" },
-  { title: t("itinerary_planner"), url: "/itinerary" },
+  { title: t("persona_analysis"), url: "/persona" }, //페르소나
+  { title: t("result_dashboard"), url: "/result" }, //대시보드
+  { title: t("itinerary_planner"), url: "/itinerary" }, //일정플래너
   { title: t("ai_docent"), url: "/docent" },
-  { title: t("community"), url: "/social" },
+  { title: t("survival"), url: "/community" }, //서바이벌
   { title: t("tour"), url: "/tour" },
-  { title: t("survival"), url: "/community" },
+  { title: t("community"), url: "/social" }, //게시판
   { title: t("mypage"), url: "/mypage" },
 ];
 

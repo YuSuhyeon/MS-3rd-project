@@ -167,6 +167,14 @@ export default function CommunityMain() {
   const { t } = useTranslation("Navigation");
   const isMobile = useMediaQuery("(max-width: 768px)");
 
+  // 컨테이너 너비 고정을 위한 스타일
+  const containerStyle = {
+    width: "100%",
+    minWidth: "100%",
+    maxWidth: "100%",
+    boxSizing: "border-box",
+  };
+
   const tabs = [
     {
       id: "survival",
@@ -229,13 +237,42 @@ export default function CommunityMain() {
   };
 
   const renderTabContent = (tabId) => {
+    const contentStyle = {
+      width: "100%",
+      minWidth: "100%",
+      maxWidth: "100%",
+      boxSizing: "border-box",
+      overflow: "hidden",
+    };
+
+    const innerContentStyle = {
+      width: "100%",
+      minWidth: "100%",
+      maxWidth: "100%",
+      boxSizing: "border-box",
+      overflow: "hidden",
+    };
+
     switch (tabId) {
       case "survival":
-        return <SurvivalKit />;
+        return (
+          <div className="w-full h-full overflow-hidden" style={contentStyle}>
+            <div style={innerContentStyle}>
+              <SurvivalKit />
+            </div>
+          </div>
+        );
       case "playlists":
         return (
-          <div className={`${isMobile ? "pb-4" : ""}`}>
-            <SpotifyPlaylistGenerator />
+          <div className="w-full h-full overflow-hidden" style={contentStyle}>
+            <div style={innerContentStyle}>
+              <div
+                className="w-full max-w-full overflow-hidden"
+                style={innerContentStyle}
+              >
+                <SpotifyPlaylistGenerator />
+              </div>
+            </div>
           </div>
         );
       default:
@@ -248,11 +285,28 @@ export default function CommunityMain() {
   };
 
   return (
-    <BackgroundEffect>
-      {isMobile ? (
-        <>
-          <div className="sticky top-0 bg-black/80 backdrop-blur-sm border-b border-purple-500/30 z-40 px-2 py-2">
-            <div className="flex bg-gray-900/50 p-1 rounded-lg">
+    <BackgroundEffect className="flex-1 min-h-screen overflow-y-auto overflow-x-hidden">
+      <style jsx>{`
+        .fixed-width-container {
+          width: 100% !important;
+          min-width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
+        }
+        .fixed-width-container * {
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+      `}</style>
+      <div
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 fixed-width-container"
+        style={containerStyle}
+      >
+        {/* 상단 탭 헤더 (CommunitySocial과 동일한 스타일) */}
+        {isMobile ? (
+          <div className="sticky top-0 z-40 px-2 py-2">
+            <div className="flex p-1 rounded-lg">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -264,7 +318,7 @@ export default function CommunityMain() {
                   {activeTab === tab.id && (
                     <motion.div
                       layoutId="mobile-active-tab-indicator"
-                      className="absolute inset-0 bg-purple-600/50 rounded-md"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-400"
                       transition={{
                         type: "spring",
                         stiffness: 300,
@@ -272,86 +326,132 @@ export default function CommunityMain() {
                       }}
                     />
                   )}
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    <tab.Icon className="h-4 w-4" />
-                    {tab.label}
+                  <span className="relative z-10 flex items-center justify-center">
+                    <tab.Icon
+                      className="h-5 w-5 md:h-6 md:w-6"
+                      aria-label={tab.label}
+                    />
                   </span>
                 </button>
               ))}
             </div>
           </div>
-
-          <div className="overflow-x-hidden">
-            <motion.div
-              className="flex"
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragEnd={handleDragEnd}
-              animate={{
-                x: `-${tabs.findIndex((tab) => tab.id === activeTab) * 100}%`,
+        ) : (
+          <div className="sticky top-0 z-50">
+            <div
+              className="max-w-7xl mx-auto px-4 sm:px-6 pt-4"
+              style={{
+                borderBottom: "none",
               }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              {tabs.map((tab) => (
-                <motion.div
-                  key={tab.id}
-                  className="w-full flex-shrink-0 px-4 py-6"
-                  initial={false}
-                >
-                  {renderTabContent(tab.id)}
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="bg-black/60 backdrop-blur-sm border-b border-purple-500/30 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-6 py-5">
-              <div className="flex justify-center">
-                <div className="relative inline-flex divide-x divide-white/10 rounded-2xl border border-white/10 bg-black/40 shadow-[0_20px_60px_-40px_rgba(168,85,247,0.9)]">
-                  {tabs.map((tab, index) => {
+              <div className="flex items-center justify-between gap-6">
+                <div className="flex items-center gap-6">
+                  {tabs.map((tab) => {
                     const Icon = tab.Icon;
                     const isActive = activeTab === tab.id;
-                    const isFirst = index === 0;
-                    const isLast = index === tabs.length - 1;
-
                     return (
                       <button
                         key={tab.id}
                         type="button"
                         onClick={() => handleTabClick(tab.id)}
                         aria-pressed={isActive}
-                        className={`group relative flex min-w-[170px] items-center justify-center gap-3 px-7 py-4 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/80 focus-visible:ring-offset-0 ${
+                        className={`relative -mb-px pb-3 pt-2 text-sm font-semibold transition-colors ${
                           isActive
-                            ? "bg-gradient-to-r from-purple-500/80 via-pink-500/70 to-blue-500/70 text-white shadow-[0_18px_45px_-25px_rgba(236,72,153,0.8)]"
-                            : "text-purple-100/80 hover:bg-white/10 hover:text-white"
-                        } ${isFirst ? "rounded-l-2xl" : ""} ${
-                          isLast ? "rounded-r-2xl" : ""
+                            ? "text-white"
+                            : "text-purple-100/80 hover:text-white"
                         }`}
+                        style={{
+                          borderBottom: isActive
+                            ? "2px solid rgba(168, 85, 247, 0.9)"
+                            : "2px solid transparent",
+                          filter:
+                            "drop-shadow(0 0 1px rgba(236,72,153,0.5)) drop-shadow(0 0 2px rgba(168,85,247,0.6)) drop-shadow(0 0 4px rgba(168,85,247,0.4))",
+                        }}
                       >
-                        <span
-                          className={`flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/10 transition-colors duration-200 ${
-                            isActive
-                              ? "border-white/30 bg-black/20 text-white"
-                              : "text-purple-200 group-hover:text-white"
-                          }`}
-                        >
-                          <Icon className="h-4 w-4" />
-                        </span>
-                        <span className="whitespace-nowrap tracking-wide">
-                          {tab.label}
+                        <span className="inline-flex items-center gap-2">
+                          <Icon
+                            className="h-5 w-5 md:h-6 md:w-6"
+                            aria-label={tab.label}
+                          />
+                          <span className="hidden sm:inline">{tab.label}</span>
                         </span>
                       </button>
                     );
                   })}
                 </div>
+                <div className="hidden md:block ml-auto" />
               </div>
             </div>
           </div>
-          <div className="max-w-7xl mx-auto px-6 py-8">{renderContent()}</div>
-        </>
-      )}
+        )}
+
+        {/* 메인 콘텐츠 - 고정된 레이아웃 */}
+        <div className="relative z-10 px-2 py-4 md:p-6 md:pt-16 w-full max-w-7xl mx-auto">
+          <div className="w-full relative z-10">
+            {isMobile ? (
+              // 모바일: 스와이프 가능한 고정 컨테이너
+              <div className="overflow-hidden h-[calc(100vh-200px)] min-h-[600px] w-full">
+                <motion.div
+                  className="flex h-full w-full"
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  onDragEnd={handleDragEnd}
+                  animate={{
+                    x: `-${
+                      tabs.findIndex((tab) => tab.id === activeTab) * 100
+                    }%`,
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                  {tabs.map((tab) => (
+                    <motion.div
+                      key={tab.id}
+                      className="w-full flex-shrink-0 px-4 py-6 h-full overflow-y-auto"
+                      style={{ width: "100vw", maxWidth: "100%" }}
+                      initial={false}
+                    >
+                      <div className="h-full w-full max-w-full">
+                        {renderTabContent(tab.id)}
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            ) : (
+              // 데스크톱: 고정 높이와 너비 컨테이너
+              <motion.section
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                className="min-h-[800px] h-[calc(100vh-250px)] w-full max-w-7xl mx-auto"
+                style={{ width: "100%", minWidth: "100%", maxWidth: "100%" }}
+              >
+                <div className="h-full w-full overflow-y-auto overflow-x-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeTab}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="h-full w-full"
+                      style={{
+                        width: "100%",
+                        minWidth: "100%",
+                        maxWidth: "100%",
+                      }}
+                    >
+                      <div className="w-full max-w-full overflow-hidden">
+                        {renderContent()}
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </motion.section>
+            )}
+          </div>
+        </div>
+      </div>
     </BackgroundEffect>
   );
 }

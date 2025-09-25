@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import BrandLogo from "components/BrandLogo";
+import { BackgroundEffect } from "components/ui/NeonTheme";
 import LoginModal from "components/community/LoginModal";
 import LanguageButtons from "components/ui/LanguageButtons";
 import { useAuth } from "context/AuthContext";
@@ -41,9 +42,9 @@ const getNavigationItems = (t) => [
   { title: t("result_dashboard"), url: "/result" },
   { title: t("itinerary_planner"), url: "/itinerary" },
   { title: t("ai_docent"), url: "/docent" },
-  { title: t("community"), url: "/social" }, //community main 에서 social로 이동 0921진희
+  { title: t("survival"), url: "/community" }, //
   { title: t("tour"), url: "/tour" },
-  { title: t("survival"), url: "/community" }, //서바이벌 키트 0921진희
+  { title: t("community"), url: "/social" }, //
   { title: t("mypage"), url: "/mypage" },
 ];
 
@@ -1986,7 +1987,11 @@ export default function Layout({ children }) {
               <div className="flex-[2] min-w-0">{/* 지도 */}</div>
               <div className="flex-[1] min-w-0">{/* 상세정보 */}</div>
             </div>
-            <div className="flex-1 flex flex-col">{children}</div>
+            <BackgroundEffect className="flex-1">
+              <div className="relative z-10 flex flex-col min-h-screen">
+                {children}
+              </div>
+            </BackgroundEffect>
           </div>
         </motion.main>
 

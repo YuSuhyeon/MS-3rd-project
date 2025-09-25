@@ -32,14 +32,16 @@ export default function POIList({
             }`}
           >
             <div className="flex items-center justify-between">
-              <div className="font-medium text-gray-100">{poi.name}</div>
+              <div className="font-medium text-gray-100" dynamic="list">
+                {poi.name}
+              </div>
               {nears.has(poi._raw?.poi_id || poi.id) && (
                 <Badge className="bg-emerald-500/20 text-emerald-200 border-emerald-400/30">
                   근처
                 </Badge>
               )}
             </div>
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs text-gray-400 mt-1" dynamic="list">
               {poi.address || ""}
             </div>
           </button>
@@ -77,7 +79,7 @@ export function POIListJH({
             }`}
           >
             <div className="flex items-center justify-between">
-              <div className="font-medium text-gray-100 text-sm">
+              <div className="font-medium text-gray-100 text-sm" dynamic="list">
                 {poi.name}
               </div>
               {nears.has(poi._raw?.poi_id || poi.id) && (
@@ -86,7 +88,7 @@ export function POIListJH({
                 </Badge>
               )}
             </div>
-            <div className="text-xs text-gray-400 mt-0.5">
+            <div className="text-xs text-gray-400 mt-0.5" dynamic="list">
               {poi.address || ""}
             </div>
           </button>

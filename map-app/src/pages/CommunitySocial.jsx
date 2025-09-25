@@ -302,6 +302,7 @@ const SearchHeader = ({
   currentSearchTerm,
   setCurrentSearchTerm,
 }) => {
+  const { t } = useTranslation("common");
   const [showFilters, setShowFilters] = useState(false);
   const inputRef = useRef(null);
 
@@ -350,16 +351,34 @@ const SearchHeader = ({
     <div className="mb-6">
       <form onSubmit={handleSearch} className="relative mb-4">
         <div className="flex items-center bg-white/5 backdrop-blur-sm rounded-xl border border-white/20 overflow-hidden">
-          <div className="flex-1 flex items-center">
-            <Search className="w-5 h-5 text-purple-400 ml-4" />
+          <div className="flex-1 flex items-center relative">
             <input
               ref={inputRef}
               type="text"
               value={currentSearchTerm}
               onChange={handleInputChange}
-              placeholder="여행지, 태그로 검색..."
-              className="flex-1 bg-transparent text-white placeholder-white/50 px-4 py-3 focus:outline-none"
+              placeholder=""
+              aria-label={t("community.search_placeholder", {
+                defaultValue: "검색",
+              })}
+              className="flex-1 bg-transparent text-white px-4 pr-12 py-3 focus:outline-none"
             />
+            {/* 우측 네온 테두리 돋보기 아이콘 (장식용) */}
+            <div
+              aria-hidden="true"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8"
+            >
+              <div className="w-full h-full rounded-full bg-gray-900/60 flex items-center justify-center">
+                <Search
+                  className="w-4 h-4 text-white"
+                  style={{
+                    filter:
+                      "drop-shadow(0 0 2px rgba(236,72,153,0.7)) drop-shadow(0 0 4px rgba(168,85,247,0.8)) drop-shadow(0 0 8px rgba(168,85,247,0.6))",
+                    strokeWidth: 2.5,
+                  }}
+                />
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-2 px-4">
             {(currentSearchTerm ||
@@ -431,7 +450,7 @@ const TrendingBar = ({
   return (
     <div className="mb-6">
       <div
-        className={`relative bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden ${
+        className={`relative bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-white/10 hover:border-white/20 hover:shadow-white/10 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden ${
           isMobile ? "p-3" : "p-6"
         }`}
       >
@@ -445,41 +464,13 @@ const TrendingBar = ({
               isMobile ? "flex-col gap-1 w-full" : "gap-4"
             }`}
           >
-            {/* 타입 탭 - 데스크톱에서만 표시 */}
+            {/* HOT 라벨 (임티 유지, 텍스트 라벨 제거) */}
             <div
               className={`flex items-center ${
                 isMobile ? "w-full justify-center" : ""
               } gap-2`}
             >
-              <div className="w-2 h-5 animate-pulse mr-1">✨</div>
-              {isMobile ? (
-                <span className="text-white font-bold text-sm">
-                  실시간 인기 {showType === "tags" ? "태그" : "글"}
-                </span>
-              ) : (
-                <div className="bg-white/5 rounded-lg p-0.5 border border-white/10 flex">
-                  <button
-                    onClick={() => setShowType("tags")}
-                    className={`px-3 py-1 rounded-md text-xs ${
-                      showType === "tags"
-                        ? "bg-purple-500 text-white"
-                        : "text-purple-300 hover:text-white"
-                    }`}
-                  >
-                    인기태그
-                  </button>
-                  <button
-                    onClick={() => setShowType("posts")}
-                    className={`px-3 py-1 rounded-md text-xs ${
-                      showType === "posts"
-                        ? "bg-yellow-500/30 text-yellow-200"
-                        : "text-yellow-300 hover:text-white"
-                    }`}
-                  >
-                    인기글
-                  </button>
-                </div>
-              )}
+              <span className="text-base font-bold text-white">HOT 🔥</span>
             </div>
 
             {/* 트렌드 아이템들 */}
@@ -501,8 +492,8 @@ const TrendingBar = ({
                           onClick={() => onTagClick(item.tag)}
                           className={`px-1.5 py-0.5 rounded-full transition-all duration-300 text-xs ${
                             index === currentIndex % trendingTags.length
-                              ? "bg-purple-500 text-white font-bold scale-110"
-                              : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
+                              ? "bg-black/60 text-white font-bold scale-110 border border-white/10"
+                              : "bg-black/30 text-gray-200 hover:bg-black/40 border border-white/5"
                           }`}
                           whileHover={{ scale: 1.05 }}
                         >
@@ -516,7 +507,7 @@ const TrendingBar = ({
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                   >
-                    인기 태그 없음
+                    HOT 데이터 없음
                   </span>
                 )
               ) : trendingPosts && trendingPosts.length > 0 ? (
@@ -537,8 +528,8 @@ const TrendingBar = ({
                           isMobile ? "max-w-24" : "max-w-xs"
                         } ${
                           index === currentIndex % trendingPosts.length
-                            ? "bg-yellow-500/20 text-yellow-300 font-bold scale-105"
-                            : "bg-white/5 text-gray-300 hover:bg-white/10"
+                            ? "bg-black/60 text-white font-bold scale-105 border border-white/10"
+                            : "bg-black/30 text-gray-200 hover:bg-black/40 border border-white/5"
                         }`}
                         whileHover={{ scale: 1.02 }}
                       >
@@ -554,7 +545,7 @@ const TrendingBar = ({
                     isMobile ? "text-xs" : "text-sm"
                   }`}
                 >
-                  인기 글 없음
+                  HOT 데이터 없음
                 </span>
               )}
             </div>
@@ -570,9 +561,9 @@ const TrendingBar = ({
                   onPostClick("all");
                 }
               }}
-              className="text-purple-400 hover:text-purple-300 text-sm transition-colors flex items-center gap-1"
+              className="text-gray-300 hover:text-white text-sm transition-colors flex items-center gap-1"
+              aria-label="전체보기"
             >
-              <span>전체보기</span>
               <TrendingUp className="w-3 h-3" />
             </button>
           )}
@@ -987,11 +978,6 @@ const PostRow = ({
         className="border-b border-white/10 hover:bg-white/5 cursor-pointer transition-all duration-200 group"
         onClick={() => onPostClick && onPostClick(post.board_id || post.id)}
       >
-        {/* 번호 */}
-        <td className="px-4 py-4 text-center text-gray-400 text-sm w-16">
-          {index + 1}
-        </td>
-
         {/* 제목 & 내용 */}
         <td className="px-4 py-4 flex-1 min-w-0">
           <div className="flex flex-col">
@@ -1348,9 +1334,6 @@ const PostTable = ({ posts, ...props }) => {
           {/* table-fixed 추가 */}
           <thead>
             <tr className="border-b border-white/20 bg-white/5">
-              <th className="px-4 py-3 text-left text-gray-300 text-sm font-medium w-16">
-                번호
-              </th>
               <th className="px-4 py-3 text-left text-gray-300 text-sm font-medium w-96">
                 제목
               </th>
@@ -1439,8 +1422,8 @@ export default function CommunitySocial() {
 
   // 탭 정의 및 공통 핸들러
   const tabs = [
-    { id: "official", label: "정보", Icon: BookOpen },
-    { id: "travel", label: "후기", Icon: MessageCircle },
+    { id: "official", label: "Klover's Guide Book", Icon: BookOpen },
+    { id: "travel", label: "Klover's Community", Icon: MessageCircle },
   ];
 
   const handleTabClick = (tabId) => {
@@ -1778,9 +1761,9 @@ export default function CommunitySocial() {
   }
 
   return (
-    <BackgroundEffect className="flex-1 min-h-screen neon-scrollbar overflow-y-auto overflow-x-hidden">
+    <BackgroundEffect className="flex-1 min-h-screen overflow-y-auto overflow-x-hidden">
+      <NeonScrollbarStyles />
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <NeonScrollbarStyles />
         <style jsx>{`
           .scrollbar-hide {
             -ms-overflow-style: none;
@@ -1831,8 +1814,8 @@ export default function CommunitySocial() {
 
         {/* 상단 탭 헤더 (CommunityMain과 동일한 위치/스타일) */}
         {isMobile ? (
-          <div className="sticky top-0 bg-black/80 backdrop-blur-sm border-b border-purple-500/30 z-40 px-2 py-2">
-            <div className="flex bg-gray-900/50 p-1 rounded-lg">
+          <div className="sticky top-0 z-40 px-2 py-2">
+            <div className="flex p-1 rounded-lg">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -1844,7 +1827,7 @@ export default function CommunitySocial() {
                   {selectedTab === tab.id && (
                     <motion.div
                       layoutId="mobile-active-tab-indicator"
-                      className="absolute inset-0 bg-purple-600/50 rounded-md"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-400"
                       transition={{
                         type: "spring",
                         stiffness: 300,
@@ -1852,88 +1835,67 @@ export default function CommunitySocial() {
                       }}
                     />
                   )}
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    <tab.Icon className="h-4 w-4" />
-                    {tab.label}
+                  <span className="relative z-10 flex items-center justify-center">
+                    <tab.Icon
+                      className="h-5 w-5 md:h-6 md:w-6"
+                      aria-label={tab.label}
+                    />
                   </span>
                 </button>
               ))}
             </div>
           </div>
         ) : (
-          <div className="sticky top-0 z-50 pointer-events-none">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pointer-events-auto">
-              <NeonCard
-                variant="primary"
-                className="relative overflow-hidden px-3 py-2 sm:px-4 sm:py-3"
-              >
-                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-blue-500/20 blur-2xl" />
-                <div className="relative z-10 flex justify-center">
-                  <div className="relative inline-flex divide-x divide-white/10 rounded-2xl border border-white/10 bg-black/30 backdrop-blur-md shadow-[0_20px_60px_-40px_rgba(168,85,247,0.9)]">
-                    {tabs.map((tab, index, arr) => {
-                      const Icon = tab.Icon;
-                      const isActive = selectedTab === tab.id;
-                      const isFirst = index === 0;
-                      const isLast = index === arr.length - 1;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => handleTabClick(tab.id)}
-                          aria-pressed={isActive}
-                          className={`group relative z-10 flex min-w-[140px] items-center justify-center gap-3 px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/80 focus-visible:ring-offset-0 ${
-                            isActive
-                              ? "bg-gradient-to-r from-purple-500/80 via-pink-500/70 to-blue-500/70 text-white shadow-[0_18px_45px_-25px_rgba(236,72,153,0.8)]"
-                              : "text-purple-100/80 hover:bg-white/10 hover:text-white"
-                          } ${isFirst ? "rounded-l-2xl" : ""} ${
-                            isLast ? "rounded-r-2xl" : ""
-                          }`}
-                        >
-                          <span
-                            className={`flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/10 transition-colors duration-200 ${
-                              isActive
-                                ? "border-white/30 bg-black/20 text-white"
-                                : "text-purple-200 group-hover:text-white"
-                            }`}
-                          >
-                            <Icon className="h-4 w-4" />
-                          </span>
-                          <span className="whitespace-nowrap tracking-wide">
-                            {tab.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+          <div className="sticky top-0 z-50">
+            <div
+              className="max-w-7xl mx-auto px-4 sm:px-6 pt-4"
+              style={{
+                borderBottom: "none",
+              }}
+            >
+              <div className="flex items-center justify-between gap-6">
+                <div className="flex items-center gap-6">
+                  {tabs.map((tab) => {
+                    const Icon = tab.Icon;
+                    const isActive = selectedTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleTabClick(tab.id)}
+                        aria-pressed={isActive}
+                        className={`relative -mb-px pb-3 pt-2 text-sm font-semibold transition-colors ${
+                          isActive
+                            ? "text-white"
+                            : "text-purple-100/80 hover:text-white"
+                        }`}
+                        style={{
+                          borderBottom: isActive
+                            ? "2px solid rgba(168, 85, 247, 0.9)"
+                            : "2px solid transparent",
+                          filter:
+                            "drop-shadow(0 0 2px rgba(236,72,153,0.7)) drop-shadow(0 0 4px rgba(168,85,247,0.8)) drop-shadow(0 0 8px rgba(168,85,247,0.6))",
+                          strokeWidth: 2.5,
+                        }}
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          <Icon
+                            className="h-5 w-5 md:h-6 md:w-6"
+                            aria-label={tab.label}
+                          />
+                          <span className="hidden sm:inline">{tab.label}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-              </NeonCard>
+                <div className="hidden md:block ml-auto" />
+              </div>
             </div>
           </div>
         )}
 
-        {/* 배경 효과 */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="bg-gradient-to-br from-purple-900/30 via-black/50 to-pink-900/30 absolute inset-0" />
-          {[...Array(15)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full opacity-30"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                opacity: [0, 1, 0],
-                scale: [0, 1, 0],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
-        </div>
+        {/* 배경 효과 제거 (단순 레이아웃 유지) */}
 
         {/* 메인 콘텐츠 */}
         <motion.div
@@ -1943,41 +1905,12 @@ export default function CommunitySocial() {
           onDragEnd={isMobile ? handleDragEnd : undefined}
         >
           <div className="w-full relative z-10 space-y-8 md:space-y-12">
+            {/* 상단 검색 입력 제거: 검색은 페이지 하단으로 이동 */}
+
             {/* <div className="flex gap-6 flex-col lg:flex-row"> */}
             {/* <div className="flex-1"> */}
             <div className="w-full">
-              {/* 검색 입력 (탭은 상단 sticky 헤더로 이동) */}
-              <div className="hidden md:flex flex-col sm:flex-row justify-end items-start sm:items-center mb-6 gap-4">
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <div className="hidden md:block ml-auto">
-                    <div className="relative w-64">
-                      <input
-                        type="text"
-                        placeholder={t("community.search_placeholder", {
-                          defaultValue: "검색...",
-                        })}
-                        value={currentSearchTerm}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setCurrentSearchTerm(value);
-                          if (window.searchTimeout) {
-                            clearTimeout(window.searchTimeout);
-                          }
-                          window.searchTimeout = setTimeout(() => {
-                            if (value.trim()) {
-                              handleSearch({ query: value.trim() });
-                            } else {
-                              handleSearch({});
-                            }
-                          }, 400);
-                        }}
-                        className="w-full bg-white/10 text-white placeholder-white/50 pl-9 pr-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:border-purple-400 text-sm"
-                      />
-                      <Search className="w-4 h-4 text-purple-300 absolute left-3 top-2.5" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* 모바일 전용 검색 입력 제거 (하단 고정 검색으로 대체) */}
 
               {/* 실시간 트렌드 바 - 후기탭에서만 표시 */}
               {selectedTab === "travel" && (
@@ -2004,7 +1937,7 @@ export default function CommunitySocial() {
                       <div className="block md:hidden">
                         {/* 공지사항 - 모바일용 간략 버전 */}
                         {noticePosts.length > 0 && (
-                          <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-yellow-500/30 hover:border-yellow-400/50 hover:shadow-yellow-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-3">
+                          <div className="rounded-2xl overflow-hidden p-3 bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/25 shadow-[0_0_12px_rgba(168,85,247,0.15)]">
                             <div
                               className={`flex items-center gap-2 mb-3 ${
                                 isMobile ? "text-sm" : "text-lg"
@@ -2027,7 +1960,7 @@ export default function CommunitySocial() {
                                 .map((post, index) => (
                                   <div
                                     key={post.id || post.board_id}
-                                    className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-2"
+                                    className="rounded-lg p-2 border border-purple-500/25 hover:border-purple-400/40 transition-colors"
                                   >
                                     <h4
                                       className="text-white font-medium hover:text-purple-300 transition-colors cursor-pointer text-sm mb-1"
@@ -2053,13 +1986,15 @@ export default function CommunitySocial() {
                         )}
 
                         {/* LIVE Seoul - 모바일용 가로 스크롤 */}
-                        <LiveSeoulSection isMobile={true} />
+                        <div className="rounded-2xl overflow-hidden p-3 bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/25 shadow-[0_0_12px_rgba(168,85,247,0.15)]">
+                          <LiveSeoulSection isMobile={true} />
+                        </div>
 
                         {/* Editor's Pick 섹션 */}
                         {posts.filter((post) => post.priority !== "notice")
                           .length > 0 && (
                           <div className="mt-4">
-                            <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/30 hover:border-purple-400/50 hover:shadow-purple-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-3">
+                            <div className="rounded-2xl overflow-hidden p-3 bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/25 shadow-[0_0_12px_rgba(168,85,247,0.15)]">
                               <div
                                 className={`flex items-center gap-2 mb-4 ${
                                   isMobile ? "text-sm" : "text-lg"
@@ -2090,9 +2025,8 @@ export default function CommunitySocial() {
                                       post.image ||
                                       null;
                                     return (
-                                      <NeonCard
+                                      <div
                                         key={post.id || post.board_id}
-                                        variant="primary"
                                         className="cursor-pointer overflow-hidden"
                                         onClick={() =>
                                           handlePostClick(
@@ -2102,7 +2036,7 @@ export default function CommunitySocial() {
                                       >
                                         <div className="flex gap-3">
                                           {cover && (
-                                            <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-white/10">
+                                            <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
                                               <img
                                                 src={cover}
                                                 alt="cover"
@@ -2124,7 +2058,7 @@ export default function CommunitySocial() {
                                             </p>
                                           </div>
                                         </div>
-                                      </NeonCard>
+                                      </div>
                                     );
                                   })}
                               </div>
@@ -2147,7 +2081,7 @@ export default function CommunitySocial() {
                       <div className="hidden md:block">
                         {/* 공지사항 섹션 */}
                         {noticePosts.length > 0 && (
-                          <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-yellow-500/30 hover:border-yellow-400/50 hover:shadow-yellow-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-6 mb-8">
+                          <div className="rounded-2xl overflow-hidden p-6 mb-8 bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/25 shadow-[0_0_14px_rgba(168,85,247,0.18)]">
                             <div
                               className={`flex items-center gap-2 mb-4 ${
                                 isMobile ? "text-sm" : "text-lg"
@@ -2171,7 +2105,7 @@ export default function CommunitySocial() {
                                 .map((post, index) => (
                                   <div
                                     key={post.id || post.board_id}
-                                    className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-4"
+                                    className="rounded-lg p-4 border border-purple-500/25 hover:border-purple-400/40 transition-colors"
                                   >
                                     <div className="flex items-start justify-between">
                                       <div className="flex-1">
@@ -2211,16 +2145,18 @@ export default function CommunitySocial() {
                         )}
 
                         {/* 실시간 인기 여행지 - 데스크톱용 가로 스크롤 */}
-                        <LiveSeoulSection
-                          isMobile={false}
-                          liveAreas={liveAreas}
-                        />
+                        <div className="rounded-2xl overflow-hidden p-6 mb-8 bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/25 shadow-[0_0_14px_rgba(168,85,247,0.18)]">
+                          <LiveSeoulSection
+                            isMobile={false}
+                            liveAreas={liveAreas}
+                          />
+                        </div>
 
                         {/* Editor's Pick 섹션 */}
                         {posts.filter((post) => post.priority !== "notice")
                           .length > 0 && (
                           <div>
-                            <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/30 hover:border-purple-400/50 hover:shadow-purple-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-6">
+                            <div className="rounded-2xl overflow-hidden p-6 bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/25 shadow-[0_0_14px_rgba(168,85,247,0.18)]">
                               <div
                                 className={`flex items-center gap-2 mb-6 ${
                                   isMobile ? "text-sm" : "text-lg"
@@ -2253,9 +2189,8 @@ export default function CommunitySocial() {
                                       post.image ||
                                       null;
                                     return (
-                                      <NeonCard
+                                      <div
                                         key={post.id || post.board_id}
-                                        variant="primary"
                                         className="relative overflow-hidden cursor-pointer"
                                         onClick={() =>
                                           handlePostClick(
@@ -2265,7 +2200,7 @@ export default function CommunitySocial() {
                                       >
                                         <div className="flex gap-6 items-stretch">
                                           {cover && (
-                                            <div className="relative w-48 h-32 flex-shrink-0 rounded-xl overflow-hidden border border-white/10">
+                                            <div className="relative w-48 h-32 flex-shrink-0 rounded-xl overflow-hidden border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
                                               <img
                                                 src={cover}
                                                 alt="cover"
@@ -2332,7 +2267,7 @@ export default function CommunitySocial() {
                                             )}
                                           </div>
                                         </div>
-                                      </NeonCard>
+                                      </div>
                                     );
                                   })}
                               </div>
@@ -2379,7 +2314,7 @@ export default function CommunitySocial() {
                 posts.length > 0 ? (
                   <>
                     {/* 후기 게시글 섹션 */}
-                    <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-3 md:p-6">
+                    <div className="rounded-2xl overflow-hidden p-3 md:p-6 bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/25 shadow-[0_0_12px_rgba(168,85,247,0.15)]">
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-2 h-5 animate-pulse mr-1">💬</div>
                         <h3 className="text-base md:text-lg font-semibold text-white">
@@ -2476,6 +2411,51 @@ export default function CommunitySocial() {
             {/* </div> */}
           </div>
         </motion.div>
+
+        {/* 하단 검색 입력 - 우측 정렬, 고정 최대 너비 */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+          <div className="relative mt-2 md:mt-0 md:max-w-md md:ml-auto">
+            <input
+              type="text"
+              value={currentSearchTerm}
+              onChange={(e) => {
+                const value = e.target.value;
+                setCurrentSearchTerm(value);
+                if (window.searchTimeoutCS) {
+                  clearTimeout(window.searchTimeoutCS);
+                }
+                window.searchTimeoutCS = setTimeout(() => {
+                  if (value.trim()) {
+                    handleSearch({ query: value.trim() });
+                  } else {
+                    handleSearch({});
+                  }
+                }, 400);
+              }}
+              placeholder=""
+              aria-label={t("community.search_placeholder", {
+                defaultValue: "검색",
+              })}
+              className="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white shadow-lg"
+            />
+            {/* 우측 네온 테두리 돋보기 아이콘 (장식용) */}
+            <div
+              aria-hidden="true"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8"
+            >
+              <div className="w-full h-full rounded-full bg-gray-900/90 flex items-center justify-center">
+                <Search
+                  className="w-4 h-4 text-white"
+                  style={{
+                    filter:
+                      "drop-shadow(0 0 2px rgba(236,72,153,0.7)) drop-shadow(0 0 4px rgba(168,85,247,0.8)) drop-shadow(0 0 8px rgba(168,85,247,0.6))",
+                    strokeWidth: 2.5,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* 모달들 */}
         <AnimatePresence>

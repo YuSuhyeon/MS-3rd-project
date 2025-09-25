@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { NeonButton, GradientText } from "../ui/NeonTheme";
+import { NeonCard } from "../ui/NeonTheme";
 
 const SpotifyIcon = ({ className = "", ...props }) => (
   <svg
@@ -60,7 +61,7 @@ const VideoPlayerModal = ({ video, onClose }) => {
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="relative w-full max-w-[92vw] sm:max-w-3xl lg:max-w-4xl"
+        className="relative w-full max-w-3xl"
         onClick={(e) => e.stopPropagation()}
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -217,6 +218,16 @@ const SpotifyPlaylistGenerator = () => {
     ],
   };
 
+  // 테마별 그라디언트 효과
+  const glowGradients = {
+    [t("themes1")]: "from-cyan-500/30 via-blue-500/20 to-purple-500/30",
+    [t("themes2")]: "from-yellow-400/30 via-orange-400/20 to-pink-400/30",
+    [t("themes3")]: "from-pink-400/30 via-red-400/20 to-orange-400/30",
+    [t("themes4")]: "from-green-400/30 via-teal-400/20 to-blue-400/30",
+    [t("themes5")]: "from-red-400/30 via-orange-400/20 to-yellow-400/30",
+    [t("themes6")]: "from-amber-400/30 via-yellow-400/20 to-orange-400/30",
+  };
+
   // Mock 플레이리스트 (로그인 전 표시용)
   const mockPlaylists = [
     {
@@ -322,17 +333,44 @@ const SpotifyPlaylistGenerator = () => {
   const loadUserPlaylists = async () => {
     // 실제 사용자 플레이리스트 로드 API 호출
     try {
-      // API 호출 예시 (실제 구현 시 사용)
-      // const response = await fetch(`${API_BASE_URL}/api/spotify/playlists`, {
-      //   credentials: "include",
-      // });
-      // const data = await response.json();
-      // setPlaylists(data.playlists);
+      const response = await fetch(`${API_BASE_URL}/api/spotify/playlists`, {
+        credentials: "include",
+      });
 
-      // 임시로 mock 데이터 사용
-      setPlaylists(mockPlaylists.map((p) => ({ ...p, isLocked: false })));
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Spotify 플레이리스트를 프론트엔드 형식에 맞게 변환
+        const formattedPlaylists = data.playlists.map((playlist, index) => ({
+          id: playlist.id,
+          title: playlist.name,
+          description: playlist.description || "",
+          image:
+            playlist.images && playlist.images.length > 0
+              ? playlist.images[0].url
+              : "/img/default-playlist.png",
+          songs: [], // Spotify API에서는 플레이리스트의 트랙 목록을 별도로 조회해야 함
+          totalDuration: "0분", // 계산 필요
+          followers: playlist.followers ? playlist.followers.total : 0,
+          theme: "사용자 플레이리스트",
+          isLocked: false,
+          external_urls: playlist.external_urls,
+        }));
+
+        setPlaylists(formattedPlaylists);
+      } else {
+        console.error("Error loading playlists:", data.error);
+        // 오류 시 mock 데이터 사용
+        setPlaylists(mockPlaylists.map((p) => ({ ...p, isLocked: false })));
+      }
     } catch (error) {
       console.error("Error loading playlists:", error);
+      // 오류 시 mock 데이터 사용
+      setPlaylists(mockPlaylists.map((p) => ({ ...p, isLocked: false })));
     }
   };
 
@@ -405,48 +443,37 @@ const SpotifyPlaylistGenerator = () => {
       setStep(4);
 
       try {
-        // 실제 API 호출 (예시)
-        // const response = await fetch(`${API_BASE_URL}/api/spotify/generate-playlist`, {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   credentials: 'include',
-        //   body: JSON.stringify({
-        //     theme: selectedTheme,
-        //     artists: selectedArtists,
-        //     settings: playlistSettings
-        //   })
-        // });
+        // 실제 API 호출
+        const response = await fetch(
+          `${API_BASE_URL}/api/spotify/generate-playlist`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              theme: selectedTheme,
+              artists: selectedArtists,
+              trackCount: playlistSettings.trackCount,
+            }),
+          }
+        );
 
-        // 시뮬레이션
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-        setGeneratedTracks([
-          {
-            id: 1,
-            name: "APT.",
-            artist: "ROSÉ & Bruno Mars",
-            duration: "2:49",
-            popularity: 95,
-          },
-          {
-            id: 2,
-            name: "Supernova",
-            artist: "aespa",
-            duration: "3:04",
-            popularity: 88,
-          },
-          {
-            id: 3,
-            name: "How Sweet",
-            artist: "NewJeans",
-            duration: "3:32",
-            popularity: 92,
-          },
-        ]);
+        const data = await response.json();
+
+        if (data.success) {
+          setGeneratedTracks(data.tracks);
+        } else {
+          throw new Error(data.error || "플레이리스트 생성에 실패했습니다.");
+        }
 
         setIsGenerating(false);
       } catch (error) {
         console.error("Error generating playlist:", error);
+        alert(`플레이리스트 생성 중 오류가 발생했습니다: ${error.message}`);
         setIsGenerating(false);
       }
     };
@@ -454,21 +481,38 @@ const SpotifyPlaylistGenerator = () => {
     const saveToSpotify = async () => {
       try {
         // 실제 Spotify 저장 API 호출
-        // const response = await fetch(`${API_BASE_URL}/api/spotify/create-playlist`, {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   credentials: 'include',
-        //   body: JSON.stringify({
-        //     name: playlistSettings.name || `${selectedTheme} 플레이리스트`,
-        //     tracks: generatedTracks
-        //   })
-        // });
+        const response = await fetch(
+          `${API_BASE_URL}/api/spotify/create-playlist`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              name: playlistSettings.name || `${selectedTheme} 플레이리스트`,
+              description: `${selectedTheme} 테마의 K-pop 플레이리스트`,
+              tracks: generatedTracks,
+            }),
+          }
+        );
 
-        alert("플레이리스트가 Spotify에 저장되었습니다!");
-        onClose();
-        loadUserPlaylists(); // 플레이리스트 목록 새로고침
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert(
+            `플레이리스트 "${data.playlist.name}"이 Spotify에 저장되었습니다!`
+          );
+          onClose();
+          loadUserPlaylists(); // 플레이리스트 목록 새로고침
+        } else {
+          throw new Error(data.error || "플레이리스트 저장에 실패했습니다.");
+        }
       } catch (error) {
         console.error("Error saving to Spotify:", error);
+        alert(`플레이리스트 저장 중 오류가 발생했습니다: ${error.message}`);
       }
     };
 
@@ -478,312 +522,407 @@ const SpotifyPlaylistGenerator = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 30, scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 220, damping: 26 }}
+          className="relative w-full max-w-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-6 border-b">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">AI 플레이리스트 생성</h2>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="p-6 max-h-[60vh] overflow-y-auto">
-            {step === 1 && (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <Sparkles className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-2">
-                    여행 테마를 선택하세요
-                  </h3>
-                  <p className="text-gray-600">
-                    선택한 테마에 맞는 K-pop 플레이리스트를 생성합니다
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(THEMES).map(([theme, config]) => (
-                    <button
-                      key={theme}
-                      onClick={() => setSelectedTheme(theme)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${
-                        selectedTheme === theme
-                          ? "border-purple-500 bg-purple-50"
-                          : "border-gray-200 hover:border-purple-300"
-                      }`}
+          <NeonCard
+            variant="primary"
+            className="relative overflow-hidden p-6 sm:p-8"
+            delay={0}
+          >
+            <div className="space-y-6">
+              {/* 헤더 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/25">
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <GradientText
+                      variant="primary"
+                      size="2xl"
+                      className="leading-tight"
                     >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-lg bg-gradient-to-r ${config.color} flex items-center justify-center text-lg`}
+                      AI 플레이리스트 생성
+                    </GradientText>
+                    <p className="text-sm text-purple-100/80">
+                      {step === 1 && "여행 테마를 선택하세요"}
+                      {step === 2 && "선호 아티스트를 선택하세요"}
+                      {step === 3 && "플레이리스트 설정을 완료하세요"}
+                      {step === 4 &&
+                        (isGenerating
+                          ? "플레이리스트 생성 중..."
+                          : "플레이리스트가 완성되었습니다!")}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-xl border border-white/10 bg-white/5 text-purple-200 hover:bg-white/10 hover:text-white transition-all duration-200"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* 진행 단계 표시 */}
+              <div className="flex items-center justify-center space-x-2">
+                {[1, 2, 3, 4].map((stepNumber) => (
+                  <div
+                    key={stepNumber}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                      step >= stepNumber
+                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
+                        : "bg-white/10 text-purple-200/60"
+                    }`}
+                  >
+                    {stepNumber}
+                  </div>
+                ))}
+              </div>
+
+              {/* 컨텐츠 영역 */}
+              <div className="min-h-[400px]">
+                {step === 1 && (
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <p className="text-sm text-purple-100/80">
+                        선택한 테마에 맞는 K-pop 플레이리스트를 생성합니다
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(THEMES).map(([theme, config]) => (
+                        <motion.button
+                          key={theme}
+                          onClick={() => setSelectedTheme(theme)}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition-all duration-300 ${
+                            selectedTheme === theme
+                              ? "border-purple-400/60 shadow-[0_0_30px_rgba(168,85,247,0.35)]"
+                              : "hover:border-purple-300/40 hover:shadow-[0_0_20px_rgba(168,85,247,0.25)]"
+                          }`}
                         >
-                          {config.icon}
+                          <div
+                            className={`absolute inset-0 bg-gradient-to-br ${
+                              glowGradients[theme] ||
+                              "from-purple-500/10 via-pink-500/10 to-blue-500/10"
+                            } opacity-0 transition-opacity duration-500 group-hover:opacity-60 ${
+                              selectedTheme === theme ? "opacity-80" : ""
+                            }`}
+                          />
+                          <div className="relative z-10 flex items-start gap-4">
+                            <div
+                              className={`w-12 h-12 rounded-xl border border-white/10 p-2 transition-colors ${
+                                selectedTheme === theme
+                                  ? "bg-white/10 text-white"
+                                  : "bg-black/30 text-purple-100"
+                              }`}
+                            >
+                              <span className="text-2xl">{config.icon}</span>
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-lg font-semibold text-white mb-2">
+                                {theme}
+                              </h4>
+                              <p className="text-sm text-purple-100/80 leading-relaxed">
+                                {config.description}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <p className="text-sm text-purple-100/80">
+                        최대 5명까지 선택 가능합니다
+                      </p>
+                    </div>
+
+                    {/* 카테고리 선택 */}
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {Object.keys(KPOP_ARTISTS).map((category) => (
+                        <motion.button
+                          key={category}
+                          onClick={() => setSelectedArtistCategory(category)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                            selectedArtistCategory === category
+                              ? "bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg"
+                              : "bg-white/10 text-purple-200 hover:bg-white/20 hover:text-white"
+                          }`}
+                        >
+                          {category}
+                        </motion.button>
+                      ))}
+                    </div>
+
+                    {/* 선택된 아티스트 표시 */}
+                    {selectedArtists.length > 0 && (
+                      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <h4 className="font-medium text-white mb-3">
+                          선택된 아티스트 ({selectedArtists.length}/5)
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedArtists.map((artist) => (
+                            <span
+                              key={artist}
+                              className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-pink-600 to-purple-600 text-white text-sm rounded-full"
+                            >
+                              {artist}
+                              <button
+                                onClick={() => handleArtistToggle(artist)}
+                                className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 아티스트 그리드 */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
+                      {KPOP_ARTISTS[selectedArtistCategory].map((artist) => (
+                        <motion.button
+                          key={artist}
+                          onClick={() => handleArtistToggle(artist)}
+                          disabled={
+                            !selectedArtists.includes(artist) &&
+                            selectedArtists.length >= 5
+                          }
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`p-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+                            selectedArtists.includes(artist)
+                              ? "bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg"
+                              : selectedArtists.length >= 5
+                              ? "bg-white/5 text-purple-200/40 cursor-not-allowed"
+                              : "bg-white/10 text-purple-200 hover:bg-white/20 hover:text-white"
+                          }`}
+                        >
+                          {artist}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="space-y-6">
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-3">
+                          플레이리스트 이름
+                        </label>
+                        <input
+                          type="text"
+                          value={playlistSettings.name}
+                          onChange={(e) =>
+                            setPlaylistSettings({
+                              ...playlistSettings,
+                              name: e.target.value,
+                            })
+                          }
+                          placeholder={`${selectedTheme} 플레이리스트`}
+                          className="w-full p-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-purple-200/60 focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all duration-300"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-3">
+                          트랙 수: {playlistSettings.trackCount}곡
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="range"
+                            min="10"
+                            max="30"
+                            value={playlistSettings.trackCount}
+                            onChange={(e) =>
+                              setPlaylistSettings({
+                                ...playlistSettings,
+                                trackCount: parseInt(e.target.value),
+                              })
+                            }
+                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer slider"
+                          />
+                          <div className="flex justify-between text-xs text-purple-200/60 mt-2">
+                            <span>10곡</span>
+                            <span>30곡</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-medium text-white">
+                          추가 옵션
+                        </h4>
+                        <div className="space-y-3">
+                          <label className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={playlistSettings.includePopular}
+                              onChange={(e) =>
+                                setPlaylistSettings({
+                                  ...playlistSettings,
+                                  includePopular: e.target.checked,
+                                })
+                              }
+                              className="w-4 h-4 text-purple-600 rounded border-white/20 bg-white/5 focus:ring-purple-500/20"
+                            />
+                            <span className="text-sm text-white">
+                              인기 곡 우선 포함
+                            </span>
+                          </label>
+                          <label className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={playlistSettings.includeRecent}
+                              onChange={(e) =>
+                                setPlaylistSettings({
+                                  ...playlistSettings,
+                                  includeRecent: e.target.checked,
+                                })
+                              }
+                              className="w-4 h-4 text-purple-600 rounded border-white/20 bg-white/5 focus:ring-purple-500/20"
+                            />
+                            <span className="text-sm text-white">
+                              최신 곡 포함
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {step === 4 && (
+                  <div className="text-center py-8">
+                    {isGenerating ? (
+                      <div className="space-y-6">
+                        <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
+                          <Loader2 className="w-10 h-10 text-white animate-spin" />
                         </div>
                         <div>
-                          <h4 className="font-semibold">{theme}</h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {config.description}
+                          <h3 className="text-xl font-bold text-white mb-2">
+                            플레이리스트 생성 중...
+                          </h3>
+                          <p className="text-purple-100/80">
+                            AI가 완벽한 조합을 찾고 있어요
                           </p>
                         </div>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <Mic className="w-12 h-12 text-pink-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-2">
-                    선호 아티스트 선택 (선택사항)
-                  </h3>
-                  <p className="text-gray-600">최대 5명까지 선택 가능합니다</p>
-                </div>
-
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {Object.keys(KPOP_ARTISTS).map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedArtistCategory(category)}
-                      className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                        selectedArtistCategory === category
-                          ? "bg-pink-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-
-                {selectedArtists.length > 0 && (
-                  <div className="bg-pink-50 rounded-lg p-4">
-                    <h4 className="font-medium text-pink-900 mb-2">
-                      선택된 아티스트 ({selectedArtists.length}/5)
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedArtists.map((artist) => (
-                        <span
-                          key={artist}
-                          className="flex items-center gap-1 px-2 py-1 bg-pink-600 text-white text-sm rounded-full"
-                        >
-                          {artist}
-                          <button onClick={() => handleArtistToggle(artist)}>
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                  {KPOP_ARTISTS[selectedArtistCategory].map((artist) => (
-                    <button
-                      key={artist}
-                      onClick={() => handleArtistToggle(artist)}
-                      disabled={
-                        !selectedArtists.includes(artist) &&
-                        selectedArtists.length >= 5
-                      }
-                      className={`p-2 rounded-lg text-sm transition-colors ${
-                        selectedArtists.includes(artist)
-                          ? "bg-pink-600 text-white"
-                          : selectedArtists.length >= 5
-                          ? "bg-gray-50 text-gray-400"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {artist}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <Radio className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-2">플레이리스트 설정</h3>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      플레이리스트 이름
-                    </label>
-                    <input
-                      type="text"
-                      value={playlistSettings.name}
-                      onChange={(e) =>
-                        setPlaylistSettings({
-                          ...playlistSettings,
-                          name: e.target.value,
-                        })
-                      }
-                      placeholder={`${selectedTheme} 플레이리스트`}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      트랙 수: {playlistSettings.trackCount}곡
-                    </label>
-                    <input
-                      type="range"
-                      min="10"
-                      max="30"
-                      value={playlistSettings.trackCount}
-                      onChange={(e) =>
-                        setPlaylistSettings({
-                          ...playlistSettings,
-                          trackCount: parseInt(e.target.value),
-                        })
-                      }
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={playlistSettings.includePopular}
-                        onChange={(e) =>
-                          setPlaylistSettings({
-                            ...playlistSettings,
-                            includePopular: e.target.checked,
-                          })
-                        }
-                        className="w-4 h-4 text-purple-600 rounded"
-                      />
-                      <span className="text-sm">인기 곡 우선 포함</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={playlistSettings.includeRecent}
-                        onChange={(e) =>
-                          setPlaylistSettings({
-                            ...playlistSettings,
-                            includeRecent: e.target.checked,
-                          })
-                        }
-                        className="w-4 h-4 text-purple-600 rounded"
-                      />
-                      <span className="text-sm">최신 곡 포함</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {step === 4 && (
-              <div className="text-center py-8">
-                {isGenerating ? (
-                  <div>
-                    <Loader2 className="w-16 h-16 text-purple-600 mx-auto mb-4 animate-spin" />
-                    <h3 className="text-xl font-bold mb-2">
-                      플레이리스트 생성 중...
-                    </h3>
-                    <p className="text-gray-600">
-                      AI가 완벽한 조합을 찾고 있어요
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div>
-                      <Music className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                      <h3 className="text-xl font-bold mb-2">
-                        플레이리스트 완성!
-                      </h3>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto">
-                      {generatedTracks.map((track, index) => (
-                        <div
-                          key={track.id}
-                          className="flex items-center gap-3 p-2"
-                        >
-                          <span className="text-gray-400 w-6">{index + 1}</span>
-                          <div className="flex-1 text-left">
-                            <p className="font-medium">{track.name}</p>
-                            <p className="text-sm text-gray-600">
-                              {track.artist}
-                            </p>
-                          </div>
-                          <span className="text-sm text-gray-500">
-                            {track.duration}
-                          </span>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-green-600 to-emerald-600 flex items-center justify-center shadow-lg">
+                          <Music className="w-10 h-10 text-white" />
                         </div>
-                      ))}
-                    </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-white mb-2">
+                            플레이리스트 완성!
+                          </h3>
+                          <p className="text-purple-100/80 mb-6">
+                            총 {generatedTracks.length}곡이 포함된
+                            플레이리스트가 생성되었습니다
+                          </p>
+                        </div>
 
-                    <button
-                      onClick={saveToSpotify}
-                      className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2"
-                    >
-                      <Download className="w-5 h-5" />
-                      Spotify에 저장
-                    </button>
+                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 max-h-60 overflow-y-auto">
+                          {generatedTracks.map((track, index) => (
+                            <div
+                              key={track.id}
+                              className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors duration-200"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white text-sm font-semibold">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1 text-left">
+                                <p className="font-medium text-white">
+                                  {track.name}
+                                </p>
+                                <p className="text-sm text-purple-200/70">
+                                  {track.artist}
+                                </p>
+                              </div>
+                              <span className="text-sm text-purple-200/60">
+                                {track.duration}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <NeonButton
+                          variant="success"
+                          size="md"
+                          onClick={saveToSpotify}
+                          className="w-full flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-5 h-5" />
+                          Spotify에 저장
+                        </NeonButton>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
 
-          <div className="p-6 border-t flex justify-between">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-            >
-              취소
-            </button>
+              {/* 하단 버튼 영역 */}
+              <div className="flex justify-between pt-6 border-t border-white/10">
+                <NeonButton variant="secondary" size="sm" onClick={onClose}>
+                  취소
+                </NeonButton>
 
-            <div className="flex gap-3">
-              {step > 1 && step < 4 && (
-                <button
-                  onClick={() => setStep(step - 1)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  이전
-                </button>
-              )}
+                <div className="flex gap-3">
+                  {step > 1 && step < 4 && (
+                    <NeonButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setStep(step - 1)}
+                    >
+                      이전
+                    </NeonButton>
+                  )}
 
-              {step < 3 && (
-                <button
-                  onClick={() => setStep(step + 1)}
-                  disabled={step === 1 && !selectedTheme}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
-                >
-                  다음
-                </button>
-              )}
+                  {step < 3 && (
+                    <NeonButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setStep(step + 1)}
+                      disabled={step === 1 && !selectedTheme}
+                    >
+                      다음
+                    </NeonButton>
+                  )}
 
-              {step === 3 && (
-                <button
-                  onClick={generatePlaylist}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                >
-                  생성하기
-                </button>
-              )}
+                  {step === 3 && (
+                    <NeonButton
+                      variant="primary"
+                      size="sm"
+                      onClick={generatePlaylist}
+                    >
+                      생성하기
+                    </NeonButton>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          </NeonCard>
         </motion.div>
       </motion.div>
     );
@@ -922,7 +1061,7 @@ const SpotifyPlaylistGenerator = () => {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="relative w-full space-y-10">
       <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-black/30 backdrop-blur-md">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-3xl blur-xl"></div>
         <div className="relative z-10 flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between">
@@ -1207,6 +1346,31 @@ const SpotifyPlaylistGenerator = () => {
           />
         )}
       </AnimatePresence>
+
+      <style jsx>{`
+        .slider {
+          background: linear-gradient(to right, #8b5cf6 0%, #ec4899 100%);
+          outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: linear-gradient(to right, #8b5cf6, #ec4899);
+          cursor: pointer;
+          box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+        .slider::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: linear-gradient(to right, #8b5cf6, #ec4899);
+          cursor: pointer;
+          border: none;
+          box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+      `}</style>
     </div>
   );
 };

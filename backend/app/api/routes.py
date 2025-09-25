@@ -1105,7 +1105,201 @@ def get_spotify_user():
 @api_bp.route('/spotify/logout', methods=['POST'])
 def spotify_logout():   
     session.pop('spotify_token_info', None)
-    return jsonify({'success': True, 'message': '로그아웃되었습니다.'}) 
+    return jsonify({'success': True, 'message': '로그아웃되었습니다.'})
+
+@api_bp.route('/spotify/playlists', methods=['GET'])
+def get_spotify_playlists():
+    """사용자의 Spotify 플레이리스트 목록을 조회합니다."""
+    token_info = session.get('spotify_token_info')
+    if not token_info:
+        return jsonify({'success': False, 'error': 'Spotify 로그인이 필요합니다.'}), 401
+    
+    try:
+        limit = int(request.args.get('limit', 20))
+        offset = int(request.args.get('offset', 0))
+        
+        result = spotify_service.get_user_playlists(token_info, limit=limit, offset=offset)
+        
+        if result.get('success'):
+            if 'updated_token' in result:
+                session['spotify_token_info'] = result['updated_token']
+            
+            return jsonify({
+                'success': True,
+                'playlists': result['playlists'],
+                'total': result['total']
+            })
+        else:
+            return jsonify({'success': False, 'error': result.get('error')}), 500
+            
+    except Exception as e:
+        print(f"플레이리스트 조회 오류: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@api_bp.route('/spotify/generate-playlist', methods=['POST'])
+def generate_spotify_playlist():
+    """K-pop 테마별 플레이리스트를 생성합니다."""
+    token_info = session.get('spotify_token_info')
+    if not token_info:
+        return jsonify({'success': False, 'error': 'Spotify 로그인이 필요합니다.'}), 401
+    
+    try:
+        data = request.get_json()
+        theme = data.get('theme', '')
+        artists = data.get('artists', [])
+        track_count = int(data.get('trackCount', 20))
+        
+        if not theme:
+            return jsonify({'success': False, 'error': '테마가 필요합니다.'}), 400
+        
+        result = spotify_service.generate_kpop_playlist(
+            token_info=token_info,
+            theme=theme,
+            artists=artists,
+            track_count=track_count
+        )
+        
+        if result.get('success'):
+            if 'updated_token' in result:
+                session['spotify_token_info'] = result['updated_token']
+            
+            # 트랙 정보를 프론트엔드 형식에 맞게 변환
+            formatted_tracks = []
+            for track in result['tracks']:
+                formatted_tracks.append({
+                    'id': track['id'],
+                    'name': track['name'],
+                    'artist': ', '.join([artist['name'] for artist in track['artists']]),
+                    'duration': f"{track['duration_ms'] // 60000}:{(track['duration_ms'] % 60000) // 1000:02d}",
+                    'popularity': track['popularity'],
+                    'uri': track['uri'],
+                    'external_urls': track['external_urls']
+                })
+            
+            return jsonify({
+                'success': True,
+                'tracks': formatted_tracks,
+                'theme': theme,
+                'artists': artists
+            })
+        else:
+            return jsonify({'success': False, 'error': result.get('error')}), 500
+            
+    except Exception as e:
+        print(f"플레이리스트 생성 오류: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@api_bp.route('/spotify/create-playlist', methods=['POST'])
+def create_spotify_playlist():
+    """Spotify에 플레이리스트를 생성하고 트랙을 추가합니다."""
+    token_info = session.get('spotify_token_info')
+    if not token_info:
+        return jsonify({'success': False, 'error': 'Spotify 로그인이 필요합니다.'}), 401
+    
+    try:
+        data = request.get_json()
+        name = data.get('name', '새 플레이리스트')
+        description = data.get('description', '')
+        tracks = data.get('tracks', [])
+        
+        if not tracks:
+            return jsonify({'success': False, 'error': '추가할 트랙이 없습니다.'}), 400
+        
+        # 먼저 사용자 정보를 가져와서 user_id 획득
+        user_result = spotify_service.get_current_user(token_info)
+        if not user_result.get('success'):
+            return jsonify({'success': False, 'error': '사용자 정보를 가져올 수 없습니다.'}), 500
+        
+        user_id = user_result['user']['id']
+        if 'updated_token' in user_result:
+            token_info = user_result['updated_token']
+            session['spotify_token_info'] = token_info
+        
+        # 플레이리스트 생성
+        playlist_result = spotify_service.create_playlist(
+            token_info=token_info,
+            user_id=user_id,
+            name=name,
+            description=description,
+            public=True
+        )
+        
+        if not playlist_result.get('success'):
+            return jsonify({'success': False, 'error': playlist_result.get('error')}), 500
+        
+        playlist = playlist_result['playlist']
+        if 'updated_token' in playlist_result:
+            token_info = playlist_result['updated_token']
+            session['spotify_token_info'] = token_info
+        
+        # 트랙 URI 추출
+        track_uris = []
+        for track in tracks:
+            if isinstance(track, dict) and 'uri' in track:
+                track_uris.append(track['uri'])
+            elif isinstance(track, str):
+                track_uris.append(track)
+        
+        if track_uris:
+            # 트랙 추가
+            add_result = spotify_service.add_tracks_to_playlist(
+                token_info=token_info,
+                playlist_id=playlist['id'],
+                track_uris=track_uris
+            )
+            
+            if not add_result.get('success'):
+                return jsonify({'success': False, 'error': add_result.get('error')}), 500
+            
+            if 'updated_token' in add_result:
+                session['spotify_token_info'] = add_result['updated_token']
+        
+        return jsonify({
+            'success': True,
+            'playlist': {
+                'id': playlist['id'],
+                'name': playlist['name'],
+                'description': playlist['description'],
+                'external_urls': playlist['external_urls'],
+                'tracks_added': len(track_uris)
+            },
+            'message': f'플레이리스트 "{name}"이 성공적으로 생성되었습니다.'
+        })
+        
+    except Exception as e:
+        print(f"플레이리스트 생성 오류: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@api_bp.route('/spotify/search', methods=['GET'])
+def search_spotify_tracks():
+    """Spotify에서 트랙을 검색합니다."""
+    token_info = session.get('spotify_token_info')
+    if not token_info:
+        return jsonify({'success': False, 'error': 'Spotify 로그인이 필요합니다.'}), 401
+    
+    try:
+        query = request.args.get('q', '')
+        limit = int(request.args.get('limit', 20))
+        
+        if not query:
+            return jsonify({'success': False, 'error': '검색어가 필요합니다.'}), 400
+        
+        result = spotify_service.search_tracks(token_info, query, limit=limit)
+        
+        if result.get('success'):
+            if 'updated_token' in result:
+                session['spotify_token_info'] = result['updated_token']
+            
+            return jsonify({
+                'success': True,
+                'tracks': result['tracks']
+            })
+        else:
+            return jsonify({'success': False, 'error': result.get('error')}), 500
+            
+    except Exception as e:
+        print(f"트랙 검색 오류: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # =================================================================
 # Social - DB 

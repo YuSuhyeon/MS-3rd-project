@@ -13,15 +13,9 @@ import { useTranslation } from "react-i18next";
 
 export default function SurvivalKit() {
   const [activeSection, setActiveSection] = useState("menu");
-  // const [translateText, setTranslateText] = useState("");
-  // const [translatedText, setTranslatedText] = useState("");
-  // const [isTranslating, setIsTranslating] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState(null);
   const { t } = useTranslation("SurvivalKit");
   const { t: tCommon } = useTranslation("common");
-  // const handleTranslate = async () => {};
-
-  // const quickPhrases = [];
 
   const sections = useMemo(
     () => [
@@ -177,176 +171,222 @@ export default function SurvivalKit() {
   ];
 
   return (
-    <div className="relative space-y-10">
-      <NeonCard
-        variant="primary"
-        className="relative overflow-hidden p-6 sm:p-8"
-        delay={0.1}
-      >
-        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-blue-500/20 blur-3xl" />
-        <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-gradient-to-br from-purple-500/40 via-pink-500/30 to-blue-500/40 blur-2xl opacity-60" />
-        <div className="relative z-10 space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium uppercase tracking-[0.35em] text-purple-100/80">
-            <Sparkles className="h-3.5 w-3.5 text-purple-200" />
-            {t("hero_tagline")}
-          </div>
-          <div className="space-y-3">
+    <div className="relative w-full space-y-10">
+      {/* 상단 헤더 카드 - SpotifyPlaylistGenerator와 동일한 스타일 */}
+      <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-black/30 backdrop-blur-md">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-3xl blur-xl"></div>
+        <div className="relative z-10 flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-purple-100/80">
+              <Sparkles className="h-4 w-4 text-purple-200" />
+              {t("hero_tagline")}
+            </div>
             <GradientText
-              size="4xl"
+              size="3xl"
               variant="primary"
               className="leading-tight"
             >
               {t("hero_title")}
             </GradientText>
-            <p className="max-w-2xl text-sm text-gray-100/80 sm:text-base">
+            <p className="text-sm text-purple-100/85 sm:text-base">
               {t("hero_subtitle")}
             </p>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {sections.map((section) => {
-              const Icon = section.icon;
-              const isActive = activeSection === section.id;
-              return (
-                <button
+            <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.35em] text-purple-200/80">
+              {sections.map((section) => (
+                <span
                   key={section.id}
-                  type="button"
-                  onClick={() => setActiveSection(section.id)}
-                  aria-pressed={isActive}
-                  className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/80 ${
-                    isActive
-                      ? "border-purple-400/60 shadow-[0_0_30px_rgba(168,85,247,0.35)]"
-                      : "hover:border-purple-300/40 hover:shadow-[0_0_20px_rgba(168,85,247,0.25)]"
-                  }`}
+                  className="rounded-full border border-white/10 bg-black/30 px-3 py-1"
                 >
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${
-                      glowGradients[section.id]
-                    } opacity-0 transition-opacity duration-500 group-hover:opacity-60 ${
-                      isActive ? "opacity-80" : ""
-                    }`}
-                  />
-                  <div className="relative z-10 flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
+                  {section.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* 섹션 선택 카드 */}
+          <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-black/35 p-6 backdrop-blur-sm">
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-[11px] uppercase tracking-[0.35em] text-purple-200/70">
+                  도구 선택
+                </p>
+                <GradientText size="xl" variant="primary">
+                  여행 도구
+                </GradientText>
+              </div>
+              <div className="grid gap-2">
+                {sections.map((section) => {
+                  const Icon = section.icon;
+                  const isActive = activeSection === section.id;
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() => setActiveSection(section.id)}
+                      className={`group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3 text-left transition-all duration-300 ${
+                        isActive
+                          ? "border-purple-400/60 shadow-[0_0_20px_rgba(168,85,247,0.35)]"
+                          : "hover:border-purple-300/40"
+                      }`}
+                    >
                       <div
-                        className={`rounded-xl border border-white/10 p-2 transition-colors ${
-                          isActive
-                            ? "bg-white/10 text-white"
-                            : "bg-black/30 text-purple-100"
+                        className={`absolute inset-0 bg-gradient-to-br ${
+                          glowGradients[section.id]
+                        } opacity-0 transition-opacity duration-500 group-hover:opacity-60 ${
+                          isActive ? "opacity-80" : ""
                         }`}
-                      >
-                        <Icon className="h-5 w-5" />
+                      />
+                      <div className="relative z-10 flex items-center gap-3">
+                        <div
+                          className={`rounded-lg border border-white/10 p-1.5 transition-colors ${
+                            isActive
+                              ? "bg-white/10 text-white"
+                              : "bg-black/30 text-purple-100"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <span className="text-sm font-semibold text-white">
+                          {section.label}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-white sm:text-base">
-                        {section.label}
-                      </span>
-                    </div>
-                    <p className="text-xs leading-relaxed text-purple-100/80 sm:text-sm">
-                      {section.description}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
-      </NeonCard>
+      </div>
 
-      <AnimatePresence mode="wait">
-        {activeSection === "menu" && (
-          <motion.div
-            key="section-menu"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-          >
-            <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-black/60 p-3 sm:p-5 shadow-[0_0_40px_-20px_rgba(168,85,247,0.6)]">
-              <OCR />
-            </div>
-          </motion.div>
-        )}
+      {/* 메인 콘텐츠 영역 */}
+      <div className="space-y-8">
+        <AnimatePresence mode="wait">
+          {activeSection === "menu" && (
+            <motion.div
+              key="section-menu"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-black/30 p-6 sm:p-8 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-3xl blur-xl" />
+                <div className="relative z-10">
+                  <OCR />
+                </div>
+              </div>
+            </motion.div>
+          )}
 
-        {activeSection === "translate" && (
-          <motion.div
-            key="section-translate"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-          >
-            <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-black/60 p-3 sm:p-5 shadow-[0_0_40px_-20px_rgba(16,185,129,0.55)]">
-              <QuickTranslator />
-            </div>
-          </motion.div>
-        )}
+          {activeSection === "translate" && (
+            <motion.div
+              key="section-translate"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-black/30 p-6 sm:p-8 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-teal-600/10 to-blue-600/10 rounded-3xl blur-xl" />
+                <div className="relative z-10">
+                  <QuickTranslator />
+                </div>
+              </div>
+            </motion.div>
+          )}
 
-        {activeSection === "culture" && (
-          <motion.div
-            key="section-culture"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <ResponsiveGrid className="xl:grid-cols-3">
-              {cultureGuide.map((guide, index) => (
-                <NeonCard
-                  key={index}
-                  variant="default"
-                  className="group cursor-pointer overflow-hidden p-6 text-left transition-all duration-300"
-                  delay={0.1 * index}
-                  onClick={() => setSelectedGuide(guide)}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-blue-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-80" />
-                  <div className="relative z-10 flex flex-col gap-4">
-                    <div className="flex items-start justify-between">
-                      <span className="text-4xl">{guide.icon}</span>
-                      <span className="h-2 w-2 rounded-full bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 shadow-[0_0_20px_rgba(236,72,153,0.6)]" />
-                    </div>
-                    <div className="space-y-2">
+          {activeSection === "culture" && (
+            <motion.div
+              key="section-culture"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <div className="relative overflow-hidden rounded-3xl border border-pink-500/30 bg-black/30 p-6 sm:p-8 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-600/10 via-purple-600/10 to-orange-600/10 rounded-3xl blur-xl" />
+                <div className="relative z-10 space-y-6">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
                       <GradientText
+                        size="2xl"
                         variant="primary"
-                        size="lg"
-                        className="block leading-tight"
+                        className="leading-tight"
                       >
-                        {guide.title}
-                      </GradientText>
-                      <p className="text-sm leading-relaxed text-gray-200">
-                        {guide.content}
-                      </p>
-                      <p className="text-xs text-purple-200/70">
-                        {guide.extra}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-[11px] uppercase tracking-[0.35em] text-purple-200/60">
                         {t("culture_guide")}
-                      </span>
-                      <NeonButton
-                        variant="primary"
-                        size="sm"
-                        className="text-xs"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setSelectedGuide(guide);
-                        }}
-                      >
-                        {tCommon("main.more.view")}
-                      </NeonButton>
+                      </GradientText>
+                      <p className="text-sm text-purple-100/80 sm:text-base">
+                        한국 문화와 예절에 대한 실용적인 가이드
+                      </p>
                     </div>
                   </div>
-                </NeonCard>
-              ))}
-            </ResponsiveGrid>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
+                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    {cultureGuide.map((guide, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        onClick={() => setSelectedGuide(guide)}
+                        className="group relative cursor-pointer overflow-hidden rounded-3xl border border-purple-500/25 bg-gradient-to-br from-gray-900/90 to-black/95 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_40px_120px_-40px_rgba(236,72,153,0.45)]"
+                      >
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(236,72,153,0.25),_transparent_55%)] opacity-60" />
+                        <div className="relative z-10 flex flex-col gap-4 p-6">
+                          <div className="flex items-start justify-between">
+                            <span className="text-4xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.35)]">
+                              {guide.icon}
+                            </span>
+                            <span className="h-2 w-2 rounded-full bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 shadow-[0_0_20px_rgba(236,72,153,0.6)]" />
+                          </div>
+                          <div className="space-y-2">
+                            <GradientText
+                              variant="primary"
+                              size="lg"
+                              className="block leading-tight"
+                            >
+                              {guide.title}
+                            </GradientText>
+                            <p className="text-sm leading-relaxed text-gray-200">
+                              {guide.content}
+                            </p>
+                            <p className="text-xs text-purple-200/70">
+                              {guide.extra}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between pt-2">
+                            <span className="text-[11px] uppercase tracking-[0.35em] text-purple-200/60">
+                              {t("culture_guide")}
+                            </span>
+                            <NeonButton
+                              variant="primary"
+                              size="sm"
+                              className="text-xs"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setSelectedGuide(guide);
+                              }}
+                            >
+                              {tCommon("main.more.view")}
+                            </NeonButton>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* 모달 */}
       <AnimatePresence>
         {selectedGuide && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -359,7 +399,7 @@ export default function SurvivalKit() {
               exit={{ opacity: 0 }}
             />
             <motion.div
-              className="relative w-full max-w-3xl"
+              className="relative w-full max-w-3xl max-h-[80vh] overflow-y-auto"
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 30, scale: 0.9 }}

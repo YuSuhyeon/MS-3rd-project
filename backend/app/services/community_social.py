@@ -910,13 +910,13 @@ class BoardService:
             if comment_info['user_id'] != user_id:
                 return {'success': False, 'error': '댓글을 수정할 권한이 없습니다.'}
             
-            # 댓글 수정
-            update_query = "UPDATE comments SET content = %s, updated_at = NOW() WHERE id = %s"
+            # 댓글 수정 (일부 환경에서 comments.updated_at 컬럼이 없을 수 있으므로 content만 업데이트)
+            update_query = "UPDATE comments SET content = %s WHERE id = %s"
             cursor.execute(update_query, (content, comment_id))
             
             # 수정된 댓글 정보 조회
             select_query = """
-                SELECT c.id as comment_id, c.user_id as comment_author_id, c.content, c.created_at, c.updated_at,
+                SELECT c.id as comment_id, c.user_id as comment_author_id, c.content, c.created_at,
                     u.name as user_name, u.profile_image as user_profile_image
                 FROM comments c JOIN users u ON c.user_id = u.id
                 WHERE c.id = %s
@@ -929,8 +929,6 @@ class BoardService:
                 comment['can_delete'] = True
                 if comment['created_at']:
                     comment['created_at'] = comment['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-                if comment['updated_at']:
-                    comment['updated_at'] = comment['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
 
             connection.commit()
             

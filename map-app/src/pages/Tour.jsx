@@ -194,7 +194,7 @@ const MobileTourCard = ({ item, onDetailClick }) => {
       onClick={() => onDetailClick(item)}
     >
       {/* 모바일 최적화 이미지 섹션 */}
-      <div className="relative h-28 overflow-hidden">
+      <div className="relative h-44 sm:h-48 md:h-80 lg:h-96 xl:h-[28rem] overflow-hidden">
         <img
           src={item.image || "/placeholder.svg"}
           alt={t(`data.${item.id}.title`, { defaultValue: item.title })}
@@ -310,6 +310,96 @@ const MobileTourCard = ({ item, onDetailClick }) => {
   );
 };
 
+// 가로형 추천 카드 (id:2 전용으로 사용)
+const FeaturedHorizontalCard = ({ item, onDetailClick }) => {
+  const { t, i18n: i18nextInstance } = useTranslation("tourDetail", {
+    useSuspense: false,
+  });
+
+  if (!item) return null;
+
+  // 다국어 타이틀/위치/설명 처리 (간단 버전)
+  const title = t(`data.${item.id}.title`, { defaultValue: item.title });
+  const location = t(`data.${item.id}.location`, {
+    defaultValue: item.location,
+  });
+  let descriptionText = item.description;
+  const descriptionKeys = [
+    `data.${item.id}.listDescription`,
+    `products.${item.id}.description`,
+    `data.${item.id}.description`,
+  ];
+  for (const key of descriptionKeys) {
+    if (i18nextInstance.exists(key, { ns: "tourDetail" })) {
+      descriptionText = t(key);
+      break;
+    }
+  }
+
+  const categoryInfo = getCategoryInfo(t, item.category);
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      whileHover={{ y: -2 }}
+      onClick={() => onDetailClick(item)}
+      className="cursor-pointer"
+    >
+      <div className="bg-gray-900/90 backdrop-blur-lg rounded-xl shadow-xl border border-purple-500/30 overflow-hidden hover:shadow-2xl hover:shadow-purple-500/20 hover:border-pink-500/50 transition-all duration-300">
+        <div className="flex gap-4 p-3 md:p-4">
+          <div className="relative w-28 h-20 sm:w-40 sm:h-28 md:w-48 md:h-32 flex-shrink-0 overflow-hidden rounded-lg">
+            <img
+              src={item.image || "/placeholder.svg"}
+              alt={title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-1.5 left-1.5">
+              <span
+                className={`px-1.5 py-0.5 bg-gradient-to-r ${categoryInfo.gradient} text-white text-[10px] sm:text-xs font-semibold rounded-full backdrop-blur-sm shadow-lg`}
+              >
+                {categoryInfo.emoji}
+              </span>
+            </div>
+          </div>
+
+          <div className="min-w-0 flex-1 flex flex-col justify-between">
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-bold text-white truncate">
+                {title}
+              </h3>
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <div className="flex items-center gap-1 text-gray-400 min-w-0">
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="truncate">{location}</span>
+                </div>
+                <div className="flex items-center gap-1 text-gray-300 flex-shrink-0 ml-2">
+                  <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
+                  <span>{item.rating || "4.5"}</span>
+                </div>
+              </div>
+              <p className="text-xs sm:text-sm text-gray-400 line-clamp-2">
+                {descriptionText}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-sm sm:text-base font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+                {item.price}
+              </span>
+              <button className="px-3 py-1.5 rounded-md text-xs sm:text-sm bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.6)] hover:shadow-[0_0_18px_rgba(236,72,153,0.7)] transition-all">
+                {t("featured.viewDetails", { ns: "tour" })}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // PartnershipSection 컴포넌트
 
 const PartnershipSection = () => {
@@ -405,6 +495,7 @@ export default function Tour() {
   };
 
   const filteredProducts = tourProducts.filter((product) => {
+    if (product.id === 2) return false; // 추천 가로 카드로 분리 표시
     const matchesSearch =
       product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -496,100 +587,108 @@ export default function Tour() {
               </button>
             </div>
           )}
-          {/* 헤더 */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-8 sm:mb-12"
-          >
-            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4 px-4">
-              한국의 숨겨진 매력을
-              <br className="sm:hidden" /> 발견하세요
-            </h1>
-            <p className="text-lg sm:text-xl md:text-2xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 sm:mb-8 px-4">
-              프리미엄 한국 문화 체험 투어
-            </p>
 
-            {/* 검색 및 필터 
-            <div className="max-w-4xl mx-auto px-4">
-              <div className="space-y-4 mb-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="투어 검색..."
-                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white placeholder-gray-400 shadow-lg"
-                  />
+          {/* 상단 개별 검색 입력 삭제: 카테고리 태그 라인으로 이동 */}
+
+          {/* 추천 가로 카드: id 2 */}
+          {(() => {
+            const featuredItem = tourProducts.find((p) => p.id === 2);
+            if (!featuredItem) return null;
+            return (
+              <div className="max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto mt-6 mb-6">
+                <h3
+                  className="mb-2 text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(168,85,247,0.6)] animate-pulse"
+                  style={{
+                    textShadow:
+                      "0 0 2px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.8), 0 0 10px rgba(255,255,255,0.7)",
+                    filter:
+                      "drop-shadow(0 0 1px rgba(236,72,153,0.5)) drop-shadow(0 0 2px rgba(168,85,247,0.6)) drop-shadow(0 0 4px rgba(168,85,247,0.4))",
+                  }}
+                >
+                  {t("featured.title", { ns: "tour" })}
+                </h3>
+                <FeaturedHorizontalCard
+                  item={featuredItem}
+                  onDetailClick={handleDetailClick}
+                />
+              </div>
+            );
+          })()}
+
+          {/* 모바일/데스크톱 반응형 투어 카드 섹션 (데스크톱 과도한 가로 확장 방지) */}
+          <div className="max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto space-y-6">
+            <NeonCard className="p-4">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/25">
+                  <Package className="w-6 h-6 text-white" />
                 </div>
-
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                  {categories.map((category) => (
-                    <button
-                      key={category.value}
-                      onClick={() => {
-                        setFilterCategory(category.value);
-                        setCurrentPage(1); // 필터 변경시 첫 페이지로
-                      }}
-                      className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 rounded-2xl border transition-all shadow-lg ${
-                        filterCategory === category.value
-                          ? "bg-gradient-to-r from-purple-600 to-pink-600 border-purple-500 text-white shadow-purple-500/25"
-                          : "bg-gray-900/70 border-gray-600/50 text-gray-300 hover:border-purple-500/50 hover:bg-gray-800/70"
-                      }`}
-                    >
-                      <span className="text-lg">{category.emoji}</span>
-                      <span className="text-sm font-medium whitespace-nowrap">
-                        {category.label}
-                      </span>
-                    </button>
-                  ))}
+                <div>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
+                    {t("list.title")}
+                  </h2>
+                  <p className="text-gray-300">{t("list.subtitle")}</p>
                 </div>
               </div>
 
-              {/* 검색 및 필터: 카드 내부 */}
+              {/* 필터: 카드 내부 (카테고리 태그 + 우측 검색어 입력) */}
               <div className="space-y-4 mb-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={t("search.placeholder")}
-                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white placeholder-gray-400 shadow-lg"
-                  />
-                </div>
-
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  {categories.map((category) => (
-                    <motion.button
-                      key={category.value}
-                      onClick={() => {
-                        setFilterCategory(category.value);
-                        setCurrentPage(1);
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full backdrop-blur-sm transition-all duration-300 ${
-                        filterCategory === category.value
-                          ? "bg-white/20 text-white shadow-lg shadow-white/10 border border-white/30"
-                          : "bg-black/20 text-gray-300 hover:bg-white/10 hover:text-white border border-transparent"
-                      }`}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {categories.map((category) => (
+                      <motion.button
+                        key={category.value}
+                        onClick={() => {
+                          setFilterCategory(category.value);
+                          setCurrentPage(1);
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                          filterCategory === category.value
+                            ? "bg-black/10 text-white border border-purple-500/70 shadow-[0_0_12px_rgba(168,85,247,0.5)]"
+                            : "bg-black/20 text-gray-300 border border-purple-500/0 hover:border-pink-500/60 hover:text-white hover:shadow-[0_0_10px_rgba(236,72,153,0.45)]"
+                        }`}
+                      >
+                        <span className="text-base">{category.emoji}</span>
+                        <span className="text-sm font-medium whitespace-nowrap">
+                          {category.label}
+                        </span>
+                      </motion.button>
+                    ))}
+                  </div>
+                  <div className="relative flex-shrink-0">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder=""
+                      aria-label={t("search.placeholder")}
+                      className="w-36 sm:w-48 md:w-60 pl-3 pr-12 py-2 rounded-full border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 outline-none transition-all text-white placeholder-purple-300 shadow-lg"
+                    />
+                    {/* 우측 네온 테두리 돋보기 아이콘 (장식용) */}
+                    <div
+                      aria-hidden="true"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 "
                     >
-                      <span className="text-base">{category.emoji}</span>
-                      <span className="text-sm font-medium whitespace-nowrap">
-                        {category.label}
-                      </span>
-                    </motion.button>
-                  ))}
+                      <div className="w-full h-full rounded-full bg-gray-900/90 flex items-center justify-center">
+                        <Search
+                          className="w-4 h-4 text-white"
+                          style={{
+                            filter:
+                              "drop-shadow(0 0 2px rgba(236,72,153,0.7)) drop-shadow(0 0 4px rgba(168,85,247,0.8)) drop-shadow(0 0 8px rgba(168,85,247,0.6))",
+                            strokeWidth: 2.5,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {currentItems.length > 0 ? (
                 <>
-                  {/* 모바일 그리드 (2x2) */}
-                  <div className="grid grid-cols-2 gap-3 mb-6">
+                  {/* 그리드: 모바일 1열, 데스크톱 2열 */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <AnimatePresence mode="wait">
                       {currentItems.map((item, index) => (
                         <motion.div
@@ -623,8 +722,7 @@ export default function Tour() {
                         className="flex items-center justify-center w-10 h-10 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
                         title={t("pagination.prev")}
                       >
-                        <ChevronLeft size={16} />
-                        <span className="text-sm">이전</span>
+                        <ChevronLeft size={20} />
                       </button>
 
                       <div className="flex space-x-1">
@@ -656,8 +754,7 @@ export default function Tour() {
                         className="flex items-center justify-center w-10 h-10 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
                         title={t("pagination.next")}
                       >
-                        <span className="text-sm">다음</span>
-                        <ChevronRight size={16} />
+                        <ChevronRight size={20} />
                       </button>
                     </div>
                   )}

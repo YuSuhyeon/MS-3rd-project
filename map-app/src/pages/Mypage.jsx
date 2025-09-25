@@ -983,12 +983,12 @@ export default function MyPage() {
                 transition={{ duration: 0.6 }}
                 className="text-center mb-12"
               >
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
+                {/* <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
                   {t("mypage")}
                 </h1>
                 <p className="text-gray-300 mb-8 leading-relaxed">
                   {t("mypage_description")}
-                </p>
+                </p> */}
 
                 {/* 프로필 섹션 */}
                 <NeonCard className="max-w-md mx-auto mb-8">

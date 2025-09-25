@@ -980,7 +980,7 @@ export const tourOffers = {
       ja: "野球プレミアムディール！",
       zh: "棒球尊享特惠！",
     },
-    image: "/img/baseball_tour.jpg",
+    image: "/img/baseball_tour.png",
     urgencyText: {
       ko: "VIP 경기장 경험!",
       en: "VIP stadium experience!",

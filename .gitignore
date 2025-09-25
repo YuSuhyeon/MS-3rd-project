@@ -1,3 +1,4 @@
+.env
 # Dependencies
 node_modules/
 map-app/node_modules/
