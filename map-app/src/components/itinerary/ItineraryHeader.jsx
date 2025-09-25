@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Paper,
@@ -19,6 +19,8 @@ import {
   Clock8,
 } from "lucide-react";
 import { NeonButton, GradientText } from "components/ui/NeonTheme";
+import { useTranslation } from "react-i18next";
+import { translateText } from "../../integrations/translator";
 
 const formatCurrency = (value) =>
   (value || 0).toLocaleString("ko-KR", { maximumFractionDigits: 0 });
@@ -43,11 +45,65 @@ export default function ItineraryHeader({
   isSaving,
   isAutoSaving,
   lastSavedAt,
-  onTitleChange,
+  onTitleDraftChange,
+  onTitleCommit,
+  onTitleEditingChange,
   onSave,
   onDiscard,
 }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const { i18n, t } = useTranslation("planner");
+  const [draftTitle, setDraftTitle] = useState(itinerary?.itinerary_name || "");
+  const [isTitleFocused, setIsTitleFocused] = useState(false);
+  const [translatedDestination, setTranslatedDestination] = useState(itinerary?.destination || "목적지 미정");
+  const [translatedTitle, setTranslatedTitle] = useState(itinerary?.itinerary_name || "");
+
+  useEffect(() => {
+    if (isTitleFocused) return;
+    const nextTitle = itinerary?.itinerary_name || "";
+    setDraftTitle(nextTitle);
+    onTitleDraftChange?.(nextTitle);
+  }, [itinerary?.itinerary_name, isTitleFocused, onTitleDraftChange]);
+
+  // destination 번역
+  useEffect(() => {
+    const translateDestination = async () => {
+      if (!itinerary?.destination || i18n.language === 'ko') {
+        setTranslatedDestination(itinerary?.destination || "목적지 미정");
+        return;
+      }
+      
+      try {
+        const translated = await translateText(itinerary.destination, i18n.language);
+        setTranslatedDestination(translated || itinerary.destination);
+      } catch (error) {
+        console.error('Failed to translate destination:', error);
+        setTranslatedDestination(itinerary.destination);
+      }
+    };
+    
+    translateDestination();
+  }, [itinerary?.destination, i18n.language]);
+
+  // title 번역
+  useEffect(() => {
+    const translateTitle = async () => {
+      if (!itinerary?.itinerary_name || i18n.language === 'ko') {
+        setTranslatedTitle(itinerary?.itinerary_name || "");
+        return;
+      }
+      
+      try {
+        const translated = await translateText(itinerary.itinerary_name, i18n.language);
+        setTranslatedTitle(translated || itinerary.itinerary_name);
+      } catch (error) {
+        console.error('Failed to translate title:', error);
+        setTranslatedTitle(itinerary.itinerary_name);
+      }
+    };
+    
+    translateTitle();
+  }, [itinerary?.itinerary_name, i18n.language]);
   const totalCost =
     itinerary?.days?.reduce(
       (total, day) =>
@@ -113,9 +169,18 @@ export default function ItineraryHeader({
         <Stack gap="lg">
           <Stack gap="xs">
             <TextInput
-              value={itinerary?.itinerary_name || ""}
-              onChange={(event) => onTitleChange?.(event.currentTarget.value)}
+              value={isTitleFocused ? draftTitle : translatedTitle}
+              onChange={(event) => {
+                const value = event.currentTarget.value;
+                setDraftTitle(value);
+                onTitleDraftChange?.(value);
+              }}
+              onFocus={() => {
+                setIsTitleFocused(true);
+                onTitleEditingChange?.(true);
+              }}
               size={isMobile ? "md" : "lg"}
+              dynamic="true"
               styles={{
                 input: {
                   fontWeight: 700,
@@ -132,6 +197,19 @@ export default function ItineraryHeader({
                   },
                 },
               }}
+              onBlur={(event) => {
+                setIsTitleFocused(false);
+                onTitleEditingChange?.(false);
+                onTitleCommit?.(event.currentTarget.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  setIsTitleFocused(false);
+                  onTitleEditingChange?.(false);
+                  event.currentTarget.blur();
+                }
+              }}
             />
             <Group gap="lg" wrap="wrap">
               <Text
@@ -139,7 +217,7 @@ export default function ItineraryHeader({
                 size="sm"
                 style={{ display: "flex", alignItems: "center", gap: 6 }}
               >
-                <MapPin size={16} /> {itinerary?.destination || "목적지 미정"}
+                <MapPin size={16} /> {translatedDestination}
               </Text>
               {!isMobile && (
                 <Text
@@ -147,7 +225,7 @@ export default function ItineraryHeader({
                   size="sm"
                   style={{ display: "flex", alignItems: "center", gap: 6 }}
                 >
-                  <Calendar size={16} /> 총 {itinerary?.total_days || 0}일 여행
+                  <Calendar size={16} /> {t("total_days_travel", { days: itinerary?.total_days || 0 })}
                 </Text>
               )}
               <Badge
@@ -161,7 +239,7 @@ export default function ItineraryHeader({
                   },
                 }}
               >
-                {activityCount}개의 활동
+                <span dynamic="true">{activityCount}개의 활동</span>
               </Badge>
             </Group>
           </Stack>
@@ -179,7 +257,7 @@ export default function ItineraryHeader({
               }}
             >
               <StatusIcon size={14} color={palette.icon} />
-              <Text size="sm" fw={500} c={palette.text}>
+              <Text size="sm" fw={500} c={palette.text} dynamic="true">
                 {status.label}
               </Text>
             </Box>
@@ -190,7 +268,7 @@ export default function ItineraryHeader({
                 onClick={onDiscard}
                 disabled={!hasChanges}
               >
-                변경 취소
+                <span dynamic="true">변경 취소</span>
               </NeonButton>
               <NeonButton
                 size="sm"
@@ -198,7 +276,7 @@ export default function ItineraryHeader({
                 loading={isSaving}
                 disabled={!hasChanges && !isSaving}
               >
-                저장
+                <span dynamic="true">저장</span>
               </NeonButton>
             </Group>
           </Group>
@@ -211,10 +289,10 @@ export default function ItineraryHeader({
                 c="gray.4"
                 style={{ display: "flex", alignItems: "center", gap: 6 }}
               >
-                <DollarSign size={16} /> 예상 총 비용
+                <DollarSign size={16} /> <span dynamic="true">예상 총 비용</span>
               </Text>
               <Text fw={700} size="lg">
-                <GradientText>{formatCurrency(totalCost)}원</GradientText>
+                <GradientText dynamic="true">{formatCurrency(totalCost)}원</GradientText>
               </Text>
             </Group>
           </Box>

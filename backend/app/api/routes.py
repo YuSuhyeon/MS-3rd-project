@@ -1067,7 +1067,7 @@ def spotify_callback():
             return "Error: Authorization code not found", 400
         token_info = spotify_service.get_token_info(auth_code)
         session['spotify_token_info'] = token_info        
-        redirect_url = os.getenv('FRONTEND_URL', 'http://127.0.0.1:3000') + '/community?tab=playlists'    
+        redirect_url = os.getenv('FRONTEND_URL', 'http://127.0.0.1:5000') + '/community?tab=playlists'    
            
         return redirect(redirect_url)
     

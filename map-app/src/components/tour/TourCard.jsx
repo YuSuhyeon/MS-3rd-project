@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Heart, MapPin, Star, Bookmark, Eye } from "lucide-react";
 
 const TourCard = ({ item, onDetailClick, onLikeToggle, isLiked = false }) => {
+  const { t } = useTranslation("tourDetail");
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   const getCategoryInfo = (category) => {
@@ -125,14 +127,31 @@ const TourCard = ({ item, onDetailClick, onLikeToggle, isLiked = false }) => {
           <Bookmark size={14} fill={isBookmarked ? "currentColor" : "none"} />
         </button>
 
-        {/* K-pop 그룹 정보 */}
-        {item.kpopGroup && (
-          <div className="absolute bottom-2 left-2">
-            <span className="text-white text-xs font-medium bg-black/40 px-2 py-1 rounded backdrop-blur-sm">
-              {item.kpopGroup}
-            </span>
-          </div>
-        )}
+        {/* K-pop 그룹/파트너십 배지 */}
+        {(() => {
+          const partnershipPrimary = t(`data.${item.id}.partnership.primary`, {
+            defaultValue: "",
+          });
+          const hasPartnership = Boolean(partnershipPrimary);
+          const hasKpopGroup = Boolean(item.kpopGroup);
+          if (!hasPartnership && !hasKpopGroup) return null;
+          return (
+            <div className="absolute bottom-2 left-2 flex flex-col gap-1">
+              {hasPartnership && (
+                <span className="text-white text-xs font-medium bg-black/40 px-2 py-1 rounded backdrop-blur-sm">
+                  {partnershipPrimary}
+                </span>
+              )}
+              {hasKpopGroup && (
+                <span className="text-white text-xs font-medium bg-black/40 px-2 py-1 rounded backdrop-blur-sm">
+                  {t(`data.${item.id}.kpopGroup`, {
+                    defaultValue: item.kpopGroup,
+                  })}
+                </span>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* 컴팩트한 컨텐츠 섹션 */}

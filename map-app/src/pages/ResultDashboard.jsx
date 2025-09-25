@@ -35,9 +35,12 @@ import {
   courseMatchesPersona,
   normalizePersonaType,
 } from "../utils/persona";
+import { useTranslation } from "react-i18next";
 
 // 배경 효과 컴포넌트 (파일 내에서 직접 정의)
 const WaveAndParticleEffect = () => {
+  const { t } = useTranslation("dashboard");
+  
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -245,7 +248,9 @@ const CourseSkeleton = () => (
   </div>
 );
 
-const CourseCard = ({ course, onPreview, onNavigate }) => (
+const CourseCard = ({ course, onPreview, onNavigate }) => {
+  const { t } = useTranslation("dashboard");
+  return (
   <motion.div
     layout
     variants={itemVariants}
@@ -261,14 +266,14 @@ const CourseCard = ({ course, onPreview, onNavigate }) => (
       </div>
     </div>
     <div className="text-lg font-semibold text-white truncate">
-      {course.title || `코스 ${course.code}`}
+      <span dynamic="true">{course.title || `코스 ${course.code}`}</span>
     </div>
     <div className="mt-3 text-xs text-slate-200/70 h-12 overflow-hidden">
-      {(course.stops || []).map((s) => s.name).join(" · ")}
+      <span dynamic="true">{(course.stops || []).map((s) => s.name).join(" · ")}</span>
     </div>
     <div className="pt-4 mt-auto flex items-center gap-2">
       <NeonButton onClick={onNavigate} size="md" className="flex-1">
-        경로 편집
+        {t("edit_route")}
       </NeonButton>
       <NeonButton
         variant="secondary"
@@ -276,13 +281,16 @@ const CourseCard = ({ course, onPreview, onNavigate }) => (
         className="shrink-0"
         onClick={onPreview}
       >
-        상세
+        {t("detail")}
       </NeonButton>
     </div>
   </motion.div>
-);
+  );
+};
 
-const CourseListItem = ({ course, onNavigate }) => (
+const CourseListItem = ({ course, onNavigate }) => {
+  const { t } = useTranslation("dashboard");
+  return (
   <motion.div
     layout
     variants={itemVariants}
@@ -293,29 +301,30 @@ const CourseListItem = ({ course, onNavigate }) => (
   >
     <div className="min-w-0">
       <div className="text-sm font-semibold text-white truncate">
-        {course.title || `코스 ${course.code}`}
+        <span dynamic="true">{course.title || `코스 ${course.code}`}</span>
       </div>
       <div className="text-xs text-slate-200/70 truncate mt-1">
-        {(course.stops || []).map((s) => s.name).join(" · ")}
+        <span dynamic="true">{(course.stops || []).map((s) => s.name).join(" · ")}</span>
       </div>
     </div>
     <div className="flex items-center gap-2 ml-4">
       <NeonButton
         size="sm"
-        variant="secondary"
-        className="flex items-center gap-1"
+        className="flex items-center gap-1 flex-shrink-0 whitespace-nowrap"
         onClick={onNavigate}
       >
-        경로 편집 <ChevronRight className="w-4 h-4" />
+        {t("edit_route")} <ChevronRight className="w-4 h-4" />
       </NeonButton>
     </div>
   </motion.div>
-);
+  );
+};
 
 // --- Main Component ---
 export default function ResultDashboard() {
   const navigate = useNavigate();
   const { profile: authProfile, isLoading: authLoading, login } = useAuth();
+  const { t } = useTranslation("dashboard");
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [csvCourses, setCsvCourses] = useState([]);
@@ -522,7 +531,7 @@ export default function ResultDashboard() {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-slate-300">
         <NeonLoader size="lg" />
-        <p className="mt-4 text-sm">로그인 상태를 확인하고 있습니다...</p>
+        <p className="mt-4 text-sm">{t("checking_login_status")}</p>
       </div>
     );
   }
@@ -531,20 +540,20 @@ export default function ResultDashboard() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center px-4 py-12">
         <NeonCard className="max-w-lg w-full text-center space-y-6 border-purple-500/30 bg-slate-900/70 backdrop-blur-xl">
-          <GradientText size="3xl">로그인이 필요합니다</GradientText>
+          <GradientText size="3xl">{t("login_required")}</GradientText>
           <p className="text-slate-300">
-            여행 페르소나 분석 및 추천 코스를 확인하려면 로그인해주세요.
+            {t("login_required_description")}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <NeonButton size="lg" onClick={() => login("google")}>
-              Google로 로그인
+              {t("google_login")}
             </NeonButton>
             <NeonButton
               size="lg"
               variant="secondary"
               onClick={() => login("microsoft")}
             >
-              Microsoft로 로그인
+              {t("microsoft_login")}
             </NeonButton>
           </div>
         </NeonCard>
@@ -568,20 +577,19 @@ export default function ResultDashboard() {
         <div className="relative z-20">
           <NeonCard
             icon={<MapPin size={22} />}
-            title="분석 결과가 없습니다"
+            title={t("no_analysis_result")}
             variant="primary"
             className="max-w-md w-full text-center space-y-4"
           >
             <p className="text-slate-200/80">
-              최근 생성된 페르소나 분석 결과를 찾을 수 없어, 새로운 여행 계획을
-              다시 분석해보세요.
+              {t("no_analysis_result_description")}
             </p>
             <NeonButton
               onClick={() => navigate(createPageUrl("Home"))}
               size="md"
               className="mt-4"
             >
-              분석 시작하기
+              {t("start_analysis")}
             </NeonButton>
           </NeonCard>
         </div>
@@ -590,7 +598,6 @@ export default function ResultDashboard() {
   }
 
   const analysis = profile.analysis_result;
-
   return (
     <div className="neon-scrollbar text-white bg-black">
       <WaveAndParticleEffect />
@@ -616,7 +623,7 @@ export default function ResultDashboard() {
                             <Star className="w-6 h-6 text-white" />
                           </div>
                           <span className="uppercase tracking-[0.4em] text-xs text-purple-100/70">
-                            Your AI Travel Persona
+                            {t("your_ai_travel_persona")}
                           </span>
                         </div>
                       </motion.div>
@@ -625,14 +632,14 @@ export default function ResultDashboard() {
                         className="text-3xl md:text-5xl font-black leading-tight"
                       >
                         <GradientText size="5xl" className="leading-tight">
-                          {analysis.persona_type || "분석 중..."}
+                          <span dynamic="true">{analysis.persona_type || t("analyzing")}</span>
                         </GradientText>
                       </motion.h1>
                       <motion.p
                         variants={itemVariants}
                         className="text-base md:text-lg text-slate-200/90 max-w-2xl"
                       >
-                        {analysis.persona_description}
+                        <span dynamic="true">{analysis.persona_description}</span>
                       </motion.p>
                     </div>
                   </div>
@@ -647,7 +654,7 @@ export default function ResultDashboard() {
           <div className="relative z-20 px-4 md:px-10">
             <div className="max-w-6xl mx-auto">
               <Divider />
-              <Section title="여행 페르소나">
+              <Section title={t("travel_persona")}>
                 <AnalysisSummaryPanel
                   profile={{
                     ...profile,
@@ -668,8 +675,8 @@ export default function ResultDashboard() {
             <div className="max-w-6xl mx-auto">
               <Divider />
               <Section
-                title="맞춤 추천 스팟"
-                description="페르소나에 맞는 서울의 장소들을 랜덤으로 골라 보여드릴게요."
+                title={t("custom_recommended_spots")}
+                description={t("custom_recommended_spots_description")}
               >
                 <div className="flex items-center justify-end mb-3 gap-2">
                   <NeonButton
@@ -679,7 +686,7 @@ export default function ResultDashboard() {
                     onClick={refetchSpots}
                     disabled={loadingSpots}
                   >
-                    <RotateCcw className="w-4 h-4" /> 새로고침
+                    <RotateCcw className="w-4 h-4" /> {t("refresh")}
                   </NeonButton>
                 </div>
                 {loadingSpots ? (
@@ -715,14 +722,14 @@ export default function ResultDashboard() {
                               className="font-semibold text-white truncate"
                               title={s.name}
                             >
-                              {s.name}
+                              <span dynamic="true">{s.name}</span>
                             </div>
                             {s.addr && (
                               <div
                                 className="text-xs text-slate-200/70 truncate mt-1"
                                 title={s.addr}
                               >
-                                {s.addr}
+                                <span dynamic="true">{s.addr}</span>
                               </div>
                             )}
                           </div>
@@ -732,7 +739,7 @@ export default function ResultDashboard() {
                   </motion.div>
                 ) : (
                   <div className="text-center py-10 rounded-2xl border border-purple-500/20 bg-black/40 text-slate-200">
-                    <p>추천 스팟을 불러오지 못했어요.</p>
+                    <p>{t("no_recommended_spots")}</p>
                   </div>
                 )}
               </Section>
@@ -740,10 +747,10 @@ export default function ResultDashboard() {
               <Section
                 title={
                   <>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400" dynamic="true">
                       {analysis.persona_type}
                     </span>{" "}
-                    맞춤 코스
+                    {t("custom_recommended_courses")}
                   </>
                 }
               >
@@ -759,7 +766,7 @@ export default function ResultDashboard() {
                       <input
                         value={courseQuery}
                         onChange={(e) => setCourseQuery(e.target.value)}
-                        placeholder="코스 이름, 장소 검색..."
+                        placeholder={t("course_search_placeholder")}
                         className="w-full pl-10 pr-4 py-2 rounded-xl border border-purple-500/30 focus:outline-none focus:ring-2 focus:ring-purple-500/60 bg-black/60 text-white placeholder-slate-400"
                       />
                     </div>
@@ -786,7 +793,7 @@ export default function ResultDashboard() {
                             ) : (
                               <List size={16} />
                             )}
-                            {mode === "cards" ? "카드 뷰" : "리스트 뷰"}
+                            {mode === "cards" ? t("card_view") : t("list_view")}
                           </span>
                         </button>
                       ))}
@@ -841,7 +848,7 @@ export default function ResultDashboard() {
                     variants={itemVariants}
                     className="text-center py-16 rounded-2xl border border-purple-500/20 bg-black/40 text-slate-200"
                   >
-                    <p>추천 코스가 없거나 검색 결과가 없습니다.</p>
+                    <p>{t("no_recommended_courses")}</p>
                   </motion.div>
                 )}
               </Section>

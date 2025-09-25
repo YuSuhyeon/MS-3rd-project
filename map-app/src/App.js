@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "./components/Layout";
+import DynamicTranslator from "./components/DynamicTranslator";
 import { AuthProvider } from "./context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import "./i18n"; // i18n 초기화
@@ -76,9 +77,11 @@ export default function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <DynamicTranslator>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </DynamicTranslator>
       </LanguageProvider>
     </AuthProvider>
   );

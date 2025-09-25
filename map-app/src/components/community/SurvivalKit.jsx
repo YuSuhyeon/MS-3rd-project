@@ -18,7 +18,6 @@ export default function SurvivalKit() {
   // const [isTranslating, setIsTranslating] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState(null);
   const { t } = useTranslation("SurvivalKit");
-  const { t: tNav } = useTranslation("Navigation");
   const { t: tCommon } = useTranslation("common");
   // const handleTranslate = async () => {};
 
@@ -46,11 +45,6 @@ export default function SurvivalKit() {
       },
     ],
     [t]
-  );
-
-  const activeInfo = useMemo(
-    () => sections.find((section) => section.id === activeSection) || sections[0],
-    [sections, activeSection]
   );
 
   const glowGradients = {
@@ -184,129 +178,78 @@ export default function SurvivalKit() {
 
   return (
     <div className="relative space-y-10">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr),minmax(0,0.9fr)]">
-        <NeonCard
-          variant="primary"
-          className="relative overflow-hidden p-6 sm:p-8"
-          delay={0.1}
-        >
-          <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-blue-500/20 blur-3xl" />
-          <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-gradient-to-br from-purple-500/40 via-pink-500/30 to-blue-500/40 blur-2xl opacity-60" />
-          <div className="relative z-10 space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium uppercase tracking-[0.35em] text-purple-100/80">
-              <Sparkles className="h-3.5 w-3.5 text-purple-200" />
-              {t("hero_tagline")}
-            </div>
-            <div className="space-y-3">
-              <GradientText
-                size="4xl"
-                variant="primary"
-                className="leading-tight"
-              >
-                {t("hero_title")}
-              </GradientText>
-              <p className="max-w-2xl text-sm text-gray-100/80 sm:text-base">
-                {t("hero_subtitle")}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {sections.map((section) => {
-                const Icon = section.icon;
-                const isActive = activeSection === section.id;
-                return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => setActiveSection(section.id)}
-                    aria-pressed={isActive}
-                    className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/80 ${
-                      isActive
-                        ? "border-purple-400/60 shadow-[0_0_30px_rgba(168,85,247,0.35)]"
-                        : "hover:border-purple-300/40 hover:shadow-[0_0_20px_rgba(168,85,247,0.25)]"
-                    }`}
-                  >
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${glowGradients[section.id]} opacity-0 transition-opacity duration-500 group-hover:opacity-60 ${
-                        isActive ? "opacity-80" : ""
-                      }`}
-                    />
-                    <div className="relative z-10 flex flex-col gap-3">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`rounded-xl border border-white/10 p-2 transition-colors ${
-                            isActive
-                              ? "bg-white/10 text-white"
-                              : "bg-black/30 text-purple-100"
-                          }`}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <span className="text-sm font-semibold text-white sm:text-base">
-                          {section.label}
-                        </span>
-                      </div>
-                      <p className="text-xs leading-relaxed text-purple-100/80 sm:text-sm">
-                        {section.description}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+      <NeonCard
+        variant="primary"
+        className="relative overflow-hidden p-6 sm:p-8"
+        delay={0.1}
+      >
+        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-blue-500/20 blur-3xl" />
+        <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-gradient-to-br from-purple-500/40 via-pink-500/30 to-blue-500/40 blur-2xl opacity-60" />
+        <div className="relative z-10 space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium uppercase tracking-[0.35em] text-purple-100/80">
+            <Sparkles className="h-3.5 w-3.5 text-purple-200" />
+            {t("hero_tagline")}
           </div>
-        </NeonCard>
-
-        <NeonCard
-          variant="secondary"
-          className="relative overflow-hidden p-6 sm:p-8"
-          delay={0.15}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/10 to-pink-500/20 blur-2xl" />
-          <div className="relative z-10 flex h-full flex-col justify-between gap-6">
-            <div className="space-y-3">
-              <p className="text-xs font-medium uppercase tracking-[0.35em] text-purple-200/70">
-                {tNav("survival_kit")}
-              </p>
-              <GradientText
-                size="3xl"
-                variant="accent"
-                className="leading-tight"
-              >
-                {activeInfo.label}
-              </GradientText>
-              <p className="text-sm text-purple-100/80 sm:text-base">
-                {activeInfo.description}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm text-purple-100/80 sm:grid-cols-3">
-              {sections.map((section) => {
-                const Icon = section.icon;
-                const isActive = section.id === activeSection;
-                return (
+          <div className="space-y-3">
+            <GradientText
+              size="4xl"
+              variant="primary"
+              className="leading-tight"
+            >
+              {t("hero_title")}
+            </GradientText>
+            <p className="max-w-2xl text-sm text-gray-100/80 sm:text-base">
+              {t("hero_subtitle")}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {sections.map((section) => {
+              const Icon = section.icon;
+              const isActive = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => setActiveSection(section.id)}
+                  aria-pressed={isActive}
+                  className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/80 ${
+                    isActive
+                      ? "border-purple-400/60 shadow-[0_0_30px_rgba(168,85,247,0.35)]"
+                      : "hover:border-purple-300/40 hover:shadow-[0_0_20px_rgba(168,85,247,0.25)]"
+                  }`}
+                >
                   <div
-                    key={`summary-${section.id}`}
-                    className={`rounded-2xl border border-white/10 bg-black/40 p-4 transition-all duration-300 ${
-                      isActive
-                        ? "border-purple-400/60 shadow-[0_0_25px_rgba(168,85,247,0.35)]"
-                        : "hover:border-purple-300/40 hover:shadow-[0_0_20px_rgba(168,85,247,0.25)]"
+                    className={`absolute inset-0 bg-gradient-to-br ${
+                      glowGradients[section.id]
+                    } opacity-0 transition-opacity duration-500 group-hover:opacity-60 ${
+                      isActive ? "opacity-80" : ""
                     }`}
-                  >
-                    <div className="flex items-center gap-2 text-white/90">
-                      <Icon className="h-4 w-4 shrink-0 text-purple-200" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">
+                  />
+                  <div className="relative z-10 flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`rounded-xl border border-white/10 p-2 transition-colors ${
+                          isActive
+                            ? "bg-white/10 text-white"
+                            : "bg-black/30 text-purple-100"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <span className="text-sm font-semibold text-white sm:text-base">
                         {section.label}
                       </span>
                     </div>
-                    <p className="mt-3 text-xs leading-relaxed text-purple-100/70">
+                    <p className="text-xs leading-relaxed text-purple-100/80 sm:text-sm">
                       {section.description}
                     </p>
                   </div>
-                );
-              })}
-            </div>
+                </button>
+              );
+            })}
           </div>
-        </NeonCard>
-      </div>
+        </div>
+      </NeonCard>
 
       <AnimatePresence mode="wait">
         {activeSection === "menu" && (
@@ -372,7 +315,9 @@ export default function SurvivalKit() {
                       <p className="text-sm leading-relaxed text-gray-200">
                         {guide.content}
                       </p>
-                      <p className="text-xs text-purple-200/70">{guide.extra}</p>
+                      <p className="text-xs text-purple-200/70">
+                        {guide.extra}
+                      </p>
                     </div>
                     <div className="flex items-center justify-between pt-2">
                       <span className="text-[11px] uppercase tracking-[0.35em] text-purple-200/60">
@@ -425,7 +370,6 @@ export default function SurvivalKit() {
                 className="relative overflow-hidden p-6 sm:p-8"
                 delay={0}
               >
-
                 <div className="space-y-5">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{selectedGuide.icon}</span>

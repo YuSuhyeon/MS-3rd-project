@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Route } from "Entities/Route";
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
@@ -38,28 +37,26 @@ import {
 import SpotifyPlaylistGenerator from "components/community/SpotifyPlaylistGenerator";
 import SurvivalKit from "components/community/SurvivalKit";
 
-// 모바일 감지 훅
 const useMediaQuery = (query) => {
   const [matches, setMatches] = useState(false);
 
   useEffect(() => {
-    const media = window.matchMedia(query);
-    setMatches(media.matches);
-
-    const listener = (e) => setMatches(e.matches);
-    media.addEventListener("change", listener);
-
-    return () => media.removeEventListener("change", listener);
+    if (typeof window !== "undefined") {
+      const media = window.matchMedia(query);
+      const updateMatches = () => setMatches(media.matches);
+      updateMatches();
+      media.addEventListener("change", updateMatches);
+      return () => media.removeEventListener("change", updateMatches);
+    }
   }, [query]);
 
   return matches;
 };
 
-// playlist 카드 컴포넌트
 const PlaylistCard = ({ playlist }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -166,43 +163,41 @@ const PlaylistCard = ({ playlist }) => {
   );
 };
 
-// 메인 컴포넌트
 export default function CommunityMain() {
   const { t } = useTranslation("Navigation");
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 
   const tabs = [
     {
       id: "survival",
       label: t("survival_kit"),
-      icon: <ShoppingBag />,
+      Icon: ShoppingBag,
       variant: "primary",
     },
     {
       id: "playlists",
       label: t("playlists"),
-      icon: <Music />,
+      Icon: Music,
       variant: "success",
     },
   ];
 
-  const [activeTab, setActiveTab] = useState("survival");
+  const [activeTab, setActiveTab] = useState(tabs[0].id);
 
   useEffect(() => {
     const handlePopState = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const tabParam = urlParams.get("tab");
-      if (tabParam && ["survival", "playlists"].includes(tabParam)) {
+      if (tabParam && tabs.some((tab) => tab.id === tabParam)) {
         setActiveTab(tabParam);
       } else {
-        setActiveTab("survival");
+        setActiveTab(tabs[0].id);
       }
     };
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [tabs]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -214,87 +209,27 @@ export default function CommunityMain() {
     window.history.pushState({}, "", url);
   };
 
-  // 네온 테마 모바일 헤더
-  const NeonMobileHeader = () => (
-    <div className="sticky top-0 bg-black/80 backdrop-blur-sm border-b border-purple-500/30 z-40 px-4 py-3">
-      <div className="flex items-center justify-between">
-        <GradientText size="xl" variant="primary">
-          Community
-        </GradientText>
-        <NeonButton
-          variant="secondary"
-          size="sm"
-          onClick={() => setIsSideMenuOpen(true)}
-          className="p-2 min-h-[44px] min-w-[44px]"
-        >
-          <Menu className="w-6 h-6" />
-        </NeonButton>
-      </div>
-    </div>
-  );
+  const handleDragEnd = (event, info) => {
+    const swipeThreshold = 50;
+    const swipePower = Math.abs(info.offset.x) * info.velocity.x;
 
-  const NeonSideDrawer = () => (
-    <AnimatePresence>
-      {isSideMenuOpen && (
-        <>
-          {/* 오버레이 */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsSideMenuOpen(false)}
-            className="fixed inset-0 bg-black/80 z-50"
-          />
+    const activeIndex = tabs.findIndex((tab) => tab.id === activeTab);
 
-          {/* 드로어 - 네온 스타일 */}
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            className="fixed right-0 top-0 h-full w-80 bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-lg border-l border-purple-500/30 z-50 shadow-2xl shadow-purple-500/20"
-          >
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-6">
-                <GradientText size="2xl" variant="primary">
-                  메뉴
-                </GradientText>
-                <NeonButton
-                  variant="danger"
-                  size="sm"
-                  onClick={() => setIsSideMenuOpen(false)}
-                  className="p-2 min-h-[44px] min-w-[44px]"
-                >
-                  <X className="w-6 h-6" />
-                </NeonButton>
-              </div>
+    if (info.offset.x < -swipeThreshold || swipePower < -10000) {
+      const nextIndex = Math.min(activeIndex + 1, tabs.length - 1);
+      if (nextIndex !== activeIndex) {
+        handleTabClick(tabs[nextIndex].id);
+      }
+    } else if (info.offset.x > swipeThreshold || swipePower > 10000) {
+      const prevIndex = Math.max(activeIndex - 1, 0);
+      if (prevIndex !== activeIndex) {
+        handleTabClick(tabs[prevIndex].id);
+      }
+    }
+  };
 
-              {/* 네온 메뉴 아이템들 */}
-              <div className="space-y-3">
-                {tabs.map((tab) => (
-                  <NeonButton
-                    key={tab.id}
-                    variant={activeTab === tab.id ? "primary" : "secondary"}
-                    size="lg"
-                    onClick={() => {
-                      handleTabClick(tab.id);
-                      setIsSideMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3 justify-start min-h-[56px]"
-                  >
-                    {tab.icon}
-                    <span className="font-medium capitalize">{tab.label}</span>
-                  </NeonButton>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-
-  const renderContent = () => {
-    switch (activeTab) {
+  const renderTabContent = (tabId) => {
+    switch (tabId) {
       case "survival":
         return <SurvivalKit />;
       case "playlists":
@@ -303,41 +238,114 @@ export default function CommunityMain() {
             <SpotifyPlaylistGenerator />
           </div>
         );
-
       default:
         return null;
     }
   };
 
+  const renderContent = () => {
+    return renderTabContent(activeTab);
+  };
+
   return (
     <BackgroundEffect>
-      {" "}
-      {/* 네온 배경 효과 적용 */}
-      {/* 모바일: 네온 헤더 + 사이드 메뉴 */}
       {isMobile ? (
         <>
-          <NeonMobileHeader />
-          <NeonSideDrawer />
-          <div className="px-4 py-6">{renderContent()}</div>
+          <div className="sticky top-0 bg-black/80 backdrop-blur-sm border-b border-purple-500/30 z-40 px-2 py-2">
+            <div className="flex bg-gray-900/50 p-1 rounded-lg">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab.id)}
+                  className={`${
+                    activeTab === tab.id ? "" : "hover:bg-white/5"
+                  } relative flex-1 text-sm font-semibold text-white p-2 rounded-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500`}
+                >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="mobile-active-tab-indicator"
+                      className="absolute inset-0 bg-purple-600/50 rounded-md"
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    <tab.Icon className="h-4 w-4" />
+                    {tab.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="overflow-x-hidden">
+            <motion.div
+              className="flex"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={handleDragEnd}
+              animate={{
+                x: `-${tabs.findIndex((tab) => tab.id === activeTab) * 100}%`,
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              {tabs.map((tab) => (
+                <motion.div
+                  key={tab.id}
+                  className="w-full flex-shrink-0 px-4 py-6"
+                  initial={false}
+                >
+                  {renderTabContent(tab.id)}
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
         </>
       ) : (
-        // 데스크톱: 네온 상단 탭
         <>
           <div className="bg-black/60 backdrop-blur-sm border-b border-purple-500/30 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-6">
-              <div className="flex items-center gap-1">
-                {tabs.map((tab) => (
-                  <NeonButton
-                    key={tab.id}
-                    variant={activeTab === tab.id ? tab.variant : "secondary"}
-                    size="md"
-                    onClick={() => handleTabClick(tab.id)}
-                    className="flex items-center gap-2 px-6 py-4 min-h-[60px]"
-                  >
-                    {tab.icon}
-                    {tab.label}
-                  </NeonButton>
-                ))}
+            <div className="max-w-7xl mx-auto px-6 py-5">
+              <div className="flex justify-center">
+                <div className="relative inline-flex divide-x divide-white/10 rounded-2xl border border-white/10 bg-black/40 shadow-[0_20px_60px_-40px_rgba(168,85,247,0.9)]">
+                  {tabs.map((tab, index) => {
+                    const Icon = tab.Icon;
+                    const isActive = activeTab === tab.id;
+                    const isFirst = index === 0;
+                    const isLast = index === tabs.length - 1;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleTabClick(tab.id)}
+                        aria-pressed={isActive}
+                        className={`group relative flex min-w-[170px] items-center justify-center gap-3 px-7 py-4 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/80 focus-visible:ring-offset-0 ${
+                          isActive
+                            ? "bg-gradient-to-r from-purple-500/80 via-pink-500/70 to-blue-500/70 text-white shadow-[0_18px_45px_-25px_rgba(236,72,153,0.8)]"
+                            : "text-purple-100/80 hover:bg-white/10 hover:text-white"
+                        } ${isFirst ? "rounded-l-2xl" : ""} ${
+                          isLast ? "rounded-r-2xl" : ""
+                        }`}
+                      >
+                        <span
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/10 transition-colors duration-200 ${
+                            isActive
+                              ? "border-white/30 bg-black/20 text-white"
+                              : "text-purple-200 group-hover:text-white"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="whitespace-nowrap tracking-wide">
+                          {tab.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>

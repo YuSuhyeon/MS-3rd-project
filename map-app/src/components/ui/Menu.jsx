@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import LanguageButtons from "components/ui/LanguageButtons";
 import { useAuth } from "context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -35,10 +36,10 @@ const getNavigationItems = (t) => [
 
 const BannerWidget = () => {
   const banners = [
-    { id: 1, image: "../../img/seoul_kdh_policies.jpg" },
-    { id: 2, image: "../../img/seoul_kdh_policies_1.jpg" },
-    { id: 3, image: "../../img/seoul_kdh_policies_2.jpg" },
-    { id: 4, image: "../../img/seoul_kdh_policies_3.jpg" },
+    { id: 1, image: "../../img/banner1.png" },
+    { id: 2, image: "../../img/banner2.png" },
+    { id: 3, image: "../../img/banner3.png" },
+    { id: 4, image: "../../img/seoul_kdh_policies.jpg" },
   ];
 
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -520,6 +521,13 @@ export default function Menu() {
           overflow: hidden;
           transition: all 0.3s ease;
         }
+        @media (min-width: 1024px) {
+          .neon-menu-toggle {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+          }
+        }
         .neon-menu-toggle:hover {
           background: linear-gradient(
             145deg,
@@ -575,6 +583,14 @@ export default function Menu() {
           box-shadow: 0 0 50px rgba(168, 85, 247, 0.1),
             inset -1px 0 0 rgba(168, 85, 247, 0.1);
           z-index: 9998 !important;
+        }
+        @media (min-width: 1024px) {
+          .neon-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+          }
         }
         .neon-menu-item {
           position: relative;
@@ -657,35 +673,36 @@ export default function Menu() {
       </motion.button>
 
       {/* 오버레이와 사이드바 */}
-      {menuOpen && (
-        <div
-          className="menu-portal"
-          style={{ position: "fixed", inset: 0, zIndex: 9997 }}
-        >
-          <AnimatePresence>
-            <motion.div
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm"
-              variants={overlayVariants}
+      {menuOpen &&
+        createPortal(
+          <div
+            className="menu-portal"
+            style={{ position: "fixed", inset: 0, zIndex: 9997 }}
+          >
+            <AnimatePresence>
+              <motion.div
+                className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+                variants={overlayVariants}
+                initial="closed"
+                animate="open"
+                exit="closed"
+                onClick={() => setMenuOpen(false)}
+              />
+            </AnimatePresence>
+
+            <motion.aside
+              className="fixed inset-y-0 left-0 w-72 neon-sidebar flex flex-col"
+              style={{ zIndex: 9998 }}
+              variants={sidebarVariants}
               initial="closed"
               animate="open"
-              exit="closed"
-              onClick={() => setMenuOpen(false)}
-            />
-          </AnimatePresence>
-
-          <motion.aside
-            className="fixed inset-y-0 left-0 w-72 neon-sidebar flex flex-col"
-            style={{ zIndex: 9998 }}
-            variants={sidebarVariants}
-            initial="closed"
-            animate="open"
-            drag={isMobile ? "x" : false}
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={handleDrag}
-            dragElastic={0.1}
-          >
-            {/* 헤더 영역 */}
-            {/* <div className="sidebar-header">
+              drag={isMobile ? "x" : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={handleDrag}
+              dragElastic={0.1}
+            >
+              {/* 헤더 영역 */}
+              {/* <div className="sidebar-header">
               <div className="flex items-center gap-2">
                 <img
                   src="/img/main_logo.png"
@@ -702,128 +719,112 @@ export default function Menu() {
                 <X size={20} />
               </button>
             </div> */}
-            {/* 헤더 영역 */}
-            <div className="sidebar-header py-4">
-              {" "}
-              {/* py-4 추가 */}
-              <div className="flex items-center gap-2">
-                <img
-                  src="/img/main_logo.png"
-                  alt="Klover 로고"
-                  className="w-12 h-12 rounded-lg object-cover"
-                />
-                <span className="text-white font-semibold text-lg">Klover</span>
-              </div>
-              <button
-                className="close-button"
-                onClick={handleCloseClick}
-                type="button"
-              >
-                <X size={20} />
-              </button>
-            </div>
+              {/* 헤더 영역 */}
 
-            {/* 네비게이션 메뉴 */}
-            <div className="p-3 flex-1 overflow-y-auto">
-              <div className="text-xs font-medium text-purple-400 uppercase tracking-wider px-3 py-2">
-                {t("menu")}
-              </div>
-              <nav className="px-2">
-                {navigationItems.map((item, index) => {
-                  const active = isActive(item.url, item.exact);
-                  return (
-                    <motion.div
-                      key={item.title}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{
-                        opacity: menuOpen ? 1 : 0,
-                        x: menuOpen ? 0 : -20,
-                      }}
-                      transition={{
-                        duration: 0.3,
-                        delay: menuOpen ? index * 0.1 : 0,
-                      }}
-                    >
-                      <Link
-                        to={item.url}
-                        onClick={() => setMenuOpen(false)}
-                        className={`neon-menu-item flex items-center gap-3 px-4 py-3 rounded-xl mb-1 ${
-                          active ? "active" : ""
-                        }`}
+              {/* 네비게이션 메뉴 */}
+              <div className="p-3 flex-1 overflow-y-auto">
+                <div className="text-xs font-medium text-purple-400 uppercase tracking-wider px-3 py-2">
+                  {t("menu")}
+                </div>
+                <nav className="px-2">
+                  {navigationItems.map((item, index) => {
+                    const active = isActive(item.url, item.exact);
+                    return (
+                      <motion.div
+                        key={item.title}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{
+                          opacity: menuOpen ? 1 : 0,
+                          x: menuOpen ? 0 : -20,
+                        }}
+                        transition={{
+                          duration: 0.3,
+                          delay: menuOpen ? index * 0.1 : 0,
+                        }}
                       >
-                        <span className="font-medium">{item.title}</span>
-                      </Link>
-                    </motion.div>
-                  );
-                })}
-              </nav>
+                        <Link
+                          to={item.url}
+                          onClick={() => setMenuOpen(false)}
+                          className={`neon-menu-item flex items-center gap-3 px-4 py-3 rounded-xl mb-1 ${
+                            active ? "active" : ""
+                          }`}
+                        >
+                          <span className="font-medium">{item.title}</span>
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </nav>
 
-              <BannerWidget />
-            </div>
-
-            {/* 하단: 실시간 정보 + 사용자 프로필 */}
-            <div className="mt-auto">
-              <LiveInfoWidget
-                isCollapsed={isLiveInfoCollapsed}
-                onToggle={toggleLiveInfo}
-                t={t}
-              />
-
-              <div className="border-t border-purple-500/20 p-6">
-                {profile ? (
-                  <motion.div
-                    className="flex items-center gap-3"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <img
-                      src={profile.picture}
-                      alt={profile.name}
-                      className="w-8 h-8 rounded-full border border-purple-400/50"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white text-sm truncate">
-                        {profile.name}
-                      </p>
-                      <p className="text-xs text-purple-300 truncate">
-                        {profile.email}
-                      </p>
-                    </div>
-                    <button
-                      onClick={logout}
-                      className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
-                    >
-                      <LogOut size={18} />
-                    </button>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    className="flex items-center gap-3"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">?</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white text-sm truncate">
-                        {t("welcome_traveler")}
-                      </p>
-                      <p className="text-xs text-purple-300 truncate">
-                        {t("plan_your_trip_with_ai")}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => login()}
-                      className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
-                    >
-                      <LogIn size={18} />
-                    </button>
-                  </motion.div>
-                )}
+                <BannerWidget />
               </div>
-            </div>
-          </motion.aside>
-        </div>
-      )}
+
+              {/* 하단: 실시간 정보 + 사용자 프로필 */}
+              <div className="mt-auto">
+                <LiveInfoWidget
+                  isCollapsed={isLiveInfoCollapsed}
+                  onToggle={toggleLiveInfo}
+                  t={t}
+                />
+
+                <div className="border-t border-purple-500/20 p-6">
+                  {profile ? (
+                    <motion.div
+                      className="flex items-center gap-3"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <img
+                        src={profile.picture}
+                        alt={profile.name}
+                        className="w-8 h-8 rounded-full border border-purple-400/50"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white text-sm truncate">
+                          {profile.name}
+                        </p>
+                        <p className="text-xs text-purple-300 truncate">
+                          {profile.email}
+                        </p>
+                      </div>
+                      <button
+                        onClick={logout}
+                        className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
+                      >
+                        <LogOut size={18} />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      className="flex items-center gap-3"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <span className="text-white font-medium text-sm">
+                          ?
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white text-sm truncate">
+                          {t("welcome_traveler")}
+                        </p>
+                        <p className="text-xs text-purple-300 truncate">
+                          {t("plan_your_trip_with_ai")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => login()}
+                        className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
+                      >
+                        <LogIn size={18} />
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </motion.aside>
+          </div>,
+          document.body
+        )}
 
       {/* 모바일에서 스와이프 힌트 */}
       {isMobile && !menuOpen && (

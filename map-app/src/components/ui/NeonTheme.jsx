@@ -634,6 +634,9 @@ export const GradientText = ({
   variant = "primary",
   size = "base",
   className = "",
+  style = {},
+  dynamic,
+  ...props
 }) => {
   const variants = {
     primary: "from-purple-300 to-pink-300",
@@ -659,7 +662,10 @@ export const GradientText = ({
 
   return (
     <span
+      style={style}
       className={`font-bold bg-gradient-to-r ${variants[variant]} bg-clip-text text-transparent ${sizes[size]} ${className}`}
+      dynamic={dynamic}
+      {...props}
     >
       {children}
     </span>

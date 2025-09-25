@@ -1,0 +1,71 @@
+PORT=5000
+
+REACT_APP_API_BASE_URL=http://127.0.0.1:5001/api
+# Backend origin (for dev proxy)
+REACT_APP_BACKEND_ORIGIN=http://127.0.0.1:5001
+
+REACT_APP_YOLO_API=http://127.0.0.1:5001/api
+
+# Backend server settings 
+BACKEND_HOST=127.0.0.1
+BACKEND_PORT=5001
+
+#Kakao map 
+REACT_APP_KAKAO_API_KEY=898957280c0b2490d91d60928c994647
+KAKAO_REST_API_KEY=00774010a9d229fe96194ec80a2b458c
+
+# Azure OpenAI
+REACT_APP_AZURE_OPENAI_ENDPOINT=https://team03openai.openai.azure.com
+REACT_APP_AZURE_OPENAI_KEY=9ZvohIa5oHzowGsE1xLyZDA7XhosUbipOt7UgLP6xM8iXLYem2ZfJQQJ99BHACYeBjFXJ3w3AAABACOGrKFd
+REACT_APP_AZURE_OPENAI_DEPLOYMENT=gpt-4o-mini
+REACT_APP_AZURE_OPENAI_API_VERSION=2024-10-21
+
+# Azure Cognitive Search
+REACT_APP_AZURE_SEARCH_ENDPOINT=https://team03search.search.windows.net
+REACT_APP_AZURE_SEARCH_KEY=xO7xnKhFu88UZxecYw3GvQsXbX1e81Z2rN44yTzzfjAzSeAxKnD3
+REACT_APP_AZURE_SEARCH_INDEX=seoul-report-index
+
+# Azure Speech Service
+REACT_APP_AZURE_SPEECH_KEY=1egHM6uTtMNBjOFTLuyaMrZsAi1WGxJq4Yopv9QIPCsJjIAiMqABJQQJ99BHACYeBjFXJ3w3AAAYACOGcNxS
+REACT_APP_AZURE_SPEECH_REGION=eastus
+
+# Azure Translator
+REACT_APP_AZURE_TRANSLATOR_KEY=7RhIv3h6vHLP0ZdfClQXLnURcVupcdiXRBtwgDGLOVq5Ns6plAyNJQQJ99BIACYeBjFXJ3w3AAAbACOG94lv
+REACT_APP_AZURE_TRANSLATOR_ENDPOINT=https://api.cognitive.microsofttranslator.com/
+REACT_APP_AZURE_TRANSLATOR_REGION=eastus
+ 
+#Vison OCR API
+AZURE_VISION_KEY = FZF7dx09012sSURntjJaP44esMzf4EpxdU3fW0uWw2IuNuAjCK93JQQJ99BIACYeBjFXJ3w3AAAFACOG5aFF
+AZURE_VISION_ENDPOINT = https://team03computervision.cognitiveservices.azure.com/
+
+REACT_APP_AZURE_FUNC_BASE=https://team03-function-cce6cugxacd3aqcs.eastus-01.azurewebsites.net/api
+
+
+# NAVER Cloud Platform (Maps API Gateway)
+# 네이버 걷기/대중교통 경로 프록시에서 사용됩니다.
+NAVER_MAPS_API_KEY_ID=9fie4dmkcw
+NAVER_MAPS_API_KEY=WvXEootNOYySXgqpeoDGPBofVZE9bBb3N1z3aGah
+
+#tmap app key
+
+REACT_APP_TMAP_APP_KEY=j3vim2ipsE9LKIEjhBk2m9blQreeJAuqd3nWNRs9
+
+#Spotify API
+SPOTIFY_CLIENT_ID = 38a07ff82e2c46d88873f23796f97d05
+SPOTIFY_CLIENT_SECRET = 1e0757578eba4b74a7d5c7c442dde258
+
+# Azure Custom Vision
+REACT_APP_CV_URL=https://team03customvision-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/9d4fd7b8-3656-428b-ad70-8181e8bf5761/detect/iterations/Iteration2/image
+REACT_APP_CV_KEY=C4tkHSWYUcjCyci6gEZC3PNiaj17yeWMZHQkzqoKIt5vmnRPEEPkJQQJ99BIACYeBjFXJ3w3AAAIACOG10pq
+
+#Google Login
+REACT_APP_GOOGLE_CLIENT_ID=845545318036-qofoqiapfmilalv9hsmrad235a43i2i4.apps.googleusercontent.com
+
+# Allow CRA dev server to accept all hosts to avoid schema error
+DANGEROUSLY_DISABLE_HOST_CHECK=true
+
+#Blob storage 연결
+AZURE_STORAGE_CONTAINER_NAME=database-community
+AZURE_SAS_TOKEN=sp=racwdl&st=2025-09-19T15:20:56Z&se=2025-09-25T15:00:00Z&sv=2024-11-04&sr=c&sig=W%2BTjqnkGsf0BDJtYta02ccPCjDRoJuH3Gn1ACrOdFH4%3D
+AZURE_SAS_URL=https://team03qna.blob.core.windows.net/database-community?sp=racwdl&st=2025-09-19T15:20:56Z&se=2025-09-25T15:00:00Z&sv=2024-11-04&sr=c&sig=W%2BTjqnkGsf0BDJtYta02ccPCjDRoJuH3Gn1ACrOdFH4%3D
+AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=team03qna;AccountKey=1K6QEkYOy5aizEjYCJTMEae7wewMSrh8xcE6iPm0azixdNugBlMxmDdPYc8ZD3SdTFgLQyQHT/SE+AStnYc6tA==;EndpointSuffix=core.windows.net"

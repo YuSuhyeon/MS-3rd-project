@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import BrandLogo from "components/BrandLogo";
+import LoginModal from "components/community/LoginModal";
 import LanguageButtons from "components/ui/LanguageButtons";
 import { useAuth } from "context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -31,6 +33,7 @@ import {
   ArrowUp,
   Minimize2,
   Maximize2,
+  ArrowLeft,
 } from "lucide-react";
 
 const getNavigationItems = (t) => [
@@ -99,8 +102,15 @@ const translateText = async (text, targetLang) => {
 const TAG_ALIASES = {
   "63스퀘어": "63스퀘어",
   "63빌딩": "63스퀘어",
+  63: "63스퀘어",
+  남산타워: "남산서울타워",
+  남산서울타워: "남산서울타워",
+  N서울타워: "남산서울타워",
+  롯데타워: "롯데월드타워",
+  롯데월드타워: "롯데월드타워",
+  LWT: "롯데월드타워",
+  경복궁: "경복궁",
 };
-
 const ALLOWED_POIS = new Set([
   "63스퀘어",
   "경복궁",
@@ -110,12 +120,175 @@ const ALLOWED_POIS = new Set([
 
 const UI = {
   ko: {
-    chatbot: "관광 챗봇",
+    title: "AI 도슨트",
+    subtitle: "실시간 위치 기반 가이드",
+    aiDocent: "AI 도슨트",
+    stopVoice: "음성 중지",
+    current: "현재 위치",
+    directions: "길찾기",
+    chatbot: "Klover AI",
+    askQuestion: "궁금한 것을 물어보세요",
+    send: "전송",
+    examples: {
+      title: "예시 질문:",
+      items: [
+        "케이팝 데몬 헌터스 촬영지",
+        "명동 맛집 추천",
+        "북촌한옥마을 정보",
+      ],
+    },
     chatbotPlaceholder: "궁금한 것을 물어보세요...",
-    chatbotInitialMessage: "안녕하세요! 저는 당신의 AI 여행 도슨트입니다...",
-    // ... 나머지 UI 텍스트들
+    chatbotInitialMessage:
+      "안녕하세요! 저는 서울 관광 안내 챗봇 Klover AI 예요. 서울 여행에 대해 궁금한 점이 있나요? 🤗",
+    imageQueryText: "이 장소에 대해 알려주세요",
+    voiceRecStart: "음성 녹음을 시작합니다...",
+    voiceRecResult: "음성 인식 결과:",
+    voiceRecStop: "음성 녹음을 중지합니다.",
+    errorReply:
+      "죄송합니다. 답변을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    filePick: "파일",
+    categories: {
+      all: "전체",
+      museum: "미술관&박물관",
+      palace: "고궁",
+      landmark: "랜드마크",
+      historic: "역사적 장소",
+    },
+    allTourismSpots: "전체 관광지",
+    detailedInfo: "상세 정보",
+    tourismList: "관광지 목록",
+    locationTracking: "위치 추적",
+    location: "위치",
+    voiceGuide: "음성 안내",
   },
-  // ... 다른 언어들
+  en: {
+    title: "AI Docent",
+    subtitle: "Real-time location guide",
+    aiDocent: "AI Docent",
+    stopVoice: "Stop voice",
+    current: "Current location",
+    directions: "Directions",
+    chatbot: "Klover AI",
+    askQuestion: "Ask me anything",
+    send: "Send",
+    examples: {
+      title: "Example questions:",
+      items: [
+        "K-pop Demon Hunters filming locations",
+        "Myeongdong restaurant recommendations",
+        "Bukchon Hanok Village info",
+        "Squid Game filming locations",
+      ],
+    },
+    chatbotPlaceholder: "Ask me anything...",
+    chatbotInitialMessage:
+      "Hello! I'm Klover AI, your Seoul tourism guide chatbot. Do you have any questions about traveling in Seoul?😊",
+    imageQueryText: "Tell me about this place",
+    voiceRecStart: "Starting voice recording...",
+    voiceRecResult: "Voice recognition result:",
+    voiceRecStop: "Stopping voice recording.",
+    errorReply:
+      "Sorry, an error occurred while generating a response. Please try again later.",
+    filePick: "File",
+    categories: {
+      all: "All",
+      museum: "Museum",
+      palace: "Palace",
+      landmark: "Landmark",
+      historic: "Historic",
+    },
+    allTourismSpots: "All Tourism Spots",
+    detailedInfo: "Detailed Information",
+    tourismList: "Tourism List",
+    locationTracking: "Location Tracking",
+    location: "Location",
+    voiceGuide: "Voice Guide",
+  },
+  ja: {
+    title: "AI ドーセント",
+    subtitle: "リアルタイム位置ガイド",
+    aiDocent: "AI ドーセント",
+    stopVoice: "音声停止",
+    current: "現在地",
+    directions: "経路検索",
+    chatbot: "観光チャットボット",
+    askQuestion: "何でもお聞きください",
+    send: "送信",
+    examples: {
+      title: "質問例:",
+      items: [
+        "ケイポップデーモンハンターズ撮影地",
+        "明洞グルメ推薦",
+        "北村韓屋村情報",
+        "イカゲーム撮影地",
+      ],
+    },
+    chatbotPlaceholder: "ご質問をどうぞ...",
+    chatbotInitialMessage:
+      "こんにちは！私はソウル観光案内チャットボットの Klover AI です。ソウル旅行について何かご質問はありますか？グルメ、ショッピング、祭り、名所まで個別におすすめできますよ☺️",
+    imageQueryText: "この場所について教えてください",
+    voiceRecStart: "音声録音を開始します...",
+    voiceRecResult: "音声認識結果:",
+    voiceRecStop: "音声録音を停止します。",
+    errorReply:
+      "申し訳ありませんが、応答の生成中にエラーが発生しました。後でもう一度お試しください。",
+    filePick: "ファイル",
+    categories: {
+      all: "すべて",
+      museum: "美術館＆博物館",
+      palace: "古宮",
+      landmark: "ランドマーク",
+      historic: "歴史的な場所",
+    },
+    allTourismSpots: "全観光スポット",
+    detailedInfo: "詳細情報",
+    tourismList: "観光地リスト",
+    locationTracking: "位置追跡",
+    location: "位置",
+    voiceGuide: "音声ガイド",
+  },
+  zh: {
+    title: "AI 讲解",
+    subtitle: "实时位置导览",
+    aiDocent: "AI 讲解",
+    stopVoice: "停止语音",
+    current: "当前位置",
+    directions: "路线",
+    chatbot: "旅游聊天机器人",
+    askQuestion: "请问您想了解什么",
+    send: "发送",
+    examples: {
+      title: "示例问题:",
+      items: [
+        "K-pop恶魔猎人拍摄地",
+        "明洞美食推荐",
+        "北村韩屋村信息",
+        "鱿鱼游戏拍摄地",
+      ],
+    },
+    chatbotPlaceholder: "请输入您的问题...",
+    chatbotInitialMessage:
+      "您好！我是首尔旅游指南聊天机器人 Klover AI。您对首尔旅行有什么疑问吗？我可以为您提供餐厅、购物、节庆、景点的定制推荐😄",
+    imageQueryText: "请介绍一下这个地方",
+    voiceRecStart: "开始录音...",
+    voiceRecResult: "语音识别结果：",
+    voiceRecStop: "停止录音。",
+    errorReply: "抱歉，生成回复时出错。请稍后再试。",
+    filePick: "文件",
+    categories: {
+      all: "全部",
+      museum: "美术馆&博物馆",
+      palace: "故宫",
+      landmark: "地标",
+      historic: "历史遗址",
+    },
+    allTourismSpots: "全部景点",
+    detailedInfo: "详细信息",
+    tourismList: "景点列表",
+    locationTracking: "位置追踪",
+    location: "位置",
+    voiceGuide: "语音导览",
+  },
 };
 
 //사이드 메뉴 베너 위젯
@@ -123,19 +296,19 @@ const BannerWidget = () => {
   const banners = [
     {
       id: 1,
-      image: "../../img/seoul_kdh_policies.jpg",
+      image: "../../img/banner1.jpg",
     },
     {
       id: 2,
-      image: "../../img/seoul_kdh_policies_1.jpg",
+      image: "../../img/banner2.png",
     },
     {
       id: 3,
-      image: "../../img/seoul_kdh_policies_2.jpg",
+      image: "../../img/banner3.png",
     },
     {
       id: 4,
-      image: "../../img/seoul_kdh_policies_3.jpg",
+      image: "../../img/seoul_kdh_policies.jpg",
     },
   ];
 
@@ -530,7 +703,7 @@ const LiveInfoWidget = ({ isCollapsed, onToggle, t }) => {
     </div>
   );
 };
-
+// 플로팅 챗봇 - docent 페이지가 아닐 때만 렌더링
 const FloatingChatbot = ({ selectedLang = "ko" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -545,12 +718,42 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
   const [inputMessage, setInputMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const navigate = useNavigate();
   const ui = UI[selectedLang];
+
+  // 모바일 감지
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // 언어 변경 시, 대화가 시작되지 않았다면 초기 메시지를 선택된 언어로 동기화
+  useEffect(() => {
+    setMessages((prev) => {
+      if (
+        Array.isArray(prev) &&
+        prev.length === 1 &&
+        prev[0]?.id === "initial" &&
+        prev[0]?.type === "ai"
+      ) {
+        return [
+          {
+            ...prev[0],
+            content: UI[selectedLang].chatbotInitialMessage,
+            timestamp: new Date(),
+          },
+        ];
+      }
+      return prev;
+    });
+  }, [selectedLang]);
 
   // 모든 기존 함수들을 그대로 가져옴
   const callTourismAPI = async (userQuery) => {
@@ -848,6 +1051,9 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
   };
 
   const renderTourButton = (message) => {
+    // 사용자 메시지에는 버튼을 표시하지 않음
+    if (message.type === "user") return null;
+
     const shouldShowButton =
       message.type === "ai-tour" ||
       message.showTourButton ||
@@ -918,57 +1124,86 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
   return (
     <>
       {/* 플로팅 버튼 */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+      <div
+        className={`fixed z-50 flex flex-col gap-3 ${
+          isMobile ? "bottom-4 right-4" : "bottom-6 right-6"
+        }`}
+      >
         <motion.button
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-300"
+          onClick={() => {
+            if (!isOpen) setIsMinimized(false);
+            setIsOpen(!isOpen);
+          }}
+          className={`${
+            isMobile ? "w-12 h-12" : "w-14 h-14"
+          } bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-300`}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+          {isOpen ? (
+            <X size={isMobile ? 20 : 24} />
+          ) : (
+            <MessageCircle size={isMobile ? 20 : 24} />
+          )}
         </motion.button>
       </div>
 
       {/* 챗봇 창 */}
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && !isMinimized && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 0.3 }}
-            className={`fixed z-40 bg-gray-900/95 backdrop-blur-lg border border-purple-500/30 rounded-2xl shadow-2xl ${
+            className={`fixed z-40 bg-gray-900/95 backdrop-blur-lg border border-purple-500/30 rounded-2xl shadow-2xl flex flex-col ${
               isMinimized
-                ? "bottom-24 right-6 w-96 h-16"
-                : "bottom-24 right-6 w-96 h-[500px]"
+                ? isMobile
+                  ? "bottom-20 right-4 w-80 h-12"
+                  : "bottom-24 right-6 w-96 h-16"
+                : isMobile
+                ? "bottom-20 right-4 w-80 h-[320px] max-h-[60vh]"
+                : "bottom-24 right-6 w-96 h-[420px] max-h-[70vh]"
             }`}
           >
             {/* 헤더 */}
-            <div className="flex items-center justify-between p-4 border-b border-purple-500/20">
+            <div
+              className={`flex items-center justify-between border-b border-purple-500/20 ${
+                isMobile ? "p-3" : "p-4"
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-white font-medium text-sm">
+                <div
+                  className={`${
+                    isMobile ? "w-2 h-2" : "w-3 h-3"
+                  } bg-green-400 rounded-full animate-pulse`}
+                ></div>
+                <span
+                  className={`text-white font-medium ${
+                    isMobile ? "text-xs" : "text-sm"
+                  }`}
+                >
                   {ui.chatbot}
                 </span>
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setIsMinimized(!isMinimized)}
+                  onClick={() => setIsMinimized(true)}
                   className="p-1 text-gray-400 hover:text-white transition-colors"
                 >
                   {isMinimized ? (
-                    <Maximize2 size={16} />
+                    <Maximize2 size={isMobile ? 14 : 16} />
                   ) : (
-                    <Minimize2 size={16} />
+                    <Minimize2 size={isMobile ? 14 : 16} />
                   )}
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-1 text-gray-400 hover:text-white transition-colors"
                 >
-                  <X size={16} />
+                  <X size={isMobile ? 14 : 16} />
                 </button>
               </div>
             </div>
@@ -976,7 +1211,11 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
             {!isMinimized && (
               <>
                 {/* 메시지 영역 */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-80">
+                <div
+                  className={`flex-1 overflow-y-auto space-y-3 ${
+                    isMobile ? "p-3" : "p-4"
+                  }`}
+                >
                   {messages.map((message) => (
                     <div
                       key={message.id}
@@ -987,7 +1226,9 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
                       }`}
                     >
                       <div
-                        className={`max-w-[80%] p-3 rounded-xl text-sm ${
+                        className={`max-w-[80%] rounded-xl ${
+                          isMobile ? "p-2 text-xs" : "p-3 text-sm"
+                        } ${
                           message.type === "user"
                             ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                             : "bg-gray-800 text-gray-100 border border-gray-700"
@@ -999,32 +1240,49 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
                               <img
                                 src={attachment.url}
                                 alt={attachment.caption}
-                                className="w-full h-32 object-cover rounded-lg"
+                                className={`w-full object-cover rounded-lg ${
+                                  isMobile ? "h-24" : "h-32"
+                                }`}
                               />
                             )}
                           </div>
                         ))}
                         <p className="whitespace-pre-wrap">{message.content}</p>
 
-                        {/* 투어 버튼 렌더링 - 조건 확장 */}
-                        {(message.type === "ai-tour" ||
-                          message.showTourButton ||
-                          checkIfShouldRedirectToTour(message.content || "")) &&
+                        {/* 투어 버튼은 AI 메시지에서만 조건부 렌더링 */}
+                        {message.type !== "user" &&
+                          (message.type === "ai-tour" ||
+                            message.showTourButton ||
+                            checkIfShouldRedirectToTour(
+                              message.content || ""
+                            )) &&
                           renderTourButton(message)}
                       </div>
                     </div>
                   ))}
                   {isProcessing && (
                     <div className="flex justify-start">
-                      <div className="bg-gray-800 border border-gray-700 p-3 rounded-xl">
+                      <div
+                        className={`bg-gray-800 border border-gray-700 rounded-xl ${
+                          isMobile ? "p-2" : "p-3"
+                        }`}
+                      >
                         <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
                           <div
-                            className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                            className={`${
+                              isMobile ? "w-1.5 h-1.5" : "w-2 h-2"
+                            } bg-purple-400 rounded-full animate-bounce`}
+                          ></div>
+                          <div
+                            className={`${
+                              isMobile ? "w-1.5 h-1.5" : "w-2 h-2"
+                            } bg-purple-400 rounded-full animate-bounce`}
                             style={{ animationDelay: "0.1s" }}
                           ></div>
                           <div
-                            className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                            className={`${
+                              isMobile ? "w-1.5 h-1.5" : "w-2 h-2"
+                            } bg-purple-400 rounded-full animate-bounce`}
                             style={{ animationDelay: "0.2s" }}
                           ></div>
                         </div>
@@ -1035,40 +1293,58 @@ const FloatingChatbot = ({ selectedLang = "ko" }) => {
                 </div>
 
                 {/* 입력 영역 */}
-                <div className="p-4 border-t border-purple-500/20">
-                  <div className="flex gap-2 mb-3">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                      title="갤러리에서 선택"
-                    >
-                      <ImageIcon size={16} className="text-purple-400" />
-                    </button>
-                    <button
-                      onClick={() => cameraInputRef.current?.click()}
-                      className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                      title="카메라로 촬영"
-                    >
-                      <Camera size={16} className="text-purple-400" />
-                    </button>
-                  </div>
-
-                  <div className="flex gap-2">
+                <div
+                  className={`border-t border-purple-500/20 ${
+                    isMobile ? "p-3" : "p-4"
+                  }`}
+                >
+                  {/* All screens: inline icons + input + send */}
+                  <div className="flex items-stretch gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors ${
+                          isMobile ? "p-1.5" : "p-2"
+                        }`}
+                        title="갤러리에서 선택"
+                      >
+                        <ImageIcon
+                          size={isMobile ? 14 : 16}
+                          className="text-purple-400"
+                        />
+                      </button>
+                      <button
+                        onClick={() => cameraInputRef.current?.click()}
+                        className={`bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors ${
+                          isMobile ? "p-1.5" : "p-2"
+                        }`}
+                        title="카메라로 촬영"
+                      >
+                        <Camera
+                          size={isMobile ? 14 : 16}
+                          className="text-purple-400"
+                        />
+                      </button>
+                    </div>
                     <textarea
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder={ui.chatbotPlaceholder}
-                      className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-purple-500"
+                      className={`flex-1 bg-gray-800 border border-gray-700 rounded-lg text-white resize-none focus:outline-none focus:border-purple-500 ${
+                        isMobile ? "px-2 py-1.5 text-xs" : "px-3 py-2 text-sm"
+                      }`}
                       rows="1"
                       disabled={isProcessing}
                     />
                     <button
                       onClick={() => handleSendMessage(inputMessage)}
                       disabled={!inputMessage.trim() || isProcessing}
-                      className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${
+                        isMobile ? "p-1.5" : "p-2"
+                      }`}
                     >
-                      <Send size={16} />
+                      <Send size={isMobile ? 14 : 16} />
                     </button>
                   </div>
                 </div>
@@ -1107,9 +1383,23 @@ export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLiveInfoCollapsed, setIsLiveInfoCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const navigationItems = getNavigationItems(t);
   // 현재 선택된 언어
   const selectedLang = i18n.language || "ko"; //0921주영
+
+  // 로그인 성공 시 모달 닫기
+  useEffect(() => {
+    if (profile && showLoginModal) {
+      setShowLoginModal(false);
+    }
+  }, [profile, showLoginModal]);
+
+  // 터치 이벤트를 위한 ref
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchStartTime = useRef(0);
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -1117,9 +1407,104 @@ export default function Layout({ children }) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // 스마트 뒤로가기 - Docent 세션 우선
+  const isFromDocent = () => {
+    try {
+      const previousPage = sessionStorage.getItem("previousPage");
+      const previousPageTitle = sessionStorage.getItem("previousPageTitle");
+      const timestamp = sessionStorage.getItem("previousPageTimestamp");
+      if (previousPage && previousPageTitle === "AI Docent" && timestamp) {
+        const now = Date.now();
+        const storedTime = parseInt(timestamp);
+        const fiveMinutes = 5 * 60 * 1000;
+        return now - storedTime < fiveMinutes;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleSmartBack = () => {
+    try {
+      const previousPage = sessionStorage.getItem("previousPage");
+      const previousPageTitle = sessionStorage.getItem("previousPageTitle");
+      if (isFromDocent() && previousPage && previousPageTitle === "AI Docent") {
+        navigate(previousPage);
+        sessionStorage.removeItem("previousPage");
+        sessionStorage.removeItem("previousPageTitle");
+        sessionStorage.removeItem("previousPageTimestamp");
+        return;
+      }
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        // 기본 폴백: 도슨트가 최우선, 아니면 투어
+        navigate("/docent");
+      }
+    } catch {
+      navigate("/docent");
+    }
+  };
+
   const toggleLiveInfo = () => setIsLiveInfoCollapsed((prev) => !prev);
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const closeMenu = () => setMenuOpen(false);
+
+  // 터치 이벤트 핸들러
+  const handleTouchStart = (e) => {
+    if (!menuOpen) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchStartTime.current = Date.now();
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!menuOpen) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaX = touchStartX.current - touchEndX;
+    const deltaY = Math.abs(touchStartY.current - touchEndY);
+    const deltaTime = Date.now() - touchStartTime.current;
+
+    // 왼쪽으로 스와이프 조건:
+    // 1. 최소 50px 이상 왼쪽으로 이동
+    // 2. 수직 움직임은 100px 이하 (수평 스와이프임을 보장)
+    // 3. 1초 이내에 완료 (빠른 스와이프)
+    if (deltaX > 50 && deltaY < 100 && deltaTime < 1000) {
+      closeMenu();
+    }
+  };
+
+  // 오버레이 클릭/터치 핸들러
+  const handleOverlayClick = (e) => {
+    // 터치 이벤트와 클릭 이벤트 모두 처리
+    if (e.type === "touchstart" || e.type === "click") {
+      closeMenu();
+    }
+  };
+
+  // 메인 콘텐츠 클릭/터치 핸들러 (사이드 메뉴가 열려있을 때만)
+  const handleMainContentClick = (e) => {
+    if (menuOpen) {
+      closeMenu();
+    }
+  };
+
+  // ESC 키로 메뉴 닫기
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && menuOpen) {
+        closeMenu();
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [menuOpen]);
 
   const isActive = (path, exact) => {
     if (exact) return location.pathname === path;
@@ -1131,6 +1516,10 @@ export default function Layout({ children }) {
   // docent 페이지 체크
   const isDocentPage =
     location.pathname === "/docent" || location.pathname.startsWith("/docent/");
+  //페르소나 페이지 체크
+  const isPersonaPage =
+    location.pathname === "/persona" ||
+    location.pathname.startsWith("/persona/");
 
   const sidebarVariants = {
     closed: {
@@ -1334,7 +1723,11 @@ export default function Layout({ children }) {
         }
       `}</style>
 
-      <div className="flex flex-col min-h-screen bg-[#18102a] relative">
+      <div
+        className="flex flex-col min-h-screen bg-[#18102a] relative"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* 상단 고정 버튼들 */}
         <div className="fixed top-4 left-0 right-0 z-50 flex items-center justify-between px-4">
           {/* 메뉴버튼 (왼쪽) */}
@@ -1357,166 +1750,216 @@ export default function Layout({ children }) {
               <div className="neon-glow" />
             </motion.button>
           )}
-          {/* 오른쪽 버튼들 (언어 버튼 + 홈 버튼) */}
-          <div className="flex items-center gap-3">
-            {/* 언어 버튼 */}
-            <motion.div
-              className="h-10 flex items-center justify-center"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <LanguageButtons />
-            </motion.div>
+          {/* 오른쪽 버튼들 (언어 버튼 + 홈/뒤로 버튼) */}
+          {!menuOpen && (
+            <div className="flex items-center gap-3">
+              {/* 언어 버튼 */}
+              <motion.div
+                className="h-10 flex items-center justify-center"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <LanguageButtons />
+              </motion.div>
 
-            {/* 홈 버튼 */}
-            <motion.button
-              onClick={() => navigate("/")}
-              className="neon-menu-toggle"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              style={{
-                width: 45,
-                height: 45,
-              }}
-              title="홈으로 이동"
-            >
-              <img
-                src="/img/Home.png"
-                alt="홈"
-                className="menu-icon"
-                style={{ filter: "brightness(0) invert(1)" }}
-              />
-              <div className="neon-glow" />
-            </motion.button>
-          </div>
+              {/* 모바일: 홈 대신 스마트 뒤로가기 (홈 경로 '/'에서는 숨김) */}
+              {isMobile
+                ? location.pathname !== "/" && (
+                    <motion.button
+                      onClick={handleSmartBack}
+                      className="text-white hover:text-purple-300 transition-colors p-2"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      title="뒤로가기"
+                    >
+                      <ArrowLeft className="w-6 h-6" />
+                    </motion.button>
+                  )
+                : location.pathname !== "/" && (
+                    <motion.button
+                      onClick={handleSmartBack}
+                      className="text-white hover:text-purple-300 transition-colors p-2"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      title="뒤로가기"
+                    >
+                      <ArrowLeft className="w-6 h-6" />
+                    </motion.button>
+                  )}
+            </div>
+          )}
         </div>
 
         {/* 오버레이 */}
         <AnimatePresence>
-          {menuOpen && (
-            <motion.div
-              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
-              variants={overlayVariants}
-              initial="closed"
-              animate="open"
-              exit="closed"
-              onClick={closeMenu}
-            />
-          )}
+          {menuOpen &&
+            createPortal(
+              <motion.div
+                className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+                variants={overlayVariants}
+                initial="closed"
+                animate="open"
+                exit="closed"
+                onClick={handleOverlayClick}
+                onTouchStart={handleOverlayClick}
+                onTouchEnd={(e) => e.stopPropagation()}
+              />,
+              document.body
+            )}
         </AnimatePresence>
 
         {/* 사이드바 */}
-        <motion.aside
-          className="fixed inset-y-0 left-0 z-50 w-72 neon-sidebar flex flex-col"
-          variants={sidebarVariants}
-          initial="closed"
-          animate={menuOpen ? "open" : "closed"}
-        >
-          <div className="p-3 flex-1 overflow-y-auto">
-            <div className="text-xs font-medium text-purple-400 uppercase tracking-wider px-3 py-2">
-              {t("menu")}
-            </div>
-            <nav className="px-2">
-              {navigationItems.map((item, index) => {
-                const active = isActive(item.url, item.exact);
-                return (
-                  <motion.div
-                    key={item.title}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{
-                      opacity: menuOpen ? 1 : 0,
-                      x: menuOpen ? 0 : -20,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      delay: menuOpen ? index * 0.1 : 0,
-                    }}
-                  >
-                    <Link
-                      to={item.url}
-                      onClick={closeMenu}
-                      className={`neon-menu-item flex items-center gap-3 px-4 py-3 rounded-xl mb-1 ${
-                        active ? "active" : ""
-                      }`}
+        {menuOpen &&
+          createPortal(
+            <motion.aside
+              className="fixed inset-y-0 left-0 z-50 w-72 neon-sidebar flex flex-col"
+              variants={sidebarVariants}
+              initial="closed"
+              animate={menuOpen ? "open" : "closed"}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                // 사이드바 내부에서 터치 시작 시 좌표 저장
+                touchStartX.current = e.touches[0].clientX;
+                touchStartY.current = e.touches[0].clientY;
+                touchStartTime.current = Date.now();
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                // 사이드바 내부에서 좌측 스와이프 감지
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const deltaX = touchStartX.current - touchEndX;
+                const deltaY = Math.abs(touchStartY.current - touchEndY);
+                const deltaTime = Date.now() - touchStartTime.current;
+
+                // 왼쪽으로 스와이프 조건:
+                // 1. 최소 50px 이상 왼쪽으로 이동
+                // 2. 수직 움직임은 100px 이하 (수평 스와이프임을 보장)
+                // 3. 1초 이내에 완료 (빠른 스와이프)
+                if (deltaX > 50 && deltaY < 100 && deltaTime < 1000) {
+                  closeMenu();
+                }
+              }}
+            >
+              <div className="p-3 flex-1 overflow-y-auto">
+                <div className="text-xs font-medium text-purple-400 uppercase tracking-wider px-3 py-2">
+                  {t("menu")}
+                </div>
+                <nav className="px-2">
+                  {navigationItems.map((item, index) => {
+                    const active = isActive(item.url, item.exact);
+                    return (
+                      <motion.div
+                        key={item.title}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{
+                          opacity: menuOpen ? 1 : 0,
+                          x: menuOpen ? 0 : -20,
+                        }}
+                        transition={{
+                          duration: 0.3,
+                          delay: menuOpen ? index * 0.1 : 0,
+                        }}
+                      >
+                        <Link
+                          to={item.url}
+                          onClick={closeMenu}
+                          className={`neon-menu-item flex items-center gap-3 px-4 py-3 rounded-xl mb-1 ${
+                            active ? "active" : ""
+                          }`}
+                        >
+                          <span className="font-medium">{item.title}</span>
+                          <div className="neon-border" />
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </nav>
+
+                <div className="mt-6">
+                  <BannerWidget />
+                </div>
+              </div>
+
+              <div className="mt-auto">
+                <LiveInfoWidget
+                  isCollapsed={isLiveInfoCollapsed}
+                  onToggle={toggleLiveInfo}
+                  t={t}
+                />
+                <div className="border-t border-purple-500/20 p-6">
+                  {profile ? (
+                    <motion.div
+                      className="flex items-center gap-3"
+                      whileHover={{ scale: 1.02 }}
                     >
-                      <span className="font-medium">{item.title}</span>
-                      <div className="neon-border" />
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </nav>
-
-            <div className="mt-6">
-              <BannerWidget />
-            </div>
-          </div>
-
-          <div className="mt-auto">
-            <LiveInfoWidget
-              isCollapsed={isLiveInfoCollapsed}
-              onToggle={toggleLiveInfo}
-              t={t}
-            />
-            <div className="border-t border-purple-500/20 p-6">
-              {profile ? (
-                <motion.div
-                  className="flex items-center gap-3"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <img
-                    src={profile.picture}
-                    alt={profile.name}
-                    className="w-8 h-8 rounded-full border-2 border-purple-400"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm truncate">
-                      {profile.name}
-                    </p>
-                    <p className="text-xs neon-text-secondary truncate">
-                      {profile.email}
-                    </p>
-                  </div>
-                  <button
-                    onClick={logout}
-                    title={t("log_out")}
-                    className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
-                  >
-                    <LogOut size={18} />
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  className="flex items-center gap-3"
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">?</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm truncate">
-                      {t("welcome_traveler")}
-                    </p>
-                    <p className="text-xs neon-text-secondary truncate">
-                      {t("plan_your_trip_with_ai")}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => login()}
-                    title={t("log_in")}
-                    className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
-                  >
-                    <LogIn size={18} />
-                  </button>
-                </motion.div>
-              )}
-            </div>
-          </div>
-        </motion.aside>
+                      <img
+                        src={
+                          profile?.picture ||
+                          profile?.profile_image ||
+                          "/img/default_profile_purple_img.png"
+                        }
+                        alt={profile.name}
+                        className="w-8 h-8 rounded-full border-2 border-purple-400"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white text-sm truncate">
+                          {profile.name}
+                        </p>
+                        <p className="text-xs neon-text-secondary truncate">
+                          {profile.email}
+                        </p>
+                      </div>
+                      <button
+                        onClick={logout}
+                        title={t("log_out")}
+                        className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
+                      >
+                        <LogOut size={18} />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      className="flex items-center gap-3"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <span className="text-white font-medium text-sm">
+                          ?
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white text-sm truncate">
+                          {t("welcome_traveler")}
+                        </p>
+                        <p className="text-xs neon-text-secondary truncate">
+                          {t("plan_your_trip_with_ai")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          console.log("로그인 버튼 클릭됨");
+                          setShowLoginModal(true);
+                        }}
+                        title={t("log_in")}
+                        className="p-2 rounded-md text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors"
+                      >
+                        <LogIn size={18} />
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </motion.aside>,
+            document.body
+          )}
 
         {/* 메인 콘텐츠 */}
         <motion.main
@@ -1529,6 +1972,8 @@ export default function Layout({ children }) {
             stiffness: 300,
             damping: 40,
           }}
+          onClick={handleMainContentClick}
+          onTouchStart={handleMainContentClick}
         >
           <div
             className="main-content content-shift"
@@ -1545,8 +1990,17 @@ export default function Layout({ children }) {
           </div>
         </motion.main>
 
-        {/* 플로팅 챗봇 - docent 페이지가 아닐 때만 렌더링 */}
-        {!isDocentPage && <FloatingChatbot selectedLang={selectedLang} />}
+        {/* 플로팅 챗봇 - docent, persona 페이지에서는 숨김 */}
+        {!(isDocentPage || isPersonaPage) && (
+          <FloatingChatbot selectedLang={selectedLang} />
+        )}
+
+        {/* 로그인 모달 */}
+        <AnimatePresence>
+          {showLoginModal && (
+            <LoginModal onClose={() => setShowLoginModal(false)} />
+          )}
+        </AnimatePresence>
       </div>
     </>
   );

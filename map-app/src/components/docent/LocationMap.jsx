@@ -40,7 +40,7 @@ export default function LocationMap({
     const translatedName = getTranslatedContent(name);
     const translatedAddress = getTranslatedContent(address);
     const translatedDirectionsLabel = getTranslatedContent(directionsLabel);
-    
+
     return `
       <div style="
         padding:8px 10px;
@@ -86,7 +86,7 @@ export default function LocationMap({
       }
 
       const newTranslatedContent = new Map();
-      
+
       // directionsLabel 번역
       if (directionsLabel) {
         try {
@@ -100,11 +100,11 @@ export default function LocationMap({
 
       // POI 이름과 주소 번역
       const allTexts = new Set();
-      pois.forEach(poi => {
+      pois.forEach((poi) => {
         if (poi.name) allTexts.add(poi.name);
         if (poi.address) allTexts.add(poi.address);
       });
-      
+
       for (const text of allTexts) {
         try {
           const translated = await translateText(text, selectedLang);
@@ -125,17 +125,19 @@ export default function LocationMap({
   useEffect(() => {
     const updatePopup = () => {
       if (!mapRef.current || !currentPOI?.location) return;
-      
-      const key = currentPOI.id || `${currentPOI.location.lat},${currentPOI.location.lng}`;
+
+      const key =
+        currentPOI.id ||
+        `${currentPOI.location.lat},${currentPOI.location.lng}`;
       const marker = markersRef.current.get(key);
-      
+
       if (marker) {
         // 기존 팝업 닫기
         if (infoWindowRef.current) {
           infoWindowRef.current.close();
           infoWindowRef.current = null;
         }
-        
+
         // 새 팝업 표시 (번역된 내용 포함)
         infoWindowRef.current = showKakaoInfoWindow({
           map: mapRef.current,
@@ -222,7 +224,7 @@ export default function LocationMap({
           address: row.address,
           location: { lat: parseFloat(row.lat), lng: parseFloat(row.lon) },
         };
-        
+
         // 현재 POI 업데이트
         setCurrentPOI(sel);
         onSelectPOI?.(sel);
@@ -232,7 +234,7 @@ export default function LocationMap({
           infoWindowRef.current.close();
           infoWindowRef.current = null;
         }
-        
+
         infoWindowRef.current = showKakaoInfoWindow({
           map,
           marker,

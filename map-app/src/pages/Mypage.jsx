@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "../components/community/LoginModal";
 import {
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 
 import { BackgroundEffect } from "../components/ui/NeonTheme";
+
 import { Itinerary } from "../Entities/Itinerary";
 
 // 로컬스토리지 키 상수
@@ -157,6 +159,8 @@ const NeonButton = ({
 
 // 로딩 페이지 컴포넌트
 const LoadingPage = () => {
+  const { t } = useTranslation("mypage");
+
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
@@ -165,7 +169,7 @@ const LoadingPage = () => {
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full mx-auto mb-4"
         />
-        <p className="text-gray-300">로딩 중...</p>
+        <p className="text-gray-300">{t("loading")}</p>
       </div>
     </div>
   );
@@ -209,9 +213,19 @@ const LoginRequiredPage = ({ onShowLoginModal }) => {
 };
 
 // 대시보드 통계 카드
-const StatCard = ({ icon: Icon, title, value, variant = "default" }) => {
+const StatCard = ({
+  icon: Icon,
+  title,
+  value,
+  variant = "default",
+  onClick,
+}) => {
   return (
-    <NeonCard variant={variant} className="p-4">
+    <NeonCard
+      variant={variant}
+      className={`p-4 ${onClick ? "cursor-pointer" : ""}`}
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-400 text-sm mb-1">{title}</p>
@@ -227,6 +241,8 @@ const StatCard = ({ icon: Icon, title, value, variant = "default" }) => {
 
 // 여행 계획 카드 컴포넌트
 const TravelPlanCard = ({ plan, onDelete, onSelect }) => {
+  const { t } = useTranslation("mypage");
+
   const formatDate = (timestamp) => {
     if (!timestamp) return "날짜 없음";
     const date = new Date(timestamp);
@@ -263,10 +279,13 @@ const TravelPlanCard = ({ plan, onDelete, onSelect }) => {
         </div>
         <div className="flex-1 min-w-0">
           <div className="min-w-0">
-            <h3 className="font-bold text-white text-base sm:text-lg md:text-xl mb-1 truncate">
+            <h3
+              className="font-bold text-white text-base sm:text-lg md:text-xl mb-1 truncate"
+              dynamic="true"
+            >
               {plan?.itinerary_name || plan?.title || "여행 계획"}
             </h3>
-            <p className="text-xs sm:text-sm text-gray-400">
+            <p className="text-xs sm:text-sm text-gray-400" dynamic="true">
               {plan?.destination || plan?.description || "목적지 미정"}
             </p>
           </div>
@@ -274,24 +293,29 @@ const TravelPlanCard = ({ plan, onDelete, onSelect }) => {
           <div className="flex flex-col sm:flex-wrap sm:flex-row gap-3 mt-4 text-xs sm:text-sm text-gray-400">
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              <span>{dayCount || "일정 없음"}</span>
-              {dayCount ? <span>일 일정</span> : null}
+              <span dynamic="true">{dayCount || "일정 없음"}</span>
+              {dayCount ? <span dynamic="true">일 일정</span> : null}
             </div>
             {activitiesCount ? (
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                <span>{activitiesCount}개 활동</span>
+                <span dynamic="true">{activitiesCount}개 활동</span>
               </div>
             ) : null}
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              <span className="truncate max-w-[140px] sm:max-w-none">
+              <span
+                className="truncate max-w-[140px] sm:max-w-none"
+                dynamic="true"
+              >
                 {plan?.destination || "미정"}
               </span>
             </div>
             <div className="flex items-center gap-1">
               <Bookmark className="w-4 h-4" />
-              <span>업데이트: {formatDate(plan?.updated_at || plan?.created_at)}</span>
+              <span dynamic="true">
+                업데이트: {formatDate(plan?.updated_at || plan?.created_at)}
+              </span>
             </div>
           </div>
 
@@ -302,7 +326,7 @@ const TravelPlanCard = ({ plan, onDelete, onSelect }) => {
               title="삭제"
             >
               <Trash2 className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">삭제</span>
+              <span className="text-xs sm:text-sm">{t("delete")}</span>
             </button>
           </div>
         </div>
@@ -312,6 +336,8 @@ const TravelPlanCard = ({ plan, onDelete, onSelect }) => {
 };
 
 const TravelPlanDetailModal = ({ plan, onClose, isLoading }) => {
+  const { t } = useTranslation("mypage");
+
   if (!plan) return null;
 
   const formatDateTime = (timestamp) => {
@@ -358,11 +384,11 @@ const TravelPlanDetailModal = ({ plan, onClose, isLoading }) => {
                 <Route className="w-6 h-6 text-blue-300" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">
-                  {plan?.itinerary_name || "여행 계획"}
+                <h2 className="text-2xl font-bold text-white" dynamic="true">
+                  {plan?.itinerary_name || t("travel_plan")}
                 </h2>
-                <p className="text-sm text-gray-400">
-                  {plan?.destination || "목적지 미정"}
+                <p className="text-sm text-gray-400" dynamic="true">
+                  {plan?.destination || t("destination_undecided")}
                 </p>
               </div>
             </div>
@@ -370,16 +396,23 @@ const TravelPlanDetailModal = ({ plan, onClose, isLoading }) => {
             <div className="flex flex-wrap gap-4 text-sm text-gray-300">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-purple-300" />
-                <span>{plan?.total_days || plan?.days?.length || 0}일 일정</span>
+                <span>
+                  {plan?.total_days || plan?.days?.length || 0}
+                  {t("day_schedule")}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-purple-300" />
-                <span>저장: {formatDateTime(plan?.created_at || plan?.created_date)}</span>
+                <span>
+                  {t("saved")}:{" "}
+                  {formatDateTime(plan?.created_at || plan?.created_date)}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Bookmark className="w-4 h-4 text-purple-300" />
                 <span>
-                  최근 업데이트: {formatDateTime(plan?.updated_at || plan?.created_date)}
+                  {t("last_updated")}:{" "}
+                  {formatDateTime(plan?.updated_at || plan?.created_date)}
                 </span>
               </div>
             </div>
@@ -389,7 +422,7 @@ const TravelPlanDetailModal = ({ plan, onClose, isLoading }) => {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-300">
                 <Loader className="w-6 h-6 animate-spin mb-3" />
-                <span>상세 정보를 불러오는 중입니다...</span>
+                <span>{t("loading_details")}</span>
               </div>
             ) : days.length > 0 ? (
               days.map((day, dayIndex) => (
@@ -408,7 +441,8 @@ const TravelPlanDetailModal = ({ plan, onClose, isLoading }) => {
                     ) : null}
                   </div>
 
-                  {Array.isArray(day?.activities) && day.activities.length > 0 ? (
+                  {Array.isArray(day?.activities) &&
+                  day.activities.length > 0 ? (
                     <div className="space-y-3">
                       {day.activities.map((activity, activityIndex) => (
                         <div
@@ -421,19 +455,32 @@ const TravelPlanDetailModal = ({ plan, onClose, isLoading }) => {
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-2 text-sm text-purple-200">
                               <Clock className="w-4 h-4" />
-                              <span>{activity?.time || "시간 미정"}</span>
+                              <span dynamic="true">
+                                {activity?.time || t("time_undecided")}
+                              </span>
                             </div>
-                            <div className="text-sm text-gray-300">
-                              {activity?.place_name || activity?.title || "활동"}
+                            <div
+                              className="text-sm text-gray-300"
+                              dynamic="true"
+                            >
+                              {activity?.place_name ||
+                                activity?.title ||
+                                t("activity")}
                             </div>
                           </div>
                           {activity?.description ? (
-                            <p className="mt-2 text-sm text-gray-400">
+                            <p
+                              className="mt-2 text-sm text-gray-400"
+                              dynamic="true"
+                            >
                               {activity.description}
                             </p>
                           ) : null}
                           {activity?.address ? (
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p
+                              className="mt-1 text-xs text-gray-500"
+                              dynamic="true"
+                            >
                               {activity.address}
                             </p>
                           ) : null}
@@ -441,13 +488,15 @@ const TravelPlanDetailModal = ({ plan, onClose, isLoading }) => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400">등록된 활동이 없습니다.</p>
+                    <p className="text-sm text-gray-400">
+                      {t("no_registered_activities")}
+                    </p>
                   )}
                 </div>
               ))
             ) : (
               <div className="text-center py-12 text-gray-400">
-                저장된 일정 정보가 없습니다.
+                {t("no_saved_schedule_info")}
               </div>
             )}
           </div>
@@ -515,10 +564,7 @@ const PostCard = ({ post, onEdit, onDelete }) => {
   };
 
   return (
-    <NeonCard
-      className="p-6 cursor-pointer"
-      onClick={() => onEdit(post)}
-    >
+    <NeonCard className="p-6 cursor-pointer" onClick={() => onEdit(post)}>
       <div className="flex gap-4">
         {post.pictures && post.pictures.length > 0 && (
           <img
@@ -581,15 +627,15 @@ const LikedPostCard = ({ post, onNavigate, onRemove }) => {
   };
 
   return (
-    <NeonCard
-      className="p-6 cursor-pointer"
-      onClick={() => onNavigate(post)}
-    >
+    <NeonCard className="p-6 cursor-pointer" onClick={() => onNavigate(post)}>
       <div className="flex gap-4">
         <img
-          src={post.user_profile_image || "/default-avatar.png"}
+          src={post.user_profile_image || "/img/default_profile_img.png"}
           alt={post.user_name}
           className="w-12 h-12 object-cover rounded-full"
+          onError={(e) => {
+            e.currentTarget.src = "/img/default_profile_img.png";
+          }}
         />
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -634,6 +680,7 @@ const LikedPostCard = ({ post, onNavigate, onRemove }) => {
 // 메인 마이페이지 컴포넌트
 export default function MyPage() {
   const { profile, logout, isLoading } = useAuth();
+  const { t } = useTranslation("mypage");
   const [activeTab, setActiveTab] = useState("travel-plans");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const navigate = useNavigate();
@@ -648,6 +695,18 @@ export default function MyPage() {
   const [userPosts, setUserPosts] = useState([]);
   const [likedPosts, setLikedPosts] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Pagination states per tab
+  const [travelPlansPage, setTravelPlansPage] = useState(1);
+  const [likedProductsPage, setLikedProductsPage] = useState(1);
+  const [myPostsPage, setMyPostsPage] = useState(1);
+  const [likedPostsPage, setLikedPostsPage] = useState(1);
+
+  const pageSizeMobile = 5;
+  const pageSizeDesktop = 8;
+  const isMobile =
+    typeof window !== "undefined" ? window.innerWidth < 768 : true;
+  const pageSize = isMobile ? pageSizeMobile : pageSizeDesktop;
 
   const loadLikedProducts = useCallback(() => {
     try {
@@ -782,13 +841,6 @@ export default function MyPage() {
     }
   }, [activeTab, profile, fetchTabData]);
 
-  const tabs = [
-    { id: "travel-plans", label: "저장한 여행 계획", icon: Route },
-    { id: "liked-products", label: "좋아요한 여행 상품", icon: ShoppingBag },
-    { id: "my-posts", label: "내가 작성한 글", icon: MessageSquare },
-    { id: "liked-posts", label: "내가 좋아요 누른 글", icon: Heart },
-  ];
-
   const handleDeleteTravelPlan = async (planId) => {
     if (!planId) return;
     if (!window.confirm("여행 계획을 삭제하시겠습니까?")) return;
@@ -920,289 +972,301 @@ export default function MyPage() {
   return (
     <>
       <BackgroundEffect>
-      {/* Header */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 py-16">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
-              마이페이지
-            </h1>
-            <p className="text-gray-300 mb-8 leading-relaxed">
-              내 활동과 정보를 확인하고 관리하세요
-            </p>
+        <div className="max-w-3xl mx-auto relative z-10 space-y-12">
+          {/* Header */}
+          <section className="relative overflow-hidden">
+            <div className="max-w-7xl mx-auto px-6 py-16">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="text-center mb-12"
+              >
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
+                  {t("mypage")}
+                </h1>
+                <p className="text-gray-300 mb-8 leading-relaxed">
+                  {t("mypage_description")}
+                </p>
 
-            {/* 프로필 섹션 */}
-            <NeonCard className="max-w-md mx-auto mb-8">
-              <div className="text-center">
-                <div className="relative inline-block mb-4">
-                  <img
-                    src={
-                      profile.picture ||
-                      profile.profile_image ||
-                      "/default-avatar.png"
-                    }
-                    alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover border-4 border-purple-500/50 shadow-lg shadow-purple-500/25"
+                {/* 프로필 섹션 */}
+                <NeonCard className="max-w-md mx-auto mb-8">
+                  <div className="text-center">
+                    <div className="relative inline-block mb-4">
+                      <img
+                        src={
+                          profile.picture ||
+                          profile.profile_image ||
+                          "/img/default_profile_img.png"
+                        }
+                        alt="Profile"
+                        className="w-24 h-24 rounded-full object-cover border-4 border-purple-500/50 shadow-lg shadow-purple-500/25"
+                        onError={(e) => {
+                          e.currentTarget.src = "/img/default_profile_img.png";
+                        }}
+                      />
+                      <button className="absolute bottom-0 right-0 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors">
+                        <Camera className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
+
+                    <h2 className="text-2xl font-bold text-white mb-1">
+                      {profile.name || profile.email}
+                    </h2>
+                    <p className="text-gray-400 mb-4">{profile.email}</p>
+                    <div className="flex items-center justify-center">
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        {t("logout")}
+                      </button>
+                    </div>
+                  </div>
+                </NeonCard>
+
+                {/* 통계 카드들 */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <StatCard
+                    icon={Route}
+                    title={t("saved_travel_plans")}
+                    value={travelPlans.length}
+                    variant="primary"
+                    onClick={() => setActiveTab("travel-plans")}
                   />
-                  <button className="absolute bottom-0 right-0 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors">
-                    <Camera className="w-4 h-4 text-white" />
-                  </button>
+                  <StatCard
+                    icon={ShoppingBag}
+                    title={t("liked_travel_products")}
+                    value={likedProducts.length}
+                    variant="warning"
+                    onClick={() => setActiveTab("liked-products")}
+                  />
+                  <StatCard
+                    icon={MessageSquare}
+                    title={t("my_posts")}
+                    value={userPosts.length}
+                    variant="success"
+                    onClick={() => setActiveTab("my-posts")}
+                  />
+                  <StatCard
+                    icon={Heart}
+                    title={t("liked_posts")}
+                    value={likedPosts.length}
+                    variant="danger"
+                    onClick={() => setActiveTab("liked-posts")}
+                  />
                 </div>
 
-                <h2 className="text-2xl font-bold text-white mb-1">
-                  {profile.name || profile.email}
-                </h2>
-                <p className="text-gray-400 mb-4">{profile.email}</p>
-                <div className="flex items-center justify-center">
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    로그아웃
-                  </button>
-                </div>
-              </div>
-            </NeonCard>
-
-            {/* 통계 카드들 */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <StatCard
-                icon={Route}
-                title="저장한 여행 계획"
-                value={travelPlans.length}
-                variant="primary"
-              />
-              <StatCard
-                icon={ShoppingBag}
-                title="좋아요한 여행 상품"
-                value={likedProducts.length}
-                variant="warning"
-              />
-              <StatCard
-                icon={MessageSquare}
-                title="작성한 글"
-                value={userPosts.length}
-                variant="success"
-              />
-              <StatCard
-                icon={Heart}
-                title="좋아요한 글"
-                value={likedPosts.length}
-                variant="danger"
-              />
+                {/* 탭 네비게이션 제거됨: 상단 통계 카드 클릭으로 전환 */}
+              </motion.div>
             </div>
+          </section>
 
-            {/* 탭 네비게이션 */}
-            <div className="flex justify-center mb-8 overflow-x-auto">
-              <div className="flex bg-gray-900/50 backdrop-blur-sm rounded-2xl p-1 border border-purple-500/30 min-w-max">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-300 whitespace-nowrap text-sm md:text-base ${
-                      activeTab === tab.id
-                        ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                        : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-                    }`}
+          {/* Main Content */}
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="pb-32 min-h-screen">
+              <AnimatePresence mode="wait">
+                {activeTab === "travel-plans" && (
+                  <motion.div
+                    key="travel-plans"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    <tab.icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    <span className="sm:hidden">
-                      {tab.id === "travel-plans"
-                        ? "여행계획"
-                        : tab.id === "liked-products"
-                        ? "여행상품"
-                        : tab.id === "my-posts"
-                        ? "내글"
-                        : "좋아요"}
-                    </span>
-                  </button>
-                ))}
-              </div>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold text-white">
+                        {t("saved_travel_plans")} ({travelPlans.length})
+                      </h2>
+                    </div>
+                    {travelPlansLoading ? (
+                      <div className="text-center py-20">
+                        <Loader className="w-8 h-8 animate-spin text-purple-400 mx-auto mb-4" />
+                        <p className="text-gray-300">
+                          {t("loading_travel_plans")}
+                        </p>
+                      </div>
+                    ) : travelPlans.length > 0 ? (
+                      <>
+                        <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
+                          {travelPlans
+                            .slice(
+                              (travelPlansPage - 1) * pageSize,
+                              (travelPlansPage - 1) * pageSize + pageSize
+                            )
+                            .map((plan) => (
+                              <TravelPlanCard
+                                key={plan.id || plan.itinerary_name}
+                                plan={plan}
+                                onDelete={handleDeleteTravelPlan}
+                                onSelect={handleSelectTravelPlan}
+                              />
+                            ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-32 mb-20">
+                        <Route className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-300 mb-2">
+                          {t("no_saved_travel_plans")}
+                        </h3>
+                        <p className="text-gray-400">
+                          {t("create_travel_plan_message")}
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {activeTab === "liked-products" && (
+                  <motion.div
+                    key="liked-products"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold text-white">
+                        {t("liked_travel_products")} ({likedProducts.length})
+                      </h2>
+                    </div>
+                    {likedProducts.length > 0 ? (
+                      <>
+                        <div className="space-y-6">
+                          {likedProducts
+                            .slice(
+                              (likedProductsPage - 1) * pageSize,
+                              (likedProductsPage - 1) * pageSize + pageSize
+                            )
+                            .map((product) => (
+                              <TravelProductCard
+                                key={product.id}
+                                product={product}
+                                onRemove={handleRemoveLikedProduct}
+                              />
+                            ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-20">
+                        <ShoppingBag className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-300 mb-2">
+                          {t("no_liked_products")}
+                        </h3>
+                        <p className="text-gray-400">
+                          {t("like_products_message")}
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {activeTab === "my-posts" && (
+                  <motion.div
+                    key="my-posts"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold text-white">
+                        {t("my_posts")} ({userPosts.length})
+                      </h2>
+                    </div>
+                    {loading ? (
+                      <div className="text-center py-20">
+                        <div className="animate-spin w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full mx-auto mb-4"></div>
+                        <p className="text-gray-300">{t("loading")}</p>
+                      </div>
+                    ) : userPosts.length > 0 ? (
+                      <>
+                        <div className="space-y-6">
+                          {userPosts
+                            .slice(
+                              (myPostsPage - 1) * pageSize,
+                              (myPostsPage - 1) * pageSize + pageSize
+                            )
+                            .map((post) => (
+                              <PostCard
+                                key={post.id}
+                                post={post}
+                                onEdit={handleEditPost}
+                                onDelete={handleDeletePost}
+                              />
+                            ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-20">
+                        <MessageSquare className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-300 mb-2">
+                          {t("no_posts_written")}
+                        </h3>
+                        <p className="text-gray-400">{t("write_first_post")}</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {activeTab === "liked-posts" && (
+                  <motion.div
+                    key="liked-posts"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold text-white">
+                        {t("liked_posts")} ({likedPosts.length})
+                      </h2>
+                    </div>
+                    {loading ? (
+                      <div className="text-center py-20">
+                        <div className="animate-spin w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full mx-auto mb-4"></div>
+                        <p className="text-gray-300">{t("loading")}</p>
+                      </div>
+                    ) : likedPosts.length > 0 ? (
+                      <>
+                        <div className="space-y-6">
+                          {likedPosts
+                            .slice(
+                              (likedPostsPage - 1) * pageSize,
+                              (likedPostsPage - 1) * pageSize + pageSize
+                            )
+                            .map((post) => (
+                              <LikedPostCard
+                                key={post.id}
+                                post={post}
+                                onNavigate={handleEditPost}
+                                onRemove={handleRemoveLikedPost}
+                              />
+                            ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-20">
+                        <Heart className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-300 mb-2">
+                          {t("no_liked_posts")}
+                        </h3>
+                        <p className="text-gray-400">
+                          {t("like_posts_message")}
+                        </p>
+                        <p className="text-yellow-400 text-sm mt-2">
+                          * 이 기능은 백엔드 API 구현 후 동작합니다
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </motion.div>
+          </div>
         </div>
-      </section>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="pb-32 min-h-screen">
-          <AnimatePresence mode="wait">
-            {activeTab === "travel-plans" && (
-              <motion.div
-                key="travel-plans"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white">
-                    저장한 여행 계획 ({travelPlans.length})
-                  </h2>
-                </div>
-                {travelPlansLoading ? (
-                  <div className="text-center py-20">
-                    <Loader className="w-8 h-8 animate-spin text-purple-400 mx-auto mb-4" />
-                    <p className="text-gray-300">여행 계획을 불러오는 중입니다...</p>
-                  </div>
-                ) : travelPlans.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
-                    {travelPlans.map((plan) => (
-                      <TravelPlanCard
-                        key={plan.id || plan.itinerary_name}
-                        plan={plan}
-                        onDelete={handleDeleteTravelPlan}
-                        onSelect={handleSelectTravelPlan}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-32 mb-20">
-                    <Route className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-300 mb-2">
-                      저장한 여행 계획이 없습니다
-                    </h3>
-                    <p className="text-gray-400">
-                      여행 계획을 세우고 저장해보세요!
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {activeTab === "liked-products" && (
-              <motion.div
-                key="liked-products"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white">
-                    좋아요한 여행 상품 ({likedProducts.length})
-                  </h2>
-                </div>
-                {likedProducts.length > 0 ? (
-                  <div className="space-y-6">
-                    {likedProducts.map((product) => (
-                      <TravelProductCard
-                        key={product.id}
-                        product={product}
-                        onRemove={handleRemoveLikedProduct}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-20">
-                    <ShoppingBag className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-300 mb-2">
-                      좋아요한 여행 상품이 없습니다
-                    </h3>
-                    <p className="text-gray-400">
-                      마음에 드는 여행 상품에 좋아요를 눌러보세요!
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {activeTab === "my-posts" && (
-              <motion.div
-                key="my-posts"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white">
-                    내가 작성한 글 ({userPosts.length})
-                  </h2>
-                </div>
-                {loading ? (
-                  <div className="text-center py-20">
-                    <div className="animate-spin w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full mx-auto mb-4"></div>
-                    <p className="text-gray-300">로딩 중...</p>
-                  </div>
-                ) : userPosts.length > 0 ? (
-                  <div className="space-y-6">
-                    {userPosts.map((post) => (
-                      <PostCard
-                        key={post.id}
-                        post={post}
-                        onEdit={handleEditPost}
-                        onDelete={handleDeletePost}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-20">
-                    <MessageSquare className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-300 mb-2">
-                      작성한 글이 없습니다
-                    </h3>
-                    <p className="text-gray-400">첫 번째 글을 작성해보세요!</p>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {activeTab === "liked-posts" && (
-              <motion.div
-                key="liked-posts"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white">
-                    내가 좋아요 누른 글 ({likedPosts.length})
-                  </h2>
-                </div>
-                {loading ? (
-                  <div className="text-center py-20">
-                    <div className="animate-spin w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full mx-auto mb-4"></div>
-                    <p className="text-gray-300">로딩 중...</p>
-                  </div>
-                ) : likedPosts.length > 0 ? (
-                  <div className="space-y-6">
-                    {likedPosts.map((post) => (
-                      <LikedPostCard
-                        key={post.id}
-                        post={post}
-                        onNavigate={handleEditPost}
-                        onRemove={handleRemoveLikedPost}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-20">
-                    <Heart className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-300 mb-2">
-                      좋아요한 글이 없습니다
-                    </h3>
-                    <p className="text-gray-400">
-                      마음에 드는 글에 좋아요를 눌러보세요!
-                    </p>
-                    <p className="text-yellow-400 text-sm mt-2">
-                      * 이 기능은 백엔드 API 구현 후 동작합니다
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
       </BackgroundEffect>
       <AnimatePresence>
         {selectedPlan && (

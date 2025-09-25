@@ -1,6 +1,7 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo, useLayoutEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Heart,
@@ -46,10 +47,11 @@ import {
   getTourOffer,
 } from "../utils/mockTourData";
 
-// 기존 할인 홍보 팝업 컴포넌트 (그대로 유지)
 const OfferPopup = ({ isOpen, onClose, tourId }) => {
+  const { t } = useTranslation("tourDetail");
   const [timeLeft, setTimeLeft] = useState({ minutes: 10, seconds: 0 });
   const [progress, setProgress] = useState(0);
+  const [isGrabbed, setIsGrabbed] = useState(false);
 
   // mockTourData에서 투어별 할인 정보 가져오기
   const offerInfo = getTourOffer(tourId);
@@ -227,7 +229,7 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
                 {/* 실시간 카운트다운 타이머 */}
                 <div className="mb-4">
                   <div className="text-xs text-gray-400 mb-2">
-                    OFFER EXPIRES IN
+                    {t("offer.expiresIn")}
                   </div>
                   <motion.div
                     key={`${timeLeft.minutes}-${timeLeft.seconds}`}
@@ -266,22 +268,35 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
                 </h2>
 
                 <p className="text-gray-300 mb-4 text-sm">
-                  Limited time offer - Book now and save big!
+                  {t("offer.limitedTime")}
                 </p>
 
                 <div className="bg-gradient-to-r from-orange-900/50 to-pink-900/50 rounded-2xl p-4 mb-4 border border-orange-500/30">
                   <div className="text-2xl font-bold text-orange-400 mb-1">
-                    <span className="text-lg line-through text-gray-500">
-                      {offerInfo.originalPrice}
-                    </span>
-                    {" → "}
-                    {offerInfo.discountPrice}
+                    {isGrabbed ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-3xl text-green-400">✓</span>
+                        <span className="text-3xl">
+                          {offerInfo.discountPrice}
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-lg line-through text-gray-500">
+                          {offerInfo.originalPrice}
+                        </span>
+                        {" → "}
+                        {offerInfo.discountPrice}
+                      </>
+                    )}
                   </div>
                   <div className="text-sm text-gray-300 mb-2">
-                    {offerInfo.savings}
+                    {isGrabbed ? t("offer.dealGrabbed") : offerInfo.savings}
                   </div>
                   <div className="text-xs text-orange-400 font-medium">
-                    {offerInfo.description}
+                    {isGrabbed
+                      ? t("offer.priceSecured")
+                      : offerInfo.description}
                   </div>
                 </div>
 
@@ -290,13 +305,20 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
                     onClick={handleDoNotShowToday}
                     className="flex-1 bg-gray-800/50 text-gray-300 py-3 px-4 rounded-xl text-sm font-medium hover:bg-gray-700/50 transition-colors border border-gray-600/50"
                   >
-                    Do not show today
+                    {t("offer.doNotShowToday")}
                   </button>
                   <NeonButton
                     variant="warning"
                     className="flex-1 py-3 px-4 text-sm"
+                    onClick={() => {
+                      setIsGrabbed(true);
+                      // 가격 확정 UI를 잠시 보여준 뒤 닫기 (0.8초)
+                      setTimeout(() => {
+                        onClose();
+                      }, 800);
+                    }}
                   >
-                    Grab Deal
+                    {isGrabbed ? t("offer.grabbed") : t("offer.grabDeal")}
                   </NeonButton>
                 </div>
 
@@ -310,9 +332,10 @@ const OfferPopup = ({ isOpen, onClose, tourId }) => {
                 >
                   🔥{" "}
                   {offerInfo.urgencyText ||
-                    `Only ${timeLeft.minutes}:${String(
-                      timeLeft.seconds
-                    ).padStart(2, "0")} left!`}
+                    t("offer.urgencyText", {
+                      minutes: timeLeft.minutes,
+                      seconds: String(timeLeft.seconds).padStart(2, "0"),
+                    })}
                 </motion.div>
               </div>
             </div>
@@ -349,14 +372,15 @@ const Card = ({ children, className = "" }) => (
 );
 
 const Tabs = ({ activeTab, onTabChange, children }) => {
+  const { t } = useTranslation("tourDetail");
   const [tabPositions, setTabPositions] = useState({});
   const tabRefs = useRef({});
   const containerRef = useRef(null);
 
   const tabs = [
-    { id: "overview", label: "일정" },
-    { id: "details", label: "상세정보" },
-    { id: "reviews", label: "리뷰" },
+    { id: "overview", label: t("tabs.overview") || "일정" },
+    { id: "details", label: t("tabs.details") || "상세정보" },
+    { id: "reviews", label: t("tabs.reviews") || "리뷰" },
   ];
 
   // 탭 위치 계산
@@ -410,25 +434,8 @@ const Tabs = ({ activeTab, onTabChange, children }) => {
             </button>
           ))}
         </div>
-
-        {/* 정확한 위치의 움직이는 구분선 */}
-        <div className="relative mt-2 border-b border-gray-700/50">
-          {currentTabPosition && (
-            <motion.div
-              className="absolute bottom-0 h-0.5 bg-purple-500"
-              animate={{
-                left: currentTabPosition.left,
-                width: currentTabPosition.width,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 30,
-                duration: 0.3,
-              }}
-            />
-          )}
-        </div>
+        {/* 이동하는 구분선 제거: 텍스트 색상만으로 활성 탭 표시 */}
+        <div className="mt-2 border-b border-gray-700/50" />
       </div>
 
       {/* 탭 내용 */}
@@ -447,140 +454,182 @@ const Tabs = ({ activeTab, onTabChange, children }) => {
   );
 };
 // 일정 탭 내용 (포함사항 2열 배치)
-const OverviewTab = ({ itinerary, included }) => (
-  <div className="space-y-8">
-    {/* 일정 */}
-    <div>
-      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        <Clock className="w-5 h-5 text-purple-400" />
-        투어 일정
-      </h3>
-      <div className="space-y-4">
-        {itinerary?.map((item, index) => (
-          <div
-            key={index}
-            className="flex gap-4 p-4 bg-gray-800/30 rounded-xl border border-gray-700/30"
-          >
-            <div className="flex-shrink-0 text-center">
-              <div className="text-purple-400  text-center text-sm  mb-1 font-medium">
-                {item.time}
+const OverviewTab = ({ itinerary, included, tourId }) => {
+  const { t } = useTranslation("tourDetail");
+  return (
+    <div className="space-y-8">
+      {/* 일정 */}
+      <div>
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Clock className="w-5 h-5 text-purple-400" />
+          {t("overview.itinerary")}
+        </h3>
+        <div className="space-y-4">
+          {itinerary?.map((item, index) => (
+            <div
+              key={index}
+              className="flex gap-4 p-4 bg-gray-800/30 rounded-xl border border-gray-700/30"
+            >
+              <div className="flex-shrink-0 text-center">
+                <div className="text-purple-400  text-center text-sm  mb-1 font-medium">
+                  {item.time}
+                </div>
+              </div>
+              <div>
+                <h4 className="font-bold text-white  mb-1">
+                  {t(`data.${tourId}.itinerary.${index}.location`, {
+                    defaultValue: item.location,
+                  })}
+                </h4>
+                <p className="text-gray-300 text-sm">
+                  {t(`data.${tourId}.itinerary.${index}.description`, {
+                    defaultValue: item.description,
+                  })}
+                </p>
               </div>
             </div>
-            <div>
-              <h4 className="font-bold text-white  mb-1">{item.location}</h4>
-              <p className="text-gray-300 text-sm">{item.description}</p>
+          )) || (
+            <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
+              {t("overview.noItinerary")}
             </div>
-          </div>
-        )) || (
-          <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
-            일정 정보가 준비 중입니다.
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
 
-    {/* 포함사항 - 2열 배치 */}
-    <div>
-      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        <CheckCircle className="w-5 h-5 text-green-400" />
-        포함 사항
-      </h3>
-      <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-          {included?.map((item, index) => (
-            <div key={index} className="flex items-center gap-3">
-              <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span className="text-gray-300 text-sm">{item}</span>
-            </div>
-          )) ||
-            [
-              "전문 가이드",
-              "점심 식사",
-              "기념품",
-              "교통비",
-              "체험 활동비",
-              "보험",
-            ].map((item, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-                <span className="text-gray-300 text-sm">{item}</span>
-              </div>
-            ))}
+      {/* 포함사항 - 2열 배치 */}
+      <div>
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-green-400" />
+          {t("overview.included")}
+        </h3>
+        <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+            {included && included.length > 0
+              ? included.map((item, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">
+                      {t(`data.${tourId}.inclusions.${index}`, {
+                        defaultValue: item,
+                      })}
+                    </span>
+                  </div>
+                ))
+              : [
+                  t("overview.includedItems.guide", { defaultValue: "Guide" }),
+                  t("overview.includedItems.lunch", { defaultValue: "Lunch" }),
+                  t("overview.includedItems.souvenirs", {
+                    defaultValue: "Souvenirs",
+                  }),
+                  t("overview.includedItems.transportation", {
+                    defaultValue: "Transportation",
+                  }),
+                  t("overview.includedItems.activities", {
+                    defaultValue: "Activities",
+                  }),
+                  t("overview.includedItems.insurance", {
+                    defaultValue: "Insurance",
+                  }),
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">{item}</span>
+                  </div>
+                ))}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // 상세정보 탭 내용
-const DetailsTab = ({ detailSections }) => (
-  <div className="space-y-6">
-    {detailSections?.map((section, index) => (
-      <div key={index} className="overflow-hidden rounded-xl">
-        <img
-          src={section.image}
-          alt={section.title}
-          className="w-full h-48 object-cover rounded-t-xl"
-        />
-        <div className="p-4 bg-gray-800/30 rounded-b-xl border border-gray-600/30 border-t-0">
-          <h4 className="text-lg font-bold text-white mb-2">{section.title}</h4>
-          <p className="text-gray-300 text-sm">{section.text}</p>
+const DetailsTab = ({ detailSections, tourId }) => {
+  const { t } = useTranslation("tourDetail");
+  return (
+    <div className="space-y-6">
+      {detailSections?.map((section, index) => (
+        <div key={index} className="overflow-hidden rounded-xl">
+          <img
+            src={section.image}
+            alt={section.title}
+            className="w-full h-48 object-cover rounded-t-xl"
+          />
+          <div className="p-4 bg-gray-800/30 rounded-b-xl border border-gray-600/30 border-t-0">
+            <h4 className="text-lg font-bold text-white mb-2">
+              {t(`data.${tourId}.detailSections.${index}.title`, {
+                defaultValue: section.title,
+              })}
+            </h4>
+            <p className="text-gray-300 text-sm">
+              {t(`data.${tourId}.detailSections.${index}.text`, {
+                defaultValue: section.text,
+              })}
+            </p>
+          </div>
         </div>
-      </div>
-    )) || (
-      <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
-        상세 정보가 준비 중입니다.
-      </div>
-    )}
-  </div>
-);
+      )) || (
+        <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
+          {t("details.noDetails")}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // 리뷰 탭 내용
-const ReviewsTab = ({ reviews }) => (
-  <div className="space-y-4">
-    {reviews?.map((review, index) => (
-      <div
-        key={review.id}
-        className="p-4 bg-gradient-to-r from-gray-800/50 to-gray-900/80 rounded-xl border border-gray-600/30"
-      >
-        <div className="flex items-center gap-3 mb-3">
-          <div
-            className={`w-10 h-10 bg-gradient-to-r ${
-              review.gradient || "from-purple-600 to-pink-600"
-            } rounded-full flex items-center justify-center text-white font-bold shadow-lg text-sm`}
-          >
-            {review.avatar || review.name?.charAt(0) || "U"}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div className="font-bold text-white text-sm">{review.name}</div>
-              <div className="text-xs text-gray-400">{review.date}</div>
+const ReviewsTab = ({ reviews, tourId }) => {
+  const { t } = useTranslation("tourDetail");
+  return (
+    <div className="space-y-4">
+      {reviews?.map((review, index) => (
+        <div
+          key={review.id}
+          className="p-4 bg-gradient-to-r from-gray-800/50 to-gray-900/80 rounded-xl border border-gray-600/30"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`w-10 h-10 bg-gradient-to-r ${
+                review.gradient || "from-purple-600 to-pink-600"
+              } rounded-full flex items-center justify-center text-white font-bold shadow-lg text-sm`}
+            >
+              {review.avatar || review.name?.charAt(0) || "U"}
             </div>
-            <div className="flex items-center gap-1 mt-1">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-3 h-3 ${
-                    i < (review.rating || 5)
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-500"
-                  }`}
-                />
-              ))}
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div className="font-bold text-white text-sm">
+                  {review.name}
+                </div>
+                <div className="text-xs text-gray-400">{review.date}</div>
+              </div>
+              <div className="flex items-center gap-1 mt-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3 h-3 ${
+                      i < (review.rating || 5)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-500"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
+          <p className="text-gray-200 text-sm leading-relaxed">
+            {t(`data.${tourId}.reviews.${index}.content`, {
+              defaultValue: review.content,
+            })}
+          </p>
         </div>
-        <p className="text-gray-200 text-sm leading-relaxed">
-          {review.content}
-        </p>
-      </div>
-    )) || (
-      <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
-        리뷰가 아직 없습니다.
-      </div>
-    )}
-  </div>
-);
+      )) || (
+        <div className="text-gray-300 text-sm p-4 bg-gray-800/30 rounded-xl">
+          {t("reviews.noReviews")}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ImageWithFallback = ({
   src,
@@ -601,6 +650,12 @@ const ImageWithFallback = ({
     }
   };
 
+  // 선택된 이미지가 바뀌면 실제 표시 src 갱신 (모바일 화살표/도트 이동 시 반영)
+  useEffect(() => {
+    setImgSrc(src);
+    setHasError(false);
+  }, [src]);
+
   return (
     <img src={imgSrc} alt={alt} className={className} onError={handleError} />
   );
@@ -608,6 +663,7 @@ const ImageWithFallback = ({
 
 // 메인 TourDetail 컴포넌트
 export default function TourDetail({ onBack }) {
+  const { t, i18n: i18nextInstance } = useTranslation("tourDetail");
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
@@ -615,8 +671,150 @@ export default function TourDetail({ onBack }) {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showOfferPopup, setShowOfferPopup] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const tourId = parseInt(id) || 1;
+
+  // 네임스페이스 보장 로드 (마운트/언어 변경 시)
+  useEffect(() => {
+    i18nextInstance.loadNamespaces(["tourDetail"]);
+  }, [i18nextInstance]);
+  useEffect(() => {
+    i18nextInstance.loadNamespaces(["tourDetail"]);
+  }, [i18nextInstance.language]);
+
+  // 상세 페이지 진입 시 최상단으로 스크롤 (브라우저의 스크롤 복원 방지)
+  useLayoutEffect(() => {
+    const previousRestoration = window.history.scrollRestoration;
+    const previousHtmlScrollBehavior =
+      document.documentElement.style.scrollBehavior;
+    const previousHtmlOverflowAnchor =
+      document.documentElement.style.overflowAnchor;
+    const previousBodyOverflowAnchor = document.body.style.overflowAnchor;
+    try {
+      window.history.scrollRestoration = "manual";
+    } catch (_) {}
+    // 스크롤 앵커링 비활성화 (동적 콘텐츠로 인한 중간 위치 유지 방지)
+    try {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.documentElement.style.overflowAnchor = "none";
+      document.body.style.overflowAnchor = "none";
+    } catch (_) {}
+
+    const forceScrollToTop = () => {
+      // 잠재적 스크롤 컨테이너들을 모두 0으로
+      const scrollContainers = new Set();
+      scrollContainers.add(window);
+      scrollContainers.add(document);
+      scrollContainers.add(document.documentElement);
+      scrollContainers.add(document.body);
+      const root = document.getElementById("root");
+      if (root) scrollContainers.add(root);
+      // 가장 흔한 오버플로우 컨테이너들을 탐색 (상위 20개 요소만 검사)
+      try {
+        const candidates = Array.from(document.querySelectorAll("*"))
+          .slice(0, 500)
+          .filter((el) => {
+            try {
+              const style = getComputedStyle(el);
+              const overflowY = style.overflowY;
+              return (
+                (overflowY === "auto" || overflowY === "scroll") &&
+                el.scrollHeight > el.clientHeight
+              );
+            } catch (_) {
+              return false;
+            }
+          });
+        candidates.forEach((el) => scrollContainers.add(el));
+      } catch (_) {}
+
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
+      // 각각의 컨테이너에 대해서도 스크롤 0 적용
+      scrollContainers.forEach((target) => {
+        try {
+          if (target === window || target === document) return;
+          if (target && typeof target.scrollTo === "function") {
+            target.scrollTo({ top: 0, left: 0, behavior: "auto" });
+          } else if (target && typeof target.scrollTop === "number") {
+            target.scrollTop = 0;
+            target.scrollLeft = 0;
+          }
+        } catch (_) {}
+      });
+      // 한 프레임 뒤와 약간의 지연 후에도 한번 더 시도 (이미지 로드로 인한 레이아웃 이동 방지)
+      try {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        });
+      } catch (_) {}
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 50);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 250);
+    };
+
+    forceScrollToTop();
+
+    return () => {
+      try {
+        window.history.scrollRestoration = previousRestoration || "auto";
+      } catch (_) {}
+      try {
+        document.documentElement.style.scrollBehavior =
+          previousHtmlScrollBehavior || "";
+        document.documentElement.style.overflowAnchor =
+          previousHtmlOverflowAnchor || "";
+        document.body.style.overflowAnchor = previousBodyOverflowAnchor || "";
+      } catch (_) {}
+    };
+  }, []);
+
+  // 투어 ID가 바뀔 때도 강제로 상단 이동 (동일 컴포넌트 재사용 케이스 대비)
+  useEffect(() => {
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    } catch (e) {
+      window.scrollTo(0, 0);
+    }
+    try {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    } catch (_) {}
+    const t1 = setTimeout(() => window.scrollTo(0, 0), 50);
+    const t2 = setTimeout(() => window.scrollTo(0, 0), 250);
+    // 추가: 가장 흔한 스크롤 컨테이너들도 리셋
+    const resetContainers = () => {
+      try {
+        const list = [
+          document.documentElement,
+          document.body,
+          document.getElementById("root"),
+        ].filter(Boolean);
+        list.forEach((el) => {
+          try {
+            el.scrollTop = 0;
+            el.scrollLeft = 0;
+          } catch (_) {}
+        });
+      } catch (_) {}
+    };
+    const t3 = setTimeout(resetContainers, 0);
+    const t4 = setTimeout(resetContainers, 100);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, [tourId]);
 
   // 팝업 로직
   useEffect(() => {
@@ -660,6 +858,35 @@ export default function TourDetail({ onBack }) {
 
   const tourData = tourDetailData[tourId];
 
+  // 화면 크기 감지 (모바일 여부)
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // 모바일에서는 비디오(.mp4 등) 제외한 이미지 리스트 계산
+  const displayImages = useMemo(() => {
+    const images = tourData?.images || [];
+    if (!isMobile) return images;
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".avi", ".mov", ".wmv"];
+    return images.filter((media) => {
+      if (typeof media === "string") {
+        const lower = media.toLowerCase();
+        return !videoExtensions.some((ext) => lower.includes(ext));
+      }
+      return media?.type !== "video";
+    });
+  }, [tourData?.images, isMobile]);
+
+  // 투어 변경 또는 이미지 목록 변경 시, 선택 인덱스 안전하게 초기화
+  useEffect(() => {
+    if (selectedImage >= (displayImages?.length || 0)) {
+      setSelectedImage(0);
+    }
+  }, [tourId, displayImages, selectedImage]);
+
   if (!tourData) {
     return (
       <BackgroundEffect>
@@ -672,11 +899,9 @@ export default function TourDetail({ onBack }) {
             <NeonCard className="p-12">
               <AlertCircle className="w-20 h-20 text-gray-400 mx-auto mb-6" />
               <h2 className="text-2xl font-bold text-white mb-4">
-                투어를 찾을 수 없습니다
+                {t("notFound.title")}
               </h2>
-              <p className="text-gray-300">
-                요청하신 투어 정보가 존재하지 않습니다.
-              </p>
+              <p className="text-gray-300">{t("notFound.description")}</p>
             </NeonCard>
           </motion.div>
         </div>
@@ -692,12 +917,18 @@ export default function TourDetail({ onBack }) {
           <OverviewTab
             itinerary={tourData.itinerary}
             included={tourData.included}
+            tourId={tourId}
           />
         );
       case "details":
-        return <DetailsTab detailSections={tourData.detailSections} />;
+        return (
+          <DetailsTab
+            detailSections={tourData.detailSections}
+            tourId={tourId}
+          />
+        );
       case "reviews":
-        return <ReviewsTab reviews={tourData.reviews} />;
+        return <ReviewsTab reviews={tourData.reviews} tourId={tourId} />;
       default:
         return null;
     }
@@ -711,8 +942,8 @@ export default function TourDetail({ onBack }) {
         tourId={tourId}
       />
 
-      {/* Header */}
-      <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 sticky top-0 z-50">
+      {/* Header (모바일에서는 non-sticky로 여백 문제 방지, 데스크탑에서는 sticky) 
+      <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 md:sticky md:top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <motion.button
             onClick={handleBack}
@@ -725,7 +956,7 @@ export default function TourDetail({ onBack }) {
             </div>
           </motion.button>
         </div>
-      </div>
+      </div>*/}
 
       {/* Main Content - 완전한 반응형 레이아웃 */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
@@ -742,17 +973,32 @@ export default function TourDetail({ onBack }) {
                 {tourData.partnership && (
                   <div className="flex items-center gap-2 mb-2">
                     <span className="px-2 py-1 bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 text-xs rounded-full font-semibold border border-purple-500/30">
-                      {tourData.partnership.primary} ×{" "}
-                      {tourData.partnership.secondary}
+                      {t(`data.${tourId}.partnership.primary`, {
+                        defaultValue: tourData.partnership.primary,
+                      })}
+                      {" × "}
+                      {t(`data.${tourId}.partnership.secondary`, {
+                        defaultValue: tourData.partnership.secondary,
+                      })}
                     </span>
                   </div>
                 )}
-                <h1 className="text-xl font-bold text-white mb-2 leading-tight">
-                  {tourData.title}
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-2 leading-tight">
+                  {t(`data.${tourId}.title`, { defaultValue: tourData.title })}
                 </h1>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  {tourData.subtitle}
+                <p className="text-base sm:text-lg md:text-xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent leading-relaxed">
+                  {t(`data.${tourId}.subtitle`, {
+                    defaultValue: tourData.subtitle,
+                  })}
                 </p>
+                {/* 로컬라이즈된 요약/설명 (옵션) */}
+                {i18nextInstance.exists(`data.${tourId}.listDescription`, {
+                  ns: "tourDetail",
+                }) && (
+                  <p className="mt-2 text-gray-300 text-sm">
+                    {t(`data.${tourId}.listDescription`)}
+                  </p>
+                )}
               </div>
               {/* 2. 이미지 갤러리 - 모바일용 (비디오 필터링) */}
               <motion.div
@@ -763,113 +1009,67 @@ export default function TourDetail({ onBack }) {
                 <div className="overflow-hidden rounded-2xl">
                   <div className="relative group">
                     {(() => {
-                      const filteredImages =
-                        tourData.images?.filter((media) => {
-                          const isVideo =
-                            typeof media === "string"
-                              ? [
-                                  ".mp4",
-                                  ".webm",
-                                  ".ogg",
-                                  ".avi",
-                                  ".mov",
-                                  ".wmv",
-                                ].some((ext) =>
-                                  media.toLowerCase().includes(ext)
-                                )
-                              : media?.type === "video";
-                          return !isVideo;
-                        }) || [];
-
-                      const safeSelectedImage =
-                        selectedImage >= filteredImages.length
+                      const safeSelected =
+                        selectedImage >= (displayImages?.length || 0)
                           ? 0
                           : selectedImage;
-                      const currentImage =
-                        filteredImages[safeSelectedImage] ||
-                        "/img/default-tour.jpg";
+                      const currentImage = displayImages?.[safeSelected];
 
                       return (
                         <ImageWithFallback
                           src={
                             typeof currentImage === "string"
                               ? currentImage
-                              : currentImage.src || currentImage
+                              : currentImage?.src || currentImage
                           }
                           alt={tourData.title}
-                          className="w-full h-64 object-cover"
-                          fallbackSrc="/img/default-tour.jpg"
+                          className="w-full h-72 object-cover"
                         />
                       );
                     })()}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
                     {/* 이미지 네비게이션 - 필터링된 배열 기준 */}
                     {(() => {
-                      const filteredImages =
-                        tourData.images?.filter((media) => {
-                          const isVideo =
-                            typeof media === "string"
-                              ? [
-                                  ".mp4",
-                                  ".webm",
-                                  ".ogg",
-                                  ".avi",
-                                  ".mov",
-                                  ".wmv",
-                                ].some((ext) =>
-                                  media.toLowerCase().includes(ext)
-                                )
-                              : media?.type === "video";
-                          return !isVideo;
-                        }) || [];
-
-                      if (filteredImages.length <= 1) return null;
+                      if (!displayImages || displayImages.length <= 1)
+                        return null;
 
                       return (
                         <>
                           <motion.button
                             onClick={() => {
-                              const safeSelectedImage =
-                                selectedImage >= filteredImages.length
-                                  ? 0
-                                  : selectedImage;
-                              setSelectedImage(
-                                safeSelectedImage === 0
-                                  ? filteredImages.length - 1
-                                  : safeSelectedImage - 1
+                              const len = displayImages.length;
+                              if (len <= 1) return;
+                              setSelectedImage((prev) =>
+                                prev <= 0 ? len - 1 : prev - 1
                               );
                             }}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200 z-10 pointer-events-auto"
                           >
                             <ChevronLeft className="w-5 h-5" />
                           </motion.button>
 
                           <motion.button
                             onClick={() => {
-                              const safeSelectedImage =
-                                selectedImage >= filteredImages.length
-                                  ? 0
-                                  : selectedImage;
-                              setSelectedImage(
-                                safeSelectedImage === filteredImages.length - 1
-                                  ? 0
-                                  : safeSelectedImage + 1
+                              const len = displayImages.length;
+                              if (len <= 1) return;
+                              setSelectedImage((prev) =>
+                                prev >= len - 1 ? 0 : prev + 1
                               );
                             }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-all duration-200 z-10 pointer-events-auto"
                           >
                             <ChevronRight className="w-5 h-5" />
                           </motion.button>
 
-                          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-                            {filteredImages.map((_, index) => (
+                          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                            {displayImages.map((_, index) => (
                               <motion.button
                                 key={index}
                                 onClick={() => setSelectedImage(index)}
                                 className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                  (selectedImage >= filteredImages.length
+                                  (selectedImage >= displayImages.length
                                     ? 0
                                     : selectedImage) === index
                                     ? "bg-purple-500 scale-125"
@@ -887,38 +1087,53 @@ export default function TourDetail({ onBack }) {
               <div className="flex items-center gap-2 mb-3">
                 <MapPin className="w-4 h-4 text-gray-400" />
                 <span className="text-gray-300 text-sm">
-                  {tourData.location}
+                  {t(`data.${tourId}.location`, {
+                    defaultValue: tourData.location,
+                  })}
                 </span>
               </div>
-              <div className="flex items-center gap-2 mb-4">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-bold text-white text-sm">
-                  {tourData.rating}
-                </span>
-                <span className="text-gray-400 text-xs">
-                  ({tourData.reviewCount}개 리뷰)
-                </span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span className="font-bold text-white text-sm">
+                    {tourData.rating}
+                  </span>
+                  <span className="text-gray-400 text-xs">
+                    ({tourData.reviewCount}
+                    {t("booking.reviews")})
+                  </span>
+                </div>
               </div>
 
               {/* 투어 정보를 하나의 컨테이너에 통합 */}
-              <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 border border-purple-500/30 mb-4">
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-sm font-medium">
-                      {tourData.duration}
-                    </span>
-
-                    <Users className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-sm font-medium">
-                      {tourData.groupSize}
-                    </span>
-
-                    <Calendar className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-sm font-medium">
-                      {tourData.language}
-                    </span>
-                  </div>
+              <div className="px-1 mb-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Clock className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-200 text-xs sm:text-[11px] leading-snug">
+                    {t(`data.${tourId}.duration`, {
+                      defaultValue: tourData.duration,
+                    })}
+                  </span>
+                </div>
+              </div>
+              <div className="px-1 mb-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Users className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-200 text-xs sm:text-[11px] leading-snug">
+                    {t(`data.${tourId}.groupSize`, {
+                      defaultValue: tourData.groupSize,
+                    })}
+                  </span>
+                </div>
+              </div>
+              <div className="px-1 mb-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Calendar className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-200 text-xs sm:text-[11px] leading-snug">
+                    {t(`data.${tourId}.language`, {
+                      defaultValue: tourData.language,
+                    })}
+                  </span>
                 </div>
               </div>
 
@@ -946,7 +1161,7 @@ export default function TourDetail({ onBack }) {
                         size="xs"
                         className="font-bold"
                       >
-                        {tourData.discount} 할인
+                        {tourData.discount} {t("booking.discount")}
                       </GradientText>
                     )}
                   </div>
@@ -975,7 +1190,7 @@ export default function TourDetail({ onBack }) {
                       window.open(tourData.bookingUrl || "#", "_blank")
                     }
                   >
-                    지금 예약하기
+                    {t("booking.bookNow")}
                   </NeonButton>
                 </div>
               </div>
@@ -1205,23 +1420,34 @@ export default function TourDetail({ onBack }) {
                       {tourData.partnership && (
                         <div className="flex items-center gap-2 mb-3">
                           <span className="px-3 py-1 bg-gradient-to-r from-purple-900/50 to-pink-900/50 text-purple-300 text-sm rounded-full font-semibold border border-purple-500/30">
-                            {tourData.partnership.primary} ×{" "}
-                            {tourData.partnership.secondary}
+                            {t(`data.${tourId}.partnership.primary`, {
+                              defaultValue: tourData.partnership.primary,
+                            })}
+                            {" × "}
+                            {t(`data.${tourId}.partnership.secondary`, {
+                              defaultValue: tourData.partnership.secondary,
+                            })}
                           </span>
                         </div>
                       )}
-                      <h1 className="text-2xl font-bold text-white mb-3 leading-tight">
-                        {tourData.title}
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-3 leading-tight">
+                        {t(`data.${tourId}.title`, {
+                          defaultValue: tourData.title,
+                        })}
                       </h1>
-                      <p className="text-gray-300 leading-relaxed text-sm">
-                        {tourData.subtitle}
+                      <p className="text-base sm:text-lg md:text-xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent leading-relaxed">
+                        {t(`data.${tourId}.subtitle`, {
+                          defaultValue: tourData.subtitle,
+                        })}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2 mb-4">
                       <MapPin className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-300 text-sm font-medium">
-                        {tourData.location}
+                        {t(`data.${tourId}.location`, {
+                          defaultValue: tourData.location,
+                        })}
                       </span>
                     </div>
 
@@ -1232,10 +1458,20 @@ export default function TourDetail({ onBack }) {
                           {tourData.rating}
                         </span>
                         <span className="text-gray-400 text-sm">
-                          ({tourData.reviewCount}개 리뷰)
+                          ({tourData.reviewCount}
+                          {t("booking.reviews")})
                         </span>
                       </div>
                     </div>
+
+                    {/* 로컬라이즈된 요약/설명 (옵션, 데스크톱) */}
+                    {i18nextInstance.exists(`data.${tourId}.listDescription`, {
+                      ns: "tourDetail",
+                    }) && (
+                      <p className="mb-6 text-gray-300 text-sm">
+                        {t(`data.${tourId}.listDescription`)}
+                      </p>
+                    )}
 
                     {/* 투어 정보를 하나의 컨테이너에 통합 */}
                     <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 border border-purple-500/30 mb-6">
@@ -1243,19 +1479,25 @@ export default function TourDetail({ onBack }) {
                         <div className="flex items-center gap-3">
                           <Clock className="w-4 h-4 text-purple-400" />
                           <span className="text-white text-sm font-medium">
-                            {tourData.duration}
+                            {t(`data.${tourId}.duration`, {
+                              defaultValue: tourData.duration,
+                            })}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
                           <Users className="w-4 h-4 text-purple-400" />
                           <span className="text-white text-sm font-medium">
-                            {tourData.groupSize}
+                            {t(`data.${tourId}.groupSize`, {
+                              defaultValue: tourData.groupSize,
+                            })}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
                           <Calendar className="w-4 h-4 text-purple-400" />
                           <span className="text-white text-sm font-medium">
-                            {tourData.language}
+                            {t(`data.${tourId}.language`, {
+                              defaultValue: tourData.language,
+                            })}
                           </span>
                         </div>
                       </div>
@@ -1284,7 +1526,7 @@ export default function TourDetail({ onBack }) {
                               size="sm"
                               className="font-bold"
                             >
-                              {tourData.discount} 할인
+                              {tourData.discount} {t("booking.discount")}
                             </GradientText>
                           )}
                         </div>
@@ -1313,7 +1555,7 @@ export default function TourDetail({ onBack }) {
                             window.open(tourData.bookingUrl || "#", "_blank")
                           }
                         >
-                          지금 예약하기
+                          {t("booking.bookNow")}
                         </NeonButton>
                         {/* <NeonButton
                           variant="secondary"

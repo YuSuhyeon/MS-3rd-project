@@ -103,6 +103,12 @@ export async function detectLanguage(input) {
   }
 
   try {
+
+    console.log("--- 디버깅: detectLanguage 함수에서 사용하는 환경 변수 ---");
+    console.log("KEY:", process.env.REACT_APP_AZURE_TRANSLATOR_KEY);
+    console.log("REGION:", process.env.REACT_APP_AZURE_TRANSLATOR_REGION);
+    console.log("---------------------------------------------------------");
+
     const response = await fetch(
       `${AZURE_TRANSLATOR_ENDPOINT}/detect?api-version=3.0`,
       {

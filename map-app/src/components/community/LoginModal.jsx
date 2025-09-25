@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { X, Sparkles } from "lucide-react";
+import { X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const LoginModal = ({ onClose }) => {
@@ -38,9 +38,11 @@ const LoginModal = ({ onClose }) => {
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-              <Sparkles className="w-8 h-8 text-white" />
-            </div>
+            <img
+              src="/img/main_logo.png"
+              alt="Logo"
+              className="w-28 h-28 object-contain rounded-xl"
+            />
           </div>
           {/* <h2 className="text-2xl font-bold text-white mb-2">
           

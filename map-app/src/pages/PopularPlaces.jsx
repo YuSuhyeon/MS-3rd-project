@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import Menu from "components/ui/Menu";
+import { useTranslation } from "react-i18next";
+//import Menu from "components/ui/Menu";
 import {
   motion,
   AnimatePresence,
@@ -241,6 +242,7 @@ const NeonInfoCard = ({
 
 //배경 이미지 컴포넌트
 const HeroSection = ({ placeData, areaName }) => {
+  const { t } = useTranslation("data");
   const decodedAreaName = decodeURIComponent(areaName);
   const info = placeInfo[decodedAreaName];
 
@@ -272,22 +274,28 @@ const HeroSection = ({ placeData, areaName }) => {
         >
           <div className="flex items-center gap-2 mb-3">
             <MapPin className="text-pink-400" size={20} />
-            <span className="text-pink-400 font-medium">실시간 정보</span>
+            <span className="text-pink-400 font-medium">{t("live_info")}</span>
           </div>
 
           <h1 className="text-4xl md:text-6xl font-black mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-            지금 {placeData.AREA_NM?._text}는
+            {t("now")} <span dynamic="true">{placeData.AREA_NM?._text}</span>
+            {t("is")}
           </h1>
 
           {info?.description && (
-            <p className="text-gray-300 text-lg md:text-xl max-w-3xl leading-relaxed">
+            <p
+              className="text-gray-300 text-lg md:text-xl max-w-3xl leading-relaxed"
+              dynamic="true"
+            >
               {info.description}
             </p>
           )}
 
           <p className="text-gray-400 text-sm mt-4 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1 inline-block">
-            데이터 업데이트:{" "}
-            {placeData.WEATHER_STTS?.WEATHER_STTS?.WEATHER_TIME?._text}
+            {t("data_update")}:{" "}
+            <span dynamic="true">
+              {placeData.WEATHER_STTS?.WEATHER_STTS?.WEATHER_TIME?._text}
+            </span>
           </p>
         </motion.div>
       </div>
@@ -301,6 +309,7 @@ const HeroSection = ({ placeData, areaName }) => {
 const PopularPlaces = () => {
   const { areaName } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation("data");
   const decodedAreaName = decodeURIComponent(areaName || "");
   const [placeData, setPlaceData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -433,51 +442,7 @@ const PopularPlaces = () => {
   return (
     <BackgroundEffect>
       {/* Navigation  */}
-      <AnimatePresence>
-        {isNavVisible && (
-          <motion.nav
-            className="fixed top-0 left-0 right-0 z-50"
-            style={{
-              background: "transparent",
-              backdropFilter: "none",
-              borderBottom: "none",
-              outline: "none",
-              zIndex: 40,
-            }}
-            initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            exit={{ y: -100, transition: { duration: 0.3 } }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-              <div className="flex items-center justify-between h-10">
-                <div className="flex items-center h-10">
-                  <Menu />
-                </div>
-                <div className="flex items-center gap-3 h-10">
-                  <div className="h-10 flex items-center">
-                    <div className="h-10 flex items-center justify-center">
-                      <LanguageButtons />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 h-10">
-                    <Link
-                      to="/"
-                      className="h-10 w-10 flex items-center justify-center rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-300 hover:scale-105"
-                    >
-                      <img
-                        src="/img/home.png"
-                        alt="홈으로"
-                        className="w-5 h-5"
-                      />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.nav>
-        )}
-      </AnimatePresence>
+      {/* Top navigation removed: using global Layout header */}
 
       {/* Hero Section */}
       <HeroSection placeData={placeData} areaName={areaName} />
@@ -486,12 +451,17 @@ const PopularPlaces = () => {
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           {/* 실시간 인구 */}
-          <NeonInfoCard icon={<Users />} title="실시간 인구" delay={0.1}>
+          <NeonInfoCard
+            icon={<Users />}
+            title={t("real_time_population")}
+            delay={0.1}
+          >
             <motion.p
               className="text-4xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.5, type: "spring" }}
+              dynamic="true"
             >
               {
                 placeData.LIVE_PPLTN_STTS?.LIVE_PPLTN_STTS?.AREA_CONGEST_LVL
@@ -499,7 +469,7 @@ const PopularPlaces = () => {
               }
             </motion.p>
             <p className="text-lg text-gray-300">
-              약{" "}
+              {t("about")}{" "}
               <span className="font-bold text-purple-300">
                 {Number(
                   placeData.LIVE_PPLTN_STTS?.LIVE_PPLTN_STTS?.AREA_PPLTN_MIN
@@ -513,15 +483,22 @@ const PopularPlaces = () => {
                     ?._text
                 ).toLocaleString()}
               </span>
-              명
+              {t("people")}
             </p>
           </NeonInfoCard>
 
           {/* 실시간 상권 */}
-          <NeonInfoCard icon={<ShoppingBag />} title="실시간 상권" delay={0.2}>
+          <NeonInfoCard
+            icon={<ShoppingBag />}
+            title={t("real_time_commercial")}
+            delay={0.2}
+          >
             <p className="text-2xl font-bold">
-              전체 상권:{" "}
-              <span className="bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+              {t("overall_commercial")}:{" "}
+              <span
+                className="bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent"
+                dynamic="true"
+              >
                 {placeData.LIVE_CMRCL_STTS?.AREA_CMRCL_LVL?._text}
               </span>
             </p>
@@ -529,7 +506,11 @@ const PopularPlaces = () => {
 
           {/* 지하철 정보 - 개선된 버전 */}
           {uniqueSubwayLines.length > 0 && (
-            <NeonInfoCard icon={<Train />} title="지하철 도착 정보" delay={0.4}>
+            <NeonInfoCard
+              icon={<Train />}
+              title={t("subway_arrival_info")}
+              delay={0.4}
+            >
               <div className="space-y-3">
                 {uniqueSubwayLines.map((subway, index) => (
                   <motion.div
@@ -544,16 +525,22 @@ const PopularPlaces = () => {
                         {subway.line.replace("호선", "")}
                       </div>
                       <div>
-                        <div className="font-semibold text-green-300">
+                        <div
+                          className="font-semibold text-green-300"
+                          dynamic="true"
+                        >
                           {subway.stationName}
                         </div>
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-gray-400" dynamic="true">
                           {subway.destination}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-green-400 bg-green-900/50 px-3 py-1 rounded-lg">
+                      <div
+                        className="font-bold text-green-400 bg-green-900/50 px-3 py-1 rounded-lg"
+                        dynamic="true"
+                      >
                         {subway.arrivalTime}
                       </div>
                     </div>
@@ -563,9 +550,123 @@ const PopularPlaces = () => {
             </NeonInfoCard>
           )}
 
-          {/* 투어 상품 섹션 - 새로 추가 */}
+          {/* 문화행사 */}
+          {eventList.length > 0 && (
+            <NeonInfoCard
+              icon={<Calendar />}
+              title={t("nearby_cultural_events")}
+              delay={0.3}
+            >
+              <div className="space-y-3 max-h-40 overflow-y-auto text-sm custom-scrollbar">
+                {eventList.map((evt, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * i }}
+                    className="p-3 rounded-lg bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/20"
+                  >
+                    <a
+                      href={evt.URL?._text}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold hover:text-pink-300 transition-colors"
+                      dynamic="true"
+                    >
+                      {evt.EVENT_NM?._text}
+                    </a>
+                    <p className="text-xs text-gray-400 mt-1" dynamic="true">
+                      {evt.EVENT_PLACE?._text}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </NeonInfoCard>
+          )}
+        </div>
+
+        {/* 사이드바 */}
+        <div className="space-y-6">
+          {/* 교통 상황 */}
+          <NeonInfoCard
+            icon={<Car />}
+            title={t("traffic_conditions")}
+            delay={0.5}
+          >
+            <p
+              className="font-semibold text-xl bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent"
+              dynamic="true"
+            >
+              {
+                placeData.ROAD_TRAFFIC_STTS?.AVG_ROAD_DATA?.ROAD_TRAFFIC_IDX
+                  ?._text
+              }
+            </p>
+            <p className="text-gray-300 text-sm" dynamic="true">
+              {placeData.ROAD_TRAFFIC_STTS?.AVG_ROAD_DATA?.ROAD_MSG?._text}
+            </p>
+          </NeonInfoCard>
+
+          {/* 날씨 정보 */}
+          <NeonInfoCard icon={<CloudSun />} title={t("weather")} delay={0.6}>
+            <motion.p
+              className="text-4xl font-black bg-gradient-to-r from-sky-300 to-blue-300 bg-clip-text text-transparent"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.8, type: "spring" }}
+              dynamic="true"
+            >
+              {placeData.WEATHER_STTS?.WEATHER_STTS?.TEMP?._text}°C
+            </motion.p>
+
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-300 mt-4">
+              <span className="flex items-center gap-1">
+                <Droplets size={14} className="text-blue-400" />
+                {t("humidity")}:{" "}
+                <span dynamic="true">
+                  {placeData.WEATHER_STTS?.WEATHER_STTS?.HUMIDITY?._text}
+                </span>
+                %
+              </span>
+              <span className="flex items-center gap-1">
+                <Wind size={14} className="text-gray-400" />
+                {t("wind_speed")}:{" "}
+                <span dynamic="true">
+                  {placeData.WEATHER_STTS?.WEATHER_STTS?.WIND_SPD?._text}
+                </span>
+                m/s
+              </span>
+              <span className="flex items-center gap-1">
+                <Umbrella size={14} className="text-purple-400" />
+                {t("precipitation")}:{" "}
+                <span dynamic="true">
+                  {placeData.WEATHER_STTS?.WEATHER_STTS?.PRECIPITATION?._text}
+                </span>
+              </span>
+              <span className="text-pink-300">
+                {t("feels_like")}:{" "}
+                <span dynamic="true">
+                  {placeData.WEATHER_STTS?.WEATHER_STTS?.SENSIBLE_TEMP?._text}
+                </span>
+                °C
+              </span>
+            </div>
+
+            <p
+              className="text-xs text-gray-400 mt-4 pt-3 border-t border-gray-700 bg-black/20 rounded-lg p-2"
+              dynamic="true"
+            >
+              {placeData.WEATHER_STTS?.WEATHER_STTS?.AIR_MSG?._text}
+            </p>
+          </NeonInfoCard>
+
+          {/* 추천 투어 상품 - 우측 사이드로 이동 */}
           {areaTourProducts.length > 0 && (
-            <NeonInfoCard icon={<Gift />} title="추천 투어 상품" delay={0.5}>
+            <NeonInfoCard
+              icon={<Gift />}
+              title={t("recommended_tour_products")}
+              delay={0.7}
+            >
               <div className="space-y-4">
                 {areaTourProducts.map((tour) => (
                   <motion.div
@@ -585,10 +686,16 @@ const PopularPlaces = () => {
                         />
                       )}
                       <div className="flex-1">
-                        <h3 className="font-bold text-pink-300 mb-1">
+                        <h3
+                          className="font-bold text-pink-300 mb-1"
+                          dynamic="true"
+                        >
                           {tour.title}
                         </h3>
-                        <p className="text-sm text-gray-300 mb-2">
+                        <p
+                          className="text-sm text-gray-300 mb-2"
+                          dynamic="true"
+                        >
                           {tour.description}
                         </p>
                         <div className="flex items-center justify-between">
@@ -613,88 +720,6 @@ const PopularPlaces = () => {
               </div>
             </NeonInfoCard>
           )}
-
-          {/* 문화행사 */}
-          {eventList.length > 0 && (
-            <NeonInfoCard icon={<Calendar />} title="주변 문화행사" delay={0.3}>
-              <div className="space-y-3 max-h-40 overflow-y-auto text-sm custom-scrollbar">
-                {eventList.map((evt, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * i }}
-                    className="p-3 rounded-lg bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/20"
-                  >
-                    <a
-                      href={evt.URL?._text}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-bold hover:text-pink-300 transition-colors"
-                    >
-                      {evt.EVENT_NM?._text}
-                    </a>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {evt.EVENT_PLACE?._text}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </NeonInfoCard>
-          )}
-        </div>
-
-        {/* 사이드바 */}
-        <div className="space-y-6">
-          {/* 교통 상황 */}
-          <NeonInfoCard icon={<Car />} title="교통 상황" delay={0.5}>
-            <p className="font-semibold text-xl bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
-              {
-                placeData.ROAD_TRAFFIC_STTS?.AVG_ROAD_DATA?.ROAD_TRAFFIC_IDX
-                  ?._text
-              }
-            </p>
-            <p className="text-gray-300 text-sm">
-              {placeData.ROAD_TRAFFIC_STTS?.AVG_ROAD_DATA?.ROAD_MSG?._text}
-            </p>
-          </NeonInfoCard>
-
-          {/* 날씨 정보 */}
-          <NeonInfoCard icon={<CloudSun />} title="날씨" delay={0.6}>
-            <motion.p
-              className="text-4xl font-black bg-gradient-to-r from-sky-300 to-blue-300 bg-clip-text text-transparent"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.8, type: "spring" }}
-            >
-              {placeData.WEATHER_STTS?.WEATHER_STTS?.TEMP?._text}°C
-            </motion.p>
-
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-300 mt-4">
-              <span className="flex items-center gap-1">
-                <Droplets size={14} className="text-blue-400" />
-                습도: {placeData.WEATHER_STTS?.WEATHER_STTS?.HUMIDITY?._text}%
-              </span>
-              <span className="flex items-center gap-1">
-                <Wind size={14} className="text-gray-400" />
-                풍속: {placeData.WEATHER_STTS?.WEATHER_STTS?.WIND_SPD?._text}
-                m/s
-              </span>
-              <span className="flex items-center gap-1">
-                <Umbrella size={14} className="text-purple-400" />
-                강수량:{" "}
-                {placeData.WEATHER_STTS?.WEATHER_STTS?.PRECIPITATION?._text}
-              </span>
-              <span className="text-pink-300">
-                체감:{" "}
-                {placeData.WEATHER_STTS?.WEATHER_STTS?.SENSIBLE_TEMP?._text}°C
-              </span>
-            </div>
-
-            <p className="text-xs text-gray-400 mt-4 pt-3 border-t border-gray-700 bg-black/20 rounded-lg p-2">
-              {placeData.WEATHER_STTS?.WEATHER_STTS?.AIR_MSG?._text}
-            </p>
-          </NeonInfoCard>
         </div>
       </div>
       {/* '상단으로 이동' 플로팅 버튼 */}

@@ -7,12 +7,20 @@ export default function POIDetails({
   poi,
   userLocation,
   onPlayTTS,
+  onStopTTS,
   isDocentActive,
+  isPlaying = false,
   isMobile = false,
-  ui = null,
   selectedLang = "ko",
+  t = null,
 }) {
   const [translatedName, setTranslatedName] = useState(poi?.name || "");
+  const [isVoiceActive, setIsVoiceActive] = useState(isDocentActive);
+
+  // AI 도슨트 상태에 따라 버튼 상태 업데이트
+  useEffect(() => {
+    setIsVoiceActive(isDocentActive);
+  }, [isDocentActive]);
 
   // POI 제목 번역 처리
   useEffect(() => {
@@ -41,8 +49,8 @@ export default function POIDetails({
 
   if (!poi) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
-        장소를 선택하세요
+      <div className="h-full flex items-center justify-center text-purple-300">
+        {t("selectPlace")}
       </div>
     );
   }
@@ -58,26 +66,47 @@ export default function POIDetails({
     );
   };
   return (
-    <Card className={`${isMobile ? "h-max" : "h-full"} rounded-none border-0 `}>
-      <CardHeader>
-        <CardTitle className="text-lg font-bold text-blue-900">
+    <Card
+      className={`${
+        isMobile ? "h-max" : "h-full"
+      } rounded-xl border border-purple-500/20 bg-black/40 p-4 shadow-lg shadow-purple-500/10 backdrop-blur-sm transition-transform hover:-translate-y-1`}
+    >
+      <CardHeader className="p-0 mb-3">
+        <CardTitle className="text-lg font-bold text-white">
           {translatedName}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-gray-600 mb-4">{poi.description}</p>
+      <CardContent className="p-0">
+        <p className="text-sm text-gray-200 mb-4 whitespace-pre-wrap">
+          {poi.description}
+        </p>
         <div className="flex gap-2">
           {isDocentActive && (
-            <Button onClick={() => onPlayTTS?.(poi)} className="flex-1">
-              {ui?.voiceGuide || "음성 안내"}
+            <Button
+              onClick={() => {
+                if (isVoiceActive) {
+                  setIsVoiceActive(false);
+                  onStopTTS?.();
+                } else {
+                  setIsVoiceActive(true);
+                  onPlayTTS?.();
+                }
+              }}
+              className={`flex-1 text-xs py-1 px-2 h-8 whitespace-nowrap border-0 ${
+                isVoiceActive
+                  ? "bg-rose-500 hover:bg-rose-600 text-white"
+                  : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white"
+              }`}
+            >
+              {isVoiceActive ? t("stopVoice") : t("voiceGuide")}
             </Button>
           )}
           <Button
             variant="outline"
             onClick={openKakaoDirections}
-            className="flex-1"
+            className="flex-1 text-xs py-1 px-2 h-8 border-purple-500/40 text-purple-200 hover:text-white hover:border-purple-400 hover:bg-purple-500/10"
           >
-            {ui?.directions || "길찾기"}
+            {t("directions")}
           </Button>
         </div>
       </CardContent>

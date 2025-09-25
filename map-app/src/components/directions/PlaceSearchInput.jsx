@@ -7,6 +7,9 @@ export default function PlaceSearchInput({
   onSelect,
   placeholder = "장소를 입력하세요",
   className = "",
+  appearance = "light",
+  inputClassName = "",
+  dropdownClassName = "",
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -17,7 +20,7 @@ export default function PlaceSearchInput({
   const [ready, setReady] = useState(false);
   const lastQueryRef = useRef("");
   // Support uncontrolled usage when onChange is not provided
-  const isControlled = typeof onChange === 'function';
+  const isControlled = typeof onChange === "function";
   const [innerValue, setInnerValue] = useState(value || "");
   useEffect(() => {
     if (!isControlled) setInnerValue(value || "");
@@ -26,7 +29,8 @@ export default function PlaceSearchInput({
   // Kakao SDK 로딩 보장
   useEffect(() => {
     let mounted = true;
-    const key = process.env.REACT_APP_KAKAO_API_KEY || window.REACT_APP_KAKAO_API_KEY;
+    const key =
+      process.env.REACT_APP_KAKAO_API_KEY || window.REACT_APP_KAKAO_API_KEY;
     ensureKakaoMaps(key)
       .then(() => {
         if (!mounted) return;
@@ -124,23 +128,56 @@ export default function PlaceSearchInput({
     }
   };
 
+  const inputBaseClass =
+    appearance === "dark"
+      ? "w-full rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:border-purple-400/70 focus:outline-none focus:ring-2 focus:ring-purple-400/30"
+      : "w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500";
+
+  const dropdownBaseClass =
+    appearance === "dark"
+      ? "absolute z-50 mt-1 w-full max-h-80 overflow-auto rounded-lg border border-white/10 bg-slate-900/95 text-slate-100 shadow-2xl backdrop-blur"
+      : "absolute z-50 mt-1 w-full rounded-lg border bg-white shadow-lg max-h-80 overflow-auto";
+
+  const optionBaseClass =
+    appearance === "dark"
+      ? "w-full text-left px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/70"
+      : "w-full text-left px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-indigo-50";
+
+  const optionActiveClass =
+    appearance === "dark" ? "bg-slate-800/80" : "bg-indigo-50";
+
+  const optionTitleClass =
+    appearance === "dark"
+      ? "font-semibold text-slate-100 truncate"
+      : "font-medium text-slate-900 truncate";
+
+  const optionSubtitleClass =
+    appearance === "dark"
+      ? "text-xs text-slate-300 truncate"
+      : "text-xs text-slate-500 truncate";
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       <input
         value={isControlled ? value : innerValue}
         onChange={onInputChange}
-        onFocus={() => { const v = isControlled ? value : innerValue; if (v && v.length >= 1) search(v); }}
+        onFocus={() => {
+          const v = isControlled ? value : innerValue;
+          if (v && v.length >= 1) search(v);
+        }}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className={`${inputBaseClass} ${inputClassName}`.trim()}
       />
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border bg-white shadow-lg max-h-80 overflow-auto">
+        <div className={`${dropdownBaseClass} ${dropdownClassName}`.trim()}>
           {loading && (
             <div className="p-3 text-sm text-slate-500">검색 중…</div>
           )}
           {!loading && results.length === 0 && (
-            <div className="p-3 text-sm text-slate-500">검색 결과가 없습니다</div>
+            <div className="p-3 text-sm text-slate-500">
+              검색 결과가 없습니다
+            </div>
           )}
           {!loading &&
             results.map((item, idx) => (
@@ -148,15 +185,13 @@ export default function PlaceSearchInput({
                 type="button"
                 key={item.id || idx}
                 onClick={() => handleSelect(item)}
-                className={`block w-full text-left px-3 py-2 hover:bg-indigo-50 ${
-                  idx === activeIdx ? "bg-indigo-50" : ""
+                className={`${optionBaseClass} ${
+                  idx === activeIdx ? optionActiveClass : ""
                 }`}
               >
-                <div className="font-medium text-slate-900 truncate">
-                  {item.name}
-                </div>
+                <div className={optionTitleClass}>{item.name}</div>
                 {(item.roadAddress || item.address) && (
-                  <div className="text-xs text-slate-500 truncate">
+                  <div className={optionSubtitleClass}>
                     {item.roadAddress || item.address}
                   </div>
                 )}

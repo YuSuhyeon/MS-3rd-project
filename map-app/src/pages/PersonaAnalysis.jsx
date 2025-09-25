@@ -1,3 +1,4 @@
+// PersonaAnalysis.jsx
 import React, { useState, useEffect } from "react";
 import { TravelProfile } from "Entities/TravelProfile";
 import {
@@ -32,6 +33,7 @@ import {
   GradientText,
   NeonScrollbarStyles,
 } from "../components/ui/NeonTheme";
+import { useTranslation } from "react-i18next";
 
 // --- Child Components ---
 
@@ -186,6 +188,8 @@ function iconForOption(value) {
 }
 
 function QuestionCard({ question, answer, onAnswer }) {
+  const { t } = useTranslation("persona");
+
   if (!question) return null;
 
   const isSelected = (value) => {
@@ -200,11 +204,13 @@ function QuestionCard({ question, answer, onAnswer }) {
         ? answer.length
         : 0
       : 0;
+  
+  const translatedTitle = t(`questions.${question.id}.title`, question.title);
 
   return (
     <div className="flex flex-col h-[420px]">
       <div className="text-center pb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">{question.title}</h2>
+        <h2 className="text-2xl font-bold text-white mb-2">{translatedTitle}</h2>
         {question.type === "multiple" && (
           <p className="text-sm text-slate-400">
             <span
@@ -214,7 +220,7 @@ function QuestionCard({ question, answer, onAnswer }) {
             >
               {selectionCount}
             </span>{" "}
-            / {question.maxSelections} 선택
+            / {question.maxSelections} <span>{t("choice")}</span>
           </p>
         )}
       </div>
@@ -229,6 +235,10 @@ function QuestionCard({ question, answer, onAnswer }) {
                 question.type === "multiple" &&
                 !selected &&
                 selectionCount >= (question.maxSelections || 3);
+              
+              const translatedLabel = t(`questions.${question.id}.options.${option.value}.label`, option.label);
+              const translatedDescription = option.description ? t(`questions.${question.id}.options.${option.value}.description`, option.description) : null;
+
               return (
                 <motion.div
                   key={option.value}
@@ -257,7 +267,7 @@ function QuestionCard({ question, answer, onAnswer }) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center">
                           <span className="font-semibold text-white truncate">
-                            {option.label}
+                            {translatedLabel}
                           </span>
                           <AnimatePresence>
                             {selected && (
@@ -272,9 +282,9 @@ function QuestionCard({ question, answer, onAnswer }) {
                             )}
                           </AnimatePresence>
                         </div>
-                        {option.description && (
+                        {translatedDescription && (
                           <p className="text-sm text-slate-400 mt-0.5">
-                            {option.description}
+                            {translatedDescription}
                           </p>
                         )}
                       </div>
@@ -293,6 +303,7 @@ function QuestionCard({ question, answer, onAnswer }) {
     </div>
   );
 }
+
 
 const questionVariants = {
   enter: (direction) => ({ x: direction > 0 ? 30 : -30, opacity: 0 }),
@@ -313,9 +324,9 @@ export default function PersonaAnalysis() {
   const [[page, direction], setPage] = useState([0, 0]);
   const [answers, setAnswers] = useState({});
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const { t } = useTranslation("persona");
 
   useEffect(() => {
-    // 컴포넌트 마운트 시 백엔드에서 질문 목록을 가져옵니다.
     const fetchQuestions = async () => {
       try {
         const response = await fetch("/api/persona/questions", {
@@ -348,20 +359,16 @@ export default function PersonaAnalysis() {
         const isAlreadySelected = currentSelection.includes(value);
 
         if (isAlreadySelected) {
-          // 이미 선택된 항목이면 제거
           return {
             ...prev,
             [questionId]: currentSelection.filter((v) => v !== value),
           };
         } else if (currentSelection.length < (question.maxSelections || 3)) {
-          // 최대 선택 개수 미만이면 추가
           return { ...prev, [questionId]: [...currentSelection, value] };
         }
-        // 최대 선택 개수에 도달했으므로 변경 없음
         return prev;
       });
     } else {
-      // 단일 선택 질문
       setAnswers((prev) => ({ ...prev, [questionId]: value }));
     }
   };
@@ -388,7 +395,6 @@ export default function PersonaAnalysis() {
   const analyzeProfile = async () => {
     setIsAnalyzing(true);
     try {
-      // 1. 백엔드 API로 답변을 전송하여 페르소나 분석을 요청합니다.
       const response = await fetch("/api/persona/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -398,19 +404,11 @@ export default function PersonaAnalysis() {
         throw new Error(`분석 API 호출 실패: ${response.status}`);
       }
       const analysisResult = await response.json();
-
-      // 2. 받은 분석 결과를 사용자의 답변과 합쳐 새로운 객체를 생성합니다.
       const newProfile = { ...answers, analysis_result: analysisResult };
-
-      // 3. TravelProfile.create를 이용해 브라우저의 localStorage에 프로필을 저장합니다.
-      // 이 과정을 통해 ResultDashboard 페이지에서 데이터를 읽을 수 있습니다.
       await TravelProfile.create(newProfile);
-
-      // 4. 모든 과정이 성공하면 결과 페이지로 이동합니다.
       navigate(createPageUrl("ResultDashboard"));
     } catch (error) {
       console.error("페르소나 분석 과정 중 오류:", error);
-      // 사용자에게 오류를 알리는 UI를 추가할 수 있습니다.
       setIsAnalyzing(false);
     }
   };
@@ -421,7 +419,7 @@ export default function PersonaAnalysis() {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-slate-400">
         <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-        <p>로그인 상태를 확인하고 있습니다...</p>
+        <p>{t("checking_login_status")}</p>
       </div>
     );
   }
@@ -432,22 +430,21 @@ export default function PersonaAnalysis() {
         <NeonScrollbarStyles />
         <NeonCard className="max-w-lg w-full text-center space-y-6">
           <div className="space-y-2">
-            <GradientText size="2xl">로그인이 필요합니다</GradientText>
+            <GradientText size="2xl">{t("login_required")}</GradientText>
             <p className="text-slate-300">
-              페르소나 분석 기능을 사용하려면 Google 또는 Microsoft 계정으로
-              로그인해주세요.
+              {t("login_required_description")}
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <NeonButton size="lg" onClick={() => login("google")}>
-              Google로 로그인
+              {t("google_login")}
             </NeonButton>
             <NeonButton
               size="lg"
               variant="secondary"
               onClick={() => login("microsoft")}
             >
-              Microsoft로 로그인
+              {t("microsoft_login")}
             </NeonButton>
           </div>
         </NeonCard>
@@ -459,7 +456,7 @@ export default function PersonaAnalysis() {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-slate-400">
         <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-        <p>Loading questions...</p>
+        <p>{t("loading_questions")}</p>
       </div>
     );
   }
@@ -469,7 +466,7 @@ export default function PersonaAnalysis() {
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
         <div className="max-w-lg w-full text-center bg-slate-800 border border-slate-700 shadow-2xl rounded-2xl p-8">
           <h2 className="text-xl font-semibold text-white mb-2">
-            질문 로드 실패
+            {t("loading_questions_failed")}
           </h2>
           <p className="text-slate-400 mb-6">{questionError}</p>
           <div className="text-sm text-left bg-slate-900 p-4 rounded-md text-slate-400 mb-6 font-mono">
@@ -481,7 +478,7 @@ export default function PersonaAnalysis() {
             variant="primary"
             onClick={() => window.location.reload()}
           >
-            다시 시도
+            {t("retry")}
           </NeonButton>
         </div>
       </div>
@@ -496,11 +493,10 @@ export default function PersonaAnalysis() {
           <NeonCard className="max-w-lg w-full text-center" variant="secondary">
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold text-white">
-                질문 목록이 비어 있습니다
+                {t("empty_questions")}
               </h2>
               <p className="text-slate-200/80">
-                백엔드가 실행 중인지, 질문 데이터가 정상적으로 반환되는지
-                확인해주세요.
+                {t("empty_questions_description")}
               </p>
               <NeonButton
                 onClick={() => window.location.reload()}
@@ -508,7 +504,7 @@ export default function PersonaAnalysis() {
                 variant="primary"
                 size="md"
               >
-                새로고침
+                {t("refresh")}
               </NeonButton>
             </div>
           </NeonCard>
@@ -520,11 +516,12 @@ export default function PersonaAnalysis() {
   return (
     <BackgroundEffect className="neon-scrollbar px-4 pt-6 pb-28 md:px-8 md:py-12">
       <NeonScrollbarStyles />
-      <div className="max-w-3xl mx-auto relative z-10 space-y-12">
+      {/* --- 최종 수정된 부분 --- */}
+      <div className="w-full lg:w-[768px] mx-auto relative z-10 space-y-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
+          className="w-full text-center space-y-4"
         >
           <div className="inline-block relative p-0.5 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 shadow-lg shadow-fuchsia-500/30">
             <div className="bg-black/60 p-3 rounded-[14px]">
@@ -536,12 +533,11 @@ export default function PersonaAnalysis() {
               size={isMobile ? "3xl" : "5xl"}
               className="block leading-tight text-center"
             >
-              당신만의 여행 페르소나 찾기
+              {t("your_ai_travel_persona")}
             </GradientText>
           </h1>
           <p className="text-lg text-slate-200/80 max-w-xl mx-auto">
-            몇 가지 질문에 답하면 AI가 당신의 여행 스타일에 맞는 코스를 추천해
-            드릴게요.
+            {t("your_ai_travel_persona_description")}
           </p>
         </motion.div>
 
@@ -553,7 +549,6 @@ export default function PersonaAnalysis() {
             />
 
             <div className="relative">
-              {/* 질문 카드를 렌더링하고 애니메이션을 적용하는 컨테이너 */}
               <AnimatePresence initial={false} custom={direction}>
                 <motion.div
                   key={page}
@@ -575,7 +570,6 @@ export default function PersonaAnalysis() {
                   />
                 </motion.div>
               </AnimatePresence>
-              {/* QuestionCard의 높이만큼 공간을 차지하여 레이아웃이 깨지지 않도록 함 */}
               <div className="h-[420px]" />
             </div>
           </div>
@@ -595,7 +589,7 @@ export default function PersonaAnalysis() {
             className="flex flex-1 items-center justify-center gap-2 sm:flex-none"
           >
             <ChevronLeft className="w-4 h-4" />
-            이전
+            <span>{t("previous")}</span>
           </NeonButton>
 
           {currentStep < questions.length - 1 ? (
@@ -606,7 +600,7 @@ export default function PersonaAnalysis() {
               size="lg"
               className="flex flex-1 items-center justify-center gap-2 sm:flex-none"
             >
-              다음
+              <span>{t("next")}</span>
               <ChevronRight className="w-4 h-4" />
             </NeonButton>
           ) : (
@@ -619,10 +613,10 @@ export default function PersonaAnalysis() {
             >
               {isAnalyzing ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> 분석 중...
+                  <Loader2 className="w-4 h-4 animate-spin" /> <span>{t("analyzing")}</span>
                 </>
               ) : (
-                "결과 확인하기"
+                <span>{t("check_result")}</span>
               )}
             </NeonButton>
           )}
