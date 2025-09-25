@@ -28,7 +28,7 @@ import {
   Pin,
   BookOpen,
 } from "lucide-react";
-
+import Pagination from "../components/ui/pagination";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "../components/community/LoginModal";
 import PostModal from "../components/community/PostModal";
@@ -41,7 +41,7 @@ import {
   NeonButton,
   NeonScrollbarStyles,
 } from "../components/ui/NeonTheme";
-
+import IconPager from "../components/ui/IconPager";
 import PostDetailModal from "../components/community/PostDetailModal";
 import mockInfoData from "../utils/mockInfoData";
 import { getInfoPosts } from "../utils/mockInfoData";
@@ -1207,7 +1207,7 @@ const LiveSeoulSection = ({ isMobile, liveAreas = [] }) => {
 
   const scrollTo = (direction) => {
     if (scrollRef.current) {
-      const scrollAmount = isMobile ? 120 : 150;
+      const scrollAmount = isMobile ? 200 : 300;
       const newScrollLeft =
         scrollRef.current.scrollLeft +
         (direction === "left" ? -scrollAmount : scrollAmount);
@@ -1233,7 +1233,7 @@ const LiveSeoulSection = ({ isMobile, liveAreas = [] }) => {
   }, [places]);
 
   return (
-    <div className={`${isMobile ? "mb-6 mt-6" : "mb-8"}`}>
+    <div className={`${isMobile ? "mb-4 mt-4" : "mb-8"}`}>
       {/* 통합된 박스 */}
       <div>
         {/* 헤더 */}
@@ -1277,6 +1277,7 @@ const LiveSeoulSection = ({ isMobile, liveAreas = [] }) => {
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
               scrollBehavior: "smooth",
+              scrollSnapType: "x mandatory",
             }}
             {...swipeHandlers}
           >
@@ -1286,6 +1287,7 @@ const LiveSeoulSection = ({ isMobile, liveAreas = [] }) => {
                   key={place.areaName}
                   to={`/popular-places/${encodeURIComponent(place.areaName)}`}
                   className={`${isMobile ? "flex-shrink-0" : "flex-shrink-0"}`}
+                  style={{ scrollSnapAlign: "start" }}
                 >
                   <div
                     className={`hover:scale-105 transition-all duration-300 cursor-pointer rounded-full overflow-hidden p-0 ${
@@ -1474,7 +1476,8 @@ export default function CommunitySocial() {
 
   const getTranslatedContent = (post) => {
     const keyId = post.id || post.board_id;
-    if (post.category === "official") {
+    // 공지글이거나 에디터 픽 글인 경우 번역 시도
+    if (post.category === "official" || post.priority === "normal") {
       return t(`community.info.posts.${keyId}.content`, {
         defaultValue: post.content || "",
       });
@@ -1799,12 +1802,15 @@ export default function CommunitySocial() {
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            scroll-behavior: smooth;
+            scroll-snap-type: x mandatory;
           }
           .mobile-horizontal-scroll::-webkit-scrollbar {
             display: none;
           }
           .mobile-horizontal-scroll > * {
             flex-shrink: 0;
+            scroll-snap-align: start;
           }
           .desktop-horizontal-scroll {
             overflow-x: auto;
@@ -1812,9 +1818,14 @@ export default function CommunitySocial() {
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            scroll-behavior: smooth;
+            scroll-snap-type: x mandatory;
           }
           .desktop-horizontal-scroll::-webkit-scrollbar {
             display: none;
+          }
+          .desktop-horizontal-scroll > * {
+            scroll-snap-align: start;
           }
         `}</style>
 
@@ -1926,19 +1937,15 @@ export default function CommunitySocial() {
 
         {/* 메인 콘텐츠 */}
         <motion.div
-          className="relative z-10 p-6 md:pt-16 w-full max-w-7xl mx-auto"
+          className="relative z-10 px-2 py-4 md:p-6 md:pt-16 w-full max-w-7xl mx-auto"
           drag={isMobile ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={isMobile ? handleDragEnd : undefined}
         >
-          <div className="max-w-3xl mx-auto relative z-10 space-y-12">
+          <div className="w-full relative z-10 space-y-8 md:space-y-12">
             {/* <div className="flex gap-6 flex-col lg:flex-row"> */}
             {/* <div className="flex-1"> */}
-            <div
-              className={`${
-                isMobile ? "w-full flex-shrink-0 px-4 pt-0 pb-2" : ""
-              }`}
-            >
+            <div className="w-full">
               {/* 검색 입력 (탭은 상단 sticky 헤더로 이동) */}
               <div className="hidden md:flex flex-col sm:flex-row justify-end items-start sm:items-center mb-6 gap-4">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -1997,7 +2004,7 @@ export default function CommunitySocial() {
                       <div className="block md:hidden">
                         {/* 공지사항 - 모바일용 간략 버전 */}
                         {noticePosts.length > 0 && (
-                          <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-yellow-500/30 hover:border-yellow-400/50 hover:shadow-yellow-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-4">
+                          <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-yellow-500/30 hover:border-yellow-400/50 hover:shadow-yellow-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-3">
                             <div
                               className={`flex items-center gap-2 mb-3 ${
                                 isMobile ? "text-sm" : "text-lg"
@@ -2020,7 +2027,7 @@ export default function CommunitySocial() {
                                 .map((post, index) => (
                                   <div
                                     key={post.id || post.board_id}
-                                    className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-3"
+                                    className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-2"
                                   >
                                     <h4
                                       className="text-white font-medium hover:text-purple-300 transition-colors cursor-pointer text-sm mb-1"
@@ -2051,8 +2058,8 @@ export default function CommunitySocial() {
                         {/* Editor's Pick 섹션 */}
                         {posts.filter((post) => post.priority !== "notice")
                           .length > 0 && (
-                          <div className="mt-6">
-                            <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/30 hover:border-purple-400/50 hover:shadow-purple-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-4">
+                          <div className="mt-4">
+                            <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-purple-500/30 hover:border-purple-400/50 hover:shadow-purple-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-3">
                               <div
                                 className={`flex items-center gap-2 mb-4 ${
                                   isMobile ? "text-sm" : "text-lg"
@@ -2066,7 +2073,7 @@ export default function CommunitySocial() {
                                     isMobile ? "text-sm" : "text-lg"
                                   } font-semibold text-white`}
                                 >
-                                  {t("community.labels.editors_pick_klover")}
+                                  {t("community.labels.editors_pick")}
                                 </h3>
                               </div>
                               <div className="space-y-3">
@@ -2121,6 +2128,16 @@ export default function CommunitySocial() {
                                     );
                                   })}
                               </div>
+
+                              {/* 정보탭 페이지네이션 - Editor's Pick 안에 */}
+                              <IconPager
+                                currentPage={pagination.currentPage}
+                                totalPages={pagination.totalPages}
+                                onChange={(page) => handlePageChange(page)}
+                                className="mt-4"
+                                ariaPrev="이전"
+                                ariaNext="다음"
+                              />
                             </div>
                           </div>
                         )}
@@ -2319,6 +2336,16 @@ export default function CommunitySocial() {
                                     );
                                   })}
                               </div>
+
+                              {/* 정보탭 페이지네이션 - Editor's Pick 안에 */}
+                              <IconPager
+                                currentPage={pagination.currentPage}
+                                totalPages={pagination.totalPages}
+                                onChange={(page) => handlePageChange(page)}
+                                className="mt-4"
+                                ariaPrev="이전"
+                                ariaNext="다음"
+                              />
                             </div>
                           </div>
                         )}
@@ -2352,7 +2379,7 @@ export default function CommunitySocial() {
                 posts.length > 0 ? (
                   <>
                     {/* 후기 게시글 섹션 */}
-                    <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-4 md:p-6">
+                    <div className="bg-gradient-to-br from-gray-900/80 to-black/90 backdrop-blur-lg border border-blue-500/30 hover:border-cyan-500/50 hover:shadow-cyan-500/20 rounded-2xl shadow-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden p-3 md:p-6">
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-2 h-5 animate-pulse mr-1">💬</div>
                         <h3 className="text-base md:text-lg font-semibold text-white">
@@ -2389,7 +2416,7 @@ export default function CommunitySocial() {
                       </div>
                       {/* 글쓰기 버튼 - 후기탭에서만 표시 */}
                       {profile && (
-                        <div className="mt-6 flex justify-center">
+                        <div className="mt-4 flex justify-center">
                           <NeonButton
                             onClick={handleCreatePostClick}
                             variant="primary"
@@ -2400,6 +2427,16 @@ export default function CommunitySocial() {
                           </NeonButton>
                         </div>
                       )}
+
+                      {/* 후기탭 페이지네이션 - 글 목록 섹션 안에 */}
+                      <IconPager
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        onChange={(page) => handlePageChange(page)}
+                        className="mt-4"
+                        ariaPrev="이전"
+                        ariaNext="다음"
+                      />
                     </div>
                   </>
                 ) : (

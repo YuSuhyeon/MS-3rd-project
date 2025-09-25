@@ -80,6 +80,82 @@ Korean Air, Asiana Airlines, Jeju Air, T'way Air, Air Seoul, Air Busan, Jin Air,
   {
     id: "10003",
     board_id: "10003",
+    title: "✈️ Seoul City Airport Terminal Smart Usage Guide",
+    content: `Check-in and complete departure procedures before heading to the airport! Make the most of Seoul's City Airport Terminal services.
+
+📍 Operating City Airport Terminals:
+- Seoul Station City Airport Terminal (B2F)
+- Gwangmyeong Station City Airport Terminal
+
+🛫 Available Services:
+- Check-in and seat assignment
+- Baggage drop-off service  
+- Immigration clearance (Seoul Station only)
+- Direct connection to Airport Railroad Express
+
+✈️ Participating Airlines:
+Korean Air, Asiana Airlines, Jeju Air, T'way Air, Air Seoul, Air Busan, Jin Air, Easter Jet
+
+🕒 Operating Hours:
+- Check-in/Baggage drop: 05:20~19:00
+- Immigration clearance: 05:30~19:00
+
+⏰ Check-in Deadline:
+- Terminal 1 departures: 3 hours before flight departure
+- Terminal 2 departures: 3 hours 20 minutes before flight departure
+
+⚠️ Important Notes:
+- Airport Railroad Express ticket required
+- Same-day Incheon Airport international flights only
+- Mobile check-in not available (counter check-in required)
+
+💡 Benefits: Access to dedicated departure gate at the airport after completing city terminal procedures!`,
+    user_name: "Seoul Metropolitan Government",
+    user_profile_image: "/img/seoul_CI.png",
+    user_id: "seoul_admin",
+    tags: "city airport terminal,Seoul Station,Incheon Airport,check-in,immigration,Airport Railroad",
+    //  is_liked: false,
+    category: "official",
+    priority: "notice",
+    is_pinned: true,
+  },
+  {
+    id: "10002",
+    board_id: "10002",
+    title: "🎆 2025 서울세계불꽃축제 개최 안내",
+    content: `올해도 화려한 불꽃으로 서울의 밤하늘을 수놓을 서울세계불꽃축제가 개최됩니다!
+  
+  🎊 축제 정보:
+  - 일시: 2025년 9월 27일(토) 오후 7:30~9:00
+  - 장소: 여의도 한강공원 일대
+  - 주제: "Seoul Dreams, Global Harmony"
+  
+  🎯 관람 포인트:
+  - 여의도 한강공원 (메인 관람석)
+  - 반포 한강공원 
+  - 뚝섬 한강공원,
+  - 망원 한강공원
+  
+  🚇 교통 정보:
+  - 5호선 여의나루역 3번 출구
+  - 9호선 샛강역 1번 출구  
+  - 축제 당일 지하철 연장 운행 예정
+  
+  ⚠️ 안전을 위해 텐트, 돗자리 설치는 오후 2시부터 가능합니다.
+  
+  자세한 정보는 서울시 공식 홈페이지를 확인해주세요!`,
+    user_name: "서울시",
+    user_profile_image: "/img/seoul_CI.png",
+    user_id: "seoul_admin",
+    tags: "불꽃축제,여의도,한강공원,축제,문화행사",
+    is_liked: false,
+    category: "official",
+    priority: "notice",
+    is_pinned: true,
+  },
+  {
+    id: "10003",
+    board_id: "10003",
     title: "🌟 서울 지하철 2025년 추석 단축 운영",
     content: `민족 대명절 추석을 맞아 서울지하철 1-9호선이 오후 11시까지 단축 운행합니다.
 
@@ -97,7 +173,9 @@ Korean Air, Asiana Airlines, Jeju Air, T'way Air, Air Seoul, Air Busan, Jin Air,
     user_id: "seoul_admin",
     tags: "지하철,단축 운행,추석,교통정보",
     // likes_count: 156,
+    // likes_count: 156,
     //comments_count: 28,
+    //views: 1245,
     //views: 1245,
     is_liked: false,
     category: "official",

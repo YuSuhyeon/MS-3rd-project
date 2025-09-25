@@ -10,6 +10,7 @@ import "@mantine/core/styles.css";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./context/AuthContext";
+import "./i18n"; // i18n 초기화
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 

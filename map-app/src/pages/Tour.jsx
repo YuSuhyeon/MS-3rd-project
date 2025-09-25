@@ -194,7 +194,7 @@ const MobileTourCard = ({ item, onDetailClick }) => {
       onClick={() => onDetailClick(item)}
     >
       {/* 모바일 최적화 이미지 섹션 */}
-      <div className="relative h-44 sm:h-48 md:h-56 lg:h-64 overflow-hidden">
+      <div className="relative h-28 overflow-hidden">
         <img
           src={item.image || "/placeholder.svg"}
           alt={t(`data.${item.id}.title`, { defaultValue: item.title })}
@@ -503,25 +503,48 @@ export default function Tour() {
             transition={{ duration: 0.6 }}
             className="text-center mb-8 sm:mb-12"
           >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4 px-4">
-              {t("header.klover")}
-              <br className="sm:hidden" /> {t("header.tour")}
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4 px-4">
+              한국의 숨겨진 매력을
+              <br className="sm:hidden" /> 발견하세요
             </h1>
-            <p className="text-base sm:text-lg md:text-xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 sm:mb-8 px-4">
-              {t("header.subtitle")}
+            <p className="text-lg sm:text-xl md:text-2xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 sm:mb-8 px-4">
+              프리미엄 한국 문화 체험 투어
             </p>
-          </motion.div>
-          {/* 모바일/데스크톱 반응형 투어 카드 섹션 (데스크톱 과도한 가로 확장 방지) */}
-          <div className="max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto space-y-6">
-            <NeonCard className="p-4">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/25">
-                  <Package className="w-6 h-6 text-white" />
+
+            {/* 검색 및 필터 
+            <div className="max-w-4xl mx-auto px-4">
+              <div className="space-y-4 mb-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="투어 검색..."
+                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-purple-500/30 bg-gray-900/80 backdrop-blur-sm focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/20 outline-none transition-all text-white placeholder-gray-400 shadow-lg"
+                  />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
-                    {t("list.title")}
-                  </h2>
+
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {categories.map((category) => (
+                    <button
+                      key={category.value}
+                      onClick={() => {
+                        setFilterCategory(category.value);
+                        setCurrentPage(1); // 필터 변경시 첫 페이지로
+                      }}
+                      className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 rounded-2xl border transition-all shadow-lg ${
+                        filterCategory === category.value
+                          ? "bg-gradient-to-r from-purple-600 to-pink-600 border-purple-500 text-white shadow-purple-500/25"
+                          : "bg-gray-900/70 border-gray-600/50 text-gray-300 hover:border-purple-500/50 hover:bg-gray-800/70"
+                      }`}
+                    >
+                      <span className="text-lg">{category.emoji}</span>
+                      <span className="text-sm font-medium whitespace-nowrap">
+                        {category.label}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -565,17 +588,17 @@ export default function Tour() {
 
               {currentItems.length > 0 ? (
                 <>
-                  {/* 그리드: 모바일 1열, 데스크톱 2열 */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <AnimatePresence mode="sync">
+                  {/* 모바일 그리드 (2x2) */}
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <AnimatePresence mode="wait">
                       {currentItems.map((item, index) => (
                         <motion.div
-                          key={`${currentPage}-${item.id}`}
+                          key={item.id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{
                             opacity: 1,
                             y: 0,
-                            transition: { delay: index * 0.1 },
+                            transition: { delay: index * 0.05 },
                           }}
                           exit={{ opacity: 0, y: -20 }}
                           className="h-full"
@@ -597,10 +620,11 @@ export default function Tour() {
                           handlePageChange(Math.max(1, currentPage - 1))
                         }
                         disabled={currentPage === 1}
-                        className="flex items-center gap-1 px-3 py-2 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
+                        className="flex items-center justify-center w-10 h-10 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
+                        title={t("pagination.prev")}
                       >
                         <ChevronLeft size={16} />
-                        <span className="text-sm">{t("pagination.prev")}</span>
+                        <span className="text-sm">이전</span>
                       </button>
 
                       <div className="flex space-x-1">
@@ -629,9 +653,10 @@ export default function Tour() {
                           )
                         }
                         disabled={currentPage === totalPages}
-                        className="flex items-center gap-1 px-3 py-2 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
+                        className="flex items-center justify-center w-10 h-10 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
+                        title={t("pagination.next")}
                       >
-                        <span className="text-sm">{t("pagination.next")}</span>
+                        <span className="text-sm">다음</span>
                         <ChevronRight size={16} />
                       </button>
                     </div>

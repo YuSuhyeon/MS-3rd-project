@@ -1,4 +1,5 @@
 // PersonaAnalysis.jsx
+// PersonaAnalysis.jsx
 import React, { useState, useEffect } from "react";
 import { TravelProfile } from "Entities/TravelProfile";
 import {
@@ -33,6 +34,7 @@ import {
   GradientText,
   NeonScrollbarStyles,
 } from "../components/ui/NeonTheme";
+import { useTranslation } from "react-i18next";
 import { useTranslation } from "react-i18next";
 
 // --- Child Components ---
@@ -204,13 +206,18 @@ function QuestionCard({ question, answer, onAnswer }) {
         ? answer.length
         : 0
       : 0;
-  
+
   const translatedTitle = t(`questions.${question.id}.title`, question.title);
 
   return (
     <div className="flex flex-col h-[420px]">
       <div className="text-center pb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">{translatedTitle}</h2>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          {translatedTitle}
+        </h2>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          {translatedTitle}
+        </h2>
         {question.type === "multiple" && (
           <p className="text-sm text-slate-400">
             <span
@@ -235,9 +242,17 @@ function QuestionCard({ question, answer, onAnswer }) {
                 question.type === "multiple" &&
                 !selected &&
                 selectionCount >= (question.maxSelections || 3);
-              
-              const translatedLabel = t(`questions.${question.id}.options.${option.value}.label`, option.label);
-              const translatedDescription = option.description ? t(`questions.${question.id}.options.${option.value}.description`, option.description) : null;
+
+              const translatedLabel = t(
+                `questions.${question.id}.options.${option.value}.label`,
+                option.label
+              );
+              const translatedDescription = option.description
+                ? t(
+                    `questions.${question.id}.options.${option.value}.description`,
+                    option.description
+                  )
+                : null;
 
               return (
                 <motion.div
@@ -267,6 +282,7 @@ function QuestionCard({ question, answer, onAnswer }) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center">
                           <span className="font-semibold text-white truncate">
+                            {translatedLabel}
                             {translatedLabel}
                           </span>
                           <AnimatePresence>
@@ -303,7 +319,6 @@ function QuestionCard({ question, answer, onAnswer }) {
     </div>
   );
 }
-
 
 const questionVariants = {
   enter: (direction) => ({ x: direction > 0 ? 30 : -30, opacity: 0 }),
@@ -420,6 +435,7 @@ export default function PersonaAnalysis() {
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-slate-400">
         <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
         <p>{t("checking_login_status")}</p>
+        <p>{t("checking_login_status")}</p>
       </div>
     );
   }
@@ -431,12 +447,15 @@ export default function PersonaAnalysis() {
         <NeonCard className="max-w-lg w-full text-center space-y-6">
           <div className="space-y-2">
             <GradientText size="2xl">{t("login_required")}</GradientText>
+            <GradientText size="2xl">{t("login_required")}</GradientText>
             <p className="text-slate-300">
+              {t("login_required_description")}
               {t("login_required_description")}
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <NeonButton size="lg" onClick={() => login("google")}>
+              {t("google_login")}
               {t("google_login")}
             </NeonButton>
             <NeonButton
@@ -444,6 +463,7 @@ export default function PersonaAnalysis() {
               variant="secondary"
               onClick={() => login("microsoft")}
             >
+              {t("microsoft_login")}
               {t("microsoft_login")}
             </NeonButton>
           </div>
@@ -456,6 +476,7 @@ export default function PersonaAnalysis() {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-slate-400">
         <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
+        <p>{t("loading_questions")}</p>
         <p>{t("loading_questions")}</p>
       </div>
     );
@@ -538,6 +559,7 @@ export default function PersonaAnalysis() {
           </h1>
           <p className="text-lg text-slate-200/80 max-w-xl mx-auto">
             {t("your_ai_travel_persona_description")}
+            {t("your_ai_travel_persona_description")}
           </p>
         </motion.div>
 
@@ -590,6 +612,7 @@ export default function PersonaAnalysis() {
           >
             <ChevronLeft className="w-4 h-4" />
             <span>{t("previous")}</span>
+            <span>{t("previous")}</span>
           </NeonButton>
 
           {currentStep < questions.length - 1 ? (
@@ -600,6 +623,7 @@ export default function PersonaAnalysis() {
               size="lg"
               className="flex flex-1 items-center justify-center gap-2 sm:flex-none"
             >
+              <span>{t("next")}</span>
               <span>{t("next")}</span>
               <ChevronRight className="w-4 h-4" />
             </NeonButton>
@@ -613,7 +637,8 @@ export default function PersonaAnalysis() {
             >
               {isAnalyzing ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> <span>{t("analyzing")}</span>
+                  <Loader2 className="w-4 h-4 animate-spin" />{" "}
+                  <span>{t("analyzing")}</span>
                 </>
               ) : (
                 <span>{t("check_result")}</span>

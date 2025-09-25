@@ -590,6 +590,7 @@ const resources = {
       "login.logout": "로그아웃",
       "login.login": "로그인",
       "main.title.k_travel": "여행",
+      "main.title.k_travel": "여행",
       "main.title.connector": "을",
       "main.title.ai_creates": "AI가 만들어드려요",
       "main.subtitle":
@@ -624,6 +625,8 @@ const resources = {
       "footer.partnership": "파트너십",
       "footer.copyright": "© 2025 Klover. All rights reserved.",
       "modal.welcome": "Klover에 오신 것을 환영합니다",
+      "footer.copyright": "© 2025 Klover. All rights reserved.",
+      "modal.welcome": "Klover에 오신 것을 환영합니다",
       "modal.instruction": "AI 맞춤 여행 플래너를 시작하려면 로그인하세요",
       "modal.continue_google": "Google로 계속하기",
       "modal.continue_microsoft": "Microsoft로 계속하기",
@@ -634,6 +637,48 @@ const resources = {
       "modal.disclaimer.suffix": "에 동의하는 것으로 간주됩니다.",
       "cta.title": "이제, 당신의 완벽한 여행을 시작할 시간",
       "cta.start": "5가지 질문으로 시작하기",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "당신만의 여행 페르소나를 발견하세요",
+      "home.persona.desc":
+        "5가지 질문으로 여행 스타일을 분석하고, AI가 맞춤형 코스를 추천해드립니다.",
+      "home.persona.cta": "페르소나 분석 시작하기",
+      "home.persona.card1.title": "여행 스타일은?",
+      "home.persona.card1.pill1": "모험 추구형",
+      "home.persona.card1.pill2": "여유 만끽형",
+      "home.persona.card1.pill3": "계획적 탐방형",
+      "home.persona.card2.title": "관심 있는 활동은?",
+      "home.persona.card2.pill1": "문화 체험",
+      "home.persona.card2.pill2": "음식 탐방",
+      "home.persona.card2.pill3": "쇼핑",
+      "home.persona.card3.title": "선호하는 분위기는?",
+      "home.persona.card3.pill1": "트렌디한",
+      "home.persona.card3.pill2": "전통적인",
+      "home.persona.card3.pill3": "자연친화적",
+
+      "home.ai_reco.title": "AI가 만드는 완벽한 여행 코스",
+      "home.ai_reco.desc":
+        "개인 맞춤 분석을 바탕으로 최적의 여행 루트를 실시간으로 생성합니다.",
+      "home.ai_reco.tag1": "실시간 생성",
+      "home.ai_reco.tag2": "맞춤형 추천",
+      "home.ai_reco.tag3": "최적 경로",
+      "home.ai_reco.tag4": "시간 효율",
+      "home.ai_reco.tag5": "현지 정보",
+
+      "home.editing.title": "자유롭게 편집하고 완성하세요",
+      "home.editing.desc":
+        "드래그 앤 드롭으로 여행 일정을 자유롭게 수정하고 나만의 완벽한 플랜을 만들어보세요.",
+
+      "home.map.preview_label": "맞춤 여행 루트",
+
+      "home.itinerary.title": "여행 일정",
+      "home.itinerary.item1": "경복궁 관람",
+      "home.itinerary.item2": "북촌 한옥마을",
+      "home.itinerary.item3": "인사동 문화거리",
+      "home.itinerary.item4": "명동 쇼핑",
+
+      "home.controls.undo": "실행취소",
+      "home.controls.save": "저장하기",
 
       // Home.jsx 추가 번역 키들
       "home.persona.title": "당신만의 여행 페르소나를 발견하세요",
@@ -759,6 +804,17 @@ const resources = {
       section_translator_benefit: "실시간 음성 및 텍스트 번역",
       section_culture_benefit: "한국 문화와 예절 가이드",
 
+      // Hero 섹션
+      hero_tagline: "여행자 필수 도구",
+      hero_title: "서바이벌 키트",
+      hero_subtitle:
+        "한국 여행 중 필요한 모든 도구와 정보를 한 곳에서 만나보세요",
+
+      // 섹션 설명
+      section_vision_benefit: "이미지 텍스트 인식 및 번역",
+      section_translator_benefit: "실시간 음성 및 텍스트 번역",
+      section_culture_benefit: "한국 문화와 예절 가이드",
+
       vision_ocr: "비전 OCR",
       quick_translator: "빠른 통역",
       culture_guide: "한국 문화 가이드",
@@ -861,6 +917,7 @@ const resources = {
       gift_modal_list_1: "양손으로 주고받기",
       gift_modal_list_2:
         "명절·집들이·감사 인사 등 다양한 상황에서 선물 주고받음",
+      modal_close: "닫기",
       modal_close: "닫기",
     },
     VisionOCR: {
@@ -2024,6 +2081,567 @@ const resources = {
         title: "Tour not found",
         description: "We couldn't load the requested tour information.",
       },
+    tour: {
+      header: {
+        klover: "Klover",
+        tour: "Tour",
+        subtitle: "Premium Personal Tour",
+      },
+      list: {
+        title: "Klover Tour",
+        subtitle:
+          "This is Klover's exclusive tour package launched in partnership with our affiliated companies, a special travel product available exclusively for Klover users.",
+      },
+      search: { placeholder: "Search tours..." },
+      categories: {
+        all: "All",
+        experience: "Experience",
+        it: "IT",
+        sports: "Sports",
+        beauty: "Beauty",
+        culture: "History",
+      },
+      pagination: { prev: "Prev", next: "Next" },
+      empty: {
+        title: "No results",
+        description: "Try a different search or filter.",
+      },
+      partners: { title: "Partners", subtitle: "Trusted partners" },
+    },
+    tourDetail: {
+      products: {
+        1: {
+          title: "Netflix x Interpark Global",
+          description:
+            "K-Pop Demon Hunters themed tour including a free pass to Everland.",
+          location: "Gangnam, Seoul → Everland, Yongin",
+        },
+        2: {
+          title: "Microsoft AI Tour Seoul",
+          description:
+            "Microsoft AI Tour Seoul - where AI technology meets cultural heritage restoration.",
+          location: "Jung-gu, Seoul",
+        },
+        3: {
+          title: "Han River Bus X Instagram Seoul Hot Spots Tour",
+          description:
+            "An atmospheric tour exploring Seoul's iconic photo spots and Instagram hot places via the Han River Bus.",
+          location: "All sections of the Han River",
+        },
+        4: {
+          title: "LG Twins Baseball Game Experience",
+          description:
+            "Premium viewing at Jamsil Baseball Stadium + chicken & beer + sports experience.",
+          location: "Songpa-gu, Seoul (Jamsil Special Tourist Zone)",
+        },
+        5: {
+          title: "K-Beauty X OLIVE YOUNG Premium Beauty Tour",
+          description:
+            "Dermatology Care + K-Beauty Brand Experience + OLIVE YOUNG Shopping + Hanbang Spa.",
+          location: "Gangnam-gu, Seoul",
+        },
+        6: {
+          title: "Seoul Traditional Culture Tour",
+          description:
+            "A fun museum experience with an AI docent and Kakao Friends characters.",
+          location: "Jongno-gu, Seoul",
+        },
+      },
+      data: {
+        1: {
+          title: "K-Pop Demon Hunters × Everland Special Collaboration Tour",
+          subtitle:
+            "A perfect collaboration between the Netflix original series and Korea's top theme park.",
+          location:
+            "Everland, Naksan Park, N Seoul Tower, National Museum of Korea",
+          duration: "10 hours (Includes Everland admission)",
+          groupSize: "Up to 12 people",
+          language: "Korean, English, Chinese",
+          partnership: {
+            primary: "NETFLIX",
+            secondary: "Samsung Everland",
+            tertiary: "Seoul Tourism Organization",
+          },
+          specialFeatures: [
+            "Includes 1-day free pass to Everland",
+            "Limited edition K-Pop Demon Hunters merchandise set",
+            "Unlimited access to AR photo zones",
+            "Drama OST playlist provided",
+            "Guided audio tour of filming locations",
+          ],
+          itinerary: [
+            {
+              time: "08:30",
+              location: "Gangnam Station Meetup",
+              description: "Board private bus & tour briefing",
+              duration: "30 min",
+            },
+            {
+              time: "09:30",
+              location: "Enter Everland",
+              description:
+                "Begin the K-Pop Demon Hunters theme zone experience",
+              duration: "4 hours",
+            },
+            {
+              time: "10:00",
+              location: "Demon Hunters Attraction",
+              description: "Experience the thrill ride 'Devil's Chase'",
+              duration: "45 min",
+            },
+            {
+              time: "11:00",
+              location: "Lumi's School of Magic",
+              description: "Interactive magic experience & AR photo zone",
+              duration: "60 min",
+            },
+            {
+              time: "12:30",
+              location: "Demon Hunters Restaurant",
+              description: "Drama-themed lunch set & limited edition dessert",
+              duration: "90 min",
+            },
+            {
+              time: "14:00",
+              location: "Move to Naksan Park",
+              description: "Reenact the Lumi ♥ Jinwoo date scene",
+              duration: "90 min",
+            },
+            {
+              time: "16:00",
+              location: "N Seoul Tower",
+              description:
+                "Final boss battle filming location & observatory visit",
+              duration: "120 min",
+            },
+            {
+              time: "18:00",
+              location: "National Museum of Korea",
+              description:
+                "Tour of the ancient artifact episode filming location",
+              duration: "60 min",
+            },
+          ],
+          detailSections: [
+            {
+              title: "Everland X K-Pop Demon Hunters Theme Zone",
+              text: "Experience the thrilling action from the drama firsthand at the world's first K-Pop Demon Hunters theme zone. Immersive attractions perfectly recreating Lumi's School of Magic, Jinwoo's Training Center, and demon-slaying missions await you.",
+            },
+            {
+              title: "Recreate the Romantic Date Scene at Naksan Park",
+              text: "Recreate the most memorable date scene between Lumi and Jinwoo from the drama at Naksan Park. Enjoy a dramatic photo time with panoramic views of Seoul, with a dedicated photographer to capture your perfect shot.",
+            },
+            {
+              title: "The Final Battle Stage at N Seoul Tower",
+              text: "Experience the season finale's final boss battle at N Seoul Tower in VR, and enjoy the night view of Seoul as if you were the drama's protagonist. A limited-edition couple's locker experience is also included.",
+            },
+          ],
+          inclusions: [
+            "Everland 1-day free pass",
+            "Round-trip private tour bus",
+            "K-Pop Demon Hunters merchandise set",
+            "Drama-themed lunch & dessert",
+            "Professional guide service",
+            "N Seoul Tower observatory ticket",
+            "AR photo zone pass",
+            "10% discount coupon for souvenir shop",
+          ],
+          exclusions: [
+            "Personal shopping expenses",
+            "Fees for additional rides",
+            "Traveler's insurance",
+            "Personal snacks and drinks",
+          ],
+        },
+        2: {
+          title: "Microsoft AI Tour Seoul",
+          subtitle: "Where AI Technology Meets Cultural Heritage Restoration",
+          location: "Microsoft Korea, Jung-gu, Seoul",
+          duration: "4 hours",
+          groupSize: "Up to 20 people",
+          language: "Korean, English",
+          partnership: {
+            primary: "Microsoft Korea",
+            secondary: "Cultural Heritage Administration",
+          },
+          itinerary: [
+            {
+              time: "09:00",
+              location: "Microsoft Korea Office",
+              description: "Introduction to AI technology and tour start",
+            },
+            {
+              time: "10:00",
+              location: "AI Demo Center",
+              description: "Experience AI for cultural heritage restoration",
+            },
+            {
+              time: "11:30",
+              location: "Cultural Heritage Admin. Collaboration Hall",
+              description: "See case studies of digital restoration",
+            },
+            {
+              time: "13:00",
+              location: "Microsoft Goods Shop",
+              description: "Limited edition souvenirs and AI experience kits",
+            },
+          ],
+          detailSections: [
+            {
+              title: "Microsoft AI Conference 2025 - Key Agenda",
+              text: "Satya Nadella introduces the future of AI at the Microsoft AI Conference in Seoul. The agenda, including a keynote, 25 breakout sessions, and 12 hands-on workshops, provides deep insights into AI innovation and industrial change.",
+            },
+            {
+              title: "Learn and Connect at Microsoft AI Conference 2025",
+              text: "Attendees introduced by Satya Nadella will gain insights from industry leaders on AI innovation and explore the latest technologies in cloud, AI, and security. It also offers opportunities to connect with Microsoft executives, have one-on-one discussions with experts, and expand networks through dynamic community sessions.",
+            },
+            {
+              title: "Microsoft AI Conference - Live Session",
+              text: "Audiences gather at the Microsoft AI Conference to listen to a keynote on the future of AI.",
+            },
+          ],
+          inclusions: [
+            "Expert-led guided tour",
+            "AI technology experience session",
+            "Limited edition souvenir",
+            "Networking opportunities",
+          ],
+          exclusions: ["Transportation costs", "Meals", "Personal expenses"],
+        },
+        3: {
+          title: "Han River Bus X Instagram Seoul Hot Spots Tour",
+          subtitle: "Conquer Seoul's top photo spots along the Han River",
+          location: "Han River Parks (Yeouido-Jamsil-Banpo-Mapo)",
+          duration: "3.5 hours",
+          groupSize: "Up to 25 people",
+          language: "Korean, English",
+          partnership: {
+            primary: "Seoul Tourism Foundation",
+            secondary: "Hangang Project Headquarters",
+          },
+          itinerary: [
+            {
+              time: "15:00",
+              location: "Yeouido Han River Park",
+              description: "Tour start & Instagram photo tips lecture",
+            },
+            {
+              time: "15:30",
+              location: "Han River Bus (Yeouido→Jamsil)",
+              description:
+                "On-bus photoshoot with 63 Building & IFC Mall background",
+            },
+            {
+              time: "16:00",
+              location: "Jamsil Lotte World Tower Photo Zone",
+              description: "Take iconic Seoul skyline shots",
+            },
+            {
+              time: "16:45",
+              location: "Han River Bus (Jamsil→Banpo)",
+              description:
+                "Shoot cinematic videos with a Han River cruise vibe",
+            },
+            {
+              time: "17:15",
+              location: "Banpo Rainbow Fountain",
+              description: "Capture golden hour time-lapse of the fountain",
+            },
+            {
+              time: "18:00",
+              location: "Sebitseom LED Show",
+              description:
+                "Night view fireworks and group commemorative photos",
+            },
+          ],
+          detailSections: [
+            {
+              title: "Yeouido Han River Park Tour",
+              text: "Feel the cool breeze cycling along the river at Yeouido Han River Park, a recreational space in the heart of Seoul. Enjoy a leisurely picnic on the green lawn and admire the unique scenery of the Han River and skyline.",
+            },
+            {
+              title: "Banpo Rainbow Fountain Tour",
+              text: "Listed in the Guinness Book of Records as the world's longest bridge fountain, the Banpo Rainbow Fountain is a landmark of the Han River. During the day, cool streams of water gush out, and at night, colorful lights and music create a romantic atmosphere, making it one of the best spots to enjoy Seoul's night view.",
+            },
+            {
+              title: "Sebitseom (Floating Islands) Tour",
+              text: "As the world's first artificial floating islands, Sebitseom is a multipurpose cultural space consisting of three islands: 'Gavit,' 'Chavit,' and 'Solvit.' It hosts exhibitions, performances, and events, and you can enjoy a special meal at restaurants and cafes overlooking the Han River. Especially at night, LED lights adorn the entire island, making it a representative night view spot in Seoul. Yacht and boat experiences are also available for a unique pleasure.",
+            },
+          ],
+          inclusions: [
+            "Han River Bus ticket",
+            "Professional photographer guide",
+            "Photo shooting and editing service",
+            "Beverages and snacks",
+          ],
+          exclusions: [
+            "Personal camera equipment",
+            "Meal costs",
+            "Additional activity fees",
+          ],
+        },
+        4: {
+          title: "LG Twins Premium Baseball Viewing Tour",
+          subtitle:
+            "The perfect baseball experience at Jamsil Baseball Stadium",
+          location: "Jamsil Baseball Stadium, Lotte World Tower",
+          duration: "6 hours",
+          groupSize: "Up to 25 people",
+          language: "Korean, English, Japanese",
+          partnership: { primary: "LG Twins", secondary: "Kyochon Chicken" },
+          itinerary: [
+            {
+              time: "14:00",
+              location: "Jamsil Station, Exit 2",
+              description: "Tour start & introduction to baseball culture",
+            },
+            {
+              time: "15:00",
+              location: "LG Twins Fan Shop",
+              description: "Try on uniforms and prepare cheering gear",
+            },
+            {
+              time: "18:00",
+              location: "Kyochon Chicken Premium Box Seats",
+              description: "Watch the game with chicken & beer",
+            },
+            {
+              time: "20:00",
+              location: "Photo Zone",
+              description:
+                "Commemorative snap photo tour with the stadium background",
+            },
+          ],
+          detailSections: [
+            {
+              title: "Jamsil Baseball Game",
+              text: "As a representative sports landmark in Seoul, Jamsil Baseball Stadium is the home of the LG Twins and Doosan Bears, where you can feel the excitement of Korean professional baseball up close. The unique atmosphere created by chants and cheering sticks in this large stadium, which can accommodate over 30,000 people, conveys the charm of Korean pro baseball. Especially, the passionate cheering of LG Twins fans offers an unforgettable experience for visitors to Jamsil.",
+            },
+            {
+              title: "LG Twins",
+              text: "International tourists are enthusiastically cheering and enjoying the atmosphere at an LG Twins baseball game in Seoul. Korean professional baseball, with its cheerleader-style cheering culture, offers a unique tourist course, providing special memories for international visitors.",
+            },
+          ],
+          inclusions: [
+            "Premium baseball game ticket",
+            "Chicken and beer set",
+            "LG Twins cheering gear",
+            "Professional guide",
+          ],
+          exclusions: [
+            "Additional food and drinks",
+            "Personal souvenir purchases",
+            "Transportation costs",
+          ],
+        },
+        5: {
+          title: "K-Beauty & Wellness Premium Tour",
+          subtitle:
+            "The perfect combination of Korea's top beauty technology and traditional wellness",
+          location: "Gangnam area (Apgujeong-Cheongdam-Sinsa)",
+          duration: "6 hours",
+          groupSize: "Up to 12 people",
+          language: "Korean, English, Chinese, Japanese",
+          partnership: {
+            primary: "OLIVE YOUNG",
+            secondary: "Gangnam Dermatology Association",
+          },
+          itinerary: [
+            {
+              time: "10:00",
+              location: "Personal Color Diagnosis",
+              description:
+                "Personal color analysis + customized makeup recommendation",
+            },
+            {
+              time: "11:00",
+              location: "Apgujeong Premium Dermatology Clinic",
+              description: "Skin analysis + HydraFacial care (30 min)",
+            },
+            {
+              time: "13:00",
+              location: "Cheongdam-dong Korean Restaurant",
+              description: "Herbal medicinal lunch for healthy skin",
+            },
+            {
+              time: "14:30",
+              location: "Sinsa-dong K-Beauty Experience Center",
+              description:
+                "Customized care experience from brands like Sulwhasoo, The History of Whoo",
+            },
+            {
+              time: "15:30",
+              location: "Apgujeong Traditional Hanbang Spa",
+              description: "Loess soil jjimjil + aroma massage (90 min)",
+            },
+            {
+              time: "17:30",
+              location: "OLIVE YOUNG VIP Shopping",
+              description:
+                "Personalized product recommendations + duty-free shopping",
+            },
+          ],
+          partnershipBenefits: [
+            {
+              icon: "Award",
+              title: "Premium Skin Care",
+              description: "Top Gangnam clinic HydraFacial + skin analysis",
+              value: "Valued at ₩150,000",
+            },
+            {
+              icon: "Gift",
+              title: "K-Beauty Goodie Bag",
+              description:
+                "Sample kits from popular brands like Sulwhasoo, The History of Whoo, Innisfree",
+              value: "Worth ₩80,000",
+            },
+            {
+              icon: "Play",
+              title: "Hanbang Wellness Spa",
+              description:
+                "Loess soil jjimjilbang + 90-min traditional aroma massage",
+              value: "Worth ₩120,000",
+            },
+          ],
+          detailSections: [
+            {
+              title: "K-Beauty Personal Color Diagnosis Experience",
+              text: "Discover the colors that best suit your image through a personal color diagnosis, a core trend in Korean beauty. A professional consultant analyzes colors that match your skin tone and mood, providing practical help for makeup and fashion styling. For foreign visitors, it is a special time to directly experience Korean K-beauty culture and discover their new charm.",
+            },
+            {
+              title: "K-Beauty in OLIVE YOUNG",
+              text: "This is an OLIVE YOUNG shopping experience tour designed for foreign tourists interested in K-beauty. Beyond a simple store visit, a personal shopper who knows the trends best accompanies you to help with customized shopping. You can get recommendations and purchase hot items loved by global fans, K-pop artist beauty items, and viral products on social media on the spot.",
+            },
+            {
+              title: "Korean Dermatology",
+              text: "Famous for its advanced equipment and professional medical staff, Korean dermatology is globally recognized in the field of beauty and skin treatment. Foreign visitors can directly experience K-beauty's medical services through personalized treatments ranging from acne and blemish care to laser procedures and skincare programs. It is a special opportunity to experience Korea's unique beauty and healthcare culture along with safe and meticulous treatment.",
+            },
+          ],
+          inclusions: [
+            "Personal color diagnosis",
+            "Premium skin care treatment",
+            "Hanbang spa experience",
+            "K-Beauty goodie bag",
+            "Professional beauty guide",
+            "Lunch",
+          ],
+          exclusions: [
+            "Additional treatment costs",
+            "Personal shopping expenses",
+            "Transportation costs",
+          ],
+        },
+        6: {
+          title: "Seoul Traditional Culture Tour",
+          subtitle:
+            "A special day enjoying royal culture at Gyeongbokgung, traditional elegance with a tea ceremony in Insadong, and local food at Gwangjang Market.",
+          location: "Jongno-gu area, Seoul",
+          duration: "4.5 hours",
+          groupSize: "Up to 6 people",
+          language: "Korean, English, Chinese",
+          partnership: {
+            primary: "Seoul Metropolitan Government",
+            secondary: "Hana Tour",
+          },
+          itinerary: [
+            {
+              time: "10:00",
+              location: "Gyeongbokgung Palace Entrance",
+              description:
+                "Rent Hanbok, tour the palace, and have a travel photoshoot",
+            },
+            {
+              time: "12:00",
+              location: "Traditional Korean Set Menu Lunch",
+              description: "Lunch at a traditional Korean restaurant",
+            },
+            {
+              time: "14:30",
+              location: "Insadong Tea Ceremony & Traditional Street Walk",
+              description:
+                "Experience a tea ceremony at a traditional teahouse and browse traditional crafts, seals, and Hanji souvenirs",
+            },
+            {
+              time: "17:00",
+              location: "Gwangjang Market Traditional Food Tour",
+              description:
+                "Taste local favorites like Bindaetteok (mung bean pancake), Mayak Gimbap, and Yukhoe (beef tartare)",
+            },
+            {
+              time: "19:00",
+              location: "Cheonggyecheon Stream Night Walk",
+              description:
+                "A stroll along Cheonggyecheon Stream, which flows to the Han River",
+            },
+          ],
+          detailSections: [
+            {
+              title: "Gyeongbokgung Palace Travel Photoshoot",
+              text: "Capture your travel moments with a professional photographer at Gyeongbokgung, Seoul's representative palace. Wearing Hanbok against the backdrop of the grand palace halls and serene gardens, you can record special moments. The blend of tradition and modernity at Gyeongbokgung will become an unforgettable travel memory.",
+            },
+            {
+              title: "Insadong Tea Ceremony Experience",
+              text: "Experience a Korean tea ceremony in a serene teahouse on the traditional streets of Insadong, Seoul. With expert guidance, you can taste traditional tea and snacks, feeling the depth of Korean tea culture.",
+            },
+            {
+              title: "Gwangjang Market Food Tour",
+              text: "Enjoy representative Korean street food at Gwangjang Market, one of Seoul's most vibrant traditional markets. You can taste various street foods loved by both locals and foreigners, such as crispy Bindaetteok, Mayak Gimbap, and Yukhoe.",
+            },
+          ],
+          inclusions: [
+            "Hanbok rental",
+            "Gyeongbokgung Palace admission",
+            "Tea ceremony experience",
+            "Gwangjang Market food tasting",
+            "Professional guide",
+            "Travel snapshot photos",
+          ],
+          exclusions: [
+            "Lunch cost",
+            "Personal souvenir purchases",
+            "Transportation costs",
+          ],
+        },
+      },
+      offer: {
+        expiresIn: "Time left",
+        limitedTime: "⏳ Limited-time offer",
+        doNotShowToday: "Don't show today",
+        grabDeal: "Grab deal",
+        grabbed: "Secured",
+        dealGrabbed: "Deal secured!",
+        priceSecured: "Current price is secured for a moment",
+        urgencyText: "Hurry! Ends in {{minutes}}m {{seconds}}s",
+      },
+      booking: {
+        bookNow: "Book now",
+        reviews: " reviews",
+        discount: "off",
+      },
+      tabs: {
+        overview: "Overview",
+        details: "Details",
+        reviews: "Reviews",
+      },
+      overview: {
+        itinerary: "Itinerary",
+        noItinerary: "No itinerary available",
+        included: "Inclusions",
+        notIncluded: "Exclusions",
+      },
+      details: {
+        noDetails: "No details available",
+        specialFeatures: "Special Features",
+        partnershipBenefits: "Partnership Benefits",
+      },
+      reviews: {
+        noReviews: "No reviews yet",
+        verifiedPurchase: "Verified Purchase",
+      },
+      notFound: {
+        title: "Tour not found",
+        description: "We couldn't load the requested tour information.",
+      },
     },
     common: {
       community: {
@@ -2079,6 +2697,7 @@ const resources = {
       "login.logout": "Logout",
       "login.login": "Login",
       "main.title.k_travel": "Travel",
+      "main.title.k_travel": "Travel",
       "main.title.connector": "",
       "main.title.ai_creates": "AI creates for you",
       "main.subtitle":
@@ -2114,6 +2733,8 @@ const resources = {
       "footer.partnership": "Partnership",
       "footer.copyright": "© 2025 Klover. All rights reserved.",
       "modal.welcome": "Welcome to Klover",
+      "footer.copyright": "© 2025 Klover. All rights reserved.",
+      "modal.welcome": "Welcome to Klover",
       "modal.instruction":
         "Please log in to start your AI custom travel planner",
       "modal.continue_google": "Continue with Google",
@@ -2125,6 +2746,48 @@ const resources = {
       "modal.disclaimer.suffix": ".",
       "cta.title": "Now, it's time to start your perfect trip",
       "cta.start": "Start with 5 questions",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "Discover Your Travel Persona",
+      "home.persona.desc":
+        "Analyze your travel style with 5 questions and get AI-customized course recommendations.",
+      "home.persona.cta": "Start Persona Analysis",
+      "home.persona.card1.title": "Travel Style?",
+      "home.persona.card1.pill1": "Adventure Seeker",
+      "home.persona.card1.pill2": "Leisure Enjoyer",
+      "home.persona.card1.pill3": "Planned Explorer",
+      "home.persona.card2.title": "Interests?",
+      "home.persona.card2.pill1": "Cultural Experience",
+      "home.persona.card2.pill2": "Food Tour",
+      "home.persona.card2.pill3": "Shopping",
+      "home.persona.card3.title": "Preferred Atmosphere?",
+      "home.persona.card3.pill1": "Trendy",
+      "home.persona.card3.pill2": "Traditional",
+      "home.persona.card3.pill3": "Nature-friendly",
+
+      "home.ai_reco.title": "Perfect Travel Course Created by AI",
+      "home.ai_reco.desc":
+        "Generate optimal travel routes in real-time based on personalized analysis.",
+      "home.ai_reco.tag1": "Real-time Generation",
+      "home.ai_reco.tag2": "Customized Recommendations",
+      "home.ai_reco.tag3": "Optimal Routes",
+      "home.ai_reco.tag4": "Time Efficient",
+      "home.ai_reco.tag5": "Local Information",
+
+      "home.editing.title": "Edit Freely and Complete",
+      "home.editing.desc":
+        "Freely modify your travel itinerary with drag and drop to create your perfect plan.",
+
+      "home.map.preview_label": "Custom Travel Route",
+
+      "home.itinerary.title": "Travel Itinerary",
+      "home.itinerary.item1": "Gyeongbokgung Tour",
+      "home.itinerary.item2": "Bukchon Hanok Village",
+      "home.itinerary.item3": "Insadong Culture Street",
+      "home.itinerary.item4": "Myeongdong Shopping",
+
+      "home.controls.undo": "Undo",
+      "home.controls.save": "Save",
 
       // Home.jsx 추가 번역 키들
       "home.persona.title": "Discover Your Travel Persona",
@@ -2220,6 +2883,7 @@ const resources = {
       ai_docent: "AI Docent",
       community: "Community",
       tour: "Tour",
+      mypage: "My Page",
       mypage: "My Page",
       survival: "Survival",
       survival_kit: "Survival Kit",
@@ -2482,6 +3146,17 @@ const resources = {
       section_translator_benefit: "Real-time voice and text translation",
       section_culture_benefit: "Korean culture and etiquette guide",
 
+      // Hero 섹션
+      hero_tagline: "Essential Travel Tools",
+      hero_title: "Survival Kit",
+      hero_subtitle:
+        "Meet all the tools and information you need during your trip to Korea in one place",
+
+      // 섹션 설명
+      section_vision_benefit: "Image text recognition and translation",
+      section_translator_benefit: "Real-time voice and text translation",
+      section_culture_benefit: "Korean culture and etiquette guide",
+
       vision_ocr: "Vision OCR",
       quick_translator: "Quick Translator",
       culture_guide: "Culture Guide",
@@ -2585,6 +3260,7 @@ const resources = {
       gift_modal_list_1: "Give and receive with both hands",
       gift_modal_list_2:
         "Exchange gifts in various situations like holidays, housewarming, gratitude",
+      modal_close: "Close",
       modal_close: "Close",
     },
     VisionOCR: {
@@ -3501,6 +4177,522 @@ const resources = {
         description: "リクエストされたツアー情報を読み込めませんでした。",
       },
     },
+    tour: {
+      header: {
+        klover: "Klover",
+        tour: "ツアー",
+        subtitle: "プレミアムパーソナルツアー",
+      },
+      list: { title: "K-lover ツアー" },
+      search: { placeholder: "ツアーを検索..." },
+      categories: {
+        all: "すべて",
+        experience: "体験",
+        it: "IT",
+        sports: "スポーツ",
+        beauty: "ビューティー",
+        culture: "歴史",
+      },
+      pagination: { prev: "前へ", next: "次へ" },
+      empty: {
+        title: "結果がありません",
+        description: "他の検索語やフィルターをお試しください。",
+      },
+      partners: { title: "提携パートナー", subtitle: "信頼できるパートナー" },
+    },
+    tourDetail: {
+      products: {
+        1: {
+          title: "Netflix x Interpark Global",
+          description:
+            "エバーランド自由利用券付き Kpop Demon Hunters テーマツアー。",
+          location: "ソウル江南区 → 龍仁エバーランド",
+        },
+        2: {
+          title: "Microsoft AI Tour Seoul",
+          description: "Microsoft AI Tour Seoul - AI技術と文化財復元の出会い。",
+          location: "ソウル中区",
+        },
+        3: {
+          title: "漢江バス X インスタグラム ソウルホットプレイスツアー",
+          description:
+            "漢江バスに乗ってソウルの代表的なフォトスポットやインスタ映えスポットを巡る感性ツアー。",
+          location: "漢江全区間",
+        },
+        4: {
+          title: "LGツインズ 野球観戦",
+          description:
+            "蚕室野球場プレミアム観覧 + チキン＆ビール + スポーツ体験。",
+          location: "ソウル松坡区（蚕室観光特区）",
+        },
+        5: {
+          title: "K-ビューティー X OLIVE YOUNG プレミアムビューティーツアー",
+          description:
+            "皮膚科ケア + K-ビューティーブランド体験 + OLIVE YOUNGショッピング + 韓方スパ。",
+          location: "ソウル江南区",
+        },
+        6: {
+          title: "ソウル伝統文化ツアー",
+          description:
+            "AIドーセントとカカオフレンズキャラクターが共にする楽しい博物館体験。",
+          location: "ソウル鐘路区",
+        },
+      },
+      data: {
+        1: {
+          title:
+            "K-POPデーモンハンターズ × エバーランド スペシャルコラボツアー",
+          subtitle:
+            "Netflixオリジナルシリーズ × 韓国代表テーマパークの完璧なコラボレーション。",
+          location: "エバーランド、駱山公園、Nソウルタワー、国立中央博物館",
+          duration: "10時間（エバーランド入場券付き）",
+          groupSize: "最大12名",
+          language: "韓国語、英語、中国語",
+          partnership: {
+            primary: "NETFLIX",
+            secondary: "Samsung Everland",
+            tertiary: "ソウル観光財団",
+          },
+          specialFeatures: [
+            "エバーランド1日自由利用券付き",
+            "K-POPデーモンハンターズ限定グッズセット",
+            "ARフォトゾーン無制限利用",
+            "ドラマOSTプレイリスト提供",
+            "撮影地ガイドオーディオツアー",
+          ],
+          itinerary: [
+            {
+              time: "08:30",
+              location: "江南駅集合",
+              description: "専用バス乗車およびツアーブリーフィング",
+              duration: "30分",
+            },
+            {
+              time: "09:30",
+              location: "エバーランド入場",
+              description: "K-POPデーモンハンターズテーマゾーン体験開始",
+              duration: "4時間",
+            },
+            {
+              time: "10:00",
+              location: "デーモンハンターズアトラクション",
+              description: "スリルライド「悪魔の追撃戦」体験",
+              duration: "45分",
+            },
+            {
+              time: "11:00",
+              location: "ルミの魔法学校",
+              description: "インタラクティブ魔法体験館 & ARフォトゾーン",
+              duration: "60分",
+            },
+            {
+              time: "12:30",
+              location: "デーモンハンターズレストラン",
+              description: "ドラマテーマのランチセット & 限定デザート",
+              duration: "90分",
+            },
+            {
+              time: "14:00",
+              location: "駱山公園へ移動",
+              description: "ルミ♥ジヌのデートシーン撮影地再現",
+              duration: "90分",
+            },
+            {
+              time: "16:00",
+              location: "Nソウルタワー",
+              description: "最終ボスバトル撮影地 & 展望台観覧",
+              duration: "120分",
+            },
+            {
+              time: "18:00",
+              location: "国立中央博物館",
+              description: "古代遺物エピソード撮影地ツアー",
+              duration: "60分",
+            },
+          ],
+          detailSections: [
+            {
+              title: "エバーランド X K-POPデーモンハンターズ テーマゾーン",
+              text: "世界初公開のK-POPデーモンハンターズテーマゾーンで、ドラマのスリリングなアクションを直接体験してください。ルミの魔法学校、ジヌのトレーニングセンター、悪魔退治ミッションまで完璧に再現された没入型アトラクションがあなたを待っています。",
+            },
+            {
+              title: "駱山公園 ロマンチックデートシーン再現",
+              text: "ドラマで最も印象的だったルミとジヌのデートシーンを駱山公園で直接再現してみてください。ソウルの都心の景色と共にドラマチックなフォトタイムを楽しめ、専用フォトグラファーが最高のショットを提供します。",
+            },
+            {
+              title: "Nソウルタワー 最終決戦の舞台",
+              text: "シーズンフィナーレを飾ったNソウルタワーでの最終ボスバトルをVRで体験し、ドラマの主人公になった気分でソウルの夜景を鑑賞してください。限定版カップルロッカー体験も含まれています。",
+            },
+          ],
+          inclusions: [
+            "エバーランド1日自由利用券",
+            "専用ツアーバス往復交通",
+            "K-POPデーモンハンターズグッズセット",
+            "ドラマテーマのランチ＆デザート",
+            "専門ガイドサービス",
+            "Nソウルタワー展望台入場料",
+            "ARフォトゾーン利用券",
+            "記念品ショップ10%割引クーポン",
+          ],
+          exclusions: [
+            "個人でのショッピング費用",
+            "追加のアトラクション利用料",
+            "旅行者保険",
+            "個人的な軽食や飲み物",
+          ],
+        },
+        2: {
+          title: "マイクロソフト AI ツアー ソウル",
+          subtitle: "AI技術と文化財復元の出会い",
+          location: "ソウル中区マイクロソフトコリア",
+          duration: "4時間",
+          groupSize: "最大20名",
+          language: "韓国語、英語",
+          partnership: { primary: "Microsoft Korea", secondary: "国家遺産庁" },
+          itinerary: [
+            {
+              time: "09:00",
+              location: "マイクロソフトコリアオフィス",
+              description: "AI技術紹介およびツアー開始",
+            },
+            {
+              time: "10:00",
+              location: "AIデモセンター",
+              description: "文化財復元AI技術体験",
+            },
+            {
+              time: "11:30",
+              location: "国家遺産庁協力館",
+              description: "デジタル文化財復元事例体験",
+            },
+            {
+              time: "13:00",
+              location: "マイクロソフトグッズショップ",
+              description: "限定版記念品およびAI体験キット",
+            },
+          ],
+          detailSections: [
+            {
+              title: "マイクロソフトAIカンファレンス2025 - 主要日程",
+              text: "サティア・ナデラがソウルで開催されたマイクロソフトAIカンファレンスでAIの未来を紹介します。基調セッション、25の分科会セッション、12の実践ワークショップが含まれた日程で、AI革新と産業変化に関する深い洞察を提供します。",
+            },
+            {
+              title: "マイクロソフトAIカンファレンス2025で学び、繋がる",
+              text: "サティア・ナデラが紹介する参加者は、AI革新に関する業界リーダーの洞察を得て、クラウド、AI、セキュリティの最新技術を探求します。また、マイクロソフトの役員と繋がり、専門家との1対1の討論を行い、ダイナミックなコミュニティセッションを通じてネットワークを拡大する機会を提供します。",
+            },
+            {
+              title: "マイクロソフトAIカンファレンス - ライブセッション",
+              text: "マイクロソフトAIカンファレンスで、観客がAIの未来に関する基調講演を聞くために集まります。",
+            },
+          ],
+          inclusions: [
+            "専門家によるガイドツアー",
+            "AI技術体験セッション",
+            "限定記念品",
+            "ネットワーキングの機会",
+          ],
+          exclusions: ["交通費", "食事", "個人的な費用"],
+        },
+        3: {
+          title: "漢江バス X インスタグラム ソウルホットプレイスツアー",
+          subtitle:
+            "漢江に沿って広がるソウルの代表的なフォトスポットを完全制覇",
+          location: "漢江公園（汝矣島-蚕室-盤浦-麻浦）",
+          duration: "3.5時間",
+          groupSize: "最大25名",
+          language: "韓国語、英語",
+          partnership: { primary: "ソウル観光財団", secondary: "漢江事業本部" },
+          itinerary: [
+            {
+              time: "15:00",
+              location: "汝矣島漢江公園",
+              description: "ツアー開始およびインスタグラムフォトのコツ講座",
+            },
+            {
+              time: "15:30",
+              location: "漢江バス（汝矣島→蚕室）",
+              description: "63ビル＆IFCモールを背景にバス内撮影",
+            },
+            {
+              time: "16:00",
+              location: "蚕室ロッテワールドタワーフォトゾーン",
+              description: "ソウルスカイライン代表認証ショット撮影",
+            },
+            {
+              time: "16:45",
+              location: "漢江バス（蚕室→盤浦）",
+              description: "漢江クルーズ感性の動画撮影",
+            },
+            {
+              time: "17:15",
+              location: "盤浦虹の噴水",
+              description: "ゴールデンアワーの虹の噴水タイムラプス撮影",
+            },
+            {
+              time: "18:00",
+              location: "セピッソムLEDショー",
+              description: "夜景花火および団体記念撮影",
+            },
+          ],
+          detailSections: [
+            {
+              title: "汝矣島漢江公園ツアー",
+              text: "ソウルの都心にある休息の空間、汝矣島漢江公園でレンタル自転車に乗って川沿いを走り、涼しい風を感じてみてください。青々とした芝生の上でゆったりとしたピクニックを楽しみながら、漢江とスカイラインが調和した特別な風景を鑑賞できます。",
+            },
+            {
+              title: "盤浦虹の噴水ツアー",
+              text: "世界で最も長い橋梁噴水としてギネスブックに登録された盤浦虹の噴水は、漢江の名所です。昼には涼しげな水しぶきが、夜には色とりどりの照明と音楽が調和し、ロマンチックな雰囲気を演出し、ソウルの夜景を楽しむのに最高の場所として知られています。",
+            },
+            {
+              title: "セピッソム（フローティングアイランド）ツアー",
+              text: "世界初の人工浮島であるセピッソムは、「ガピッ」、「チェピッ」、「ソルピッ」の3つの島からなる複合文化空間です。展示や公演、イベントが開催され、レストランやカフェで漢江を眺めながら特別な食事を楽しめます。特に夜になるとLED照明が島全体を彩り、ソウルの代表的な夜景スポットとして有名です。ヨットやボート体験も可能で、一味違った楽しみを提供します。",
+            },
+          ],
+          inclusions: [
+            "漢江バス乗車券",
+            "プロフォトグラファーガイド",
+            "記念写真撮影および編集サービス",
+            "飲み物および軽食",
+          ],
+          exclusions: ["個人用カメラ機材", "食事代", "追加アクティビティ費用"],
+        },
+        4: {
+          title: "LGツインズ プレミアム野球観戦ツアー",
+          subtitle: "蚕室野球場で楽しむ完璧な野球体験",
+          location: "蚕室野球場、ロッテワールドタワー",
+          duration: "6時間",
+          groupSize: "最大25名",
+          language: "韓国語、英語、日本語",
+          partnership: { primary: "LGツインズ", secondary: "キョチョンチキン" },
+          itinerary: [
+            {
+              time: "14:00",
+              location: "蚕室駅2番出口",
+              description: "ツアー開始および野球文化紹介",
+            },
+            {
+              time: "15:00",
+              location: "LGツインズファンショップ",
+              description: "ユニフォーム着用および応援グッズ準備",
+            },
+            {
+              time: "18:00",
+              location: "キョチョンチキンプレミアムボックス席",
+              description: "チキン＆ビールと共に試合観戦",
+            },
+            {
+              time: "20:00",
+              location: "フォトゾーン",
+              description: "球場を背景に記念スナップ写真ツアー",
+            },
+          ],
+          detailSections: [
+            {
+              title: "蚕室野球試合",
+              text: "ソウルの代表的なスポーツ名所、蚕室野球場はLGツインズと斗山ベアーズのホーム球場で、韓国プロ野球の熱気を最も近くで感じられる場所です。3万人以上を収容できる大規模な球場で、応援歌と応援棒が作り出す独特の雰囲気は、韓国プロ野球ならではの魅力を伝えます。特にLGツインズファンの情熱的な応援は、蚕室野球場を訪れる人々に忘れられない経験を提供します。",
+            },
+            {
+              title: "LGツインズ",
+              text: "ソウルで開かれたLGツインズの野球試合で、外国人観光客が情熱的に応援し、現場の雰囲気を楽しんでいます。チアリーダー式の応援文化と共にある韓国プロ野球は、ユニークな観光コースとして、国際的な観光客に特別な思い出を提供します。",
+            },
+          ],
+          inclusions: [
+            "野球試合プレミアム席チケット",
+            "チキンとビールのセット",
+            "LGツインズ応援グッズ",
+            "専門ガイド",
+          ],
+          exclusions: ["追加の食べ物や飲み物", "個人のお土産購入", "交通費"],
+        },
+        5: {
+          title: "K-ビューティー＆ウェルネス プレミアムツアー",
+          subtitle:
+            "韓国最高のビューティー技術と伝統ウェルネスの完璧な組み合わせ",
+          location: "江南区（狎鴎亭-清潭-新沙洞一帯）",
+          duration: "6時間",
+          groupSize: "最大12名",
+          language: "韓国語、英語、中国語、日本語",
+          partnership: { primary: "OLIVE YOUNG", secondary: "江南皮膚科協会" },
+          itinerary: [
+            {
+              time: "10:00",
+              location: "パーソナルカラー診断",
+              description: "パーソナルカラー診断＋カスタムメイク提案",
+            },
+            {
+              time: "11:00",
+              location: "狎鴎亭プレミアム皮膚科",
+              description: "肌分析＋ハイドラフェイシャルケア（30分）",
+            },
+            {
+              time: "13:00",
+              location: "清潭洞の韓国料理レストラン",
+              description: "肌に良い韓方薬膳ランチ",
+            },
+            {
+              time: "14:30",
+              location: "新沙洞K-ビューティー体験館",
+              description: "雪花秀、后などブランド別カスタムケア体験",
+            },
+            {
+              time: "15:30",
+              location: "狎鴎亭伝統韓方スパ",
+              description: "黄土サウナ＋アロママッサージ（90分）",
+            },
+            {
+              time: "17:30",
+              location: "OLIVE YOUNG VIPショッピング",
+              description: "パーソナル製品推薦＋免税ショッピング",
+            },
+          ],
+          partnershipBenefits: [
+            {
+              icon: "Award",
+              title: "プレミアムスキンケア",
+              description: "江南の一流皮膚科でのハイドラフェイシャル＋肌分析",
+              value: "施術価格 ₩150,000",
+            },
+            {
+              icon: "Gift",
+              title: "K-ビューティーグッズバッグ",
+              description:
+                "雪花秀、后、イニスフリーなど人気ブランドのサンプルキット",
+              value: "₩80,000相当",
+            },
+            {
+              icon: "Play",
+              title: "韓方ウェルネススパ",
+              description: "黄土サウナ＋伝統アロママッサージ90分",
+              value: "₩120,000相当",
+            },
+          ],
+          detailSections: [
+            {
+              title: "K-ビューティー パーソナルカラー診断体験",
+              text: "韓国ビューティートレンドの核心、パーソナルカラー診断を通じて、自分のイメージに最も似合う色を見つけてみましょう。専門コンサルタントが肌のトーンや雰囲気に合ったカラーを分析し、メイクやファッションスタイリングに実質的な助けとなります。外国人訪問者には、韓国のK-ビューティー文化を直接体験し、自分だけの新しい魅力を発見できる特別な時間となります。",
+            },
+            {
+              title: "K-ビューティー in OLIVE YOUNG",
+              text: "K-ビューティーに興味のある外国人観光客のために企画されたOLIVE YOUNGショッピング体験ツアーです。単なる店舗訪問を超え、トレンドを最もよく知るパーソナルショッパーが同行し、カスタマイズされたショッピングをサポートします。グローバルなファンに愛されるK-POPアーティストのビューティーアイテム、SNSで話題のホットアイテムまで、現場で直接推薦されて購入できます。",
+            },
+            {
+              title: "韓国の皮膚科",
+              text: "最先端の設備と専門医療スタッフで有名な韓国の皮膚科は、美容・皮膚治療分野で世界的に認められています。外国人訪問者は、ニキビ・シミの管理からレーザー施術、スキンケアプログラムまで、個人に合わせた診療を通じてK-ビューティーの医療サービスを直接体験できます。安全で丁寧な診療と共に、韓国ならではのビューティー・ヘルスケア文化を体験できる特別な機会です。",
+            },
+          ],
+          inclusions: [
+            "パーソナルカラー診断",
+            "プレミアムスキンケアトリートメント",
+            "韓方スパ体験",
+            "K-ビューティーグッズバッグ",
+            "専門ビューティーガイド",
+            "昼食",
+          ],
+          exclusions: ["追加の施術費用", "個人でのショッピング費用", "交通費"],
+        },
+        6: {
+          title: "ソウル伝統文化ツアー",
+          subtitle:
+            "景福宮で韓国の王室文化を感じ、仁寺洞で茶道を通じて伝統の趣を体験し、広蔵市場で地元の味を楽しむ特別な一日。",
+          location: "ソウル鐘路区一帯",
+          duration: "4.5時間",
+          groupSize: "最大6名",
+          language: "韓国語、英語、中国語",
+          partnership: { primary: "ソウル特別市", secondary: "ハナツアー" },
+          itinerary: [
+            {
+              time: "10:00",
+              location: "景福宮入口",
+              description: "韓服レンタル後、景福宮観覧、旅行スナップ撮影",
+            },
+            {
+              time: "12:00",
+              location: "伝統韓定食ランチ",
+              description: "伝統的な韓国料理レストランで昼食",
+            },
+            {
+              time: "14:30",
+              location: "仁寺洞茶道体験＆伝統通り散策",
+              description:
+                "伝統的な茶屋で茶道体験、伝統工芸品、印鑑、韓紙のお土産探し",
+            },
+            {
+              time: "17:00",
+              location: "広蔵市場伝統食べ物ツアー",
+              description:
+                "ピンデトッ、麻薬キンパ、ユッケなど、地元で人気の食べ物を試食",
+            },
+            {
+              time: "19:00",
+              location: "清渓川夜景散策",
+              description: "漢江に続く清渓川を散策",
+            },
+          ],
+          detailSections: [
+            {
+              title: "景福宮旅行スナップ",
+              text: "ソウルを代表する宮殿、景福宮でプロのカメラマンと一緒に旅行スナップを撮影してみましょう。韓服を着て、古宮の壮大な殿閣や静かな庭園を背景に特別な瞬間を記録できます。伝統と現代が調和した景福宮の魅力は、忘れられない旅の思い出となります。",
+            },
+            {
+              title: "仁寺洞茶道体験",
+              text: "ソウルの伝統的な街、仁寺洞の静かな茶屋で韓国式の茶道を体験してみましょう。専門家の案内のもと、伝統的なお茶とお菓子を味わいながら、韓国の茶文化の深さを感じることができます。",
+            },
+            {
+              title: "広蔵市場食べ物ツアー",
+              text: "ソウルで最も活気のある伝統市場の一つである広蔵市場で、韓国の代表的な食べ物を楽しんでみましょう。サクサクのピンデトッ、麻薬キンパ、ユッケなど、地元の人々や外国人に愛されるさまざまなストリートフードを味わうことができます。",
+            },
+          ],
+          inclusions: [
+            "韓服レンタル",
+            "景福宮入場料",
+            "茶道体験",
+            "広蔵市場での食べ物試食",
+            "専門ガイド",
+            "旅行スナップ写真",
+          ],
+          exclusions: ["昼食代", "個人のお土産購入", "交通費"],
+        },
+      },
+      offer: {
+        expiresIn: "終了までの時間",
+        limitedTime: "⏳ 期間限定オファー",
+        doNotShowToday: "今日は表示しない",
+        grabDeal: "今すぐ獲得",
+        grabbed: "確定",
+        dealGrabbed: "ディールが確定しました！",
+        priceSecured: "現在の価格がしばらく保証されます",
+        urgencyText: "お急ぎください！残り {{minutes}}分 {{seconds}}秒",
+      },
+      booking: {
+        bookNow: "今すぐ予約",
+        reviews: "件のレビュー",
+        discount: "割引",
+      },
+      tabs: {
+        overview: "日程",
+        details: "詳細",
+        reviews: "レビュー",
+      },
+      overview: {
+        itinerary: "日程",
+        noItinerary: "日程情報がありません",
+        included: "含まれるもの",
+        notIncluded: "含まれないもの",
+      },
+      details: {
+        noDetails: "詳細情報がありません",
+        specialFeatures: "特別特典",
+        partnershipBenefits: "提携特典",
+      },
+      reviews: {
+        noReviews: "レビューはまだありません",
+        verifiedPurchase: "認証済み購入",
+      },
+      notFound: {
+        title: "ツアーが見つかりません",
+        description: "リクエストされたツアー情報を読み込めませんでした。",
+      },
+    },
     common: {
       community: {
         info_reviews_label: "情報 & レビュー",
@@ -3555,6 +4747,7 @@ const resources = {
       "login.logout": "ログアウト",
       "login.login": "ログイン",
       "main.title.k_travel": "旅行",
+      "main.title.k_travel": "旅行",
       "main.title.connector": "を",
       "main.title.ai_creates": "AIが作ります",
       "main.subtitle":
@@ -3590,6 +4783,8 @@ const resources = {
       "footer.partnership": "パートナーシップ",
       "footer.copyright": "© 2024 Klover. All rights reserved.",
       "modal.welcome": "Kloverへようこそ",
+      "footer.copyright": "© 2024 Klover. All rights reserved.",
+      "modal.welcome": "Kloverへようこそ",
       "modal.instruction":
         "AIカスタム旅行プランナーを開始するにはログインしてください",
       "modal.continue_google": "Googleで続行",
@@ -3601,6 +4796,48 @@ const resources = {
       "modal.disclaimer.suffix": "に同意したものとみなされます。",
       "cta.title": "今こそ、あなたの完璧な旅行を始める時",
       "cta.start": "5つの質問で始める",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "あなただけの旅行ペルソナを発見",
+      "home.persona.desc":
+        "5つの質問で旅行スタイルを分析し、AIがカスタマイズされたコースを推薦します。",
+      "home.persona.cta": "ペルソナ分析開始",
+      "home.persona.card1.title": "旅行スタイルは？",
+      "home.persona.card1.pill1": "冒険追求型",
+      "home.persona.card1.pill2": "余裕満喫型",
+      "home.persona.card1.pill3": "計画的探訪型",
+      "home.persona.card2.title": "興味のある活動は？",
+      "home.persona.card2.pill1": "文化体験",
+      "home.persona.card2.pill2": "グルメ探訪",
+      "home.persona.card2.pill3": "ショッピング",
+      "home.persona.card3.title": "好みの雰囲気は？",
+      "home.persona.card3.pill1": "トレンディー",
+      "home.persona.card3.pill2": "伝統的",
+      "home.persona.card3.pill3": "自然親和的",
+
+      "home.ai_reco.title": "AIが作る完璧な旅行コース",
+      "home.ai_reco.desc":
+        "個人カスタマイズ分析に基づいて最適な旅行ルートをリアルタイムで生成します。",
+      "home.ai_reco.tag1": "リアルタイム生成",
+      "home.ai_reco.tag2": "カスタマイズ推薦",
+      "home.ai_reco.tag3": "最適経路",
+      "home.ai_reco.tag4": "時間効率",
+      "home.ai_reco.tag5": "現地情報",
+
+      "home.editing.title": "自由に編集して完成させましょう",
+      "home.editing.desc":
+        "ドラッグ＆ドロップで旅行日程を自由に修正し、あなただけの完璧なプランを作ってみてください。",
+
+      "home.map.preview_label": "カスタム旅行ルート",
+
+      "home.itinerary.title": "旅行日程",
+      "home.itinerary.item1": "景福宮観覧",
+      "home.itinerary.item2": "北村韓屋村",
+      "home.itinerary.item3": "仁寺洞文化街",
+      "home.itinerary.item4": "明洞ショッピング",
+
+      "home.controls.undo": "元に戻す",
+      "home.controls.save": "保存",
 
       // Home.jsx 추가 번역 키들
       "home.persona.title": "あなただけの旅行ペルソナを発見",
@@ -4037,7 +5274,68 @@ const resources = {
       viewDetails: "📝 詳細情報を見る",
       selectPlace: "場所を選択してください",
     },
+    DocentMantine: {
+      title: "AI ドーセント",
+      subtitle: "リアルタイム位置ガイド",
+      aiDocent: "AI ドーセント",
+      stopVoice: "音声停止",
+      current: "現在地",
+      directions: "経路検索",
+      chatbot: "観光チャットボット",
+      askQuestion: "何でもお聞きください",
+      send: "送信",
+      examples: {
+        title: "質問例:",
+        items: [
+          "ケイポップデーモンハンターズ撮影地",
+          "明洞グルメ推薦",
+          "北村韓屋村情報",
+          "イカゲーム撮影地",
+        ],
+      },
+      chatbotPlaceholder: "ご質問をどうぞ...",
+      chatbotInitialMessage:
+        "こんにちは！私はあなたのAI旅行ドーセントです。場所や旅行情報について何でも尋ねてください。写真を送ってください。その場所について詳しく説明します！",
+      imageQueryText: "この場所について教えてください",
+      voiceRecStart: "音声録音を開始します...",
+      voiceRecResult: "音声認識結果:",
+      voiceRecStop: "音声録音を停止します。",
+      errorReply:
+        "申し訳ありませんが、応答の生成中にエラーが発生しました。後でもう一度お試しください。",
+      filePick: "ファイル",
+      categories: {
+        all: "すべて",
+        museum: "美術館＆博物館",
+        palace: "古宮",
+        landmark: "ランドマーク",
+        historic: "歴史的な場所",
+      },
+      allTourismSpots: "全観光スポット",
+      detailedInfo: "詳細情報",
+      tourismList: "観光地リスト",
+      locationTracking: "位置追跡",
+      location: "位置",
+      voiceGuide: "音声ガイド",
+      tourDetection: {
+        message:
+          "🎯 ツアーに関するご質問ですね！専門ガイドツアーサービスとカスタムコース推薦は、ツアーページでご確認いただけます。",
+        buttonText: "🎯 ツアーサービスページへ移動",
+      },
+      viewDetails: "📝 詳細情報を見る",
+      selectPlace: "場所を選択してください",
+    },
     SurvivalKit: {
+      // Hero 섹션
+      hero_tagline: "旅行者必須ツール",
+      hero_title: "サバイバルキット",
+      hero_subtitle:
+        "韓国旅行中に必要なすべてのツールと情報を一か所でお会いしましょう",
+
+      // 섹션 설명
+      section_vision_benefit: "画像テキスト認識と翻訳",
+      section_translator_benefit: "リアルタイム音声・テキスト翻訳",
+      section_culture_benefit: "韓国文化とマナーガイド",
+
       // Hero 섹션
       hero_tagline: "旅行者必須ツール",
       hero_title: "サバイバルキット",
@@ -4148,6 +5446,7 @@ const resources = {
       gift_modal_list_1: "両手でやり取りする",
       gift_modal_list_2:
         "名節・引っ越し祝い・感謝挨拶など様々な状況で贈り物のやり取り",
+      modal_close: "閉じる",
       modal_close: "閉じる",
     },
     VisionOCR: {
@@ -4280,6 +5579,162 @@ const resources = {
       gift_modal_list_1: "両手でやり取りする",
       gift_modal_list_2:
         "名節・引っ越し祝い・感謝挨拶など様々な状況で贈り物のやり取り",
+    },
+    directions: {
+      days: "日目",
+      add_recommended_course: "におすすめコースを追加しました。",
+      delete_day: "この日程を削除しますか？",
+      search_start: "出発地検索",
+      search_end: "到着地検索",
+      search_waypoint: "経由地検索",
+      route_planner: "ルートプランナー",
+      calculate_route: "ルート計算",
+      calculating_route: "ルート計算中...",
+      save_route: "ルート保存",
+      more: "もっと見る",
+      duplicate_day: "日程複製",
+      add_day_menu: "日目追加メニュー",
+      add_day: "新しい日目を追加",
+      add_recommended_course: "おすすめコース追加",
+      set_start: "出発地を設定してください",
+      set_end: "到着地を設定してください",
+      add_waypoint: "経由地追加",
+      remove_waypoint: "経由地削除",
+      add_waypoint_description:
+        "経由地を追加するとより精密なルートを作成できます。",
+      map_provider: "地図提供者",
+      kakao_map: "カカオマップ",
+      t_map: "Tマップ",
+      car: "車",
+      pedestrian: "徒歩",
+      transit: "公共交通機関",
+      transportation_mode: "移動手段",
+      route_order_adjustment: "ルート順序調整",
+      drag_to_adjust_order: "ドラッグして順序を変更してください",
+      start: "出発",
+      end: "到着",
+      waypoint: "経由",
+      add_start: "出発地追加",
+      add_end: "到着地追加",
+      add_waypoint: "経由地追加",
+      select_start: "出発地を選択してください",
+      select_end: "到着地を選択してください",
+      select_waypoint: "経由地を選択してください",
+      travel_summary: "移動要約",
+      total_distance: "総移動距離",
+      estimated_duration: "予想所要時間",
+      minutes: "分",
+      stay_time: "滞在時間（分）",
+      load_recommended_course: "おすすめコース読み込み",
+      load_recommended_course_description:
+        "追加したいコースを選択すると新しい日目として準備されます。",
+      loading_recommended_course: "おすすめコースを読み込み中です...",
+      load_recommended_course_failed: "おすすめコースを読み込めませんでした。",
+      try_again: "再試行",
+      no_recommended_course: "使用可能なおすすめコースがありません。",
+      stops: "箇所",
+      keyword_input: "キーワードを入力してください",
+      search_result_select_place: "検索結果から場所を選択すると",
+      waypoint_added: "経由地が追加されます。",
+      start_set: "出発地が設定されます。",
+      end_set: "到着地が設定されます。",
+    },
+    planner: {
+      new_activity: "新しい活動",
+      no_saved_plans: "保存された旅行計画がありません。",
+      create_or_modify_plan:
+        "新しい計画を作成するか、既存の計画を修正して管理してください。",
+      new_plan: "新しい旅行",
+      places: "場所",
+      days: "日",
+      load_plan: "この計画を読み込む",
+      delete_plan: "この計画を削除",
+      login_to_start_plan: "ログインして旅行計画を開始してください。",
+      login: "ログイン",
+      creating_sample_plan: "サンプル旅行を作成中...",
+      no_plan: "旅行計画がありません。",
+      create_sample_plan: "サンプル旅行作成",
+      saved_schedule: "保存されたスケジュール",
+      travel_planner: "旅行日程プランナー",
+      saving: "保存中...",
+      travel_plan: "旅行計画",
+      saved_plans: "保存された計画",
+      activity_editor: "活動編集",
+      time_info: "時間情報",
+      time: "時間",
+      stay_time: "滞在時間（分）",
+      place_info: "場所情報",
+      place_name: "場所名",
+      search_place_placeholder: "検索語を入力すると場所をおすすめします",
+      place_type: "場所タイプ",
+      road_address: "道路名住所",
+      address: "地番住所",
+      latitude: "緯度",
+      longitude: "経度",
+      additional_info: "追加情報",
+      description: "説明",
+      description_placeholder: "活動に関連するメモを入力してください",
+      cost_estimate: "予想費用（ウォン）",
+      cancel: "キャンセル",
+      save: "保存",
+      add_activity: "活動追加",
+      day: "日",
+      activity: "活動",
+      transport: "交通",
+      total_days_travel: "合計{{days}}日間の旅行",
+    },
+    data: {
+      live_info: "ライブ情報",
+      now: "今",
+      is: "は",
+      data_update: "データ更新",
+      real_time_population: "リアルタイム人口",
+      about: "約",
+      people: "人",
+      real_time_commercial: "リアルタイム商業",
+      overall_commercial: "全体商業",
+      subway_arrival_info: "地下鉄到着情報",
+      recommended_tour_products: "おすすめツアー商品",
+      nearby_cultural_events: "周辺文化イベント",
+      traffic_conditions: "交通状況",
+      weather: "天気",
+      humidity: "湿度",
+      wind_speed: "風速",
+      precipitation: "降水量",
+      feels_like: "体感",
+    },
+    mypage: {
+      mypage: "マイページ",
+      mypage_description: "あなたの活動と情報を確認・管理してください",
+      logout: "ログアウト",
+      saved_travel_plans: "保存した旅行計画",
+      liked_travel_products: "いいねした旅行商品",
+      my_posts: "私が書いた投稿",
+      liked_posts: "いいねした投稿",
+      travel_plans: "旅行計画",
+      travel_products: "旅行商品",
+      likes: "いいね",
+      loading_travel_plans: "旅行計画を読み込み中...",
+      no_saved_travel_plans: "保存した旅行計画がありません",
+      create_travel_plan_message: "旅行計画を作成して保存してみてください！",
+      no_liked_products: "いいねした旅行商品がありません",
+      like_products_message: "気に入った旅行商品にいいねを押してみてください！",
+      loading: "読み込み中...",
+      no_posts_written: "書いた投稿がありません",
+      write_first_post: "最初の投稿を書いてみてください！",
+      no_liked_posts: "いいねした投稿がありません",
+      like_posts_message: "気に入った投稿にいいねを押してみてください！",
+      delete: "削除",
+      travel_plan: "旅行計画",
+      destination_undecided: "目的地未定",
+      day_schedule: "日のスケジュール",
+      saved: "保存",
+      last_updated: "最近の更新",
+      loading_details: "詳細情報を読み込み中...",
+      time_undecided: "時間未定",
+      activity: "活動",
+      no_registered_activities: "登録された活動がありません",
+      no_saved_schedule_info: "保存されたスケジュール情報がありません",
     },
     directions: {
       days: "日目",
@@ -4935,6 +6390,502 @@ const resources = {
         description: "无法加载请求的旅游信息。",
       },
     },
+    tour: {
+      header: { klover: "K-lover", tour: "旅行", subtitle: "高端私人定制旅行" },
+      list: { title: "K-lover 旅行" },
+      search: { placeholder: "搜索旅行…" },
+      categories: {
+        all: "全部",
+        experience: "体验",
+        it: "IT",
+        sports: "运动",
+        beauty: "美妆",
+        culture: "历史",
+      },
+      pagination: { prev: "上一页", next: "下一页" },
+      empty: { title: "没有结果", description: "请尝试其他搜索或筛选条件。" },
+      partners: { title: "合作伙伴", subtitle: "值得信赖的伙伴" },
+    },
+    tourDetail: {
+      products: {
+        1: {
+          title: "Netflix x Interpark Global",
+          description: "包含爱宝乐园通票的K-Pop恶魔猎人主题之旅。",
+          location: "首尔江南区 → 龙仁爱宝乐园",
+        },
+        2: {
+          title: "Microsoft AI Tour Seoul",
+          description: "微软AI首尔之旅 - AI技术与文物修复的相遇。",
+          location: "首尔中区",
+        },
+        3: {
+          title: "汉江巴士 X Instagram 首尔热门打卡地之旅",
+          description:
+            "乘坐汉江巴士，游览首尔代表性拍照圣地和Instagram热门打卡地的感性之旅。",
+          location: "汉江全段",
+        },
+        4: {
+          title: "LG双子星棒球赛观战",
+          description: "蚕室棒球场高级观赛体验 + 炸鸡啤酒 + 体育活动。",
+          location: "首尔松坡区（蚕室观光特区）",
+        },
+        5: {
+          title: "K-Beauty X OLIVE YOUNG 高级美妆之旅",
+          description:
+            "皮肤科护理 + K-Beauty品牌体验 + OLIVE YOUNG购物 + 韩方水疗。",
+          location: "首尔江南区",
+        },
+        6: {
+          title: "首尔传统文化之旅",
+          description:
+            "与AI导览员和Kakao Friends角色一起享受有趣的博物馆体验。",
+          location: "首尔钟路区",
+        },
+      },
+      data: {
+        1: {
+          title: "K-Pop恶魔猎人 × 爱宝乐园特别合作之旅",
+          subtitle: "Netflix原创剧集 × 韩国代表性主题公园的完美合作。",
+          location: "爱宝乐园、骆山公园、N首尔塔、国立中央博物馆",
+          duration: "10小时（含爱宝乐园门票）",
+          groupSize: "最多12人",
+          language: "韩语、英语、中文",
+          partnership: {
+            primary: "NETFLIX",
+            secondary: "Samsung Everland",
+            tertiary: "首尔观光财团",
+          },
+          specialFeatures: [
+            "包含爱宝乐园1日通票",
+            "K-Pop恶魔猎人限定周边套装",
+            "无限次使用AR拍照区",
+            "提供电视剧OST播放列表",
+            "拍摄地导览音频之旅",
+          ],
+          itinerary: [
+            {
+              time: "08:30",
+              location: "江南站集合",
+              description: "乘坐专用巴士及行程说明",
+              duration: "30分钟",
+            },
+            {
+              time: "09:30",
+              location: "进入爱宝乐园",
+              description: "开始体验K-Pop恶魔猎人主题区",
+              duration: "4小时",
+            },
+            {
+              time: "10:00",
+              location: "恶魔猎人游乐设施",
+              description: "体验惊险刺激的“恶魔追击战”",
+              duration: "45分钟",
+            },
+            {
+              time: "11:00",
+              location: "露米的魔法学校",
+              description: "互动魔法体验馆 & AR拍照区",
+              duration: "60分钟",
+            },
+            {
+              time: "12:30",
+              location: "恶魔猎人餐厅",
+              description: "电视剧主题午餐套餐 & 限定甜点",
+              duration: "90分钟",
+            },
+            {
+              time: "14:00",
+              location: "前往骆山公园",
+              description: "重现露米♥振宇约会场景拍摄地",
+              duration: "90分钟",
+            },
+            {
+              time: "16:00",
+              location: "N首尔塔",
+              description: "最终Boss战拍摄地 & 观景台参观",
+              duration: "120分钟",
+            },
+            {
+              time: "18:00",
+              location: "国立中央博物馆",
+              description: "古代文物插曲拍摄地之旅",
+              duration: "60分钟",
+            },
+          ],
+          detailSections: [
+            {
+              title: "爱宝乐园 X K-Pop恶魔猎人主题区",
+              text: "在世界首个K-Pop恶魔猎人主题区，亲身体验剧中惊心动魄的动作场面。完美再现的露米魔法学校、振宇训练中心以及恶魔清除任务等沉浸式游乐设施正等待着您。",
+            },
+            {
+              title: "骆山公园浪漫约会场景重现",
+              text: "在骆山公园亲自重现剧中露米和振宇最令人印象深刻的约会场景。在首尔市中心的美景下，享受戏剧性的拍照时间，专属摄影师将为您捕捉人生美照。",
+            },
+            {
+              title: "N首尔塔最终决战舞台",
+              text: "通过VR体验在N首尔塔上演的季终最终Boss战，以剧中主角的心情欣赏首尔的夜景。还包含限定版情侣锁体验。",
+            },
+          ],
+          inclusions: [
+            "爱宝乐园1日通票",
+            "专用旅游巴士往返交通",
+            "K-Pop恶魔猎人周边套装",
+            "电视剧主题午餐和甜点",
+            "专业导游服务",
+            "N首尔塔观景台门票",
+            "AR拍照区使用券",
+            "纪念品商店10%折扣券",
+          ],
+          exclusions: [
+            "个人购物费用",
+            "额外游乐设施费用",
+            "旅游保险",
+            "个人零食和饮料",
+          ],
+        },
+        2: {
+          title: "微软AI首尔之旅",
+          subtitle: "AI技术与文物修复的相遇",
+          location: "首尔中区微软韩国",
+          duration: "4小时",
+          groupSize: "最多20人",
+          language: "韩语、英语",
+          partnership: { primary: "Microsoft Korea", secondary: "国家遗产厅" },
+          itinerary: [
+            {
+              time: "09:00",
+              location: "微软韩国办公室",
+              description: "AI技术介绍及行程开始",
+            },
+            {
+              time: "10:00",
+              location: "AI演示中心",
+              description: "体验文物修复AI技术",
+            },
+            {
+              time: "11:30",
+              location: "国家遗产厅合作馆",
+              description: "体验数字文物修复案例",
+            },
+            {
+              time: "13:00",
+              location: "微软周边商店",
+              description: "限量版纪念品及AI体验套件",
+            },
+          ],
+          detailSections: [
+            {
+              title: "微软AI大会2025 - 主要日程",
+              text: "萨提亚·纳德拉在首尔举行的微软AI大会上介绍了AI的未来。议程包括一场主题演讲、25场分组会议和12场实践工作坊，为AI创新和产业变革提供了深刻的见解。",
+            },
+            {
+              title: "在微软AI大会2025上学习与交流",
+              text: "由萨提亚·纳德拉介绍的与会者将从行业领袖那里获得关于AI创新的见解，并探索云、AI和安全领域的最新技术。它还提供了与微软高管交流、与专家进行一对一讨论以及通过充满活力的社区会议扩展网络的机会。",
+            },
+            {
+              title: "微软AI大会 - 现场会议",
+              text: "观众聚集在微软AI大会，聆听关于AI未来的主题演讲。",
+            },
+          ],
+          inclusions: ["专家导览", "AI技术体验环节", "限量纪念品", "交流机会"],
+          exclusions: ["交通费用", "餐饮", "个人开销"],
+        },
+        3: {
+          title: "汉江巴士 X Instagram 首尔热门打卡地之旅",
+          subtitle: "沿汉江征服首尔代表性拍照圣地",
+          location: "汉江公园（汝矣岛-蚕室-盘浦-麻浦）",
+          duration: "3.5小时",
+          groupSize: "最多25人",
+          language: "韩语、英语",
+          partnership: { primary: "首尔观光财团", secondary: "汉江事业本部" },
+          itinerary: [
+            {
+              time: "15:00",
+              location: "汝矣岛汉江公园",
+              description: "行程开始及Instagram拍照技巧讲座",
+            },
+            {
+              time: "15:30",
+              location: "汉江巴士（汝矣岛→蚕室）",
+              description: "以63大厦和IFC购物中心为背景进行车内拍摄",
+            },
+            {
+              time: "16:00",
+              location: "蚕室乐天世界塔拍照区",
+              description: "拍摄首尔天际线代表性认证照",
+            },
+            {
+              time: "16:45",
+              location: "汉江巴士（蚕室→盘浦）",
+              description: "拍摄具有汉江游轮感的视频",
+            },
+            {
+              time: "17:15",
+              location: "盘浦彩虹喷泉",
+              description: "拍摄黄金时段彩虹喷泉的延时摄影",
+            },
+            {
+              time: "18:00",
+              location: "三岛LED秀",
+              description: "夜景烟花及团体纪念照拍摄",
+            },
+          ],
+          detailSections: [
+            {
+              title: "汝矣岛汉江公园之旅",
+              text: "在首尔市中心的休息空间——汝矣岛汉江公园，骑着共享单车沿江边行驶，感受凉爽的江风。在绿色的草坪上享受悠闲的野餐，欣赏汉江与天际线交融的独特风景。",
+            },
+            {
+              title: "盘浦彩虹喷泉之旅",
+              text: "作为世界上最长的桥梁喷泉被载入吉尼斯世界纪录的盘浦彩虹喷泉是汉江的一大名胜。白天是清凉的水柱，夜晚则与五彩缤纷的灯光和音乐相得益彰，营造出浪漫的氛围，是欣赏首尔夜景的最佳地点之一。",
+            },
+            {
+              title: "三岛（漂浮岛）之旅",
+              text: "作为世界上第一座人工浮岛，三岛是由“佳岛”、“彩岛”和“帅岛”三个岛屿组成的复合文化空间。这里举办展览、演出和活动，您可以在餐厅和咖啡馆欣赏汉江美景，享受特别的用餐体验。尤其在夜晚，LED灯光点缀整个岛屿，使其成为首尔代表性的夜景名胜。还可以体验游艇和船只，享受别样的乐趣。",
+            },
+          ],
+          inclusions: [
+            "汉江巴士票",
+            "专业摄影师导览",
+            "人生美照拍摄及修图服务",
+            "饮料及零食",
+          ],
+          exclusions: ["个人相机设备", "餐费", "额外活动费用"],
+        },
+        4: {
+          title: "LG双子星高级棒球观赛之旅",
+          subtitle: "在蚕室棒球场享受完美的棒球体验",
+          location: "蚕室棒球场，乐天世界塔",
+          duration: "6小时",
+          groupSize: "最多25人",
+          language: "韩语、英语、日语",
+          partnership: { primary: "LG双子星", secondary: "校村炸鸡" },
+          itinerary: [
+            {
+              time: "14:00",
+              location: "蚕室站2号出口",
+              description: "行程开始及棒球文化介绍",
+            },
+            {
+              time: "15:00",
+              location: "LG双子星粉丝商店",
+              description: "试穿队服并准备应援用品",
+            },
+            {
+              time: "18:00",
+              location: "校村炸鸡高级包厢",
+              description: "边享用炸鸡啤酒边观看比赛",
+            },
+            {
+              time: "20:00",
+              location: "拍照区",
+              description: "以球场为背景的纪念快照之旅",
+            },
+          ],
+          detailSections: [
+            {
+              title: "蚕室棒球比赛",
+              text: "作为首尔的代表性体育地标，蚕室棒球场是LG双子星和斗山熊队的主场，在这里可以近距离感受韩国职业棒球的热情。在这个可容纳超过3万人的大型球场，应援歌和应援棒营造出的独特氛围，展现了韩国职业棒球的魅力。特别是LG双子星球迷热情的应援战，为来访蚕室的游客提供了难忘的体验。",
+            },
+            {
+              title: "LG双子星",
+              text: "在首尔举行的LG双子星棒球比赛中，外国游客热情地加油助威，享受现场气氛。结合啦啦队式应援文化的韩国职业棒球，作为独特的旅游项目，为国际游客带来了特别的回忆。",
+            },
+          ],
+          inclusions: [
+            "棒球比赛高级座位票",
+            "炸鸡啤酒套餐",
+            "LG双子星应援用品",
+            "专业导游",
+          ],
+          exclusions: ["额外餐饮", "个人纪念品购买", "交通费"],
+        },
+        5: {
+          title: "K-Beauty与健康高级之旅",
+          subtitle: "韩国顶级美容技术与传统健康养生的完美结合",
+          location: "江南区（狎鸥亭-清潭-新沙洞一带）",
+          duration: "6小时",
+          groupSize: "最多12人",
+          language: "韩语、英语、中文、日语",
+          partnership: { primary: "OLIVE YOUNG", secondary: "江南皮肤科协会" },
+          itinerary: [
+            {
+              time: "10:00",
+              location: "个人色彩诊断",
+              description: "个人色彩诊断+定制化妆推荐",
+            },
+            {
+              time: "11:00",
+              location: "狎鸥亭高级皮肤科",
+              description: "皮肤分析+水光针护理（30分钟）",
+            },
+            {
+              time: "13:00",
+              location: "清潭洞韩定食餐厅",
+              description: "有益皮肤的韩方药膳午餐",
+            },
+            {
+              time: "14:30",
+              location: "新沙洞K-Beauty体验馆",
+              description: "体验雪花秀、后等品牌的定制护理",
+            },
+            {
+              time: "15:30",
+              location: "狎鸥亭传统韩方水疗",
+              description: "黄土汗蒸+香薰按摩（90分钟）",
+            },
+            {
+              time: "17:30",
+              location: "OLIVE YOUNG VIP购物",
+              description: "个人定制产品推荐+免税购物",
+            },
+          ],
+          partnershipBenefits: [
+            {
+              icon: "Award",
+              title: "高级皮肤护理",
+              description: "江南顶级皮肤科的水光针+皮肤分析",
+              value: "价值₩150,000",
+            },
+            {
+              icon: "Gift",
+              title: "K-Beauty大礼包",
+              description: "雪花秀、后、悦诗风吟等热门品牌样品套装",
+              value: "价值₩80,000",
+            },
+            {
+              icon: "Play",
+              title: "韩方健康水疗",
+              description: "黄土汗蒸房+90分钟传统香薰按摩",
+              value: "价值₩120,000",
+            },
+          ],
+          detailSections: [
+            {
+              title: "K-Beauty个人色彩诊断体验",
+              text: "通过韩国美容潮流的核心——个人色彩诊断，找到最适合您形象的颜色。专业顾问将分析符合您肤色和气质的颜色，为您的化妆和时尚造型提供实际帮助。对外国游客而言，这是亲身体验韩国K-Beauty文化、发现自己新魅力的特殊时刻。",
+            },
+            {
+              title: "K-Beauty in OLIVE YOUNG",
+              text: "这是专为对K-Beauty感兴趣的外国游客策划的OLIVE YOUNG购物体验之旅。这不仅仅是简单的店铺访问，最了解潮流的私人导购将陪同您进行定制化购物。从全球粉丝喜爱的K-Pop艺人美妆单品到社交媒体上的热门话题产品，您都可以在现场获得推荐并购买。",
+            },
+            {
+              title: "韩国皮肤科",
+              text: "以先进设备和专业医疗团队闻名的韩国皮肤科，在美容和皮肤治疗领域享誉全球。外国游客可以通过从痘痘、斑点管理到激光治疗和护肤项目的个人定制化诊疗，亲身体验K-Beauty的医疗服务。在安全细致的诊疗中，体验韩国独特的美容与健康文化，这是一个特殊的机会。",
+            },
+          ],
+          inclusions: [
+            "个人色彩诊断",
+            "高级皮肤护理",
+            "韩方水疗体验",
+            "K-Beauty大礼包",
+            "专业美容导游",
+            "午餐",
+          ],
+          exclusions: ["额外治疗费用", "个人购物费用", "交通费"],
+        },
+        6: {
+          title: "首尔传统文化之旅",
+          subtitle:
+            "在景福宫感受韩国王室文化，在仁寺洞通过茶道体验传统风情，在广藏市场品尝当地美食，度过特别的一天。",
+          location: "首尔钟路区一带",
+          duration: "4.5小时",
+          groupSize: "最多6人",
+          language: "韩语、英语、中文",
+          partnership: { primary: "首尔市政府", secondary: "哈拿多乐" },
+          itinerary: [
+            {
+              time: "10:00",
+              location: "景福宫入口",
+              description: "租借韩服后参观景福宫，拍摄旅行快照",
+            },
+            {
+              time: "12:00",
+              location: "传统韩定食午餐",
+              description: "在传统韩餐厅享用午餐",
+            },
+            {
+              time: "14:30",
+              location: "仁寺洞茶道体验与传统街区漫步",
+              description:
+                "在传统茶馆体验茶道，并逛传统工艺品、印章、韩纸纪念品",
+            },
+            {
+              time: "17:00",
+              location: "广藏市场传统美食之旅",
+              description: "品尝绿豆煎饼、麻药紫菜包饭、生拌牛肉等当地人气美食",
+            },
+            {
+              time: "19:00",
+              location: "清溪川夜景漫步",
+              description: "沿着流向汉江的清溪川散步",
+            },
+          ],
+          detailSections: [
+            {
+              title: "景福宫旅行快照",
+              text: "在首尔的代表性宫殿景福宫，与专业摄影师一起拍摄旅行快照。穿着韩服，以宫殿宏伟的殿阁和宁静的庭院为背景，记录下特别的瞬间。传统与现代交融的景福宫的魅力，将成为您难忘的旅行回忆。",
+            },
+            {
+              title: "仁寺洞茶道体验",
+              text: "在首尔传统街区仁寺洞的宁静茶馆里，体验韩式茶道。在专家的指导下，品尝传统茶和茶点，感受韩国茶文化的深厚底蕴。",
+            },
+            {
+              title: "广藏市场美食之旅",
+              text: "在首尔最富活力的传统市场之一广藏市场，尽情享受韩国的代表性美食。您可以品尝到香脆的绿豆煎饼、麻药紫菜包饭、生拌牛肉等深受当地人和外国游客喜爱的各种街头小吃。",
+            },
+          ],
+          inclusions: [
+            "韩服租借",
+            "景福宫门票",
+            "茶道体验",
+            "广藏市场美食试吃",
+            "专业导游",
+            "旅行快照",
+          ],
+          exclusions: ["午餐费用", "个人纪念品购买", "交通费"],
+        },
+      },
+      offer: {
+        expiresIn: "剩余时间",
+        limitedTime: "⏳ 限时优惠",
+        doNotShowToday: "今日不再显示",
+        grabDeal: "立即抢购",
+        grabbed: "已确认",
+        dealGrabbed: "优惠已确认！",
+        priceSecured: "当前价格将短暂保留",
+        urgencyText: "抓紧时间！剩余 {{minutes}}分 {{seconds}}秒",
+      },
+      booking: {
+        bookNow: "立即预订",
+        reviews: "条评论",
+        discount: "折",
+      },
+      tabs: {
+        overview: "行程",
+        details: "详情",
+        reviews: "评价",
+      },
+      overview: {
+        itinerary: "行程",
+        noItinerary: "暂无行程信息",
+        included: "包含项目",
+        notIncluded: "不包含项目",
+      },
+      details: {
+        noDetails: "暂无详细信息",
+        specialFeatures: "特别优惠",
+        partnershipBenefits: "合作优惠",
+      },
+      reviews: {
+        noReviews: "暂无评价",
+        verifiedPurchase: "已验证购买",
+      },
+      notFound: {
+        title: "未找到该旅游项目",
+        description: "无法加载请求的旅游信息。",
+      },
+    },
     common: {
       community: {
         info_reviews_label: "信息 & 评价",
@@ -4989,6 +6940,7 @@ const resources = {
       "login.logout": "登出",
       "login.login": "登录",
       "main.title.k_travel": "旅行",
+      "main.title.k_travel": "旅行",
       "main.title.connector": "",
       "main.title.ai_creates": "AI为您打造",
       "main.subtitle":
@@ -5022,6 +6974,8 @@ const resources = {
       "footer.partnership": "合作伙伴",
       "footer.copyright": "© 2024 Klover. All rights reserved.",
       "modal.welcome": "欢迎来到Klover",
+      "footer.copyright": "© 2024 Klover. All rights reserved.",
+      "modal.welcome": "欢迎来到Klover",
       "modal.instruction": "请登录以开始您的AI定制旅行规划师",
       "modal.continue_google": "使用Google继续",
       "modal.continue_microsoft": "使用Microsoft继续",
@@ -5032,6 +6986,46 @@ const resources = {
       "modal.disclaimer.suffix": "。",
       "cta.title": "现在，是开始您完美旅行的时候了",
       "cta.start": "通过5个问题开始",
+
+      // Home.jsx 추가 번역 키들
+      "home.persona.title": "发现您专属的旅行人格",
+      "home.persona.desc":
+        "通过5个问题分析您的旅行风格，AI将为您推荐定制化路线。",
+      "home.persona.cta": "开始人格分析",
+      "home.persona.card1.title": "旅行风格？",
+      "home.persona.card1.pill1": "冒险追求型",
+      "home.persona.card1.pill2": "悠闲享受型",
+      "home.persona.card1.pill3": "计划探访型",
+      "home.persona.card2.title": "感兴趣的活动？",
+      "home.persona.card2.pill1": "文化体验",
+      "home.persona.card2.pill2": "美食探访",
+      "home.persona.card2.pill3": "购物",
+      "home.persona.card3.title": "偏好的氛围？",
+      "home.persona.card3.pill1": "时尚的",
+      "home.persona.card3.pill2": "传统的",
+      "home.persona.card3.pill3": "亲近自然的",
+
+      "home.ai_reco.title": "AI打造的完美旅行路线",
+      "home.ai_reco.desc": "基于个人定制分析，实时生成最优旅行路线。",
+      "home.ai_reco.tag1": "实时生成",
+      "home.ai_reco.tag2": "定制推荐",
+      "home.ai_reco.tag3": "最优路线",
+      "home.ai_reco.tag4": "时间效率",
+      "home.ai_reco.tag5": "本地信息",
+
+      "home.editing.title": "自由编辑并完成",
+      "home.editing.desc": "通过拖拽功能自由修改旅行日程，创建您的完美计划。",
+
+      "home.map.preview_label": "定制旅行路线",
+
+      "home.itinerary.title": "旅行日程",
+      "home.itinerary.item1": "景福宫参观",
+      "home.itinerary.item2": "北村韩屋村",
+      "home.itinerary.item3": "仁寺洞文化街",
+      "home.itinerary.item4": "明洞购物",
+
+      "home.controls.undo": "撤销",
+      "home.controls.save": "保存",
 
       // Home.jsx 추가 번역 키들
       "home.persona.title": "发现您专属的旅行人格",
@@ -5161,6 +7155,55 @@ const resources = {
       mock_playlists2: "夏日微风",
       mock_playlists2_desc: "清爽夏日假期K-pop",
       play: "播放",
+    },
+    DocentMantine: {
+      title: "AI 讲解",
+      subtitle: "实时位置导览",
+      aiDocent: "AI 讲解",
+      stopVoice: "停止语音",
+      current: "当前位置",
+      directions: "路线",
+      chatbot: "旅游聊天机器人",
+      askQuestion: "请问您想了解什么",
+      send: "发送",
+      examples: {
+        title: "示例问题:",
+        items: [
+          "K-pop恶魔猎人拍摄地",
+          "明洞美食推荐",
+          "北村韩屋村信息",
+          "鱿鱼游戏拍摄地",
+        ],
+      },
+      chatbotPlaceholder: "请输入您的问题...",
+      chatbotInitialMessage:
+        "您好！我是您的AI旅行讲解员。您可以询问任何关于地点或旅行信息的问题。您也可以发送照片，我会为您提供该地点的详细说明！",
+      imageQueryText: "请介绍一下这个地方",
+      voiceRecStart: "开始录音...",
+      voiceRecResult: "语音识别结果：",
+      voiceRecStop: "停止录音。",
+      errorReply: "抱歉，生成回复时出错。请稍后再试。",
+      filePick: "文件",
+      categories: {
+        all: "全部",
+        museum: "美术馆&博物馆",
+        palace: "故宫",
+        landmark: "地标",
+        historic: "历史遗址",
+      },
+      allTourismSpots: "全部景点",
+      detailedInfo: "详细信息",
+      tourismList: "景点列表",
+      locationTracking: "位置追踪",
+      location: "位置",
+      voiceGuide: "语音导览",
+      tourDetection: {
+        message:
+          "🎯 看起来您在咨询旅游相关问题！专业导游服务和定制路线推荐可在旅游页面查看。",
+        buttonText: "🎯 前往旅游服务页面",
+      },
+      viewDetails: "📝 查看详细信息",
+      selectPlace: "请选择地点",
     },
     DocentMantine: {
       title: "AI 讲解",
@@ -5451,6 +7494,16 @@ const resources = {
       section_translator_benefit: "实时语音和文本翻译",
       section_culture_benefit: "韩国文化与礼仪指南",
 
+      // Hero 섹션
+      hero_tagline: "旅行者必备工具",
+      hero_title: "生存工具包",
+      hero_subtitle: "在韩国旅行中需要的所有工具和信息，在一个地方相遇",
+
+      // 섹션 설명
+      section_vision_benefit: "图像文字识别与翻译",
+      section_translator_benefit: "实时语音和文本翻译",
+      section_culture_benefit: "韩国文化与礼仪指南",
+
       vision_ocr: "视觉OCR",
       quick_translator: "快速翻译",
       culture_guide: "韩国文化指南",
@@ -5533,6 +7586,7 @@ const resources = {
       gift_modal_paragraphs_2: "送礼物和接受礼物时必须使用双手是礼仪。",
       gift_modal_list_1: "用双手给予和接受",
       gift_modal_list_2: "在节日、乔迁、感谢等各种情况下交换礼物",
+      modal_close: "关闭",
       modal_close: "关闭",
     },
     VisionOCR: {
@@ -5798,6 +7852,233 @@ const resources = {
       no_registered_activities: "没有注册的活动",
       no_saved_schedule_info: "没有保存的行程信息",
     },
+    cultureGuide: {
+      greeting: "问候礼仪",
+      greeting_content: "在韩国，要先向年长者问候，并低头行礼。",
+      greeting_extra: "通常轻微的点头就足够了，用双手握手会显得更加恭敬。",
+      greeting_modal_title: "韩国的敬语和基本问候表达",
+      greeting_modal_paragraphs:
+        "韩国有敬语和半语，问候表达也会根据情况有所不同。",
+      greeting_modal_paragraphs_2:
+        "朋友之间说'안녕'，但对长辈或初次见面的人必须说'안녕하세요'才算有礼貌。",
+      greeting_modal_list_1: "안녕하세요 (日常敬语)",
+      greeting_modal_list_2: "안녕하십니까 (正式)",
+      greeting_modal_list_3: "안녕 (亲密关系，半语)",
+      greeting_modal_list_4: "감사합니다 / 고맙습니다 / 고마워",
+      greeting_modal_list_5: "죄송합니다 / 미안합니다 / 미안해",
+      greeting_modal_link_1: "如何向韩国人问候",
+      meal: "用餐礼仪",
+      meal_content: "长辈先拿起餐具，不要端着饭碗吃饭。接酒要用双手。",
+      meal_extra: "吃完饭后将筷子整齐地放在碗上是礼貌的表现。",
+      meal_modal_title: "韩国的用餐礼仪",
+      meal_modal_paragraphs:
+        "在韩国，用餐不仅仅是吃饭，而是尊重对方的重要场合。",
+      meal_modal_paragraphs_2:
+        "用餐前说'잘 먹겠습니다'，用餐后说'잘 먹었습니다'，这是对准备的人和一起用餐的人的尊重。",
+      meal_modal_list_1: "就座时让长辈或客人先坐。",
+      meal_modal_list_2: "不要把筷子插在饭碗里。",
+      meal_modal_list_3: "喝酒时要稍微转头喝。",
+      meal_modal_list_4: "大声咀嚼或用筷子指人是失礼的。",
+      meal_modal_list_5: "要把碗放在餐桌上吃。",
+      meal_modal_link_1: "韩国人的用餐礼仪",
+      transportation: "公共交通",
+      transportation_content: "在地铁上要让座给老弱病残，不要大声通话。",
+      transportation_extra: "在拥挤的时间段把包背在前面是体贴的态度。",
+      transportation_modal_title: "韩国的公共交通",
+      transportation_modal_paragraphs:
+        "韩国的地铁和公交车非常方便，但遵守座位和行为礼仪很重要。",
+      transportation_modal_paragraphs_2:
+        "特别是老弱病残专座和孕妇专座，外国人容易混淆，即使空着也不坐是一般文化。",
+      transportation_modal_list_1:
+        "老弱病残专座是老人、残疾人、孕妇专用座位，年轻人不使用。",
+      transportation_modal_list_2: "孕妇专座（粉色座位）要随时为孕妇空着。",
+      transportation_modal_list_3: "在公共交通工具内不要大声通话。",
+      transportation_modal_list_4: "不要在地铁或公交车上吃东西。",
+      transportation_modal_list_5: "拥挤时把包背在前面是礼貌的。",
+      transportation_modal_link_1: "韩国的公共交通礼仪",
+      tip: "小费文化",
+      tip_content: "韩国没有小费文化。服务费已经包含在内。",
+      tip_extra: "旅游区的一些酒店可能例外地接受少量小费，但不是必须的。",
+      tip_modal_title: "韩国的小费文化",
+      tip_modal_paragraphs: "韩国的小费文化与西方不同，几乎不存在。",
+      tip_modal_list_1: "餐厅·咖啡厅：不需要小费",
+      tip_modal_list_2: "出租车：只支付规定费用",
+      tip_modal_list_3: "美容院·按摩等服务行业：没有小费文化",
+      footwear: "脱鞋",
+      footwear_content: "在韩国家庭或一些餐厅要脱鞋进入。",
+      footwear_extra: "鞋柜通常在入口处，经常准备室内拖鞋。",
+      footwear_modal_title: "韩国的脱鞋文化",
+      footwear_modal_paragraphs: "在韩国，进入家中时脱鞋是理所当然的文化。",
+      footwear_modal_paragraphs_2:
+        "这是为了保持室内清洁和保护家人健康的传统习惯。",
+      footwear_modal_paragraphs_3:
+        "在室内经常穿拖鞋而不是鞋子，或者只穿袜子生活。",
+      footwear_modal_list_1: "家庭：在玄关脱鞋进入",
+      footwear_modal_list_2: "传统韩餐厅·韩屋：由于坐式结构经常脱鞋",
+      gift: "礼物礼仪",
+      gift_content: "送礼物时要用双手递送，收到礼物时要表示感谢。",
+      gift_extra: "在韩国，礼物包装也很重要，要选择漂亮的包装纸。",
+      gift_modal_title: "韩国的礼物礼仪",
+      gift_modal_paragraphs: "在韩国，送礼物是表达心意的重要方式。",
+      gift_modal_paragraphs_2:
+        "节日、搬家祝贺、感谢问候等各种情况下都有礼物往来。",
+      gift_modal_list_1: "送礼物时要用双手递送。",
+      gift_modal_list_2: "收到礼物时要表示感谢。",
+      gift_modal_list_3: "礼物包装要漂亮。",
+      gift_modal_list_4: "不要送过于昂贵的礼物。",
+      gift_modal_list_5: "节日、搬家祝贺、感谢问候等各种情况下都有礼物往来。",
+      gift_modal_link_1: "韩国的礼物礼仪",
+    },
+    directions: {
+      days: "第",
+      add_recommended_course: "已添加推荐路线。",
+      delete_day: "删除此日程？",
+      search_start: "搜索出发地",
+      search_end: "搜索目的地",
+      search_waypoint: "搜索途经地",
+      route_planner: "路线规划器",
+      calculate_route: "计算路线",
+      calculating_route: "正在计算路线...",
+      save_route: "保存路线",
+      more: "更多",
+      duplicate_day: "复制日程",
+      add_day_menu: "添加日程菜单",
+      add_day: "添加新日程",
+      add_recommended_course: "添加推荐路线",
+      set_start: "请设置出发地",
+      set_end: "请设置目的地",
+      add_waypoint: "添加途经地",
+      remove_waypoint: "删除途经地",
+      add_waypoint_description: "添加途经地可以创建更精确的路线。",
+      map_provider: "地图提供商",
+      kakao_map: "Kakao地图",
+      t_map: "T地图",
+      car: "汽车",
+      pedestrian: "步行",
+      transit: "公共交通",
+      transportation_mode: "交通方式",
+      route_order_adjustment: "路线顺序调整",
+      drag_to_adjust_order: "拖拽更改顺序",
+      start: "出发",
+      end: "到达",
+      waypoint: "途经",
+      add_start: "添加出发地",
+      add_end: "添加目的地",
+      add_waypoint: "添加途经地",
+      select_start: "请选择出发地",
+      select_end: "请选择目的地",
+      select_waypoint: "请选择途经地",
+      travel_summary: "行程摘要",
+      total_distance: "总距离",
+      estimated_duration: "预计用时",
+      minutes: "分钟",
+      stay_time: "停留时间（分钟）",
+      load_recommended_course: "加载推荐路线",
+      load_recommended_course_description: "选择要添加的路线将作为新日程准备。",
+      loading_recommended_course: "正在加载推荐路线...",
+      load_recommended_course_failed: "无法加载推荐路线。",
+      try_again: "重试",
+      no_recommended_course: "没有可用的推荐路线。",
+      stops: "个",
+      keyword_input: "请输入关键词",
+      search_result_select_place: "从搜索结果中选择地点",
+      waypoint_added: "将添加途经地。",
+      start_set: "将设置出发地。",
+      end_set: "将设置目的地。",
+    },
+    planner: {
+      new_activity: "新活动",
+      no_saved_plans: "没有保存的旅行计划。",
+      create_or_modify_plan: "创建新计划或修改现有计划进行管理。",
+      new_plan: "新旅行",
+      places: "地点",
+      days: "天",
+      load_plan: "加载此计划",
+      delete_plan: "删除此计划",
+      login_to_start_plan: "请登录开始规划您的旅行。",
+      login: "登录",
+      creating_sample_plan: "正在创建示例旅行...",
+      no_plan: "没有旅行计划。",
+      create_sample_plan: "创建示例旅行",
+      saved_schedule: "已保存的日程",
+      travel_planner: "旅行日程规划器",
+      saving: "保存中...",
+      travel_plan: "旅行计划",
+      saved_plans: "已保存的计划",
+      activity_editor: "活动编辑",
+      time_info: "时间信息",
+      time: "时间",
+      stay_time: "停留时间（分钟）",
+      place_info: "地点信息",
+      place_name: "地点名称",
+      search_place_placeholder: "输入搜索词以获取地点推荐",
+      place_type: "地点类型",
+      road_address: "道路地址",
+      address: "地址",
+      latitude: "纬度",
+      longitude: "经度",
+      additional_info: "附加信息",
+      description: "描述",
+      description_placeholder: "请输入与活动相关的备注",
+      cost_estimate: "预计费用（韩元）",
+      cancel: "取消",
+      save: "保存",
+      add_activity: "添加活动",
+      total_days_travel: "总共{{days}}天旅行",
+    },
+    data: {
+      live_info: "实时信息",
+      now: "现在",
+      is: "是",
+      data_update: "数据更新",
+      real_time_population: "实时人口",
+      about: "约",
+      people: "人",
+      real_time_commercial: "实时商业",
+      overall_commercial: "整体商业",
+      subway_arrival_info: "地铁到达信息",
+      recommended_tour_products: "推荐旅游产品",
+      nearby_cultural_events: "周边文化活动",
+      traffic_conditions: "交通状况",
+      weather: "天气",
+      humidity: "湿度",
+      wind_speed: "风速",
+      precipitation: "降水量",
+      feels_like: "体感",
+    },
+    mypage: {
+      mypage: "我的页面",
+      mypage_description: "查看和管理您的活动和信息",
+      logout: "登出",
+      saved_travel_plans: "保存的旅行计划",
+      liked_travel_products: "喜欢的旅行产品",
+      my_posts: "我写的文章",
+      liked_posts: "喜欢的文章",
+      travel_plans: "旅行计划",
+      travel_products: "旅行产品",
+      likes: "喜欢",
+      loading_travel_plans: "正在加载旅行计划...",
+      no_saved_travel_plans: "没有保存的旅行计划",
+      create_travel_plan_message: "创建并保存您的旅行计划！",
+      no_liked_products: "没有喜欢的旅行产品",
+      like_products_message: "为您感兴趣的旅行产品点赞！",
+      loading: "加载中...",
+      no_posts_written: "没有写过的文章",
+      write_first_post: "写您的第一篇文章！",
+      no_liked_posts: "没有喜欢的文章",
+      like_posts_message: "为您感兴趣的文章点赞！",
+      delete: "删除",
+      travel_plan: "旅行计划",
+      destination_undecided: "目的地未定",
+      day_schedule: "天行程",
+      saved: "保存",
+      last_updated: "最近更新",
+      loading_details: "正在加载详细信息...",
+      time_undecided: "时间未定",
+      activity: "活动",
+      no_registered_activities: "没有注册的活动",
+      no_saved_schedule_info: "没有保存的行程信息",
+    },
   },
 };
 
@@ -5813,6 +8094,15 @@ i18n.use(initReactI18next).init({
     "Navigation",
     "VisionOCR",
     "playlists",
+    "DocentMantine",
+    "dashboard",
+    "persona",
+    "directions",
+    "tour",
+    "tourDetail",
+    "planner",
+    "data",
+    "mypage",
     "DocentMantine",
     "dashboard",
     "persona",
