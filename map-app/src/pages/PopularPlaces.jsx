@@ -99,25 +99,46 @@ const tourProducts = [
 
 // 장소별 이미지와 설명 데이터
 const placeInfo = {
-  "명동 관광특구": {
-    image: "/img/myeondong.jpg",
+  "강남 MICE 관광특구": {
+    image: "/img/p1.png",
     description:
-      "서울의 대표 쇼핑 거리이자 한류 문화의 중심지. 국내외 관광객들이 가장 많이 찾는 명소로, 화장품 매장과 패션 브랜드, 맛집들이 즐비합니다.",
-  },
-  "잠실 관광특구": {
-    image: "/img/jamsil.jpg",
-    description:
-      "롯데월드와 올림픽공원이 있는 복합 엔터테인먼트 구역. 쇼핑, 레저, 문화를 한 번에 즐길 수 있는 서울의 랜드마크입니다.",
+      "서울의 경제와 문화의 중심지로, 고급 쇼핑몰과 레스토랑, 엔터테인먼트가 집중된 곳. K-pop과 한류의 발원지이자 현대 서울의 상징적인 지역입니다.",
   },
   "광화문·덕수궁": {
     image: "/img/deoksugung.jpg",
     description:
       "조선왕조의 역사가 살아 숨쉬는 궁궐과 현대 서울의 중심이 조화를 이루는 곳. 전통과 현대가 만나는 특별한 공간입니다.",
   },
+  "명동 관광특구": {
+    image: "/img/myeondong.jpg",
+    description:
+      "서울의 대표 쇼핑 거리이자 한류 문화의 중심지. 국내외 관광객들이 가장 많이 찾는 명소로, 화장품 매장과 패션 브랜드, 맛집들이 즐비합니다.",
+  },
+
+  서울역: {
+    image: "/img/p4.png",
+    description:
+      "한국 철도교통의 중심 허브이자 쇼핑과 문화가 어우러진 복합공간. 전통 시장과 현대적 상업시설이 공존하는 서울의 관문 역할을 합니다.",
+  },
   "이태원 관광특구": {
-    image: null, // 이미지 없음
+    image: "/img/Itaewon.jpg",
     description:
       "다양한 국가의 문화가 공존하는 국제적인 거리. 이국적인 음식점과 바, 클럽들이 모여 있는 서울의 글로벌 핫플레이스입니다.",
+  },
+  "잠실 관광특구": {
+    image: "/img/jamsil.jpg",
+    description:
+      "롯데월드와 올림픽공원이 있는 복합 엔터테인먼트 구역. 쇼핑, 레저, 문화를 한 번에 즐길 수 있는 서울의 랜드마크입니다.",
+  },
+  "종로·청계 관광특구": {
+    image: "/img/p3.png",
+    description:
+      "서울의 역사적 중심가로 경복궁, 창덕궁 등 조선 왕궁과 인사동, 북촌 한옥마을이 위치한 전통문화의 보고. 과거와 현재가 어우러진 문화의 거리입니다.",
+  },
+  "홍대 관광특구": {
+    image: "/img/p4.png",
+    description:
+      "젊음과 예술이 살아있는 대학가 문화의 중심지. 독특한 카페, 클럽, 라이브 음악 공연장들이 모여있는 서울의 대표적인 나이트라이프 명소입니다.",
   },
 };
 
@@ -182,6 +203,7 @@ const getAreaTourProducts = (areaName) => {
 
   // 지역명에 따른 투어 상품 매핑
   const areaMapping = {
+    "강남 Mice 관광특구": ["강남", "강남구", "Gangnam"],
     "잠실 관광특구": ["잠실", "송파구", "Jamsil"],
     "명동 관광특구": ["명동", "중구"],
     "광화문·덕수궁": ["광화문", "덕수궁", "중구"],
@@ -248,7 +270,7 @@ const HeroSection = ({ placeData, areaName }) => {
 
   return (
     <motion.div
-      className="relative h-96 mb-8 rounded-3xl overflow-hidden"
+      className="relative h-96 mb-8 rounded-3xl overflow-hidden p-1"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8 }}
@@ -256,28 +278,28 @@ const HeroSection = ({ placeData, areaName }) => {
       {/* 배경 이미지 */}
       {info?.image && (
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-1 bg-cover bg-center rounded-3xl"
           style={{ backgroundImage: `url(${info.image})` }}
         />
       )}
 
-      {/* 그라데이션 오버레이 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 via-transparent to-pink-900/30" />
+      {/* 그라데이션 오버레이 제거: 불투명 이미지 위에 텍스트만 표시 */}
 
       {/* 컨텐츠 */}
-      <div className="absolute bottom-0 left-0 right-0 p-8">
+      <div className="absolute bottom-1 left-1 right-1 p-8">
         <motion.div
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <div className="flex items-center gap-2 mb-3">
-            <MapPin className="text-pink-400" size={20} />
-            <span className="text-pink-400 font-medium">{t("live_info")}</span>
+          <div className="flex items-center gap-2 mb-4 min-w-0">
+            <MapPin className="text-pink-400 flex-shrink-0" size={20} />
+            <span className="text-pink-400 font-medium truncate max-w-full">
+              {t("live_info")}
+            </span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-black mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-5xl font-black mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
             {t("now")} <span dynamic="true">{placeData.AREA_NM?._text}</span>
             {t("is")}
           </h1>
@@ -384,6 +406,9 @@ const PopularPlaces = () => {
   }, [areaName]);
 
   useEffect(() => {
+    // 페이지 로드 시 즉시 최상단으로 스크롤
+    window.scrollTo(0, 0);
+
     if (!loading && placeData) {
       window.scrollTo({
         top: 0,
@@ -391,6 +416,18 @@ const PopularPlaces = () => {
       });
     }
   }, [loading, placeData]);
+
+  // 컴포넌트 마운트 시 확실하게 최상단으로 스크롤
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    // DOM이 완전히 렌더링된 후 한 번 더 확인
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [areaName]);
 
   if (loading)
     return (
@@ -521,8 +558,19 @@ const PopularPlaces = () => {
                     className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-green-900/30 to-blue-900/30 border border-green-500/20"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-sm">
-                        {subway.line.replace("호선", "")}
+                      <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center px-1 text-center whitespace-nowrap">
+                        {(() => {
+                          const label = subway.line.replace("호선", "");
+                          const sizeClass =
+                            label.length >= 3 ? "text-[10px]" : "text-sm";
+                          return (
+                            <span
+                              className={`text-white font-bold leading-none ${sizeClass}`}
+                            >
+                              {label}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div>
                         <div

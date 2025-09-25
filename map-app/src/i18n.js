@@ -12,7 +12,7 @@ const resources = {
       list: {
         title: "Klover 투어",
         subtitle:
-          "klover와  제휴한 업체들과 함께 출시한 klover만의  투어 상품이며, Klover 이용 고객만을 위한 특별한 여행 상품입니다.",
+          "Klover와  제휴한 업체들과 함께 출시한 klover만의  투어 상품을 만나보세요.",
       },
       search: { placeholder: "검색어를 입력하세요" },
       categories: {
@@ -537,7 +537,7 @@ const resources = {
           seoul_station: "서울역",
           itaewon: "이태원",
           jamsil: "잠실",
-          jongno: "종로·청계",
+          jongno: "종로",
           hongdae: "홍대",
         },
         info: {
@@ -560,7 +560,13 @@ const resources = {
             1001: {
               title: "케이팝 데몬 헌터스 – 3일 서울 여행 코스",
               content:
-                "웹툰 ‘케이팝 데몬 헌터스’ 배경 명소를 3일에 걸쳐 둘러보는 성지순례 루트. 강남·삼성, 한강·홍대, 광화문·익선동·낙산 일정과 꿀팁 제공.",
+                "웹툰 '케이팝 데몬 헌터스' 배경 명소를 3일에 걸쳐 둘러보는 성지순례 루트. 강남·삼성, 한강·홍대, 광화문·익선동·낙산 일정과 꿀팁 제공.",
+            },
+            1002: {
+              title:
+                "K-Pop 아이돌들처럼 먹어보자! 🎤✨ 서울 맛집 완전정복 가이드",
+              content:
+                "좋아하는 아이돌과 같은 공간에서 같은 메뉴를... 상상만 해도 설레지 않나요? 에디터가 직접 발품 팔아 모은 아이돌들의 진짜 단골집 리스트를 공개합니다! 📍\n\nTV 속 그 맛집들\n🥖 Pachamama Bakery | 용산 HYBE 근처\nLE SSERAFIM이 더 매니저에서 극찬한 그 베이커리! 소금빵과 피스타치오 슬라이스는 필수 주문 아이템. HYBE 구경 후 들르면 일석이조 ✨\n\n🥩 금돼지식당 | 미슐랭 빕 구르망\nZB1, BTS, EXO가 단골인 데에는 이유가 있었어요. 바질쌈에 두툼한 삼겹살 올려 먹으면... 말이 필요 없죠 🤤\n\nSNS 화제의 그 곳들\n🍈 아소또 | 을지로\naespa 윈터가 버블로 인증한 메론빵 전문점! 2024년 오픈 후 지금까지 인기 지속 중. 바닐라크림 메론빵 강력 추천 💛\n\n🌿 카페 수목금토 | 강남\nSEVENTEEN 민규의 무지개 계단 인스타 포토존으로 유명세. 도심 속 자연 친화적 분위기에서 힐링 타임 가져보세요 🌈\n\n🍦 요아정 | 전국 매장\nRIIZE 성찬의 조합 레시피로 유명해진 요거트 아이스크림. 골드망고+허니콤+샤인머스캣 조합은 진짜 맛있어요 (에디터도 인정!)\n\n🍩 피르마 베이커리 | 안국\nTWICE 사나의 슈퍼 얼그레이 도넛. 달지 않은 진한 얼그레이 크림이 포인트! (포장만 가능)\n\n팬들의 성지 순례 필수 코스\n🐑 Lamb NIKUYA | 둔촌2호점\nStray Kids, DAY6 멤버들 사인과 포스트잇이 가득! V-Live 촬영지로도 유명\n\n🥩 곱창파는고기집\nSEVENTEEN 고잉 세븐틴 촬영지. 캐럿세트 메뉴와 생일 이벤트까지! 진짜 팬이라면 필수 방문 📸\n\n🎯수현 에디터의 Tips!\n\n강남라인: 수목금토 → Sunday Burger Club → 아가젤라또\n\n성수라인: 카페 파르벤 → 성수다락\n\n용산라인: Pachamama → 아소또\n\n평일 오후에 방문하면 한적하게 즐길 수 있어요. 아이돌들과 같은 메뉴 주문하고 #아이돌맛집투어 해시태그 잊지 마세요! 💜",
             },
           },
         },
@@ -1151,51 +1157,51 @@ const resources = {
           },
         },
         r19hap: {
-          title: "선호하는 숙소 유형은 무엇인가요?",
+          title: "얼마나 머무를 예정이신가요?",
           options: {
             h1: {
-              label: "특급 호텔",
+              label: "1~3일",
               description: "최고급 시설과 서비스를 선호합니다.",
             },
             h2: {
-              label: "가성비 호텔",
+              label: "4~10일",
               description: "합리적인 가격의 깔끔한 호텔을 선호합니다.",
             },
             h3: {
-              label: "게스트하우스/호스텔",
+              label: "11~18일",
               description: "다른 여행객과 교류하는 것을 즐깁니다.",
             },
             h4: {
-              label: "에어비앤비/레지던스",
+              label: "19~29일",
               description: "현지인처럼 살아보는 경험을 중시합니다.",
             },
             h5: {
-              label: "기타",
+              label: "30일 이상",
               description: "친구 집 등 다른 숙소를 이용합니다.",
             },
           },
         },
         cost: {
-          title: "하루 평균 여행 경비는 얼마인가요? (숙박 제외)",
+          title: "여행 예산은 어느 정도인가요? (1인기준)",
           options: {
             c1: {
-              label: "5만원 미만",
+              label: "140만원 미만",
               description: "알뜰하고 실속 있는 여행을 계획합니다.",
             },
             c2: {
-              label: "5만원 ~ 10만원",
+              label: "140만원 ~ 280만원",
               description: "합리적인 소비를 선호합니다.",
             },
             c3: {
-              label: "10만원 ~ 20만원",
+              label: "280만원 ~ 420만원",
               description: "다양한 경험에 투자하는 것을 즐깁니다.",
             },
             c4: {
-              label: "20만원 ~ 30만원",
+              label: "420만원 ~ 560만원",
               description: "비용에 구애받지 않고 즐기는 편입니다.",
             },
             c5: {
-              label: "30만원 이상",
+              label: "560만원 이상",
               description: "럭셔리한 경험과 쇼핑을 선호합니다.",
             },
           },
@@ -1409,9 +1415,9 @@ const resources = {
       total_days_travel: "총 {{days}}일 여행",
     },
     data: {
-      live_info: "실시간 정보",
-      now: "지금",
-      is: "는",
+      live_info: "live_info",
+      now: "실시간",
+      is: "",
       data_update: "데이터 업데이트",
       real_time_population: "실시간 인구",
       about: "약",
@@ -1429,8 +1435,8 @@ const resources = {
       feels_like: "체감",
     },
     mypage: {
-      mypage: "마이페이지",
-      mypage_description: "내 활동과 정보를 확인하고 관리하세요",
+      mypage: "마이 페이지",
+      mypage_description: "Klover와 함께한 여행 일정과 글을 관리해보세요",
       logout: "로그아웃",
       saved_travel_plans: "저장한 여행 계획",
       liked_travel_products: "좋아요한 여행 상품",
@@ -1460,6 +1466,9 @@ const resources = {
       activity: "활동",
       no_registered_activities: "등록된 활동이 없습니다",
       no_saved_schedule_info: "저장된 일정 정보가 없습니다",
+      alert_mypage_h: "마이페이지 접근 제한",
+      alert_mypage_1: "마이페이지를 이용하시려면 먼저 로그인이 필요합니다.",
+      alert_mypage_2: "소셜 계정으로 간편하게 로그인하세요",
     },
   },
   en: {
@@ -2029,6 +2038,22 @@ const resources = {
       community: {
         info_reviews_label: "Info & Reviews",
         info_reviews_desc: "A space to share travel information and reviews",
+        labels: {
+          notice: "Notice",
+          editors_pick: "Klover's Pick",
+          popular_destinations: "Popular Destinations",
+        },
+        search_placeholder: "Search...",
+        live_areas: {
+          gangnam: "Gangnam",
+          gwanghwamun: "Gwanghwamun",
+          myeongdong: "Myeongdong",
+          seoul_station: "Seoul Station",
+          itaewon: "Itaewon",
+          jamsil: "Jamsil",
+          jongno: "Jongno",
+          hongdae: "Hongdae",
+        },
         info: {
           posts: {
             10001: {
@@ -2049,7 +2074,12 @@ const resources = {
             1001: {
               title: "K‑pop Demon Hunters – 3‑day Seoul Pilgrimage Course",
               content:
-                "Visit the series’ iconic spots over 3 days: Day1 Gangnam/Samseong, Day2 Hangang/Hongdae, Day3 Gwanghwamun/Ikseon/Naksan, plus pro tips.",
+                "Visit the series' iconic spots over 3 days: Day1 Gangnam/Samseong, Day2 Hangang/Hongdae, Day3 Gwanghwamun/Ikseon/Naksan, plus pro tips.",
+            },
+            1002: {
+              title: "Eat Like K-Pop Idols! 🎤✨ Complete Seoul Food Guide",
+              content:
+                "Imagine eating the same menu in the same space as your favorite idols... Exciting just thinking about it, right? We reveal the real regular spots of idols that our editor personally researched! 📍\n\nThose Famous Restaurants from TV\n🥖 Pachamama Bakery | Near HYBE in Yongsan\nThat bakery LE SSERAFIM praised on 'The Manager'! Salt bread and pistachio slices are must-order items. Perfect for a visit after touring HYBE ✨\n\n🥩 Geumdoeji Sikdang | Michelin Bib Gourmand\nThere's a reason ZB1, BTS, and EXO are regulars here. Eating thick pork belly with basil wraps... No words needed 🤤\n\nSNS Trending Spots\n🍈 Asotto | Euljiro\naespa Winter's bubble-verified melon bread specialty store! Popular since opening in 2024. Strongly recommend vanilla cream melon bread 💛\n\n🌿 Cafe Sumokgeumto | Gangnam\nFamous for SEVENTEEN Mingyu's rainbow staircase Instagram photo zone. Enjoy healing time in a nature-friendly atmosphere in the city 🌈\n\n🍦 Yoajung | Nationwide locations\nFamous for RIIZE Seungchan's combination recipe yogurt ice cream. Gold mango + honeycomb + shine muscat combination is really delicious (editor approved!)\n\n🍩 Pirma Bakery | Anguk\nTWICE Sana's super earl grey donut. The point is the not-too-sweet, rich earl grey cream! (Takeout only)\n\nEssential Pilgrimage Spots for Fans\n🐑 Lamb NIKUYA | Duncheon Branch 2\nFull of Stray Kids and DAY6 member signatures and post-its! Also famous as a V-Live filming location\n\n🥩 Gopchang Paneun Gogi Jip\nSEVENTEEN Going Seventeen filming location. Carat set menu and birthday events included! Must-visit for real fans 📸\n\n🎯 Editor Suhyeon's Tips!\n\nGangnam Line: Sumokgeumto → Sunday Burger Club → Agagelato\n\nSeongsu Line: Cafe Parven → Seongsu Darak\n\nYongsan Line: Pachamama → Asotto\n\nVisit on weekday afternoons for a peaceful experience. Order the same menu as idols and don't forget the #idolfoodtour hashtag! 💜",
             },
           },
         },
@@ -2347,53 +2377,53 @@ const resources = {
           },
         },
         r19hap: {
-          title: "What type of accommodation do you prefer?",
+          title: "How long are you planning to stay?",
           options: {
             h1: {
-              label: "Luxury Hotel",
-              description: "I prefer top-tier facilities and services.",
+              label: "1-3 days",
+              description: "Just staying for a short while.",
             },
             h2: {
-              label: "Value Hotel",
-              description: "I prefer clean hotels at a reasonable price.",
+              label: "4-10 days",
+              description: "Just visiting the famous tourist spots.",
             },
             h3: {
-              label: "Guesthouse/Hostel",
+              label: "11-18 days",
               description: "I enjoy interacting with other travelers.",
             },
             h4: {
-              label: "Airbnb/Residence",
+              label: "19-29 days",
               description: "I value the experience of living like a local.",
             },
             h5: {
-              label: "Other",
-              description: "I use other accommodations like a friend's house.",
+              label: "30 days or more",
+              description:
+                "I'm very interested in life in Korea, like a month-long stay.",
             },
           },
         },
         cost: {
-          title:
-            "What is your average daily travel budget? (excluding accommodation)",
+          title: "What is your travel budget? (per person)",
           options: {
             c1: {
-              label: "Less than $50",
-              description: "I plan a frugal and practical trip.",
+              label: "Less than $1,000",
+              description: "Planning a frugal and value-oriented trip.",
             },
             c2: {
-              label: "$50 - $100",
+              label: "$1,000 ~ $2,000",
               description: "I prefer reasonable spending.",
             },
             c3: {
-              label: "$100 - $200",
-              description: "I enjoy investing in various experiences.",
+              label: "$2,000 ~ $3,000",
+              description: "I enjoy investing in diverse experiences.",
             },
             c4: {
-              label: "$200 - $300",
+              label: "$3,000 ~ $4,000",
               description:
-                "I tend to enjoy myself without worrying about cost.",
+                "I tend to enjoy my trip without being restricted by cost.",
             },
             c5: {
-              label: "More than $300",
+              label: "$4,000 or more",
               description: "I prefer luxury experiences and shopping.",
             },
           },
@@ -2954,7 +2984,8 @@ const resources = {
     },
     mypage: {
       mypage: "My Page",
-      mypage_description: "Check and manage your activities and information",
+      mypage_description:
+        "Organize travel itineraries and memories with Klover",
       logout: "Logout",
       saved_travel_plans: "Saved Travel Plans",
       liked_travel_products: "Liked Travel Products",
@@ -2984,6 +3015,9 @@ const resources = {
       activity: "Activity",
       no_registered_activities: "No registered activities",
       no_saved_schedule_info: "No saved schedule information",
+      alert_mypage_h: "Login Required",
+      alert_mypage_1: "Please log in to access your My Page.",
+      alert_mypage_2: "Sign in quickly with your social account",
     },
   },
   ja: {
@@ -3507,6 +3541,22 @@ const resources = {
       community: {
         info_reviews_label: "情報 & レビュー",
         info_reviews_desc: "旅行情報とレビューを共有するスペース",
+        labels: {
+          notice: "お知らせ",
+          editors_pick: "Klover's Pick",
+          popular_destinations: "人気の旅行先",
+        },
+        search_placeholder: "検索...",
+        live_areas: {
+          gangnam: "江南",
+          gwanghwamun: "光化門",
+          myeongdong: "明洞",
+          seoul_station: "ソウル駅",
+          itaewon: "梨泰院",
+          jamsil: "蚕室",
+          jongno: "鍾路・清渓",
+          hongdae: "弘大",
+        },
         info: {
           posts: {
             10001: {
@@ -3528,6 +3578,12 @@ const resources = {
               title: "K‑pop デーモンハンターズ 3日間ソウル巡礼コース",
               content:
                 "作品の舞台となった名所を3日で巡るルート。1日目: 江南/三成、2日目: 漢江/弘大、3日目: 光化門/益善洞/駱山。旅のコツ付き。",
+            },
+            1002: {
+              title:
+                "K-Popアイドルみたいに食べよう！🎤✨ ソウルグルメ完全ガイド",
+              content:
+                "好きなアイドルと同じ空間で同じメニューを...想像するだけでワクワクしませんか？編集者が直接足を運んで調べたアイドルの本当の常連店リストを公開します！📍\n\nTVで話題のあの店\n🥖 Pachamama Bakery | 龍山HYBE近く\nLE SSERAFIMが「ザ・マネージャー」で絶賛したあのベーカリー！塩パンとピスタチオスライスは必注アイテム。HYBE見学後に立ち寄れば一石二鳥 ✨\n\n🥩 クムドジシクタン | ミシュラン ビブグルマン\nZB1、BTS、EXOが常連なのには理由がありました。バジルサムに厚いサムギョプサルを乗せて食べると...言葉はいりません 🤤\n\nSNSで話題のあの場所\n🍈 アソット | 乙支路\naespaウィンターがバブルで認証したメロンパン専門店！2024年オープン後、今でも人気継続中。バニラクリームメロンパン強力おすすめ 💛\n\n🌿 カフェ スモッグムト | 江南\nSEVENTEEN ミンギュの虹階段インスタフォトゾーンで有名。都心の自然親和的な雰囲気でヒーリングタイムを過ごしてください 🌈\n\n🍦 ヨアジョン | 全国店舗\nRIIZE ソンチャンの組み合わせレシピで有名になったヨーグルトアイスクリーム。ゴールドマンゴー+ハニーコム+シャインマスカットの組み合わせは本当においしいです（編集者も認める！）\n\n🍩 ピルマベーカリー | 安国\nTWICE サナのスーパーアールグレイドーナツ。甘くない濃いアールグレイクリームがポイント！（テイクアウトのみ）\n\nファンの聖地巡礼必須コース\n🐑 Lamb NIKUYA | 屯村2号店\nStray Kids、DAY6メンバーのサインとポストイットが満載！V-Live撮影地としても有名\n\n🥩 コプチャンパヌンゴギジプ\nSEVENTEEN ゴーイングセブンティーン撮影地。キャラットセットメニューと誕生日イベントまで！本当のファンなら必須訪問 📸\n\n🎯 スヒョン編集者のTips！\n\n江南ライン：スモッグムト → Sunday Burger Club → アガジェラート\n\n聖水ライン：カフェ パルベン → 聖水ダラク\n\n龍山ライン：Pachamama → アソット\n\n平日午後に訪問すると静かに楽しめます。アイドルと同じメニューを注文して #アイドルグルメツアー ハッシュタグを忘れずに！💜",
             },
           },
         },
@@ -3817,52 +3873,52 @@ const resources = {
           },
         },
         r19hap: {
-          title: "どのタイプの宿泊施設を好みますか？",
+          title: "どのくらい滞在する予定ですか？",
           options: {
             h1: {
-              label: "高級ホテル",
-              description: "最高級の施設とサービスを好みます。",
+              label: "1～3日",
+              description: "少しだけ滞在します。",
             },
             h2: {
-              label: "コストパフォーマンスの良いホテル",
-              description: "手頃な価格で清潔なホテルを好みます。",
+              label: "4～10日",
+              description: "有名な観光地だけを訪れます。",
             },
             h3: {
-              label: "ゲストハウス/ホステル",
+              label: "11～18日",
               description: "他の旅行者との交流を楽しみます。",
             },
             h4: {
-              label: "Airbnb/レジデンス",
-              description: "地元の人々のように生活する体験を重視します。",
+              label: "19～29日",
+              description: "現地の人みたいに暮らす経験を重視します。",
             },
             h5: {
-              label: "その他",
-              description: "友人の家など、他の宿泊施設を利用します。",
+              label: "30日以上",
+              description: "一ヶ月滞在など、韓国での生活に深い関心があります。",
             },
           },
         },
         cost: {
-          title: "1日あたりの平均旅行予算はいくらですか？（宿泊費を除く）",
+          title: "旅行の予算はどのくらいですか？（1人あたり）",
           options: {
             c1: {
-              label: "5万ウォン未満",
+              label: "13万円未満",
               description: "節約志向で実用的な旅行を計画します。",
             },
             c2: {
-              label: "5万～10万ウォン",
+              label: "13万円～25万円",
               description: "合理的な消費を好みます。",
             },
             c3: {
-              label: "10万～20万ウォン",
-              description: "様々な体験に投資することを楽しんでいます。",
+              label: "25万円～38万円",
+              description: "多様な経験に投資することを楽しんでいます。",
             },
             c4: {
-              label: "20万～30万ウォン",
-              description: "費用を気にせず楽しむタイプです。",
+              label: "38万円～50万円",
+              description: "費用にこだわらずに楽しむタイプです。",
             },
             c5: {
-              label: "30万ウォン以上",
-              description: "豪華な体験とショッピングを好みます。",
+              label: "50万円以上",
+              description: "ラグジュアリーな体験とショッピングを好みます。",
             },
           },
         },
@@ -4941,6 +4997,22 @@ const resources = {
       community: {
         info_reviews_label: "信息 & 评价",
         info_reviews_desc: "分享旅行信息与评价的空间",
+        labels: {
+          notice: "公告",
+          editors_pick: "Klover's Pick",
+          popular_destinations: "热门目的地",
+        },
+        search_placeholder: "搜索...",
+        live_areas: {
+          gangnam: "江南",
+          gwanghwamun: "光化门",
+          myeongdong: "明洞",
+          seoul_station: "首尔站",
+          itaewon: "梨泰院",
+          jamsil: "蚕室",
+          jongno: "钟路·清溪",
+          hongdae: "弘大",
+        },
         info: {
           posts: {
             10001: {
@@ -4962,6 +5034,11 @@ const resources = {
               title: "K‑pop 恶魔猎人 3日首尔巡礼路线",
               content:
                 "3天打卡作品取景地：第1天 江南/三成，第2天 汉江/弘大，第3天 光化门/益善洞/骆山，并附出行小贴士。",
+            },
+            1002: {
+              title: "像K-Pop偶像一样吃！🎤✨ 首尔美食完全指南",
+              content:
+                "想象在喜欢的偶像相同的空间里吃相同的菜单...光是想象就让人兴奋，不是吗？我们公开了编辑亲自走访调查的偶像真正常去店铺清单！📍\n\n电视里的那些名店\n🥖 Pachamama Bakery | 龙山HYBE附近\nLE SSERAFIM在《The Manager》中盛赞的那家面包店！盐面包和开心果切片是必点单品。参观HYBE后顺便去的话一举两得 ✨\n\n🥩 金猪食堂 | 米其林必比登\nZB1、BTS、EXO成为常客是有原因的。用罗勒包着厚厚的五花肉吃...无需多言 🤤\n\nSNS热门场所\n🍈 阿索托 | 乙支路\naespa Winter在泡泡中认证的甜瓜面包专门店！2024年开业后至今人气持续。强烈推荐香草奶油甜瓜面包 💛\n\n🌿 咖啡 树木金土 | 江南\n以SEVENTEEN 珉奎的彩虹阶梯Instagram拍照区而闻名。在都市中的自然友好氛围中享受治愈时光 🌈\n\n🍦 要雅正 | 全国门店\n以RIIZE 成灿的组合配方而闻名的酸奶冰淇淋。黄金芒果+蜂蜜蜂巢+阳光玫瑰组合真的很好吃（编辑也认可！）\n\n🍩 皮尔马面包店 | 安国\nTWICE Sana的超级伯爵茶甜甜圈。不甜腻的浓郁伯爵茶奶油是重点！（仅限外带）\n\n粉丝圣地巡礼必去路线\n🐑 Lamb NIKUYA | 屯村2号店\nStray Kids、DAY6成员签名和便利贴满满！也是V-Live拍摄地而闻名\n\n🥩 烤肠卖肉的店\nSEVENTEEN Going Seventeen拍摄地。包含Carat套餐菜单和生日活动！真正的粉丝必去 📸\n\n🎯 秀贤编辑的Tips！\n\n江南路线：树木金土 → Sunday Burger Club → 阿加杰拉托\n\n圣水路线：咖啡 帕尔本 → 圣水达拉\n\n龙山路线：Pachamama → 阿索托\n\n平日下午访问可以安静地享受。点与偶像相同的菜单，别忘了 #偶像美食巡游 标签！💜",
             },
           },
         },
@@ -5330,46 +5407,52 @@ const resources = {
           },
         },
         r19hap: {
-          title: "您喜欢哪种类型的住宿？",
+          title: "您計劃停留多久？",
           options: {
-            h1: { label: "豪华酒店", description: "我偏爱顶级的设施和服务。" },
+            h1: {
+              label: "1-3天",
+              description: "短暫逗留。",
+            },
             h2: {
-              label: "经济型酒店",
-              description: "我喜欢价格合理且干净的酒店。",
+              label: "4-10天",
+              description: "只遊覽著名的旅遊景點。",
             },
             h3: {
-              label: "旅馆/青年旅社",
-              description: "我喜欢与其他旅行者互动。",
+              label: "11-18天",
+              description: "喜歡與其他遊客交流。",
             },
             h4: {
-              label: "爱彼迎/公寓",
-              description: "我重视像当地人一样生活的体验。",
+              label: "19-29天",
+              description: "重視像當地人一樣生活的體驗。",
             },
-            h5: { label: "其他", description: "我使用其他住宿，比如朋友家。" },
+            h5: {
+              label: "30天以上",
+              description: "對在韓國長期生活（如「生活一個月」）非常感興趣。",
+            },
           },
         },
         cost: {
-          title: "您每天的平均旅行预算是多少？（不含住宿）",
+          title: "您的旅行預算是多少？（人均）",
           options: {
             c1: {
-              label: "低于50美元",
-              description: "我计划一次经济实惠的旅行。",
+              label: "低于7,000元",
+              description: "計劃一場經濟實惠的旅行。",
             },
             c2: {
-              label: "50美元 - 100美元",
-              description: "我偏爱合理的消费。",
+              label: "7,000元 ~ 14,000元",
+              description: "偏好合理的消費。",
             },
             c3: {
-              label: "100美元 - 200美元",
-              description: "我喜欢在各种体验上投资。",
+              label: "14,000元 ~ 22,000元",
+              description: "樂於為多樣的體驗投資。",
             },
             c4: {
-              label: "200美元 - 300美元",
-              description: "我倾向于不考虑费用，尽情享受。",
+              label: "22,000元 ~ 29,000元",
+              description: "享受旅行，不太受費用限制。",
             },
             c5: {
-              label: "超过300美元",
-              description: "我偏爱奢华的体验和购物。",
+              label: "29,000元以上",
+              description: "偏好奢華的體驗和購物。",
             },
           },
         },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Sparkles,
   Wand2,
@@ -12,6 +12,9 @@ import {
   Clock,
   LogOut,
   ArrowUp, // ArrowLeft 대신 ArrowUp 사용
+  MapPin,
+  Flag,
+  Plane,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import LanguageButtons from "components/ui/LanguageButtons";
@@ -22,9 +25,11 @@ import Menu from "components/ui/Menu";
 import {
   motion,
   useScroll,
-  useMotionValueEvent,
+  useMotionValue,
+  useAnimationFrame,
   AnimatePresence,
   useTransform,
+  useInView,
 } from "framer-motion";
 import {
   BackgroundEffect,
@@ -258,6 +263,34 @@ const KPopTravelHome = () => {
       variant: "warning",
     },
   ];
+
+  // ---------- 공용 유틸 (섹션 3에서 사용) ----------
+  const haversineKm = (a, b) => {
+    const R = 6371; // km
+    const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+    const dLon = ((b.lng - a.lng) * Math.PI) / 180;
+    const lat1 = (a.lat * Math.PI) / 180;
+    const lat2 = (b.lat * Math.PI) / 180;
+    const sinDLat = Math.sin(dLat / 2);
+    const sinDLon = Math.sin(dLon / 2);
+    const c =
+      2 *
+      Math.asin(
+        Math.sqrt(
+          sinDLat * sinDLat +
+            Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon
+        )
+      );
+    return R * c;
+  };
+
+  const formatDuration = (hoursFloat) => {
+    const totalMin = Math.round(hoursFloat * 60);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    if (h <= 0) return `${m}m`;
+    return `${h}h ${m}m`;
+  };
 
   return (
     <BackgroundEffect className="min-h-screen neon-scrollbar">
@@ -501,7 +534,7 @@ const KPopTravelHome = () => {
         </div>
       </Section>
 
-      {/* Section 3: AI 맞춤 코스 추천 */}
+      {/* Section 3: AI 맞춤 코스 추천 — 확장 버전 (다중 경유지 + 실제 거리/시간) */}
       <Section id="ai-reco">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <motion.div
@@ -516,65 +549,16 @@ const KPopTravelHome = () => {
             <p className="mt-5 text-lg text-white/80">
               {t("home.ai_reco.desc")}
             </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {[
-                t("home.ai_reco.tag1"),
-                t("home.ai_reco.tag2"),
-                t("home.ai_reco.tag3"),
-                t("home.ai_reco.tag4"),
-                t("home.ai_reco.tag5"),
-              ].map((t) => (
-                <span
-                  key={t}
-                  className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white/90 shadow-sm"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
+
+            {/* 이동수단 선택 */}
+            <TransportSelector />
+
+            {/* 거리/시간 요약 (아래 컴포넌트와 데이터 공유 위해 context 없이도 동일 로직 복제하지 않도록 구성) */}
+            <RouteSummary />
           </motion.div>
 
-          {/* Simple animated map preview */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.6 }}
-            className="relative"
-          >
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-purple-500/30">
-              <div className="w-full h-[360px] bg-[radial-gradient(1200px_600px_at_80%_10%,rgba(168,85,247,0.15),transparent),radial-gradient(900px_500px_at_0%_100%,rgba(236,72,153,0.12),transparent)] bg-gradient-to-br from-gray-900 to-black">
-                {/* Path */}
-                <svg
-                  className="absolute inset-0 w-full h-full"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M40,300 C120,220 180,240 240,180 C300,120 360,100 460,160"
-                    stroke="#8b5cf6"
-                    strokeWidth="6"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeDasharray="6 10"
-                  />
-                </svg>
-                {/* Pins */}
-                <div className="absolute left-8 bottom-8 w-8 h-8 rounded-full bg-purple-600 border-4 border-white shadow-xl flex items-center justify-center text-white font-bold">
-                  S
-                </div>
-                <div className="absolute left-[45%] top-[45%] w-8 h-8 rounded-full bg-pink-500 border-4 border-white shadow-xl flex items-center justify-center text-white font-bold">
-                  1
-                </div>
-                <div className="absolute right-10 top-16 w-8 h-8 rounded-full bg-indigo-600 border-4 border-white shadow-xl flex items-center justify-center text-white font-bold">
-                  E
-                </div>
-              </div>
-              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white/90 text-sm flex items-center gap-2 shadow">
-                <Map className="w-4 h-4 text-purple-400" />
-                {t("home.map.preview_label")}
-              </div>
-            </div>
-          </motion.div>
+          {/* Animated Multi-Waypoint Map */}
+          <AnimatedSeoulRouteCard />
         </div>
       </Section>
 
@@ -820,4 +804,547 @@ const KPopTravelHome = () => {
   );
 };
 
+/* ======================= 섹션 3 구성요소들 ======================= */
+
+// 공유 데이터(서울 5개 동 경유지)와 계산 로직을 훅으로 분리해 재사용
+const useSeoulRoute = () => {
+  // 서울 주요 동 5개 (대략 좌표)
+  const waypoints = useMemo(
+    () => [
+      { key: "S", name: "종로1가", lat: 37.5704, lng: 126.9816 }, // Start
+      { key: "1", name: "명동", lat: 37.5609, lng: 126.9863 },
+      { key: "2", name: "이태원1동", lat: 37.5345, lng: 126.9946 },
+      { key: "3", name: "서교동(홍대)", lat: 37.5521, lng: 126.9226 },
+      { key: "E", name: "역삼1동(강남)", lat: 37.5010, lng: 127.0366 }, // End
+    ],
+    []
+  );
+
+  // 이동 모드
+  const [mode, setMode] = useState("drive");
+  const speedKmh = useMemo(() => {
+    switch (mode) {
+      case "walk":
+        return 4.5;
+      case "subway":
+        return 35;
+      case "drive":
+      default:
+        return 30; // 도심 평균 주행 가정
+    }
+  }, [mode]);
+
+  // 거리 계산
+  const segments = useMemo(() => {
+    const segs = [];
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const a = waypoints[i];
+      const b = waypoints[i + 1];
+      segs.push({ from: a, to: b });
+    }
+    return segs;
+  }, [waypoints]);
+
+  const distances = useMemo(() => {
+    return segments.map((s) => haversineKm(s.from, s.to));
+  }, [segments]);
+
+  const totalKm = useMemo(
+    () => distances.reduce((acc, v) => acc + v, 0),
+    [distances]
+  );
+
+  const etaHours = useMemo(() => totalKm / speedKmh, [totalKm, speedKmh]);
+
+  return {
+    waypoints,
+    segments,
+    distances,
+    totalKm,
+    etaHours,
+    mode,
+    setMode,
+  };
+};
+
+const haversineKm = (a, b) => {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLon = ((b.lng - a.lng) * Math.PI) / 180;
+  const lat1 = (a.lat * Math.PI) / 180;
+  const lat2 = (b.lat * Math.PI) / 180;
+  const sinDLat = Math.sin(dLat / 2);
+  const sinDLon = Math.sin(dLon / 2);
+  const c =
+    2 *
+    Math.asin(
+      Math.sqrt(
+        sinDLat * sinDLat +
+          Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon
+      )
+    );
+  return R * c;
+};
+
+const formatDuration = (hoursFloat) => {
+  const totalMin = Math.round(hoursFloat * 60);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h <= 0) return `${m}m`;
+  return `${h}h ${m}m`;
+};
+
+// 이동수단 선택 UI + 요약 정보 표시를 위한 컨텍스트 대용 컴포넌트
+const TransportSelector = () => {
+  // 이 컴포넌트는 단독 사용이 아니라 요약 영역과 노출을 맞추기 위해
+  // AnimatedSeoulRouteCard와 동일 훅을 쓰기보다는, 아래 RouteBus에 props로 전달하는 구조를 채택.
+  return null;
+};
+
+// 요약 영역 — 실제 데이터는 AnimatedSeoulRouteCard에서 커스텀 이벤트로 전달
+const RouteSummary = () => {
+  const [summary, setSummary] = useState({
+    mode: "drive",
+    totalKm: 0,
+    eta: "0m",
+    distances: [],
+    waypointNames: [],
+  });
+
+  // 커스텀 이벤트 수신 (동일 페이지 내 통신용 — 간단 구현)
+  useEffect(() => {
+    const onEvt = (e) => {
+      if (e.detail?.type === "ROUTE_SUMMARY") {
+        setSummary(e.detail.payload);
+      }
+    };
+    window.addEventListener("seoul-route-summary", onEvt);
+    return () => window.removeEventListener("seoul-route-summary", onEvt);
+  }, []);
+
+  const modeLabel =
+    summary.mode === "walk"
+      ? "도보"
+      : summary.mode === "subway"
+      ? "지하철"
+      : "차량";
+
+  return (
+    <div className="mt-6 space-y-3">
+      <div className="flex flex-wrap gap-2">
+        <ModeButton current={summary.mode} mode="walk" label="도보" />
+        <ModeButton current={summary.mode} mode="subway" label="지하철" />
+        <ModeButton current={summary.mode} mode="drive" label="차량" />
+      </div>
+
+      <div className="mt-4 p-4 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-gray-900/80 to-black/90 text-white/90 shadow">
+        <div className="flex items-center gap-2 text-sm mb-1">
+          <MapPin className="w-4 h-4" />
+          <span className="font-semibold">
+            경유지 ({summary.waypointNames.length}) :
+          </span>
+          <span className="opacity-90">
+            {summary.waypointNames.join(" → ")}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <Clock className="w-4 h-4" />
+          <span>
+            <span className="font-semibold">총 거리</span>{" "}
+            {summary.totalKm.toFixed(2)} km /{" "}
+            <span className="font-semibold">예상 소요</span> {summary.eta} (
+            {modeLabel})
+          </span>
+        </div>
+
+        {/* 구간별 거리 */}
+        {summary.distances.length > 0 && (
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            {summary.distances.map((d, idx) => (
+              <div
+                key={idx}
+                className="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20"
+              >
+                <span className="font-semibold">{idx + 1} 구간</span>:{" "}
+                {d.toFixed(2)} km
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Animated Map Card — 섹션 3 우측의 카드
+const AnimatedSeoulRouteCard = () => {
+  const { waypoints, distances, totalKm, etaHours, mode, setMode } =
+    useSeoulRoute();
+
+  // 요약 정보를 상위 요약 패널로 브로드캐스트
+  useEffect(() => {
+    const evt = new CustomEvent("seoul-route-summary", {
+      detail: {
+        type: "ROUTE_SUMMARY",
+        payload: {
+          mode,
+          totalKm,
+          eta: formatDuration(etaHours),
+          distances,
+          waypointNames: waypoints.map((w) => w.name),
+        },
+      },
+    });
+    window.dispatchEvent(evt);
+  }, [mode, totalKm, etaHours, distances, waypoints]);
+
+  // SVG 영역(가상 캔버스)
+  const W = 800;
+  const H = 360;
+  const P = 28; // padding
+
+  // 좌표 변환 (소지역 범위이므로 단순 선형 매핑)
+  const [minLat, maxLat, minLng, maxLng] = useMemo(() => {
+    const lats = waypoints.map((w) => w.lat);
+    const lngs = waypoints.map((w) => w.lng);
+    return [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)];
+  }, [waypoints]);
+
+  const project = (lat, lng) => {
+    const x =
+      P +
+      ((lng - minLng) / (maxLng - minLng || 1)) * (W - P * 2);
+    // y는 lat이 클수록 위로 가도록 반전
+    const y =
+      P +
+      (1 - (lat - minLat) / (maxLat - minLat || 1)) * (H - P * 2);
+    return { x, y };
+  };
+
+  const pathD = useMemo(() => {
+    const pts = waypoints.map((w) => project(w.lat, w.lng));
+    if (pts.length === 0) return "";
+    let d = `M ${pts[0].x},${pts[0].y}`;
+    for (let i = 1; i < pts.length; i++) {
+      const p = pts[i];
+      d += ` L ${p.x},${p.y}`;
+    }
+    return d;
+  }, [waypoints, minLat, maxLat, minLng, maxLng]);
+
+  // 경로 애니메이션 (pathLength + 비행기 이동)
+  const containerRef = useRef(null);
+  const inView = useInView(containerRef, { amount: 0.4, once: true });
+  const pathRef = useRef(null);
+  const progress = useMotionValue(0);
+  const [plane, setPlane] = useState({ x: 0, y: 0, angle: 0 });
+
+  useEffect(() => {
+    if (!inView) return;
+    let rafId;
+    const start = performance.now();
+    const duration = 1500;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      progress.set(t);
+      if (t < 1) rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => rafId && cancelAnimationFrame(rafId);
+  }, [inView, progress]);
+
+  useAnimationFrame(() => {
+    const path = pathRef.current;
+    if (!path) return;
+    const len = path.getTotalLength();
+    const d = len * progress.get();
+    const p = path.getPointAtLength(d);
+    // 진행 방향 각도 계산
+    const eps = 1;
+    const p2 = path.getPointAtLength(Math.min(len, d + eps));
+    const angle = Math.atan2(p2.y - p.y, p2.x - p.x) * (180 / Math.PI);
+    setPlane({ x: p.x, y: p.y, angle });
+  });
+
+  // 배경(그리드/노이즈)
+  const GradientNoise = () => (
+    <div className="pointer-events-none absolute inset-0">
+      <div className="absolute -top-20 -left-20 h-80 w-80 rounded-full bg-purple-500/20 blur-3xl" />
+      <div className="absolute -bottom-16 -right-16 h-72 w-72 rounded-full bg-pink-500/20 blur-3xl" />
+      <div
+        className="absolute inset-0 opacity-[0.07] mix-blend-overlay"
+        style={{
+          backgroundImage:
+            "radial-gradient(transparent,rgba(0,0,0,0.4)), url('data:image/svg+xml;utf8," +
+            encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <filter id="n">
+    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/>
+    <feColorMatrix type="saturate" values="0"/>
+  </filter>
+  <rect width="100%" height="100%" filter="url(#n)" opacity="0.25"/>
+</svg>`) +
+            "')",
+          backgroundSize: "cover",
+        }}
+      />
+    </div>
+  );
+
+  const MapGrid = () => (
+    <div
+      aria-hidden
+      className="absolute inset-0 [mask-image:radial-gradient(70%_60%_at_50%_45%,black,transparent)] opacity-60"
+      style={{
+        backgroundImage:
+          "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px)," +
+          "linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)",
+        backgroundSize: "40px 40px",
+      }}
+    />
+  );
+
+  const modeLabel =
+    mode === "walk" ? "도보" : mode === "subway" ? "지하철" : "차량";
+
+  return (
+    <motion.div
+      ref={containerRef}
+      initial={{ opacity: 0, x: 40 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, amount: 0.4 }}
+      transition={{ duration: 0.6 }}
+      className="relative"
+    >
+      <div
+        className="relative rounded-3xl overflow-hidden shadow-2xl border border-purple-500/30"
+        style={{
+          transformStyle: "preserve-3d",
+        }}
+      >
+        <div className="w-full h-[360px] bg-gradient-to-br from-slate-900 via-slate-950 to-black relative">
+          <GradientNoise />
+          <MapGrid />
+
+          {/* 경로 SVG */}
+          <svg
+            className="absolute inset-0 w-full h-full"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {/* 부드러운 글로우 */}
+            <path
+              d={pathD}
+              stroke="#A78BFA"
+              strokeWidth="14"
+              strokeLinecap="round"
+              fill="none"
+              opacity="0.12"
+            />
+
+            {/* 점선 베이스 */}
+            <path
+              d={pathD}
+              stroke="#A78BFA"
+              strokeWidth="6"
+              strokeLinecap="round"
+              fill="none"
+              strokeDasharray="0 10"
+              opacity="0.35"
+            />
+
+            {/* 그려지는 애니메이션 라인 */}
+            <motion.path
+              ref={pathRef}
+              d={pathD}
+              stroke="#C4B5FD"
+              strokeWidth="6"
+              strokeLinecap="round"
+              fill="none"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+            />
+
+            {/* 핀들 */}
+            {waypoints.map((w, idx) => {
+              const p = project(w.lat, w.lng);
+              const isStart = idx === 0;
+              const isEnd = idx === waypoints.length - 1;
+              return (
+                <g key={w.key} transform={`translate(${p.x} ${p.y})`}>
+                  {/* pulse */}
+                  <circle
+                    r="18"
+                    className="animate-ping"
+                    fill={isStart ? "#A78BFA" : isEnd ? "#6366F1" : "#EC4899"}
+                    opacity="0.35"
+                  />
+                  {/* dot */}
+                  <g>
+                    <circle
+                      r="14"
+                      fill={isStart ? "#8B5CF6" : isEnd ? "#4F46E5" : "#EC4899"}
+                      stroke="#FFFFFF"
+                      strokeWidth="4"
+                    />
+                    {isStart ? (
+                      <text
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="#FFFFFF"
+                        fontWeight="bold"
+                        fontSize="12"
+                      >
+                        S
+                      </text>
+                    ) : isEnd ? (
+                      <g transform="translate(-7 -7)">
+                        <Flag width={14} height={14} color="#FFFFFF" />
+                      </g>
+                    ) : (
+                      <text
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="#FFFFFF"
+                        fontWeight="bold"
+                        fontSize="12"
+                      >
+                        {idx}
+                      </text>
+                    )}
+                  </g>
+                  {/* 라벨 */}
+                  <g transform="translate(0 -26)">
+                    <rect
+                      x={-46}
+                      y={-18}
+                      width={92}
+                      height={22}
+                      rx={11}
+                      fill="rgba(17,24,39,0.85)"
+                      stroke="rgba(168,85,247,0.4)"
+                      strokeWidth="1"
+                    />
+                    <text
+                      x={0}
+                      y={-3}
+                      textAnchor="middle"
+                      fill="#fff"
+                      fontSize="11"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {w.name}
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
+
+            {/* 비행기 아이콘 */}
+            <g
+              transform={`translate(${plane.x} ${plane.y}) rotate(${plane.angle})`}
+            >
+              <foreignObject x={-12} y={-12} width={24} height={24}>
+                <div className="h-6 w-6 rounded-full bg-white/90 shadow-md backdrop-blur flex items-center justify-center">
+                  <Plane className="h-3.5 w-3.5 text-slate-900" />
+                </div>
+              </foreignObject>
+            </g>
+          </svg>
+
+          {/* 상단 라벨 */}
+          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white/90 text-sm flex items-center gap-2 shadow">
+            <Map className="w-4 h-4 text-purple-300" />
+            <span>서울 도심 코스 · {modeLabel}</span>
+          </div>
+
+          {/* 하단 요약 바(시각 보조) */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between gap-4 rounded-b-3xl bg-gradient-to-t from-black/60 to-transparent p-4 text-xs text-white/80">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <span>{waypoints[0].name}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Plane className="h-4 w-4" />
+              <span>{totalKm.toFixed(2)} km · {formatDuration(etaHours)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Flag className="h-4 w-4" />
+              <span>{waypoints[waypoints.length - 1].name}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 모드 토글 (카드 자체에도 제공) */}
+        <div className="absolute top-4 right-4 flex gap-2">
+          <ToggleChip
+            active={mode === "walk"}
+            onClick={() => setMode("walk")}
+            label="도보"
+          />
+          <ToggleChip
+            active={mode === "subway"}
+            onClick={() => setMode("subway")}
+            label="지하철"
+          />
+          <ToggleChip
+            active={mode === "drive"}
+            onClick={() => setMode("drive")}
+            label="차량"
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const ToggleChip = ({ active, label, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+      active
+        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-400/50 shadow"
+        : "bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-white/80 border-purple-500/30 hover:bg-purple-500/20"
+    }`}
+  >
+    {label}
+  </button>
+);
+
+// 외부 요약 패널의 모드 버튼 (동기화를 위해 카드에서 이벤트 발행)
+const ModeButton = ({ current, mode, label }) => {
+  const isActive = current === mode;
+  const onClick = () => {
+    const evt = new CustomEvent("seoul-route-mode", {
+      detail: { mode },
+    });
+    window.dispatchEvent(evt);
+  };
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+        isActive
+          ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-400/50 shadow"
+          : "bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-white/80 border-purple-500/30 hover:bg-purple-500/20"
+      }`}
+    >
+      {label}
+    </button>
+  );
+};
+
+/* ============================================================= */
+
 export default KPopTravelHome;
+
+/* =================== 동작 메모 ===================
+- 섹션 3에 AnimatedSeoulRouteCard를 넣어, 서울 주요 5개 동을 잇는 경로를
+  애니메이션으로 그려주고(경로 그려짐 + 비행기 아이콘 이동),
+  상/하단 라벨, 그리드/노이즈/그라디언트 배경, 핀+라벨까지 표시했습니다.
+- 실제 거리(haversine)로 구간별/총 거리 계산 및 이동 모드(도보/지하철/차량)
+  속도 가정치에 따른 ETA를 표시합니다.
+- 외부 요약 패널(RouteSummary)과 카드 간에는 CustomEvent로 정보를 공유합니다.
+  (간단한 단방향 브로드캐스트)
+==================================================== */

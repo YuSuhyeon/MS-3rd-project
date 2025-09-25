@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 import { BackgroundEffect } from "../components/ui/NeonTheme";
-
+import IconPager from "../components/ui/IconPager";
 import { Itinerary } from "../Entities/Itinerary";
 
 // 로컬스토리지 키 상수
@@ -177,6 +177,7 @@ const LoadingPage = () => {
 
 // 로그인이 필요함을 알리는 페이지
 const LoginRequiredPage = ({ onShowLoginModal }) => {
+  const { t } = useTranslation("mypage");
   return (
     <div className="flex items-center justify-center min-h-screen px-6">
       <NeonCard className="max-w-md w-full text-center">
@@ -190,13 +191,13 @@ const LoginRequiredPage = ({ onShowLoginModal }) => {
         </motion.div>
 
         <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
-          마이페이지 접근 제한
+          {t("alert_mypage_h")}
         </h2>
 
         <p className="text-gray-300 mb-8 leading-relaxed">
-          마이페이지를 이용하시려면 먼저 로그인이 필요합니다.
+          {t("alert_mypage_1")}
           <br />
-          소셜 계정으로 간편하게 로그인하세요.
+          {t("alert_mypage_2")}
         </p>
 
         <NeonButton
@@ -631,7 +632,7 @@ const LikedPostCard = ({ post, onNavigate, onRemove }) => {
       <div className="flex gap-4">
         <img
           src={post.user_profile_image || "/img/default_profile_img.png"}
-          alt={post.user_name}
+          // alt={post.user_name}
           className="w-12 h-12 object-cover rounded-full"
           onError={(e) => {
             e.currentTarget.src = "/img/default_profile_img.png";
@@ -1104,6 +1105,14 @@ export default function MyPage() {
                               />
                             ))}
                         </div>
+                        <IconPager
+                          currentPage={travelPlansPage}
+                          totalPages={Math.max(
+                            1,
+                            Math.ceil(travelPlans.length / pageSize)
+                          )}
+                          onChange={(p) => setTravelPlansPage(p)}
+                        />
                       </>
                     ) : (
                       <div className="text-center py-32 mb-20">
@@ -1148,6 +1157,14 @@ export default function MyPage() {
                               />
                             ))}
                         </div>
+                        <IconPager
+                          currentPage={likedProductsPage}
+                          totalPages={Math.max(
+                            1,
+                            Math.ceil(likedProducts.length / pageSize)
+                          )}
+                          onChange={(p) => setLikedProductsPage(p)}
+                        />
                       </>
                     ) : (
                       <div className="text-center py-20">
@@ -1198,6 +1215,14 @@ export default function MyPage() {
                               />
                             ))}
                         </div>
+                        <IconPager
+                          currentPage={myPostsPage}
+                          totalPages={Math.max(
+                            1,
+                            Math.ceil(userPosts.length / pageSize)
+                          )}
+                          onChange={(p) => setMyPostsPage(p)}
+                        />
                       </>
                     ) : (
                       <div className="text-center py-20">
@@ -1246,6 +1271,14 @@ export default function MyPage() {
                               />
                             ))}
                         </div>
+                        <IconPager
+                          currentPage={likedPostsPage}
+                          totalPages={Math.max(
+                            1,
+                            Math.ceil(likedPosts.length / pageSize)
+                          )}
+                          onChange={(p) => setLikedPostsPage(p)}
+                        />
                       </>
                     ) : (
                       <div className="text-center py-20">

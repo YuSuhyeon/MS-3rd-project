@@ -194,7 +194,7 @@ const MobileTourCard = ({ item, onDetailClick }) => {
       onClick={() => onDetailClick(item)}
     >
       {/* 모바일 최적화 이미지 섹션 */}
-      <div className="relative h-44 sm:h-48 md:h-56 lg:h-64 overflow-hidden">
+      <div className="relative h-44 sm:h-48 md:h-80 lg:h-96 xl:h-[28rem] overflow-hidden">
         <img
           src={item.image || "/placeholder.svg"}
           alt={t(`data.${item.id}.title`, { defaultValue: item.title })}
@@ -503,11 +503,10 @@ export default function Tour() {
             transition={{ duration: 0.6 }}
             className="text-center mb-8 sm:mb-12"
           >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight mb-4 px-4">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
               {t("header.klover")}
-              <br className="sm:hidden" /> {t("header.tour")}
             </h1>
-            <p className="text-base sm:text-lg md:text-xl font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 sm:mb-8 px-4">
+            <p className="text-gray-300 mb-8 leading-relaxed">
               {t("header.subtitle")}
             </p>
           </motion.div>
@@ -522,6 +521,7 @@ export default function Tour() {
                   <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
                     {t("list.title")}
                   </h2>
+                  <p className="text-gray-300">{t("list.subtitle")}</p>
                 </div>
               </div>
 
@@ -567,15 +567,15 @@ export default function Tour() {
                 <>
                   {/* 그리드: 모바일 1열, 데스크톱 2열 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <AnimatePresence mode="sync">
+                    <AnimatePresence mode="wait">
                       {currentItems.map((item, index) => (
                         <motion.div
-                          key={`${currentPage}-${item.id}`}
+                          key={item.id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{
                             opacity: 1,
                             y: 0,
-                            transition: { delay: index * 0.1 },
+                            transition: { delay: index * 0.05 },
                           }}
                           exit={{ opacity: 0, y: -20 }}
                           className="h-full"
@@ -597,10 +597,10 @@ export default function Tour() {
                           handlePageChange(Math.max(1, currentPage - 1))
                         }
                         disabled={currentPage === 1}
-                        className="flex items-center gap-1 px-3 py-2 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
+                        className="flex items-center justify-center w-10 h-10 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
+                        title={t("pagination.prev")}
                       >
-                        <ChevronLeft size={16} />
-                        <span className="text-sm">{t("pagination.prev")}</span>
+                        <ChevronLeft size={20} />
                       </button>
 
                       <div className="flex space-x-1">
@@ -629,10 +629,10 @@ export default function Tour() {
                           )
                         }
                         disabled={currentPage === totalPages}
-                        className="flex items-center gap-1 px-3 py-2 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
+                        className="flex items-center justify-center w-10 h-10 bg-gray-800/80 text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700/80 transition-colors"
+                        title={t("pagination.next")}
                       >
-                        <span className="text-sm">{t("pagination.next")}</span>
-                        <ChevronRight size={16} />
+                        <ChevronRight size={20} />
                       </button>
                     </div>
                   )}
