@@ -1,0 +1,125 @@
+﻿페르소나ID,일차,코스ID,구간순서,장소명,위도,경도,address,road_address
+0,1,0A,1,Gyeongbokgung Palace,37.57761329,126.9768979,"161, Sajik-ro, Jongno-gu, Seoul","161, Sajik-ro, Jongno-gu, Seoul"
+0,1,0A,2,Bukchon Hanok Village,37.58176815,126.9848125,"53, Bukchon-ro, Jongno-gu, Seoul","53, Bukchon-ro, Jongno-gu, Seoul"
+0,1,0A,3,Insadong-gil / Ssamziegil,37.57435206,126.9847313,"44, Insadong-gil, Jongno-gu, Seoul","44, Insadong-gil, Jongno-gu, Seoul"
+0,1,0A,4,Ikseon-dong Hanok Street,37.57343719,126.9897757,"Ikseon-dong, Jongno-gu, Seoul",
+0,1,0A,5,Cheonggyecheon Stream (Night),37.55366459,127.0193069,"148, Seorin-dong, Jongno-gu, Seoul",
+0,1,0A,6,Samcheongdong Sujebi (Restaurant),37.58459777,126.9819712,"101-1, Samcheong-ro, Jongno-gu, Seoul","101-1, Samcheong-ro, Jongno-gu, Seoul"
+0,2,0B,1,Myeongdong Shopping Street,37.56168277,126.9893801,"302, Samil-daero, Jung-gu, Seoul","302, Samil-daero, Jung-gu, Seoul"
+0,2,0B,2,Olive Young Myeongdong Global Flagship,37.54417332,127.0544304,"13, Yeonmujang 7-gil, Seongdong-gu, Seoul","13, Yeonmujang 7-gil, Seongdong-gu, Seoul"
+0,2,0B,3,Namsan Cable Car,37.55658072,126.984031,"83, Sopa-ro, Jung-gu, Seoul","83, Sopa-ro, Jung-gu, Seoul"
+0,2,0B,4,N Seoul Tower (Night View),37.55130497,126.9882306,"105, Namsangongwon-gil, Yongsan-gu, Seoul","105, Namsangongwon-gil, Yongsan-gu, Seoul"
+0,2,0B,5,Myeongdong Kyoja (Restaurant),37.56255453,126.9856143,"29, Myeongdong 10-gil, Jung-gu, Seoul","29, Myeongdong 10-gil, Jung-gu, Seoul"
+0,3,0C,1,Dongdaemun Design Plaza (DDP),37.56718431,127.009911,"281, Eulji-ro, Jung-gu, Seoul","281, Eulji-ro, Jung-gu, Seoul"
+0,3,0C,2,Dongdaemun Shopping Town / Doota Mall,37.57085784,127.007617,"266, Jong-ro, Jongno-gu, Seoul","266, Jong-ro, Jongno-gu, Seoul"
+0,3,0C,3,Heunginjimun Gate (Dongdaemun),37.57114151,127.0095719,"288, Jong-ro, Jongno-gu, Seoul","288, Jong-ro, Jongno-gu, Seoul"
+0,3,0C,4,Cheonggyecheon Stream (Night),37.55366459,127.0193069,"148, Seorin-dong, Jongno-gu, Seoul",
+0,3,0C,5,Dongdaemun Dak-hanmari Alley (Restaurant),37.57029124,127.0052976,"25, Jong-ro 40ga-gil, Jongno-gu, Seoul","25, Jong-ro 40ga-gil, Jongno-gu, Seoul"
+0,4,0D,1,Bongeunsa Temple,37.51551811,127.0577103,"531, Bongeunsa-ro, Gangnam-gu, Seoul","531, Bongeunsa-ro, Gangnam-gu, Seoul"
+0,4,0D,2,COEX Aquarium,37.51274336,127.0588471,"513, Yeongdong-daero, Gangnam-gu, Seoul","513, Yeongdong-daero, Gangnam-gu, Seoul"
+0,4,0D,3,Starfield Library,37.51019286,127.0601594,"159-9, Samseong-dong, Gangnam-gu, Seoul",
+0,4,0D,4,Olive Young COEX Mall,37.50959144,127.0592733,"13, Yeonmujang 7-gil, Seongdong-gu, Seoul","13, Yeonmujang 7-gil, Seongdong-gu, Seoul"
+0,4,0D,5,Woorimil Guksi / Garam Guksi (COEX),37.52437305,127.040704,"15, Seolleung-ro 152-gil, Gangnam-gu, Seoul","15, Seolleung-ro 152-gil, Gangnam-gu, Seoul"
+0,5,0E,1,Gyeongui Line Forest Park,37.55880348,126.9253385,"190-1, Donggyo-dong, Mapo-gu, Seoul",
+0,5,0E,2,Hongdae Flea Market / Busking,37.54869202,126.9204893,"365-29, Seogyo-dong, Mapo-gu, Seoul",
+0,5,0E,3,Olive Young Hongik Univ. Station,37.55625795,126.9235992,"13, Yeonmujang 7-gil, Seongdong-gu, Seoul","13, Yeonmujang 7-gil, Seongdong-gu, Seoul"
+0,5,0E,4,Yukmong Hongdae Main Branch (Restaurant),37.55322239,126.9207108,"19, Yanghwa-ro 16-gil, Mapo-gu, Seoul","19, Yanghwa-ro 16-gil, Mapo-gu, Seoul"
+1,1,1A,1,National Museum of Korea,37.52384681,126.980203,"137, Seobinggo-ro, Yongsan-gu, Seoul","137, Seobinggo-ro, Yongsan-gu, Seoul"
+1,1,1A,2,Leeum Museum of Art,37.53833657,126.9991174,"60-16, Itaewon-ro 55-gil, Yongsan-gu, Seoul","60-16, Itaewon-ro 55-gil, Yongsan-gu, Seoul"
+1,1,1A,3,Itaewon Select Shops / Antique Furniture Street,37.53452521,126.9943339,"119-23, Itaewon-dong, Yongsan-gu, Seoul",
+1,1,1A,4,Han River E-Land Cruise (Night View),37.52567949,126.9384616,"290, Yeouidong-ro, Yeongdeungpo-gu, Seoul","290, Yeouidong-ro, Yeongdeungpo-gu, Seoul"
+1,1,1A,5,Onjium (Reservation) (Restaurant),37.58049474,126.9733907,"49, Hyoja-ro, Jongno-gu, Seoul","49, Hyoja-ro, Jongno-gu, Seoul"
+1,2,1B,1,Lotte World Tower Seoul Sky,37.51254232,127.1025465,"300, Olympic-ro, Songpa-gu, Seoul","300, Olympic-ro, Songpa-gu, Seoul"
+1,2,1B,2,Seokchon Lake,37.50768073,127.0991128,"47, Jamsil-dong, Songpa-gu, Seoul",
+1,2,1B,3,Avenuel / Lotte World Mall,37.51289804,127.1017077,"300, Olympic-ro, Songpa-gu, Seoul","300, Olympic-ro, Songpa-gu, Seoul"
+1,2,1B,4,Bicena / La Seine (Reservation) (Restaurant),37.56538301,126.9810126,"30, Eulji-ro, Jung-gu, Seoul","30, Eulji-ro, Jung-gu, Seoul"
+1,3,1C,1,Seoul Forest,37.54432223,127.0376178,"678-1, Seongsu-dong 1(il)-ga, Seongdong-gu, Seoul",
+1,3,1C,2,Grandpa Factory (Cafe),37.54108991,127.0548288,"9, Seongsui-ro 7ga-gil, Seongdong-gu, Seoul",
+1,3,1C,3,Musinsa Daerim Changgo,37.54148559,127.0564607,"83, Yeonmujang-gil, Seongdong-gu, Seoul","83, Yeonmujang-gil, Seongdong-gu, Seoul"
+1,3,1C,4,Olive Young Seongsu Branch,37.54418321,127.0544825,"13, Yeonmujang 7-gil, Seongdong-gu, Seoul","13, Yeonmujang 7-gil, Seongdong-gu, Seoul"
+1,3,1C,5,Gihu (Omakase Reservation) (Restaurant),37.54059915,127.05615,"66, Seongsui-ro, Seongdong-gu, Seoul","66, Seongsui-ro, Seongdong-gu, Seoul"
+1,4,1D,1,Dosan Park,37.52455769,127.0352876,"649-9, Sinsa-dong, Gangnam-gu, Seoul",
+1,4,1D,2,Garosu-gil Flagship Stores,37.52065771,127.0223357,"403, Dosan-daero, Gangnam-gu, Seoul","403, Dosan-daero, Gangnam-gu, Seoul"
+1,4,1D,3,Mingles Lunch (Reservation) (Restaurant),37.52537012,127.0441606,"19, Dosan-daero 67-gil, Gangnam-gu, Seoul","19, Dosan-daero 67-gil, Gangnam-gu, Seoul"
+1,5,1E,1,Namsan Yejang Park,37.56048259,126.9888302,"5-22, Juja-dong, Jung-gu, Seoul",
+1,5,1E,2,Namsan Cable Car,37.55658072,126.984031,"83, Sopa-ro, Jung-gu, Seoul","83, Sopa-ro, Jung-gu, Seoul"
+1,5,1E,3,N Seoul Tower (Night View),37.55130497,126.9882306,"105, Namsangongwon-gil, Yongsan-gu, Seoul","105, Namsangongwon-gil, Yongsan-gu, Seoul"
+1,5,1E,4,Mokmyeoksanbang,37.55811277,126.9868941,"71, Toegye-ro 20-gil, Jung-gu, Seoul","71, Toegye-ro 20-gil, Jung-gu, Seoul"
+2,1,2A,1,Yeouido Hangang Park,37.5263886,126.9351293,"85, Yeouido-dong, Yeongdeungpo-gu, Seoul",
+2,1,2A,2,IFC Mall,37.52504158,126.9258959,"10, Gukjegeumyung-ro, Yeongdeungpo-gu, Seoul","10, Gukjegeumyung-ro, Yeongdeungpo-gu, Seoul"
+2,1,2A,3,Nodeul Island,37.51766014,126.9580339,"445, Yangnyeong-ro, Yongsan-gu, Seoul","445, Yangnyeong-ro, Yongsan-gu, Seoul"
+2,1,2A,4,Banpo Bridge Rainbow Fountain,37.51262196,126.9983939,"649-1, Banpo-dong, Seocho-gu, Seoul",
+2,2,2B,1,Deoksugung Palace Stonewall Walkway,37.56497658,126.9756646,"B1, 101, Sejong-daero, Jung-gu, Seoul","B1, 101, Sejong-daero, Jung-gu, Seoul"
+2,2,2B,2,Jeongdong-gil,37.56585893,126.9727758,"43, Jeongdong-gil, Jung-gu, Seoul","43, Jeongdong-gil, Jung-gu, Seoul"
+2,2,2B,3,Gwanghwamun Square,37.57260286,126.9769164,"1-68, Sejong-ro, Jongno-gu, Seoul",
+2,2,2B,4,Gwanghwamunjip,37.5713663,126.9749834,"12, Saemunan-ro 5-gil, Jongno-gu, Seoul","12, Saemunan-ro 5-gil, Jongno-gu, Seoul"
+2,3,2C,1,Gyeongui Line Forest Park,37.55880348,126.9253385,"190-1, Donggyo-dong, Mapo-gu, Seoul",
+2,3,2C,2,The Hand and Malt Taproom,37.53274269,126.9709248,"149, Hangang-daero, Yongsan-gu, Seoul","149, Hangang-daero, Yongsan-gu, Seoul"
+2,3,2C,3,Primo Bacio Baci (Cafe),37.55478399,126.9237037,"44, Wausan-ro 23-gil, Mapo-gu, Seoul","44, Wausan-ro 23-gil, Mapo-gu, Seoul"
+2,4,2D,1,Seoul Forest,37.54432223,127.0376178,"678-1, Seongsu-dong 1(il)-ga, Seongdong-gu, Seoul",
+2,4,2D,2,Grandpa Factory (Cafe),37.54108991,127.0548288,"9, Seongsui-ro 7ga-gil, Seongdong-gu, Seoul",
+2,4,2D,3,Musinsa Daerim Changgo,37.54148559,127.0564607,"83, Yeonmujang-gil, Seongdong-gu, Seoul","83, Yeonmujang-gil, Seongdong-gu, Seoul"
+2,4,2D,4,Olive Young Seongsu Branch,37.54418321,127.0544825,"13, Yeonmujang 7-gil, Seongdong-gu, Seoul","13, Yeonmujang 7-gil, Seongdong-gu, Seoul"
+2,4,2D,5,Somunnan Seongsu Gamjatang (Restaurant),37.54283084,127.0544046,"45, Yeonmujang-gil, Seongdong-gu, Seoul","45, Yeonmujang-gil, Seongdong-gu, Seoul"
+3,1,3A,1,Lotte Department Store / Avenuel,37.51291427,127.1016964,"300, Olympic-ro, Songpa-gu, Seoul","300, Olympic-ro, Songpa-gu, Seoul"
+3,1,3A,2,Myeongdong Street,37.56209483,126.9841147,"302, Samil-daero, Jung-gu, Seoul","302, Samil-daero, Jung-gu, Seoul"
+3,1,3A,3,Myeongdong Underground Shopping Center,37.56349289,126.982085,"B1, 42, Eulji-ro, Jung-gu, Seoul","B1, 42, Eulji-ro, Jung-gu, Seoul"
+3,1,3A,4,Olive Young Myeongdong Global,37.54417332,127.0544304,"13, Yeonmujang 7-gil, Seongdong-gu, Seoul","13, Yeonmujang 7-gil, Seongdong-gu, Seoul"
+3,1,3A,5,Department Store Food Court (Korean Set Meal) (Restaurant),37.50428126,127.0045667,"176, Sinbanpo-ro, Seocho-gu, Seoul","176, Sinbanpo-ro, Seocho-gu, Seoul"
+3,2,3B,1,DDP,37.56718431,127.009911,"281, Eulji-ro, Jung-gu, Seoul","281, Eulji-ro, Jung-gu, Seoul"
+3,2,3B,2,Dongdaemun Shopping Town / Doota,37.57042086,127.0076181,"266, Jong-ro, Jongno-gu, Seoul","266, Jong-ro, Jongno-gu, Seoul"
+3,2,3B,3,Dongdaemun Market (Fabric) (Restaurant),37.57085784,127.007617,"266, Jong-ro, Jongno-gu, Seoul","266, Jong-ro, Jongno-gu, Seoul"
+3,2,3B,4,Dak-hanmari Alley (Restaurant),37.57029124,127.0052976,"25, Jong-ro 40ga-gil, Jongno-gu, Seoul","25, Jong-ro 40ga-gil, Jongno-gu, Seoul"
+3,3,3C,1,COEX Mall,37.51292302,127.0581324,"513, Yeongdong-daero, Gangnam-gu, Seoul","513, Yeongdong-daero, Gangnam-gu, Seoul"
+3,3,3C,2,Starfield Library,37.51019286,127.0601594,"159-9, Samseong-dong, Gangnam-gu, Seoul",
+3,3,3C,3,Hyundai Department Store Trade Center Branch,37.50865144,127.0597748,"517, Teheran-ro, Gangnam-gu, Seoul","517, Teheran-ro, Gangnam-gu, Seoul"
+3,3,3C,4,Olive Young COEX,37.50959144,127.0592733,"13, Yeonmujang 7-gil, Seongdong-gu, Seoul","13, Yeonmujang 7-gil, Seongdong-gu, Seoul"
+3,3,3C,5,Food Court / Woorimil Guksi (Restaurant),37.53635612,127.0037077,"91, Hannam-daero, Yongsan-gu, Seoul","91, Hannam-daero, Yongsan-gu, Seoul"
+3,4,3D,1,Garosu-gil Select Shops,37.52344902,127.0266523,"11, Achasan-ro 1-gil, Seongdong-gu, Seoul","11, Achasan-ro 1-gil, Seongdong-gu, Seoul"
+3,4,3D,2,Dosan Park,37.52455769,127.0352876,"649-9, Sinsa-dong, Gangnam-gu, Seoul",
+3,4,3D,3,Baegam Wangsundae / Hanilkwan Lunch (Restaurant),37.57358484,126.9884875,"9, Samil-daero 28-gil, Jongno-gu, Seoul","9, Samil-daero 28-gil, Jongno-gu, Seoul"
+3,5,3E,1,Beaker Hannam Branch,37.53661927,127.0000091,"241, Itaewon-ro, Yongsan-gu, Seoul","241, Itaewon-ro, Yongsan-gu, Seoul"
+3,5,3E,2,Mardi Mercredi Hannam,37.53595973,127.0009674,"58, Itaewon-ro 54-gil, Yongsan-gu, Seoul","58, Itaewon-ro 54-gil, Yongsan-gu, Seoul"
+3,5,3E,3,Blue Bottle Hannam Branch,37.53630111,127.0050327,"7, Achasan-ro, Seongdong-gu, Seoul","7, Achasan-ro, Seongdong-gu, Seoul"
+3,5,3E,4,Baustelle (Restaurant),37.53753286,127.0023082,"16-1, Itaewon-ro 54-gil, Yongsan-gu, Seoul","16-1, Itaewon-ro 54-gil, Yongsan-gu, Seoul"
+4,1,4A,1,Gyeongbokgung Palace,37.57761329,126.9768979,"161, Sajik-ro, Jongno-gu, Seoul","161, Sajik-ro, Jongno-gu, Seoul"
+4,1,4A,2,National Folk / National Palace Museum of Korea,37.58169969,126.979016,"37, Samcheong-ro, Jongno-gu, Seoul","37, Samcheong-ro, Jongno-gu, Seoul"
+4,1,4A,3,Bukchon Hanok Village,37.58176815,126.9848125,"53, Bukchon-ro, Jongno-gu, Seoul","53, Bukchon-ro, Jongno-gu, Seoul"
+4,1,4A,4,Changdeokgung Palace & Secret Garden,37.57782953,126.9893771,"99, Yulgok-ro, Jongno-gu, Seoul","99, Yulgok-ro, Jongno-gu, Seoul"
+4,1,4A,5,Jongmyo Shrine,37.57610804,126.994213,"157, Jong-ro, Jongno-gu, Seoul","157, Jong-ro, Jongno-gu, Seoul"
+4,1,4A,6,Baru Gongyang (Reservation) (Restaurant),37.57396983,126.9831692,"56, Ujeongguk-ro, Jongno-gu, Seoul","56, Ujeongguk-ro, Jongno-gu, Seoul"
+4,2,4B,1,Deoksugung Palace,37.56556387,126.9748948,"99, Sejong-daero, Jung-gu, Seoul","99, Sejong-daero, Jung-gu, Seoul"
+4,2,4B,2,National Museum of Modern and Contemporary Art, Deoksugung,37.56593843,126.9737401,"99, Sejong-daero, Jung-gu, Seoul","99, Sejong-daero, Jung-gu, Seoul"
+4,2,4B,3,Culture Station Seoul 284,37.55587561,126.9716273,"1, Tongil-ro, Jung-gu, Seoul","1, Tongil-ro, Jung-gu, Seoul"
+4,2,4B,4,Seoul Metropolitan Library,37.56625644,126.977928,"110, Sejong-daero, Jung-gu, Seoul","110, Sejong-daero, Jung-gu, Seoul"
+4,2,4B,5,Gwanghwamunjip,37.5713663,126.9749834,"12, Saemunan-ro 5-gil, Jongno-gu, Seoul","12, Saemunan-ro 5-gil, Jongno-gu, Seoul"
+4,3,4C,1,Seoul City Wall (Naksan),37.58079664,127.0086358,"Samseon-dong 1(il)-ga, Seongbuk-gu, Seoul",
+4,3,4C,2,Naksan Park Night View,37.57798558,127.0081306,"18-26, Naksanseonggwakseo 1-gil, Jongno-gu, Seoul","18-26, Naksanseonggwakseo 1-gil, Jongno-gu, Seoul"
+4,3,4C,3,Heunginjimun Gate,37.57114151,127.0095719,"288, Jong-ro, Jongno-gu, Seoul","288, Jong-ro, Jongno-gu, Seoul"
+4,3,4C,4,Cheonggyecheon Stream (Night),37.55366459,127.0193069,"7, Dongjak-daero 1-gil, Dongjak-gu, Seoul","7, Dongjak-daero 1-gil, Dongjak-gu, Seoul"
+4,3,4C,5,Dongdaemun Dak-hanmari (Restaurant),37.56785914,127.0573918,"25, Jong-ro 40ga-gil, Jongno-gu, Seoul","25, Jong-ro 40ga-gil, Jongno-gu, Seoul"
+4,4,4D,1,Seodaemun Prison History Hall,37.57450354,126.9563153,"251, Tongil-ro, Seodaemun-gu, Seoul","251, Tongil-ro, Seodaemun-gu, Seoul"
+4,4,4D,2,Gyeonggyojang,37.56836251,126.9680524,"29, Saemunan-ro, Jongno-gu, Seoul","29, Saemunan-ro, Jongno-gu, Seoul"
+4,4,4D,3,Ahn Jung-geun Memorial Hall,37.55352399,126.9804079,"91, Sowol-ro, Jung-gu, Seoul","91, Sowol-ro, Jung-gu, Seoul"
+4,4,4D,4,Cheong Wa Dae (Blue House),37.5826761,126.9732338,"45, Hyoja-ro 13-gil, Jongno-gu, Seoul","45, Hyoja-ro 13-gil, Jongno-gu, Seoul"
+4,4,4D,5,Chungjeong-ro Baekban / Kalguksu (Restaurant),37.56326688,126.99133,"46, Toegye-ro 27-gil, Jung-gu, Seoul","46, Toegye-ro 27-gil, Jung-gu, Seoul"
+5,1,5A,1,Hongdae K-Beauty Makeup Class,37.5509256,126.9214656,"363-16, Seogyo-dong, Mapo-gu, Seoul","363-16, Seogyo-dong, Mapo-gu, Seoul"
+5,1,5A,2,Samgeori Butchers (Hongdae),37.54176171,127.1348961,"25, Cheonjung-ro 32-gil, Gangdong-gu, Seoul","25, Cheonjung-ro 32-gil, Gangdong-gu, Seoul"
+5,1,5A,3,SM Universe Dance Class,37.49821308,127.0684549,"217, Yeongdong-daero, Gangnam-gu, Seoul","217, Yeongdong-daero, Gangnam-gu, Seoul"
+5,1,5A,4,Cheongdamgol (Gangnam),37.52274667,127.0434215,"48, Seolleung-ro 148-gil, Gangnam-gu, Seoul","48, Seolleung-ro 148-gil, Gangnam-gu, Seoul"
+5,2,5B,1,Lotte World Tower Seoul Sky,37.51254232,127.1025465,"300, Olympic-ro, Songpa-gu, Seoul","300, Olympic-ro, Songpa-gu, Seoul"
+5,2,5B,2,Seokchon Lake,37.50768073,127.0991128,"47, Jamsil-dong, Songpa-gu, Seoul",
+5,2,5B,3,SMTOWN &STORE (Lotte World Mall),37.54425056,127.0442362,"83-21, Wangsimni-ro, Seongdong-gu, Seoul","83-21, Wangsimni-ro, Seongdong-gu, Seoul"
+5,2,5B,4,Lotte World Mall,37.51260448,127.1025556,"300, Olympic-ro, Songpa-gu, Seoul","300, Olympic-ro, Songpa-gu, Seoul"
+5,2,5B,5,Baekje Samgyetang / Food Court (Restaurant),37.53635612,127.0037077,"91, Hannam-daero, Yongsan-gu, Seoul","91, Hannam-daero, Yongsan-gu, Seoul"
+5,3,5C,1,National Museum of Korea,37.52384681,126.980203,"137, Seobinggo-ro, Yongsan-gu, Seoul","137, Seobinggo-ro, Yongsan-gu, Seoul"
+5,3,5C,2,Itaewon Street,37.53908841,126.9891264,"119-23, Itaewon-dong, Yongsan-gu, Seoul",
+5,3,5C,3,Hanilkwan Lunch / Namyeong Station Baekban (Restaurant),37.57358484,126.9884875,"9, Samil-daero 28-gil, Jongno-gu, Seoul","9, Samil-daero 28-gil, Jongno-gu, Seoul"
+5,4,5D,1,Gyeongbokgung Palace Photo Shoot,37.57919006,126.9822816,"40, Donggyo-ro 46-gil, Mapo-gu, Seoul","40, Donggyo-ro 46-gil, Mapo-gu, Seoul"
+5,4,5D,2,Bukchon Hanok Village,37.58176815,126.9848125,"53, Bukchon-ro, Jongno-gu, Seoul","53, Bukchon-ro, Jongno-gu, Seoul"
+5,4,5D,3,Insadong Ssamziegil,37.57435206,126.9847313,"44, Insadong-gil, Jongno-gu, Seoul","44, Insadong-gil, Jongno-gu, Seoul"
+5,4,5D,4,Kyobo Hottracks (Gwanghwamun),37.57061725,126.9778633,"1, Jong-ro, Jongno-gu, Seoul","1, Jong-ro, Jongno-gu, Seoul"
+5,4,5D,5,Samcheongdong Sujebi / Osegyehyang (Restaurant),37.57466657,126.9852407,"14-5, Insadong 12-gil, Jongno-gu, Seoul","14-5, Insadong 12-gil, Jongno-gu, Seoul"
+5,5,5E,1,Hongdae Flea Market / Busking,37.54869202,126.9204893,"365-29, Seogyo-dong, Mapo-gu, Seoul",
+5,5,5E,2,Beatroad,37.55245682,126.9211292,"35, Zandari-ro 6-gil, Mapo-gu, Seoul","35, Zandari-ro 6-gil, Mapo-gu, Seoul"
+5,5,5E,3,Primo Bacio Baci (Cafe),37.55478399,126.9237037,"44, Wausan-ro 23-gil, Mapo-gu, Seoul","44, Wausan-ro 23-gil, Mapo-gu, Seoul"

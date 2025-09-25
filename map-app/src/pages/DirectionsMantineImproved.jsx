@@ -542,10 +542,10 @@ export default function DirectionsMantineImproved() {
           const waypointIndex = Math.max(1, stop.order - 1);
           const baseLabel =
             stop.role === "start"
-              ? "출발지"
+              ? t("start_point") 
               : stop.role === "end"
-              ? "도착지"
-              : `경유지 ${waypointIndex}`;
+              ? t("end_point") 
+              : `${t("waypoint_point")} ${waypointIndex}`;
           const primaryName =
             typeof stop?.name === "string" ? stop.name.trim() : "";
           const overlayLabel =
@@ -756,37 +756,60 @@ export default function DirectionsMantineImproved() {
         ? primaryRoute.sections
         : [];
       const summarySource = primaryRoute.summary || null;
-      const stops = [
+      // 3. 번역할 장소 이름 목록 생성
+      let stops = [
         { ...start, name: cur.startLocation },
         ...validMids,
         { ...end, name: cur.endLocation },
       ];
-      const stays = Array.from(
-        { length: stops.length },
-        (_, i) => cur.stays?.[i] || 0
-      );
+      
+      // 4. 현재 언어가 한국어가 아니면 장소 이름 번역 실행
+      const lang = i18n.language;
+      if (lang !== 'ko' && stops.some(s => s.name)) {
+        try {
+            const originalNames = stops.map(s => s.name || "");
+            const translatedNames = await translateText(originalNames, lang);
+            // 번역된 이름으로 stops 배열 업데이트
+            stops = stops.map((stop, index) => ({
+                ...stop,
+                name: translatedNames[index] || stop.name,
+            }));
+        } catch (error) {
+            console.error("Failed to translate calculated route names:", error);
+            // 번역 실패 시 원본 이름으로 계속 진행
+        }
+      }
+
+      // 5. 번역된 이름으로 타임라인 생성 및 상태 업데이트
+      const stays = Array.from({ length: stops.length }, (_, i) => cur.stays?.[i] || 0);
+      
       const timeline = recomputeTimelineWithStays({
-        stops,
+        stops, // 번역된 이름이 포함된 stops 배열 사용
         sections,
         startTime: cur.startTime,
         stays,
       });
+
       const summary = summarySource
         ? {
             distance: (summarySource.distance || 0) / 1000,
-            duration: summarySource.duration
-              ? Math.round(summarySource.duration / 60)
-              : 0,
+            duration: summarySource.duration ? Math.round(summarySource.duration / 60) : 0,
           }
         : null;
+
       updateCur({
-        timeline,
+        timeline, // 번역된 이름이 포함된 타임라인
         summary,
         lastRoutes: routes,
         stays,
         startCoords: start,
         endCoords: end,
-        waypoints: validMids,
+        waypoints: validMids.map((mid, index) => ({
+            ...mid,
+            name: stops[index + 1].name // 경유지 이름도 번역된 것으로 업데이트
+        })),
+        startLocation: stops[0].name, // 출발지 이름 번역된 것으로 업데이트
+        endLocation: stops[stops.length - 1].name, // 도착지 이름 번역된 것으로 업데이트
       });
     } catch (e) {
       console.error(e);
@@ -890,6 +913,11 @@ export default function DirectionsMantineImproved() {
       if (personaCourseId !== null && personaCourseId !== undefined) {
         params.set("pid", String(personaCourseId));
       }
+
+      if (i18n.language) {
+        params.set("lang", i18n.language);
+      }
+
       const response = await fetch(
         `/api/persona/courses2?${params.toString()}`,
         {
@@ -908,7 +936,7 @@ export default function DirectionsMantineImproved() {
     } finally {
       setRecommendedLoading(false);
     }
-  }, [personaCourseId]);
+  }, [personaCourseId, i18n.language]);
 
   const handleSelectRecommendedCourse = (course) => {
     if (!course) return;

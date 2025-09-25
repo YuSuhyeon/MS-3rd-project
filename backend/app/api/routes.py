@@ -559,8 +559,24 @@ def tmap_transit():
 @api_bp.route('/persona/courses', methods=['GET'])
 def persona_courses():
     try:
+        lang_code = request.args.get('lang', 'kr').lower()
+
+        supported_suffixes = {'en', 'jp', 'kr', 'zh'}
+        lang_suffix = lang_code
+        if lang_code.startswith('zh'):
+            lang_suffix = 'zh'
+        elif lang_code == 'ko':
+            lang_suffix = 'kr'
+
+        if lang_suffix not in supported_suffixes:
+            lang_suffix = 'kr'
+
         course_dir = os.path.join(PUBLIC_DIR, 'course_data')
-        csv_path = os.path.join(course_dir, 'routes_all_simplified.csv')
+        filename = f'routes_all_simplified_{lang_suffix}.csv'
+        csv_path = os.path.join(course_dir, filename)
+
+        if not os.path.exists(csv_path):
+            csv_path = os.path.join(course_dir, 'routes_all_simplified_kr.csv')
         if not os.path.exists(csv_path):
             return jsonify({ 'items': [] })
 
@@ -628,8 +644,24 @@ def persona_courses():
 @api_bp.route('/persona/courses2', methods=['GET'])
 def persona_courses2():
     try:
+        lang_code = request.args.get('lang', 'kr').lower()
+
+        supported_suffixes = {'en', 'jp', 'kr', 'zh'}
+        lang_suffix = lang_code
+        if lang_code.startswith('zh'):
+            lang_suffix = 'zh'
+        elif lang_code == 'ko':
+            lang_suffix = 'kr'
+
+        if lang_suffix not in supported_suffixes:
+            lang_suffix = 'kr'
+
         course_dir = os.path.join(PUBLIC_DIR, 'course_data')
-        csv_path = os.path.join(course_dir, 'routes_all_simplified.csv')
+        filename = f'routes_all_simplified_{lang_suffix}.csv'
+        csv_path = os.path.join(course_dir, filename)
+
+        if not os.path.exists(csv_path):
+            csv_path = os.path.join(course_dir, 'routes_all_simplified_kr.csv')
         if not os.path.exists(csv_path):
             return jsonify({ 'items': [] })
 

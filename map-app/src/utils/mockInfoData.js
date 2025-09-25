@@ -110,7 +110,7 @@ Korean Air, Asiana Airlines, Jeju Air, T'way Air, Air Seoul, Air Busan, Jin Air,
     id: "1001",
     board_id: "1002",
     author: "triple_guide",
-    user_name: "Triple Travel Guide",
+    user_name: "유수현",
     title: "K-Pop 아이돌들처럼 먹어보자! 🎤✨ 서울 맛집 완전정복 가이드",
     created_at: "2025-09-20",
     content: `
@@ -208,7 +208,7 @@ KDH 조직 본부 설정지. 웅장한 스케일에서 최종 보스전 분위�
 
 
 
-🎯수현 에디터의 Tips!
+🎯su hyeon 's Tips!
 
 
 

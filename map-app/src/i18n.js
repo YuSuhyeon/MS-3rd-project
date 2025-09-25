@@ -1366,6 +1366,9 @@ const resources = {
       waypoint_added: "경유지가 추가됩니다.",
       start_set: "출발지가 설정됩니다.",
       end_set: "도착지가 설정됩니다.",
+      start_point: "출발지",
+      end_point: "도착지",
+      waypoint_point: "경유지",
     },
     planner: {
       new_activity: "새로운 활동",
@@ -2782,6 +2785,9 @@ const resources = {
       waypoint_added: "Waypoint will be added.",
       start_set: "Departure point will be set.",
       end_set: "Destination will be set.",
+      start_point: "Starting Point",
+      end_point: "Destination",
+      waypoint_point: "Stop",
     },
     playlists: {
       title: "K-pop Travel Playlist",
@@ -4339,6 +4345,9 @@ const resources = {
       waypoint_added: "経由地が追加されます。",
       start_set: "出発地が設定されます。",
       end_set: "到着地が設定されます。",
+      start_point: "出発地",
+      end_point: "到着地",
+      waypoint_point: "経由地",
     },
     planner: {
       new_activity: "新しい活動",
@@ -5704,6 +5713,9 @@ const resources = {
       waypoint_added: "将添加途经地。",
       start_set: "将设置出发地。",
       end_set: "将设置目的地。",
+      start_point: "出发地",
+      end_point: "目的地",
+      waypoint_point: "途经点",
     },
     planner: {
       new_activity: "新活动",
