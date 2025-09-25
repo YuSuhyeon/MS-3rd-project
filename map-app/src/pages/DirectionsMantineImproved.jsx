@@ -15,6 +15,7 @@ import ensureTmap from "integrations/tmapLoader";
 import { Itinerary } from "Entities/Itinerary";
 import { convertPlanToItinerary } from "../store/useItineraryStore";
 import { useAuth } from "../context/AuthContext";
+import { translateText } from "../integrations/translator";
 import {
   Plus,
   X,
@@ -33,6 +34,7 @@ import {
   Train,
 } from "lucide-react";
 import { Reorder, motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 let kakaoSdkPromise = null;
 const ensureKakao = () => {
@@ -107,10 +109,10 @@ export default function DirectionsMantineImproved() {
   const location = useLocation();
   const { profile: authProfile } = useAuth();
   const isAuthenticated = !!authProfile;
-
-  const makeEmptyDay = (idx = 0) => ({
+  const { t, i18n } = useTranslation("directions");
+  const makeEmptyDay = useCallback((idx = 0) => ({
     id: `day-${Date.now()}-${idx}`,
-    title: `${idx + 1}일차`,
+    title: `${idx + 1}${t("days") || "일차"}`,
     startLocation: "",
     startCoords: null,
     endLocation: "",
@@ -122,9 +124,9 @@ export default function DirectionsMantineImproved() {
     timeline: [],
     summary: null,
     lastRoutes: null,
-  });
+  }), [t]);
 
-  const [days, setDays] = useState([makeEmptyDay(0)]);
+  const [days, setDays] = useState([]);
   const [activeDay, setActiveDay] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [currentItineraryId, setCurrentItineraryId] = useState(null);
@@ -152,6 +154,13 @@ export default function DirectionsMantineImproved() {
   const [recommendedLoading, setRecommendedLoading] = useState(false);
   const [recommendedError, setRecommendedError] = useState(null);
   const [personaCourseId, setPersonaCourseId] = useState(null);
+
+  // 초기 상태 설정 (번역이 준비된 후)
+  useEffect(() => {
+    if (days.length === 0) {
+      setDays([makeEmptyDay(0)]);
+    }
+  }, [makeEmptyDay, days.length]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -925,7 +934,7 @@ export default function DirectionsMantineImproved() {
     setCoursePickerOpen(false);
     setToast({
       id: Date.now(),
-      message: `${nextIndex + 1}일차에 추천 코스를 추가했어요.`,
+      message: `${nextIndex + 1}${t("days") || "일차"}에 ${t("add_recommended_course")}.`,
       tone: "success",
     });
   };
@@ -941,17 +950,17 @@ export default function DirectionsMantineImproved() {
   const removeDay = (idx) => {
     if (days.length <= 1) return;
     const target = days[idx];
-    const label = target?.title || `${idx + 1}일차`;
+    const label = target?.title || `${idx + 1}${t("days") || "일차"}`;
     const shouldRemove =
       typeof window === "undefined"
         ? true
-        : window.confirm(`${label} 일정을 삭제하시겠어요?`);
+        : window.confirm(`${label} ${t("delete_day")}`);
     if (!shouldRemove) return;
 
     setDays((prev) => {
       const filtered = prev
         .filter((_, i) => i !== idx)
-        .map((d, i) => ({ ...d, title: `${i + 1}일차` }));
+        .map((d, i) => ({ ...d, title: `${i + 1}${t("days") || "일차"}` }));
       setActiveDay((prevActive) => {
         if (filtered.length === 0) return 0;
         if (prevActive > idx) return prevActive - 1;
@@ -968,7 +977,7 @@ export default function DirectionsMantineImproved() {
       const clone = {
         ...prev[idx],
         id: `day-${Date.now()}`,
-        title: `${prev.length + 1}일차`,
+        title: `${prev.length + 1}${t("days") || "일차"}`,
         timeline: [],
         summary: null,
         lastRoutes: null,
@@ -991,13 +1000,18 @@ export default function DirectionsMantineImproved() {
         window.alert("Please sign in to save this route.");
         return;
       }
-      const defaultName = days
-        .map((d, idx) => {
+      const defaultName = await Promise.all(
+        days.map(async (d, idx) => {
           const start = d.startLocation || `Day ${idx + 1}`;
           const end = d.endLocation || "";
-          return `${idx + 1} - ${start}${end ? " -> " + end : ""}`;
+          
+          // 장소명 번역
+          const translatedStart = start.includes("Day") ? start : await translateText(start, i18n.language);
+          const translatedEnd = end ? await translateText(end, i18n.language) : "";
+          
+          return `${idx + 1} - ${translatedStart}${translatedEnd ? " -> " + translatedEnd : ""}`;
         })
-        .join(", ");
+      ).then(results => results.join(", "));
       const nameInput = window.prompt(
         "Enter a name for this route plan.",
         defaultName || "My route plan"
@@ -1225,9 +1239,9 @@ export default function DirectionsMantineImproved() {
       : "bg-slate-900/80 text-white";
 
   const searchTitleMap = {
-    start: "출발지 검색",
-    end: "도착지 검색",
-    waypoint: "경유지 검색",
+    start: t("search_start"),
+    end: t("search_end"),
+    waypoint: t("search_waypoint"),
   };
 
   return (
@@ -1261,7 +1275,7 @@ export default function DirectionsMantineImproved() {
               Route Planner
             </span>
             <h1 className="truncate text-xl font-bold text-white sm:text-2xl">
-              경로 플래너
+              {t("route_planner")}
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -1269,19 +1283,19 @@ export default function DirectionsMantineImproved() {
               onClick={calculateRoute}
               disabled={!canCalculate || isCalculating}
               className="hidden h-10 items-center rounded-full border-indigo-200/40 bg-indigo-500 px-4 text-sm font-semibold text-white shadow-lg backdrop-blur hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60 sm:flex"
-              aria-label="경로 계산"
+              aria-label={t("calculate_route")}
             >
               <MapIcon className="mr-2 h-4 w-4" />
-              <span>{isCalculating ? "경로 계산 중..." : "경로 계산"}</span>
+              <span>{isCalculating ? t("calculating_route") : t("calculate_route")}</span>
             </Button>
             <Button
               variant="outline"
               onClick={saveToBackend}
               className="hidden h-10 items-center rounded-full border-white/20 bg-white/10 px-4 text-sm font-semibold text-white shadow-lg backdrop-blur hover:bg-white/20 sm:flex"
-              aria-label="경로 저장"
+              aria-label={t("save_route")}
             >
               <Save className="mr-2 h-4 w-4" />
-              <span>경로 저장</span>
+              <span>{t("save_route")}</span>
             </Button>
             <div className="relative" ref={menuRef}>
               <Button
@@ -1289,7 +1303,7 @@ export default function DirectionsMantineImproved() {
                 size="icon"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
                 className="h-10 w-10 rounded-full border border-white/10 bg-white/5 text-white hover:bg-white/10"
-                aria-label="더보기"
+                aria-label={t("more")}
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>
@@ -1310,7 +1324,7 @@ export default function DirectionsMantineImproved() {
                       className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                     >
                       <Copy className="h-4 w-4 text-slate-500" />
-                      <span>일정 복제</span>
+                      <span>{t("duplicate_day")}</span>
                     </button>
                     <button
                       onClick={() => {
@@ -1320,7 +1334,7 @@ export default function DirectionsMantineImproved() {
                       className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                     >
                       <Save className="h-4 w-4 text-slate-500" />
-                      <span>경로 저장</span>
+                      <span>{t("save_route")}</span>
                     </button>
                   </motion.div>
                 )}
@@ -1365,7 +1379,7 @@ export default function DirectionsMantineImproved() {
                 <span className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
                   Day {activeDay + 1}
                 </span>
-                <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+                <p className="mt-1 line-clamp-2 text-sm text-slate-500" dynamic="true">
                   {collapsedSummary}
                 </p>
               </div>
@@ -1385,7 +1399,7 @@ export default function DirectionsMantineImproved() {
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-400 sm:hidden"
               >
                 <MapIcon className="h-4 w-4" />
-                <span>{isCalculating ? "경로 계산 중..." : "경로 계산"}</span>
+                <span>{isCalculating ? t("calculating_route") : t("calculate_route")}</span>
               </Button>
             )}
           </div>
@@ -1400,7 +1414,7 @@ export default function DirectionsMantineImproved() {
                   className="flex w-full items-center justify-center gap-2 rounded-full bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-400"
                 >
                   <MapIcon className="h-4 w-4" />
-                  <span>{isCalculating ? "경로 계산 중..." : "경로 계산"}</span>
+                  <span>{isCalculating ? t("calculating_route") : t("calculate_route")}</span>
                 </Button>
               </div>
               <div className="flex items-center justify-between gap-3">
@@ -1438,7 +1452,7 @@ export default function DirectionsMantineImproved() {
                       variant="ghost"
                       onClick={() => setAddDayMenuOpen((prev) => !prev)}
                       className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600"
-                      aria-label="일차 추가 메뉴"
+                      aria-label={t("add_day_menu")}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -1459,14 +1473,14 @@ export default function DirectionsMantineImproved() {
                             }}
                             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100"
                           >
-                            새 일차 추가
+                            {t("add_day")}
                           </button>
                           <button
                             type="button"
                             onClick={handleAddRecommendedDay}
                             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-indigo-600 hover:bg-indigo-50"
                           >
-                            추천 코스 추가
+                            {t("add_recommended_course")}
                           </button>
                         </motion.div>
                       )}
@@ -1484,10 +1498,10 @@ export default function DirectionsMantineImproved() {
                   >
                     <div>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        출발지
+                        {t("start")}
                       </span>
-                      <p className="mt-1 text-sm font-medium text-slate-700">
-                        {cur.startLocation || "출발지를 설정하세요"}
+                      <p className="mt-1 text-sm font-medium text-slate-700" dynamic="true">
+                        {cur.startLocation || t("set_start")}
                       </p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -1499,10 +1513,10 @@ export default function DirectionsMantineImproved() {
                   >
                     <div>
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        도착지
+                        {t("end")}
                       </span>
-                      <p className="mt-1 text-sm font-medium text-slate-700">
-                        {cur.endLocation || "도착지를 설정하세요"}
+                      <p className="mt-1 text-sm font-medium text-slate-700" dynamic="true">
+                        {cur.endLocation || t("set_end")}
                       </p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -1515,20 +1529,21 @@ export default function DirectionsMantineImproved() {
                     className="rounded-full border-slate-300 bg-white px-4 text-sm font-semibold text-slate-600 hover:border-indigo-200 hover:text-indigo-600"
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    경유지 추가
+                    {t("add_waypoint")}
                   </Button>
                   {cur.waypoints?.length ? (
                     cur.waypoints.map((wp, idx) => (
                       <span
                         key={`${wp.name}-${idx}`}
                         className="group inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow"
+                        dynamic="true"
                       >
                         {idx + 1}. {wp.name || "이름 없음"}
                         <button
                           type="button"
                           onClick={() => removeWaypoint(idx)}
                           className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-rose-500"
-                          aria-label="경유지 삭제"
+                          aria-label={t("remove_waypoint")}
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -1536,7 +1551,7 @@ export default function DirectionsMantineImproved() {
                     ))
                   ) : (
                     <span className="text-xs text-slate-400">
-                      경유지를 추가하면 더 정교한 경로를 만들 수 있어요.
+                      {t("add_waypoint_description")}
                     </span>
                   )}
                 </div>
@@ -1545,7 +1560,7 @@ export default function DirectionsMantineImproved() {
               <div className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    지도 제공자
+                    {t("map_provider")}
                   </label>
                   <SegmentedControl
                     value={mapProvider}
@@ -1553,12 +1568,12 @@ export default function DirectionsMantineImproved() {
                     options={[
                       {
                         value: "KAKAO",
-                        label: "카카오맵",
+                        label: t("kakao_map"),
                         icon: <MapIcon size={14} />,
                       },
                       {
                         value: "TMAP",
-                        label: "T map",
+                        label: t("t_map"),
                         icon: <MapIcon size={14} />,
                       },
                     ]}
@@ -1566,7 +1581,7 @@ export default function DirectionsMantineImproved() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    이동 수단
+                    {t("transportation_mode")}
                   </label>
                   <SegmentedControl
                     value={routeMode}
@@ -1574,17 +1589,17 @@ export default function DirectionsMantineImproved() {
                     options={[
                       {
                         value: "CAR",
-                        label: "자동차",
+                        label: t("car"),
                         icon: <Car size={14} />,
                       },
                       {
                         value: "PEDESTRIAN",
-                        label: "도보",
+                        label: t("pedestrian"),
                         icon: <PersonStanding size={14} />,
                       },
                       {
                         value: "TRANSIT",
-                        label: "대중교통",
+                        label: t("transit"),
                         icon: <Train size={14} />,
                       },
                     ]}
@@ -1595,10 +1610,10 @@ export default function DirectionsMantineImproved() {
               <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-slate-700">
-                    경로 순서 조정
+                    {t("route_order_adjustment")}
                   </h3>
                   <span className="text-xs text-slate-400">
-                    드래그하여 순서를 변경하세요
+                    {t("drag_to_adjust_order")}
                   </span>
                 </div>
                 <Reorder.Group
@@ -1624,18 +1639,18 @@ export default function DirectionsMantineImproved() {
                         }`}
                       >
                         {s.type === "start"
-                          ? "출발"
+                          ? t("start")
                           : s.type === "end"
-                          ? "도착"
-                          : "경유"}
+                          ? t("end")
+                          : t("waypoint")}
                       </span>
-                      <span className="truncate text-slate-700">
+                      <span className="truncate text-slate-700" dynamic="true">
                         {s.name ||
                           (s.type === "start"
-                            ? "출발지를 선택하세요"
+                            ? t("select_start")
                             : s.type === "end"
-                            ? "도착지를 선택하세요"
-                            : "경유지를 추가하세요")}
+                            ? t("select_end")
+                            : t("select_waypoint"))}
                       </span>
                     </Reorder.Item>
                   ))}
@@ -1644,18 +1659,18 @@ export default function DirectionsMantineImproved() {
 
               <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
                 <h3 className="mb-3 text-sm font-semibold text-slate-700">
-                  이동 요약
+                  {t("travel_summary")}
                 </h3>
                 {cur.summary && (
                   <div className="mb-4 flex flex-wrap items-center gap-4 text-xs text-slate-500">
                     <span>
-                      총 이동거리{" "}
+                      {t("total_distance")}
                       <span className="font-semibold text-indigo-600">
                         {cur.summary.distance.toFixed(1)}km
                       </span>
                     </span>
                     <span>
-                      예상 소요시간{" "}
+                      {t("estimated_duration")}{" "}
                       <span className="font-semibold text-indigo-600">
                         {cur.summary.duration}분
                       </span>
@@ -1672,7 +1687,7 @@ export default function DirectionsMantineImproved() {
                         <div className="grid h-7 w-7 place-items-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
                           {s.idx}
                         </div>
-                        <div className="flex-1 truncate font-semibold text-slate-700">
+                        <div className="flex-1 truncate font-semibold text-slate-700" dynamic="true">
                           {s.name}
                         </div>
                       </div>
@@ -1680,17 +1695,17 @@ export default function DirectionsMantineImproved() {
                         <div className="mt-2 flex flex-wrap items-center gap-4 pl-10 text-xs text-slate-500">
                           <span className="flex items-center gap-1">
                             <Car size={12} />
-                            {s.km.toFixed(1)}km · {s.minutes}분
+                            {s.km.toFixed(1)}km · {s.minutes}{t("minutes")}
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock size={12} />
-                            {s.arrival} 도착
+                            {s.arrival} {t("end")}
                           </span>
                         </div>
                       )}
                       <div className="mt-3 flex items-center gap-2 pl-10 text-xs text-slate-500">
                         <label className="whitespace-nowrap">
-                          체류 시간(분)
+                          {t("stay_time")}
                         </label>
                         <input
                           type="number"
@@ -1720,7 +1735,7 @@ export default function DirectionsMantineImproved() {
           >
             <div className="flex items-center justify-between px-5 pt-6 pb-4">
               <h3 className="text-lg font-semibold text-white">
-                추천 코스 불러오기
+                {t("load_recommended_course")}
               </h3>
               <button
                 onClick={() => setCoursePickerOpen(false)}
@@ -1731,16 +1746,16 @@ export default function DirectionsMantineImproved() {
               </button>
             </div>
             <div className="px-5 pb-4 text-sm text-slate-300">
-              <p>추가하고 싶은 코스를 선택하면 새 일차로 준비됩니다.</p>
+              <p>{t("load_recommended_course_description")}</p>
             </div>
             <div className="flex-1 overflow-y-auto px-5 pb-10 space-y-3">
               {recommendedLoading ? (
                 <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                  추천 코스를 불러오는 중입니다...
+                  {t("loading_recommended_course")}
                 </div>
               ) : recommendedError ? (
                 <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-6 text-sm text-rose-100">
-                  <p className="font-semibold">불러오기 실패</p>
+                  <p className="font-semibold">{t("load_recommended_course_failed")}</p>
                   <p className="mt-2 text-xs text-rose-100/80">
                     {recommendedError}
                   </p>
@@ -1749,12 +1764,12 @@ export default function DirectionsMantineImproved() {
                     onClick={loadRecommendedCourses}
                     className="mt-4 inline-flex items-center justify-center rounded-full border border-rose-300/40 px-4 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-400/20"
                   >
-                    다시 시도
+                    {t("try_again")}
                   </button>
                 </div>
               ) : recommendedCourses.length === 0 ? (
                 <div className="rounded-2xl border border-slate-700 bg-slate-800/70 px-4 py-6 text-center text-sm text-slate-300">
-                  사용할 수 있는 추천 코스가 없습니다.
+                  {t("no_recommended_course")}
                 </div>
               ) : (
                 recommendedCourses.map((course) => {
@@ -1774,7 +1789,7 @@ export default function DirectionsMantineImproved() {
                         </span>
                         <span className="text-xs text-slate-400">
                           {Array.isArray(course.stops)
-                            ? `${course.stops.length}곳`
+                            ? `${course.stops.length}${t("stops")}`
                             : ""}
                         </span>
                       </div>
@@ -1818,18 +1833,18 @@ export default function DirectionsMantineImproved() {
                 autoFocus
                 value=""
                 onSelect={handlePlaceSelect}
-                placeholder={`${searchTitleMap[searchContext]} 키워드를 입력하세요`}
+                placeholder={`${searchTitleMap[searchContext]} ${t("keyword_input")}`}
                 className="w-full rounded-2xl border-none bg-white/90 px-4 py-3 text-base font-medium text-slate-900 shadow-lg focus:ring-2 focus:ring-indigo-400"
               />
             </div>
             <div className="flex-1 overflow-y-auto px-5 pb-10 text-sm text-slate-300">
               <p>
-                검색된 목록에서 장소를 선택하면{" "}
+                {t("search_result_select_place")}
                 {searchContext === "waypoint"
-                  ? "경유지가 추가됩니다."
+                  ? t("waypoint_added")
                   : searchContext === "start"
-                  ? "출발지가 설정됩니다."
-                  : "도착지가 설정됩니다."}
+                  ? t("start_set")
+                  : t("end_set")}
               </p>
             </div>
           </motion.div>

@@ -8,6 +8,7 @@ import {
   Award,
   Bus,
 } from "lucide-react";
+
 import i18n from "../i18n";
 
 // 투어 상품 데이터
@@ -18,11 +19,11 @@ export const tourProducts = [
     image: "/img/everland_kdh_1.jpg",
     price: "₩100,000",
     category: "experience",
-    kpopGroup: "K-Pop Demon Hunters",
+    //kpopGroup: "K-Pop Demon Hunters",
     description: "Everland 자유입장권이 포함된 Kpop Demon Hunters 테마 투어",
     tags: ["Day Tour", "K-Pop Demon Hunters", "Amusement Park", "Netflix"],
     rating: 5.0,
-    reviews: 250,
+    reviews: 3,
     location: "서울 강남구 → 용인 에버랜드",
   },
   {
@@ -31,11 +32,11 @@ export const tourProducts = [
     image: "/img/thumbnail_ms.jpg",
     price: "₩125,000",
     category: "it",
-    kpopGroup: "Microsoft",
+    // kpopGroup: "Microsoft",
     description: "Microsoft AI Tour Seoul - AI 기술과 문화재 복원의 만남",
     tags: ["Microsoft", "AI Technology", "Cultural Heritage", "Bootcamp"],
     rating: 5.0,
-    reviews: 89,
+    reviews: 3,
     location: "서울 중구",
   },
   {
@@ -44,12 +45,12 @@ export const tourProducts = [
     image: "/img/hangang_bus.jpg",
     price: "₩85,000",
     category: "experience",
-    kpopGroup: "서울관광재단",
+    //  kpopGroup: "서울관광재단",
     description:
       "한강버스를 타고 서울 대표 포토스팟과 인스타 핫플을 돌아보는 감성 투어",
     tags: ["Instagram", "Han River Bus", "Photo Spot", "Seoul Hotplace"],
     rating: 4.6,
-    reviews: 312,
+    reviews: 4,
     location: "한강 전구간",
   },
   {
@@ -58,11 +59,11 @@ export const tourProducts = [
     image: "/img/baseball_chicken.jpg",
     price: "₩65,000",
     category: "sports",
-    kpopGroup: "LG 트윈스",
+    // kpopGroup: "LG 트윈스",
     description: "잠실야구장 프리미엄 관람 + 치킨맥주 + 스포츠 체험",
     tags: ["Baseball", "Korean Food", "Sports", "Jamsil"],
-    rating: 4.8,
-    reviews: 445,
+    rating: 5.0,
+    reviews: 2,
     location: "서울 송파구 (잠실 관광 특구)",
   },
   {
@@ -71,7 +72,7 @@ export const tourProducts = [
     image: "/img/oliveyoung_store.jpg",
     price: "₩135,000",
     category: "beauty",
-    kpopGroup: "올리브영",
+    //  kpopGroup: "올리브영",
     description: "피부과 케어 + K-뷰티 브랜드 체험 + 올리브영 쇼핑 + 한방 스파",
     tags: ["K-Beauty", "Skincare", "Wellness", "Premium", "Gangnam"],
     rating: 4.9,
@@ -84,7 +85,7 @@ export const tourProducts = [
     image: "/img/경복궁 여행스냅.jpg",
     price: "₩80,000",
     category: "culture",
-    kpopGroup: "경복궁",
+    //   kpopGroup: "경복궁",
     description:
       "AI 도슨트와 카카오프렌즈 캐릭터가 함께하는 재미있는 박물관 체험",
     tags: [
@@ -220,7 +221,7 @@ export const tourDetailData = {
     originalPrice: "₩100,000",
     discount: "11%",
     rating: 4.9,
-    reviewCount: 100,
+    reviewCount: 3,
     duration: "10시간",
     groupSize: "최대 12명",
     language: "한국어, 영어, 중국어",
@@ -282,17 +283,17 @@ export const tourDetailData = {
     ],
     detailSections: [
       {
-        image: "/img/everland_demon_zone.jpg",
+        image: "/img/에버케데.jpg",
         title: "에버랜드 X K-Pop 데몬 헌터즈 테마존",
         text: "세계 최초로 공개되는 K-Pop 데몬 헌터즈 테마존에서 드라마 속 스릴 넘치는 액션을 직접 체험하세요. 루미의 마법학교, 진우의 트레이닝 센터, 악마 퇴치 미션까지 완벽 재현된 몰입형 어트랙션이 여러분을 기다립니다.",
       },
       {
-        image: "/img/naksan_date_scene.jpg",
+        image: "/img/케데헌 낙산.png",
         title: "낙산공원 로맨틱 데이트 씬 재현",
         text: "드라마에서 가장 인상 깊었던 루미와 진우의 데이트 장면을 낙산공원에서 직접 재현해보세요. 서울 도심 전망과 함께 드라마틱한 포토타임을 즐길 수 있으며, 전용 포토그래퍼가 인생샷을 선사합니다.",
       },
       {
-        image: "/img/namsan_finale.jpg",
+        image: "/img/케데헌_남산.png",
         title: "N서울타워 최종 결전 무대",
         text: "시즌 피날레를 장식한 N서울타워에서의 최종 보스 배틀을 VR로 체험하고, 드라마 주인공이 된 기분으로 서울의 야경을 감상하세요. 한정판 커플 락커 체험도 포함되어 있습니다.",
       },
@@ -364,8 +365,8 @@ export const tourDetailData = {
     price: "₩125,000",
     originalPrice: "₩150,000",
     discount: "17%",
-    rating: 4.8,
-    reviewCount: 89,
+    rating: 5.0,
+    reviewCount: 3,
     duration: "4시간",
     groupSize: "최대 20명",
     language: "한국어, 영어",
@@ -419,9 +420,9 @@ export const tourDetailData = {
     reviews: [
       {
         id: 1,
-        name: "김현수",
+        name: "김원필",
         rating: 5,
-        date: "2025-08-12",
+        date: "2025-09-12",
         content:
           "AI 기술로 문화재를 복원하는 과정이 정말 신기했어요! Microsoft의 최신 기술을 직접 체험할 수 있어서 좋았습니다.",
         avatar: "김",
@@ -433,27 +434,17 @@ export const tourDetailData = {
         rating: 5,
         date: "2025-08-08",
         content:
-          "놀라운 기술 시연이었어요! AI 복원 과정이 정말 흥미로웠고 한국 유산 보존과의 협력이 정말 영감을 주었습니다.",
+          "It was an amazing technology demonstration! The AI restoration process was very intriguing, and the collaboration for preserving Korean heritage was truly inspiring.",
         avatar: "A",
         gradient: "from-green-500 to-blue-500",
       },
       {
         id: 3,
-        name: "이서연",
-        rating: 4,
-        date: "2025-08-03",
-        content:
-          "IT와 전통문화의 융합이 인상적이었어요. 특히 AI로 복원된 문화재들을 직접 볼 수 있어서 의미 있는 시간이었습니다.",
-        avatar: "이",
-        gradient: "from-purple-500 to-pink-500",
-      },
-      {
-        id: 4,
         name: "Michael Park",
         rating: 5,
         date: "2025-07-30",
         content:
-          "최첨단 기술과 문화 보존의 완벽한 조화였어요. 마이크로소프트 팀이 정말 전문적이었고 시연이 정말 인상적이었습니다!",
+          "It was a perfect harmony of cutting-edge technology and cultural preservation. The Microsoft team was highly professional, and the demonstration was truly impressive!",
         avatar: "M",
         gradient: "from-orange-500 to-red-500",
       },
@@ -473,9 +464,9 @@ export const tourDetailData = {
     ],
     price: "72,000",
     originalPrice: "₩85,000",
-    discount: "19%",
+    discount: "15%",
     rating: 4.6,
-    reviewCount: 312,
+    reviewCount: 4,
     duration: "3.5시간",
     groupSize: "최대 25명",
     language: "한국어, 영어",
@@ -562,12 +553,12 @@ export const tourDetailData = {
       },
       {
         id: 3,
-        name: "커플 민수♥지혜",
+        name: "Jenny",
         rating: 5,
         date: "2025-09-10",
         content:
-          "데이트로 완벽했어요! 한강버스 타면서 사진도 많이 찍고, 야경도 보고. 포토그래퍼님 덕분에 프로필 사진도 건졌습니다!",
-        avatar: "커",
+          "The tour was a great balance of sightseeing and photography. I loved the skyline shots from the bus and the LED lights at Sebitseom. Only thing I’d say is that it got a bit crowded at Banpo Fountain, so I had to wait for a clear shot. Still, my followers loved the photos I posted",
+        avatar: "Jenny",
         gradient: "from-red-500 to-pink-500",
       },
       {
@@ -589,16 +580,16 @@ export const tourDetailData = {
     subtitle: "잠실야구장에서 즐기는 완벽한 야구 체험",
     location: "잠실야구장, 롯데월드타워",
     images: [
-      "/img/baseball_tour.jpg",
-      "/img/jamsil_stadium.jpg",
-      "/img/korean_chicken_beer.jpg",
-      "/img/lg_twins_merchandise.jpg",
+      "/img/baseball_chicken.jpg",
+      "/img/팬샵.png",
+      "/img/lgchickenbeer.png",
+      "/img/야구장.png",
     ],
-    price: "₩100,000",
-    originalPrice: "₩90,000",
-    discount: "17%",
+    price: "₩65,000",
+    originalPrice: "₩100,000",
+    discount: "35%",
     rating: 4.7,
-    reviewCount: 342,
+    reviewCount: 2,
     duration: "6시간",
     groupSize: "최대 25명",
     language: "한국어, 영어, 일본어",
@@ -648,18 +639,18 @@ export const tourDetailData = {
     reviews: [
       {
         id: 1,
-        name: "Park Min-jun",
+        name: "Park Min",
         rating: 5,
         date: "2025-09-10",
         content:
-          "야구를 잘 몰랐는데도 정말 재미있었어요! 교촌치킨도 맛있고 응원 분위기가 끝내줬습니다.",
-        avatar: "박",
+          "야구를 잘 몰랐는데도 정말 재미있었어요! 교촌치킨도 맛있고 응원 분위기가 끝내줬습니다.외국인 친구들도 같이 즐길 수 있어서 더욱 특별한 시간이었어요! 특전으로 받은 롯데월드 면세점 쿠폰으로  쇼핑도 할 수 있어서 좋았어요",
+        avatar: "P",
         gradient: "from-red-500 to-blue-500",
       },
       {
         id: 2,
         name: "Emma S.",
-        rating: 5,
+        rating: 4.7,
         date: "2025-09-08",
         content:
           "Amazing cultural experience! Learning Korean baseball cheers was so fun and the chicken was incredible!",
@@ -674,16 +665,15 @@ export const tourDetailData = {
     subtitle: "한국 최고의 뷰티 기술과 전통 웰니스의 완벽한 조합",
     location: "강남구 (압구정-청담-신사동 일대)",
     images: [
-      "/img/kbeauty_wellness_tour.jpg",
-      "/img/gangnam_skincare_clinic.jpg",
-      "/img/oliveyoung_flagship.jpg",
-      "/img/korean_spa_wellness.jpg",
+      "/img/oliveyoung_people.jpg",
+      "/img/skincare.jpg",
+      "/img/wishbag.jpg",
     ],
     price: "₩135,000",
     originalPrice: "₩180,000",
     discount: "25%",
     rating: 4.9,
-    reviewCount: 428,
+    reviewCount: 4,
     duration: "6시간",
     groupSize: "최대 12명",
     language: "한국어, 영어, 중국어,일본어",
@@ -829,7 +819,7 @@ export const tourDetailData = {
     originalPrice: "₩100,000",
     discount: "20%",
     rating: 4.8,
-    reviewCount: 285,
+    reviewCount: 4,
     duration: "4.5시간",
     groupSize: "최대 6명",
     language: "한국어, 영어, 중국어",
@@ -943,10 +933,10 @@ export const tourOffers = {
     originalPrice: "₩100,000",
     discountPrice: "₩89,000",
     savings: {
-      ko: "1인당 ₩10,000 할인!",
-      en: "Save ₩10,000 per person!",
-      ja: "お一人様あたり₩10,000お得！",
-      zh: "每人立减₩10,000！",
+      ko: "1인당 ₩11,000 할인!",
+      en: "Save ₩12,000 per person!",
+      ja: "お一人様あたり₩11,000お得！",
+      zh: "每人立减₩11,000！",
     },
     description: {
       ko: "K-팝 포토카드 + 에버랜드 입장권 포함",
@@ -968,79 +958,19 @@ export const tourOffers = {
       zh: "K-Pop周边数量有限！",
     },
   },
-  2: {
-    hasOffer: true,
-    originalPrice: "₩125,000",
-    discountPrice: "₩90,000",
-    savings: {
-      ko: "1인당 ₩25,000 할인!",
-      en: "Save ₩25,000 per person!",
-      ja: "お一人様あたり₩25,000お得！",
-      zh: "每人立减₩25,000！",
-    },
-    description: {
-      ko: "AI 워크숍 자료 무료 제공",
-      en: "Free AI workshop materials included",
-      ja: "AIワークショップ資料無料付き",
-      zh: "附赠AI工作坊资料",
-    },
-    title: {
-      ko: "Microsoft AI 부트캠프 특가!",
-      en: "Microsoft AI Bootcamp Deal!",
-      ja: "Microsoft AIブートキャンプ特価！",
-      zh: "Microsoft AI 训练营优惠！",
-    },
-    image: "/img/thumbnail_ms.jpg",
-    urgencyText: {
-      ko: "단독 테크 워크숍 액세스!",
-      en: "Exclusive tech workshop access!",
-      ja: "限定テックワークショップ参加！",
-      zh: "独家科技工作坊名额！",
-    },
-  },
-  3: {
-    hasOffer: true,
-    originalPrice: "₩85,000",
-    discountPrice: "₩72,000",
-    savings: {
-      ko: "1인당 ₩13,000 할인!",
-      en: "Save ₩13,000 per person!",
-      ja: "お一人様あたり₩13,000お得！",
-      zh: "每人立减₩13,000！",
-    },
-    description: {
-      ko: "AI 워크숍 자료 무료 제공",
-      en: "Free AI workshop materials included",
-      ja: "AIワークショップ資料無料付き",
-      zh: "附赠AI工作坊资料",
-    },
-    title: {
-      ko: "Microsoft AI 부트캠프 특가!",
-      en: "Microsoft AI Bootcamp Deal!",
-      ja: "Microsoft AIブートキャンプ特価！",
-      zh: "Microsoft AI 训练营优惠！",
-    },
-    image: "/img/thumbnail_ms.jpg",
-    urgencyText: {
-      ko: "단독 테크 워크숍 액세스!",
-      en: "Exclusive tech workshop access!",
-      ja: "限定テックワークショップ参加！",
-      zh: "独家科技工作坊名额！",
-    },
-  },
   4: {
     hasOffer: true,
     originalPrice: "₩100,000",
-    discountPrice: "₩84,000",
+    discountPrice: "₩65,000",
     savings: {
-      ko: "1인당 ₩16,000 할인!",
-      en: "Save ₩16,000 per person!",
-      ja: "お一人様あたり₩16,000お得！",
-      zh: "每人立减₩16,000！",
+      ko: "1인당 ₩35,000 할인!",
+      en: "Save ₩35,000 per person!",
+      ja: "お一人様あたり₩35,000お得！",
+      zh: "每人立减₩35,000！",
     },
     description: {
-      ko: "프리미엄 좌석 + 무제한 치킨&맥주",
-      en: "Premium stadium seats + unlimited chicken & beer",
+      ko: "프리미엄 좌석 + 무제한 치킨&맥주 + 롯데면세점 할인 쿠폰",
+      en: "Premium stadium seats + unlimited chicken & beer + Lotte Duty Free Discount",
       ja: "プレミアム席＋チキン＆ビール食べ飲み放題",
       zh: "高端球场座位＋鸡肉和啤酒不限量",
     },
@@ -1061,12 +991,12 @@ export const tourOffers = {
   5: {
     hasOffer: true,
     originalPrice: "₩135,000",
-    discountPrice: "₩109,000",
+    discountPrice: "₩180,000",
     savings: {
-      ko: "1인당 ₩26,000 할인!",
-      en: "Save ₩26,000 per person!",
-      ja: "お一人様あたり₩26,000お得！",
-      zh: "每人立减₩26,000！",
+      ko: "1인당 ₩45,000 할인!",
+      en: "Save ₩45,000 per person!",
+      ja: "お一人様あたり₩45,000お得！",
+      zh: "每人立减₩45,000！",
     },
     description: {
       ko: "₩50,000 상당 프리미엄 스킨케어 증정",
@@ -1090,13 +1020,13 @@ export const tourOffers = {
   },
   6: {
     hasOffer: true,
-    originalPrice: "₩85,000",
-    discountPrice: "₩72,000",
+    originalPrice: "100,000",
+    discountPrice: "₩80,000",
     savings: {
-      ko: "1인당 ₩13,000 할인!",
-      en: "Save ₩13,000 per person!",
-      ja: "お一人様あたり₩13,000お得！",
-      zh: "每人立减₩13,000！",
+      ko: "1인당 ₩20,000 할인!",
+      en: "Save ₩20,000 per person!",
+      ja: "お一人様あたり₩20,000お得！",
+      zh: "每人立减₩20,000！",
     },
     description: {
       ko: "전문 보정 + 고해상도 사진 20장 제공",
@@ -1129,9 +1059,7 @@ const resolveLocalized = (value) => {
 };
 
 export const getTourOffer = (tourId) => {
-  console.log("getTourOffer called with tourId:", tourId); // 디버깅용
   const offer = tourOffers[tourId];
-  console.log("Found offer:", offer); // 디버깅용
 
   // tourId에 해당하는 투어가 없거나 hasOffer가 false면 기본값 반환
   if (!offer || !offer.hasOffer) {

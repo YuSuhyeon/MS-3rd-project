@@ -10,6 +10,7 @@ import {
   Bot,
   Maximize2,
   Minimize2,
+  ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { translateText } from "integrations/translator";
@@ -107,17 +108,17 @@ const FixedChatbot = ({
 }) => {
   const [messages, setMessages] = useState(() => {
     // 페이지 로드 시 저장된 대화 내역 복원
-    const savedMessages = sessionStorage.getItem('docentChatHistory');
+    const savedMessages = sessionStorage.getItem("docentChatHistory");
     if (savedMessages) {
       try {
         const parsed = JSON.parse(savedMessages);
         // timestamp를 Date 객체로 변환
-        return parsed.map(msg => ({
+        return parsed.map((msg) => ({
           ...msg,
-          timestamp: new Date(msg.timestamp)
+          timestamp: new Date(msg.timestamp),
         }));
       } catch (error) {
-        console.error('Failed to parse saved messages:', error);
+        console.error("Failed to parse saved messages:", error);
       }
     }
     // 저장된 대화 내역이 없으면 초기 메시지로 시작
@@ -168,7 +169,7 @@ const FixedChatbot = ({
   // 대화 내역을 sessionStorage에 저장
   useEffect(() => {
     if (messages.length > 0) {
-      sessionStorage.setItem('docentChatHistory', JSON.stringify(messages));
+      sessionStorage.setItem("docentChatHistory", JSON.stringify(messages));
     }
   }, [messages]);
 
@@ -347,7 +348,6 @@ const FixedChatbot = ({
 
   const handleTextSend = () => handleSendMessage(inputMessage);
 
-
   const checkIfShouldRedirectToTour = (response) => {
     //투어 단어 감지
     const tourKeywords = [
@@ -370,9 +370,9 @@ const FixedChatbot = ({
   // 투어 페이지로 이동하는 함수
   const handleTourRedirect = () => {
     // 현재 페이지 정보를 세션 스토리지에 저장 (타임스탬프 포함)
-    sessionStorage.setItem('previousPage', window.location.pathname);
-    sessionStorage.setItem('previousPageTitle', 'AI Docent');
-    sessionStorage.setItem('previousPageTimestamp', Date.now().toString());
+    sessionStorage.setItem("previousPage", window.location.pathname);
+    sessionStorage.setItem("previousPageTitle", "AI Docent");
+    sessionStorage.setItem("previousPageTimestamp", Date.now().toString());
     navigate("/tour");
   };
 
@@ -385,7 +385,7 @@ const FixedChatbot = ({
       timestamp: new Date(),
     };
     setMessages([initialMessage]);
-    sessionStorage.removeItem('docentChatHistory');
+    sessionStorage.removeItem("docentChatHistory");
   };
 
   // 파일을 base64로 변환하는 함수
@@ -394,17 +394,17 @@ const FixedChatbot = ({
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result);
-      reader.onerror = error => reject(error);
+      reader.onerror = (error) => reject(error);
     });
   };
 
   // 파일/카메라 입력 공통 처리 (YOLO + RAG Azure Function)
   const processImage = async (file) => {
     if (!file) return;
-    
+
     // 이미지를 base64로 변환하여 저장
     const imageBase64 = await fileToBase64(file);
-    
+
     setExpanded(true); // 업로드하면 자동 확대
 
     // 1) 사용자 말풍선 (이미지)
@@ -590,17 +590,20 @@ const FixedChatbot = ({
               onClick={async () => {
                 // 원본 응답을 새 메시지로 추가
                 let content = message.originalResponse;
-                
+
                 // 한국어가 아닌 경우에만 번역
                 if (selectedLang !== "ko") {
                   const cacheKey = `${message.originalResponse}_${selectedLang}`;
-                  
+
                   // 캐시에서 먼저 확인
                   if (translationCache.has(cacheKey)) {
                     content = translationCache.get(cacheKey);
                   } else {
                     try {
-                      content = await translateText(message.originalResponse, selectedLang);
+                      content = await translateText(
+                        message.originalResponse,
+                        selectedLang
+                      );
                       // 번역 결과를 캐시에 저장
                       translationCache.set(cacheKey, content);
                     } catch (error) {
@@ -609,7 +612,7 @@ const FixedChatbot = ({
                     }
                   }
                 }
-                
+
                 setMessages((prev) => [
                   ...prev,
                   {
@@ -1144,31 +1147,113 @@ export default function DocentMantine() {
       throw error;
     }
   };
-  // 카테고리 드롭다운
-  const CategoryDropdown = ({ t, category, setCategory }) => (
-    <div className="bg-gray-900/80 backdrop-blur-lg px-4 py-3">
+  // 카테고리 드롭다운 (언어 드롭다운과 동일한 스타일)
+  const CategoryDropdown = ({ t, category, setCategory }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target)
+        ) {
+          setIsOpen(false);
+        }
+      };
+      if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, [isOpen]);
+
+    const currentLabel = t(`categories.${category}`) || category;
+
+    const handleSelect = (value) => {
+      setCategory(value);
+      setExpanded(false);
+      setSelectedPOI(null);
+      setIsOpen(false);
+    };
+
+    return (
       <div className="flex items-center gap-2">
-        <select
-          value={category}
-          onChange={(e) => {
-            setCategory(e.target.value);
-            setExpanded(false); // 카테고리 변경 시 챗봇창 축소
-            setSelectedPOI(null); // 카테고리 변경 시 상세정보 닫기
-          }}
-          className={`
-            border border-purple-500/30 rounded-md px-3 py-2 text-sm bg-gray-800/50 text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 hover:border-purple-400 transition-all duration-200 cursor-pointer
-            ${isMobile ? "text-xs px-2 py-1" : "text-sm px-3 py-2"}
-          `}
-        >
-          {CATEGORY_OPTIONS.map((key) => (
-            <option key={key} value={key}>
-              {t(`categories.${key}`) || key}
-            </option>
-          ))}
-        </select>
+        <div className="relative inline-block text-left" ref={dropdownRef}>
+          <motion.button
+            onClick={() => setIsOpen((v) => !v)}
+            className={`inline-flex items-center justify-center gap-2 h-10 px-3 text-sm font-medium text-white rounded-lg border border-purple-500/30 transition-all duration-300 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400/50`}
+            style={{
+              background:
+                "linear-gradient(145deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1))",
+            }}
+            whileHover={{
+              scale: 1.05,
+              background:
+                "linear-gradient(145deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2))",
+            }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <span className="truncate max-w-[10rem]">{currentLabel}</span>
+            <motion.div
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex-shrink-0"
+            >
+              <ChevronDown className="w-4 h-4 opacity-70" />
+            </motion.div>
+          </motion.button>
+
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                transition={{ duration: 0.1 }}
+                className={`absolute ${
+                  isMobile ? "left-0" : "right-0"
+                } mt-2 w-48 origin-top-right rounded-xl border border-purple-500/20 shadow-2xl ring-1 ring-black ring-opacity-5 z-50`}
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(12, 12, 12, 0.95) 0%, rgba(26, 10, 46, 0.95) 100%)",
+                  backdropFilter: "blur(20px)",
+                }}
+              >
+                <div className="p-1">
+                  {CATEGORY_OPTIONS.map((key) => (
+                    <motion.button
+                      key={key}
+                      onClick={() => handleSelect(key)}
+                      className={`${
+                        category === key
+                          ? "bg-purple-600/30 text-purple-100"
+                          : "text-gray-300 hover:bg-purple-600/20 hover:text-purple-200"
+                      } group flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span>{t(`categories.${key}`) || key}</span>
+                      {category === key && (
+                        <motion.div
+                          className="ml-auto w-2 h-2 bg-purple-400 rounded-full"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // =========================
   // 모바일
@@ -1181,41 +1266,37 @@ export default function DocentMantine() {
           className="h-screen flex flex-col"
           style={{ height: "calc(100vh - 75px)" }}
         >
-          {/* 헤더 */}
+          {/* 헤더 (타이틀/로고 제거, 컨트롤만 유지) */}
           <div className="bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-3 py-2 shadow-lg flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/25">
-                  <Navigation className="w-3 h-3 text-white" />
-                </div>
-                <GradientText
-                  variant="secondary"
-                  size="lg"
-                  className="font-bold"
-                >
-                  {t("title")}
-                </GradientText>
-              </div>
+            <div className="flex items-center justify-end">
               <div className="flex items-center gap-1">
                 {/* 카테고리 드롭다운 - 모바일 헤더용 */}
                 <select
                   value={category}
                   onChange={(e) => {
-                    console.log('카테고리 변경:', e.target.value);
+                    console.log("카테고리 변경:", e.target.value);
                     setCategory(e.target.value);
                     setExpanded(false); // 카테고리 변경 시 챗봇창 축소
                     setSelectedPOI(null); // 카테고리 변경 시 상세정보 닫기
                   }}
-                  className="border border-purple-500/30 rounded px-1 py-0.5 text-xs bg-gray-800/50 text-white backdrop-blur-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="min-w-[140px] h-8 rounded-lg px-2 py-1 text-xs text-white backdrop-blur-sm cursor-pointer transition-all duration-200 shadow-[0_0_8px_rgba(168,85,247,0.25)] border border-purple-500/30 focus:outline-none focus:ring-1 focus:ring-purple-400/50 hover:border-purple-300"
+                  style={{
+                    background:
+                      "linear-gradient(145deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1))",
+                  }}
                 >
                   {CATEGORY_OPTIONS.map((key) => (
-                    <option key={key} value={key}>
+                    <option
+                      key={key}
+                      value={key}
+                      className="bg-gray-900 text-white"
+                      style={{ backgroundColor: "#0f172a", color: "#ffffff" }}
+                    >
                       {t(`categories.${key}`) || key}
                     </option>
                   ))}
                 </select>
 
-                
                 <div className="flex items-center gap-1">
                   <Switch
                     checked={isDocentActive}
@@ -1240,8 +1321,6 @@ export default function DocentMantine() {
               </div>
             </div>
           </div>
-
-          
 
           {/* 콘텐츠 영역 */}
           <div className="flex-1 flex flex-col min-h-0">
@@ -1273,8 +1352,6 @@ export default function DocentMantine() {
                   <h3 className="text-lg font-semibold text-white mb-3 flex-shrink-0">
                     {selectedPOI
                       ? t("detailedInfo") || "상세 정보"
-                      : category === "all"
-                      ? t("allTourismSpots") || "전체 관광지"
                       : t(`categories.${category}`) || category}
                   </h3>
                   <div className="flex-1 min-h-0 overflow-y-auto neon-scrollbar">
@@ -1357,30 +1434,19 @@ export default function DocentMantine() {
     <>
       <NeonScrollbarStyles />
       <div className="h-screen flex flex-col">
-        {/* 헤더 - 기존과 동일 */}
-        <div className="relative z-50 bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-6 py-4 shadow-lg" style={{ pointerEvents: 'auto' }}>
-          {/* 헤더 내용 그대로 */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/25">
-                <Navigation className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <GradientText
-                  variant="secondary"
-                  size="xl"
-                  className="font-bold"
-                >
-                  {t("title")}
-                </GradientText>
-                <p className="text-xs text-gray-400">{t("subtitle")}</p>
-              </div>
-            </div>
+        {/* 헤더 (타이틀/로고 제거, 컨트롤만 유지) */}
+        <div
+          className="relative z-50 bg-gray-900/90 backdrop-blur-lg border-b border-purple-500/30 px-6 py-4 shadow-lg"
+          style={{ pointerEvents: "auto" }}
+        >
+          <div className="flex items-center justify-end">
             <div className="flex items-center gap-4">
-             
               <div className="flex items-center gap-2">
-                {/* 카테고리 바  */}
-                <CategoryDropdown t={t} category={category} setCategory={setCategory} />
+                <CategoryDropdown
+                  t={t}
+                  category={category}
+                  setCategory={setCategory}
+                />
                 <Switch
                   checked={isDocentActive}
                   onCheckedChange={(v) => {
@@ -1388,34 +1454,21 @@ export default function DocentMantine() {
                     setIsDocentActive(v);
                   }}
                 />
-                <span className="text-white data-[state=checked]:from-indigo-500 data-[state=checked]:to-purple-500 data-[state=checked]:bg-gradient-to-r">
-                  {t("aiDocent")}
-                </span>
+                <span className="text-white">{t("aiDocent")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
                   checked={isLocationTracking}
                   onCheckedChange={toggleLocationTracking}
                 />
-                <span className="text-white data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:bg-gradient-to-r">
+                <span className="text-white">
                   {t("locationTracking") || "위치 추적"}
                 </span>
               </div>
-              {/* {(isPlaying || isDocentActive) && (
-                <NeonButton
-                  variant="outline"
-                  size="sm"
-                  onClick={stopAllTTS}
-                  className="flex items-center gap-1"
-                >
-                  <VolumeX className="w-4 h-4 mr-1" />
-                  {t("stopVoice")}
-                </NeonButton>
-              )} */}
             </div>
           </div>
         </div>
-        
+
         {/* 메인 콘텐츠 - 수직으로 60%/40% 분할 */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* 상단 영역 (60%) - POI리스트 + 지도 + 상세정보 */}
@@ -1517,45 +1570,15 @@ export default function DocentMantine() {
           <style jsx global>{`
             /* ===== Kakao InfoWindow / CustomOverlay 글자 가독성 ===== */
             .kakao-map-theme {
-              --map-popup-title: #3e4044ff; /* 제목 색 */
-              --map-popup-text: #27324d; /* 본문 색 */
-              --map-popup-btn: #3f4042ff; /* 버튼 글자 색 */
+              --map-popup-title: #e5e7eb; /* 제목 색 */
+              --map-popup-text: #d1d5db; /* 본문 색 */
+              --map-popup-btn: #f3f4f6; /* 버튼 글자 색 */
             }
 
             /* 팝업 내부 텍스트가 다른 유틸에 의해 덮이지 않도록 */
             .kakao-map-theme .map-popup * {
               color: inherit;
             }
-            /* ===== 우측 상세 정보(흰 카드) 글자 가독성 ===== */
-            .poi-details {
-              color: #0f172a;
-              opacity: 1 !important; /* 상위에서 opacity 먹는 경우 무력화 */
-            }
-            .poi-details h1,
-            .poi-details h2,
-            .poi-details h3,
-            .poi-details .title,
-            .poi-details .poi-name {
-              color: #1d273a !important; /* "갤러리 학고재" 같은 제목 */
-              font-weight: 800 !important;
-              text-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
-            }
-            .poi-details p,
-            .poi-details li {
-              color: #2b3242 !important; /* 본문 */
-              line-height: 1.55;
-            }
-            .poi-details a {
-              color: #1f2937 !important;
-              font-weight: 700;
-            }
-            .poi-details [class*="opacity-"] {
-              opacity: 1 !important;
-            } /* 불투명 강제 */
-            .poi-details [class*="text-white/"],
-            .poi-details [class*="text-gray-"] {
-              color: #1d273a !important;
-            } /* 희미한 유틸 클래스 무력화 */
           `}</style>
 
           {/* 하단 챗봇 영역 (40%) */}

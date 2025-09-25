@@ -66,30 +66,36 @@ export default function POIDetails({
     );
   };
   return (
-    <Card className={`${isMobile ? "h-max" : "h-full"} rounded-none border-0 `}>
-      <CardHeader>
-        <CardTitle className="text-lg font-bold text-blue-900">
+    <Card
+      className={`${
+        isMobile ? "h-max" : "h-full"
+      } rounded-xl border border-purple-500/20 bg-black/40 p-4 shadow-lg shadow-purple-500/10 backdrop-blur-sm transition-transform hover:-translate-y-1`}
+    >
+      <CardHeader className="p-0 mb-3">
+        <CardTitle className="text-lg font-bold text-white">
           {translatedName}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-gray-600 mb-4">{poi.description}</p>
+      <CardContent className="p-0">
+        <p className="text-sm text-gray-200 mb-4 whitespace-pre-wrap">
+          {poi.description}
+        </p>
         <div className="flex gap-2">
           {isDocentActive && (
-            <Button 
+            <Button
               onClick={() => {
                 if (isVoiceActive) {
-                  // 음성 중지
                   setIsVoiceActive(false);
                   onStopTTS?.();
                 } else {
-                  // 음성 재생
                   setIsVoiceActive(true);
                   onPlayTTS?.();
                 }
-              }} 
-              className={`flex-1 text-xs py-1 px-2 h-8 whitespace-nowrap ${
-                isVoiceActive ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }}
+              className={`flex-1 text-xs py-1 px-2 h-8 whitespace-nowrap border-0 ${
+                isVoiceActive
+                  ? "bg-rose-500 hover:bg-rose-600 text-white"
+                  : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white"
               }`}
             >
               {isVoiceActive ? t("stopVoice") : t("voiceGuide")}
@@ -98,7 +104,7 @@ export default function POIDetails({
           <Button
             variant="outline"
             onClick={openKakaoDirections}
-            className="flex-1 text-xs py-1 px-2 h-8"
+            className="flex-1 text-xs py-1 px-2 h-8 border-purple-500/40 text-purple-200 hover:text-white hover:border-purple-400 hover:bg-purple-500/10"
           >
             {t("directions")}
           </Button>

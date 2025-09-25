@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, useLayoutEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -47,7 +47,6 @@ import {
   getTourOffer,
 } from "../utils/mockTourData";
 
-//할인 팝업 컴
 const OfferPopup = ({ isOpen, onClose, tourId }) => {
   const { t } = useTranslation("tourDetail");
   const [timeLeft, setTimeLeft] = useState({ minutes: 10, seconds: 0 });
@@ -435,25 +434,8 @@ const Tabs = ({ activeTab, onTabChange, children }) => {
             </button>
           ))}
         </div>
-
-        {/* 정확한 위치의 움직이는 구분선 */}
-        <div className="relative mt-2 border-b border-gray-700/50">
-          {currentTabPosition && (
-            <motion.div
-              className="absolute bottom-0 h-0.5 bg-purple-500"
-              animate={{
-                left: currentTabPosition.left,
-                width: currentTabPosition.width,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 30,
-                duration: 0.3,
-              }}
-            />
-          )}
-        </div>
+        {/* 이동하는 구분선 제거: 텍스트 색상만으로 활성 탭 표시 */}
+        <div className="mt-2 border-b border-gray-700/50" />
       </div>
 
       {/* 탭 내용 */}
@@ -522,25 +504,38 @@ const OverviewTab = ({ itinerary, included, tourId }) => {
         </h3>
         <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
           <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-            {included?.map((item, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-                <span className="text-gray-300 text-sm">{item}</span>
-              </div>
-            )) ||
-              [
-                t("overview.includedItems.guide"),
-                t("overview.includedItems.lunch"),
-                t("overview.includedItems.souvenirs"),
-                t("overview.includedItems.transportation"),
-                t("overview.includedItems.activities"),
-                t("overview.includedItems.insurance"),
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-                  <span className="text-gray-300 text-sm">{item}</span>
-                </div>
-              ))}
+            {included && included.length > 0
+              ? included.map((item, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">
+                      {t(`data.${tourId}.inclusions.${index}`, {
+                        defaultValue: item,
+                      })}
+                    </span>
+                  </div>
+                ))
+              : [
+                  t("overview.includedItems.guide", { defaultValue: "Guide" }),
+                  t("overview.includedItems.lunch", { defaultValue: "Lunch" }),
+                  t("overview.includedItems.souvenirs", {
+                    defaultValue: "Souvenirs",
+                  }),
+                  t("overview.includedItems.transportation", {
+                    defaultValue: "Transportation",
+                  }),
+                  t("overview.includedItems.activities", {
+                    defaultValue: "Activities",
+                  }),
+                  t("overview.includedItems.insurance", {
+                    defaultValue: "Insurance",
+                  }),
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">{item}</span>
+                  </div>
+                ))}
           </div>
         </div>
       </div>
@@ -562,12 +557,12 @@ const DetailsTab = ({ detailSections, tourId }) => {
           />
           <div className="p-4 bg-gray-800/30 rounded-b-xl border border-gray-600/30 border-t-0">
             <h4 className="text-lg font-bold text-white mb-2">
-              {t(`data.${tourId}.details.${index}.title`, {
+              {t(`data.${tourId}.detailSections.${index}.title`, {
                 defaultValue: section.title,
               })}
             </h4>
             <p className="text-gray-300 text-sm">
-              {t(`data.${tourId}.details.${index}.text`, {
+              {t(`data.${tourId}.detailSections.${index}.text`, {
                 defaultValue: section.text,
               })}
             </p>
@@ -583,7 +578,7 @@ const DetailsTab = ({ detailSections, tourId }) => {
 };
 
 // 리뷰 탭 내용
-const ReviewsTab = ({ reviews }) => {
+const ReviewsTab = ({ reviews, tourId }) => {
   const { t } = useTranslation("tourDetail");
   return (
     <div className="space-y-4">
@@ -622,7 +617,9 @@ const ReviewsTab = ({ reviews }) => {
             </div>
           </div>
           <p className="text-gray-200 text-sm leading-relaxed">
-            {review.content}
+            {t(`data.${tourId}.reviews.${index}.content`, {
+              defaultValue: review.content,
+            })}
           </p>
         </div>
       )) || (
@@ -666,7 +663,7 @@ const ImageWithFallback = ({
 
 // 메인 TourDetail 컴포넌트
 export default function TourDetail({ onBack }) {
-  const { t } = useTranslation("tourDetail");
+  const { t, i18n: i18nextInstance } = useTranslation("tourDetail");
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
@@ -678,14 +675,146 @@ export default function TourDetail({ onBack }) {
 
   const tourId = parseInt(id) || 1;
 
-  // 상세 페이지 진입 시 최상단으로 스크롤
+  // 네임스페이스 보장 로드 (마운트/언어 변경 시)
+  useEffect(() => {
+    i18nextInstance.loadNamespaces(["tourDetail"]);
+  }, [i18nextInstance]);
+  useEffect(() => {
+    i18nextInstance.loadNamespaces(["tourDetail"]);
+  }, [i18nextInstance.language]);
+
+  // 상세 페이지 진입 시 최상단으로 스크롤 (브라우저의 스크롤 복원 방지)
+  useLayoutEffect(() => {
+    const previousRestoration = window.history.scrollRestoration;
+    const previousHtmlScrollBehavior =
+      document.documentElement.style.scrollBehavior;
+    const previousHtmlOverflowAnchor =
+      document.documentElement.style.overflowAnchor;
+    const previousBodyOverflowAnchor = document.body.style.overflowAnchor;
+    try {
+      window.history.scrollRestoration = "manual";
+    } catch (_) {}
+    // 스크롤 앵커링 비활성화 (동적 콘텐츠로 인한 중간 위치 유지 방지)
+    try {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.documentElement.style.overflowAnchor = "none";
+      document.body.style.overflowAnchor = "none";
+    } catch (_) {}
+
+    const forceScrollToTop = () => {
+      // 잠재적 스크롤 컨테이너들을 모두 0으로
+      const scrollContainers = new Set();
+      scrollContainers.add(window);
+      scrollContainers.add(document);
+      scrollContainers.add(document.documentElement);
+      scrollContainers.add(document.body);
+      const root = document.getElementById("root");
+      if (root) scrollContainers.add(root);
+      // 가장 흔한 오버플로우 컨테이너들을 탐색 (상위 20개 요소만 검사)
+      try {
+        const candidates = Array.from(document.querySelectorAll("*"))
+          .slice(0, 500)
+          .filter((el) => {
+            try {
+              const style = getComputedStyle(el);
+              const overflowY = style.overflowY;
+              return (
+                (overflowY === "auto" || overflowY === "scroll") &&
+                el.scrollHeight > el.clientHeight
+              );
+            } catch (_) {
+              return false;
+            }
+          });
+        candidates.forEach((el) => scrollContainers.add(el));
+      } catch (_) {}
+
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
+      // 각각의 컨테이너에 대해서도 스크롤 0 적용
+      scrollContainers.forEach((target) => {
+        try {
+          if (target === window || target === document) return;
+          if (target && typeof target.scrollTo === "function") {
+            target.scrollTo({ top: 0, left: 0, behavior: "auto" });
+          } else if (target && typeof target.scrollTop === "number") {
+            target.scrollTop = 0;
+            target.scrollLeft = 0;
+          }
+        } catch (_) {}
+      });
+      // 한 프레임 뒤와 약간의 지연 후에도 한번 더 시도 (이미지 로드로 인한 레이아웃 이동 방지)
+      try {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        });
+      } catch (_) {}
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 50);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 250);
+    };
+
+    forceScrollToTop();
+
+    return () => {
+      try {
+        window.history.scrollRestoration = previousRestoration || "auto";
+      } catch (_) {}
+      try {
+        document.documentElement.style.scrollBehavior =
+          previousHtmlScrollBehavior || "";
+        document.documentElement.style.overflowAnchor =
+          previousHtmlOverflowAnchor || "";
+        document.body.style.overflowAnchor = previousBodyOverflowAnchor || "";
+      } catch (_) {}
+    };
+  }, []);
+
+  // 투어 ID가 바뀔 때도 강제로 상단 이동 (동일 컴포넌트 재사용 케이스 대비)
   useEffect(() => {
     try {
-      window.scrollTo({ top: 0, behavior: "auto" });
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     } catch (e) {
       window.scrollTo(0, 0);
     }
-  }, []);
+    try {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    } catch (_) {}
+    const t1 = setTimeout(() => window.scrollTo(0, 0), 50);
+    const t2 = setTimeout(() => window.scrollTo(0, 0), 250);
+    // 추가: 가장 흔한 스크롤 컨테이너들도 리셋
+    const resetContainers = () => {
+      try {
+        const list = [
+          document.documentElement,
+          document.body,
+          document.getElementById("root"),
+        ].filter(Boolean);
+        list.forEach((el) => {
+          try {
+            el.scrollTop = 0;
+            el.scrollLeft = 0;
+          } catch (_) {}
+        });
+      } catch (_) {}
+    };
+    const t3 = setTimeout(resetContainers, 0);
+    const t4 = setTimeout(resetContainers, 100);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, [tourId]);
 
   // 팝업 로직
   useEffect(() => {
@@ -799,7 +928,7 @@ export default function TourDetail({ onBack }) {
           />
         );
       case "reviews":
-        return <ReviewsTab reviews={tourData.reviews} />;
+        return <ReviewsTab reviews={tourData.reviews} tourId={tourId} />;
       default:
         return null;
     }
@@ -862,6 +991,14 @@ export default function TourDetail({ onBack }) {
                     defaultValue: tourData.subtitle,
                   })}
                 </p>
+                {/* 로컬라이즈된 요약/설명 (옵션) */}
+                {i18nextInstance.exists(`data.${tourId}.listDescription`, {
+                  ns: "tourDetail",
+                }) && (
+                  <p className="mt-2 text-gray-300 text-sm">
+                    {t(`data.${tourId}.listDescription`)}
+                  </p>
+                )}
               </div>
               {/* 2. 이미지 갤러리 - 모바일용 (비디오 필터링) */}
               <motion.div
@@ -973,7 +1110,7 @@ export default function TourDetail({ onBack }) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <Clock className="w-4 h-4 text-purple-400" />
                   <span className="text-purple-200 text-xs sm:text-[11px] leading-snug">
-                    {t(`data.${tourId}.meta.duration`, {
+                    {t(`data.${tourId}.duration`, {
                       defaultValue: tourData.duration,
                     })}
                   </span>
@@ -983,7 +1120,7 @@ export default function TourDetail({ onBack }) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <Users className="w-4 h-4 text-purple-400" />
                   <span className="text-purple-200 text-xs sm:text-[11px] leading-snug">
-                    {t(`data.${tourId}.meta.groupSize`, {
+                    {t(`data.${tourId}.groupSize`, {
                       defaultValue: tourData.groupSize,
                     })}
                   </span>
@@ -993,7 +1130,7 @@ export default function TourDetail({ onBack }) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <Calendar className="w-4 h-4 text-purple-400" />
                   <span className="text-purple-200 text-xs sm:text-[11px] leading-snug">
-                    {t(`data.${tourId}.meta.language`, {
+                    {t(`data.${tourId}.language`, {
                       defaultValue: tourData.language,
                     })}
                   </span>
@@ -1327,25 +1464,40 @@ export default function TourDetail({ onBack }) {
                       </div>
                     </div>
 
+                    {/* 로컬라이즈된 요약/설명 (옵션, 데스크톱) */}
+                    {i18nextInstance.exists(`data.${tourId}.listDescription`, {
+                      ns: "tourDetail",
+                    }) && (
+                      <p className="mb-6 text-gray-300 text-sm">
+                        {t(`data.${tourId}.listDescription`)}
+                      </p>
+                    )}
+
                     {/* 투어 정보를 하나의 컨테이너에 통합 */}
                     <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 border border-purple-500/30 mb-6">
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
                           <Clock className="w-4 h-4 text-purple-400" />
                           <span className="text-white text-sm font-medium">
-                            {tourData.duration}
+                            {t(`data.${tourId}.duration`, {
+                              defaultValue: tourData.duration,
+                            })}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
                           <Users className="w-4 h-4 text-purple-400" />
                           <span className="text-white text-sm font-medium">
-                            {tourData.groupSize}
+                            {t(`data.${tourId}.groupSize`, {
+                              defaultValue: tourData.groupSize,
+                            })}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
                           <Calendar className="w-4 h-4 text-purple-400" />
                           <span className="text-white text-sm font-medium">
-                            {tourData.language}
+                            {t(`data.${tourId}.language`, {
+                              defaultValue: tourData.language,
+                            })}
                           </span>
                         </div>
                       </div>

@@ -106,7 +106,6 @@ Korean Air, Asiana Airlines, Jeju Air, T'way Air, Air Seoul, Air Busan, Jin Air,
   },
 
   // 일반 정보글들
-
   {
     id: "1001",
     board_id: "1002",
@@ -163,9 +162,10 @@ SEVENTEEN 고잉 세븐틴 촬영지. 캐럿세트 메뉴와 생일 이벤트까
     priority: "normal",
     // 이미지 배열 추가
     pictures: [
-      "/img/tour_mock_01.jpg",
-      "/img/tour_mock_02.jpg",
-      "/img/tour_mock_03.jpg",
+      "/img/editor_mock_1.png",
+      "/img/editor_mock_2.png",
+      "/img/editor_mock_3.png",
+      "/img/editor_mock_4.png",
     ],
   },
   {

@@ -11,6 +11,8 @@ const resources = {
       },
       list: {
         title: "Klover 투어",
+        subtitle:
+          "klover와  제휴한 업체들과 함께 출시한 klover만의  투어 상품이며, Klover 이용 고객만을 위한 특별한 여행 상품입니다.",
       },
       search: { placeholder: "검색어를 입력하세요" },
       categories: {
@@ -20,18 +22,6 @@ const resources = {
         sports: "Sports",
         beauty: "Beauty",
         culture: "History",
-        location: "촬영지",
-        goods: "굿즈",
-        food: "먹방",
-        adventure: "모험",
-        entertainment: "엔터",
-        other: "기타",
-      },
-      actions: {
-        like: "좋아요",
-        unlike: "좋아요 취소",
-        view: "보기",
-        viewDetail: "상세보기",
       },
       pagination: { prev: "이전", next: "다음" },
       empty: {
@@ -534,6 +524,22 @@ const resources = {
       community: {
         info_reviews_label: "정보 & 후기",
         info_reviews_desc: "여행 정보와 후기를 공유하는 공간",
+        labels: {
+          notice: "공지",
+          editors_pick: "Klover's Pick",
+          popular_destinations: "인기 여행지",
+        },
+        search_placeholder: "검색...",
+        live_areas: {
+          gangnam: "강남",
+          gwanghwamun: "광화문",
+          myeongdong: "명동",
+          seoul_station: "서울역",
+          itaewon: "이태원",
+          jamsil: "잠실",
+          jongno: "종로·청계",
+          hongdae: "홍대",
+        },
         info: {
           posts: {
             10001: {
@@ -616,8 +622,8 @@ const resources = {
       "footer.terms_of_service": "이용약관",
       "footer.customer_center": "고객센터",
       "footer.partnership": "파트너십",
-      "footer.copyright": "© 2025 TravelK. All rights reserved.",
-      "modal.welcome": "TravelK에 오신 것을 환영합니다",
+      "footer.copyright": "© 2025 Klover. All rights reserved.",
+      "modal.welcome": "Klover에 오신 것을 환영합니다",
       "modal.instruction": "AI 맞춤 여행 플래너를 시작하려면 로그인하세요",
       "modal.continue_google": "Google로 계속하기",
       "modal.continue_microsoft": "Microsoft로 계속하기",
@@ -855,6 +861,7 @@ const resources = {
       gift_modal_list_1: "양손으로 주고받기",
       gift_modal_list_2:
         "명절·집들이·감사 인사 등 다양한 상황에서 선물 주고받음",
+      modal_close: "닫기",
     },
     VisionOCR: {
       image_upload: "이미지 업로드",
@@ -1110,6 +1117,160 @@ const resources = {
       next: "다음",
       analyzing: "분석 중...",
       check_result: "결과 확인하기",
+      // --- [추가 시작] 페르소나 질문 번역 ---
+      questions: {
+        rvit: {
+          title: "한국 방문 횟수가 어떻게 되시나요?",
+          options: {
+            v1: {
+              label: "처음이에요",
+              description: "이번이 첫 한국 여행입니다.",
+            },
+            v2: {
+              label: "2번째 방문",
+              description: "한 번 와본 경험이 있습니다.",
+            },
+            v3: { label: "3번째 방문", description: "이제는 조금 익숙합니다." },
+            v4plus: {
+              label: "4번 이상",
+              description: "자주 방문하는 편입니다.",
+            },
+          },
+        },
+        q1_purpose: {
+          title: "이번 여행의 주된 목적은 무엇인가요?",
+          options: {
+            leisure: {
+              label: "휴가/여가",
+              description: "개인적인 휴식과 즐거움을 위해 방문합니다.",
+            },
+            friends: {
+              label: "친구/가족 방문",
+              description: "가까운 사람들을 만나러 왔습니다.",
+            },
+          },
+        },
+        r19hap: {
+          title: "선호하는 숙소 유형은 무엇인가요?",
+          options: {
+            h1: {
+              label: "특급 호텔",
+              description: "최고급 시설과 서비스를 선호합니다.",
+            },
+            h2: {
+              label: "가성비 호텔",
+              description: "합리적인 가격의 깔끔한 호텔을 선호합니다.",
+            },
+            h3: {
+              label: "게스트하우스/호스텔",
+              description: "다른 여행객과 교류하는 것을 즐깁니다.",
+            },
+            h4: {
+              label: "에어비앤비/레지던스",
+              description: "현지인처럼 살아보는 경험을 중시합니다.",
+            },
+            h5: {
+              label: "기타",
+              description: "친구 집 등 다른 숙소를 이용합니다.",
+            },
+          },
+        },
+        cost: {
+          title: "하루 평균 여행 경비는 얼마인가요? (숙박 제외)",
+          options: {
+            c1: {
+              label: "5만원 미만",
+              description: "알뜰하고 실속 있는 여행을 계획합니다.",
+            },
+            c2: {
+              label: "5만원 ~ 10만원",
+              description: "합리적인 소비를 선호합니다.",
+            },
+            c3: {
+              label: "10만원 ~ 20만원",
+              description: "다양한 경험에 투자하는 것을 즐깁니다.",
+            },
+            c4: {
+              label: "20만원 ~ 30만원",
+              description: "비용에 구애받지 않고 즐기는 편입니다.",
+            },
+            c5: {
+              label: "30만원 이상",
+              description: "럭셔리한 경험과 쇼핑을 선호합니다.",
+            },
+          },
+        },
+        considered: {
+          title: "어떤 활동에 관심이 있으신가요?",
+          options: {
+            nature: {
+              label: "자연",
+              description: "산, 바다, 공원 등 자연 경관 즐기기",
+            },
+            heritage: {
+              label: "문화유산",
+              description: "고궁, 박물관, 역사 유적지 탐방",
+            },
+            food: {
+              label: "미식",
+              description: "맛집, 카페, 길거리 음식 탐방",
+            },
+            shopping: {
+              label: "쇼핑",
+              description: "패션, 뷰티, 기념품 등 쇼핑 즐기기",
+            },
+            relaxation: {
+              label: "휴양",
+              description: "스파, 해변, 조용한 곳에서 휴식",
+            },
+            tradition: {
+              label: "전통문화",
+              description: "한복, 전통공연, 한옥마을 체험",
+            },
+            museum: {
+              label: "미술관/박물관",
+              description: "예술 작품 및 전시 관람",
+            },
+            kpop: {
+              label: "K-POP",
+              description: "콘서트, 팬미팅, 성지순례 등",
+            },
+            arts: {
+              label: "공연/예술",
+              description: "뮤지컬, 연극, 전시회 관람",
+            },
+            festival: {
+              label: "축제/이벤트",
+              description: "지역 축제 및 계절 이벤트 참여",
+            },
+            nightlife: {
+              label: "나이트라이프",
+              description: "클럽, 바, 야시장 등 밤문화 즐기기",
+            },
+            themepark: {
+              label: "테마파크",
+              description: "놀이공원 및 테마파크 방문",
+            },
+            beauty: {
+              label: "뷰티/미용",
+              description: "헤어, 네일, 피부 관리 등 K-뷰티 체험",
+            },
+            medical: {
+              label: "의료",
+              description: "건강검진 등 의료 서비스 이용",
+            },
+            sports_view: {
+              label: "스포츠 관람",
+              description: "야구, 축구 등 프로 스포츠 경기 관람",
+            },
+            sports_play: {
+              label: "스포츠 체험",
+              description: "스키, 서핑 등 직접 스포츠 활동 참여",
+            },
+          },
+        },
+      },
+      // --- [추가 끝] ---
     },
     dashboard: {
       edit_route: "경로 편집",
@@ -1206,6 +1367,100 @@ const resources = {
       start_set: "출발지가 설정됩니다.",
       end_set: "도착지가 설정됩니다.",
     },
+    planner: {
+      new_activity: "새로운 활동",
+      no_saved_plans: "저장된 여행 계획이 없습니다.",
+      create_or_modify_plan:
+        "새로운 계획을 만들거나 기존 계획을 수정하여 관리하세요.",
+      new_plan: "새로운 여행",
+      places: "장소",
+      days: "일",
+      load_plan: "이 계획 불러오기",
+      delete_plan: "이 계획 삭제",
+      login_to_start_plan: "로그인하여 여행 계획을 시작하세요.",
+      login: "로그인",
+      creating_sample_plan: "샘플 여행을 만드는 중...",
+      no_plan: "여행 계획이 없습니다.",
+      create_sample_plan: "샘플 여행 만들기",
+      saved_schedule: "저장된 일정",
+      travel_planner: "여행 일정 플래너",
+      saving: "저장 중...",
+      travel_plan: "여행 계획",
+      saved_plans: "저장된 계획",
+      activity_editor: "활동 편집",
+      time_info: "시간 정보",
+      time: "시간",
+      stay_time: "체류 시간 (분)",
+      place_info: "장소 정보",
+      place_name: "장소명",
+      search_place_placeholder: "검색어를 입력하면 장소를 추천해드려요",
+      place_type: "장소 유형",
+      road_address: "도로명 주소",
+      address: "지번 주소",
+      latitude: "위도",
+      longitude: "경도",
+      additional_info: "추가 정보",
+      description: "설명",
+      description_placeholder: "활동과 관련된 메모를 입력하세요",
+      cost_estimate: "예상 비용 (원)",
+      cancel: "취소",
+      save: "저장",
+      add_activity: "활동 추가",
+      total_days_travel: "총 {{days}}일 여행",
+    },
+    data: {
+      live_info: "실시간 정보",
+      now: "지금",
+      is: "는",
+      data_update: "데이터 업데이트",
+      real_time_population: "실시간 인구",
+      about: "약",
+      people: "명",
+      real_time_commercial: "실시간 상권",
+      overall_commercial: "전체 상권",
+      subway_arrival_info: "지하철 도착 정보",
+      recommended_tour_products: "추천 투어 상품",
+      nearby_cultural_events: "주변 문화행사",
+      traffic_conditions: "교통 상황",
+      weather: "날씨",
+      humidity: "습도",
+      wind_speed: "풍속",
+      precipitation: "강수량",
+      feels_like: "체감",
+    },
+    mypage: {
+      mypage: "마이페이지",
+      mypage_description: "내 활동과 정보를 확인하고 관리하세요",
+      logout: "로그아웃",
+      saved_travel_plans: "저장한 여행 계획",
+      liked_travel_products: "좋아요한 여행 상품",
+      my_posts: "내가 작성한 글",
+      liked_posts: "내가 좋아요 누른 글",
+      travel_plans: "여행계획",
+      travel_products: "여행상품",
+      likes: "좋아요",
+      loading_travel_plans: "여행 계획을 불러오는 중입니다...",
+      no_saved_travel_plans: "저장한 여행 계획이 없습니다",
+      create_travel_plan_message: "여행 계획을 세우고 저장해보세요!",
+      no_liked_products: "좋아요한 여행 상품이 없습니다",
+      like_products_message: "마음에 드는 여행 상품에 좋아요를 눌러보세요!",
+      loading: "로딩 중...",
+      no_posts_written: "작성한 글이 없습니다",
+      write_first_post: "첫 번째 글을 작성해보세요!",
+      no_liked_posts: "좋아요한 글이 없습니다",
+      like_posts_message: "마음에 드는 글에 좋아요를 눌러보세요!",
+      delete: "삭제",
+      travel_plan: "여행 계획",
+      destination_undecided: "목적지 미정",
+      day_schedule: "일 일정",
+      saved: "저장",
+      last_updated: "최근 업데이트",
+      loading_details: "상세 정보를 불러오는 중입니다...",
+      time_undecided: "시간 미정",
+      activity: "활동",
+      no_registered_activities: "등록된 활동이 없습니다",
+      no_saved_schedule_info: "저장된 일정 정보가 없습니다",
+    },
   },
   en: {
     tour: {
@@ -1214,7 +1469,11 @@ const resources = {
         tour: "Tour",
         subtitle: "Premium Personal Tour",
       },
-      list: { title: "Klover Tours" },
+      list: {
+        title: "Klover Tour",
+        subtitle:
+          "This is Klover's exclusive tour package launched in partnership with our affiliated companies, a special travel product available exclusively for Klover users.",
+      },
       search: { placeholder: "Search tours..." },
       categories: {
         all: "All",
@@ -1223,18 +1482,6 @@ const resources = {
         sports: "Sports",
         beauty: "Beauty",
         culture: "History",
-        location: "Filming Location",
-        goods: "Goods",
-        food: "Food",
-        adventure: "Adventure",
-        entertainment: "Entertainment",
-        other: "Other",
-      },
-      actions: {
-        like: "Like",
-        unlike: "Unlike",
-        view: "View",
-        viewDetail: "View Details",
       },
       pagination: { prev: "Prev", next: "Next" },
       empty: {
@@ -1865,8 +2112,8 @@ const resources = {
       "footer.terms_of_service": "Terms of Service",
       "footer.customer_center": "Customer Center",
       "footer.partnership": "Partnership",
-      "footer.copyright": "© 2024 TravelK. All rights reserved.",
-      "modal.welcome": "Welcome to TravelK",
+      "footer.copyright": "© 2025 Klover. All rights reserved.",
+      "modal.welcome": "Welcome to Klover",
       "modal.instruction":
         "Please log in to start your AI custom travel planner",
       "modal.continue_google": "Continue with Google",
@@ -1973,6 +2220,7 @@ const resources = {
       ai_docent: "AI Docent",
       community: "Community",
       tour: "Tour",
+      mypage: "My Page",
       survival: "Survival",
       survival_kit: "Survival Kit",
       playlists: "Playlists",
@@ -2062,6 +2310,167 @@ const resources = {
       travel_budget: "Travel Budget",
       visit_purpose: "Purpose of Visit",
       interests_activities: "Interests/Activities",
+      // --- [Add Start] Persona Question Translations ---
+      questions: {
+        rvit: {
+          title: "How many times have you visited Korea?",
+          options: {
+            v1: {
+              label: "First time",
+              description: "This is my first trip to Korea.",
+            },
+            v2: {
+              label: "Second time",
+              description: "I have been here once before.",
+            },
+            v3: {
+              label: "Third time",
+              description: "I'm getting familiar with it now.",
+            },
+            v4plus: {
+              label: "4 or more times",
+              description: "I visit quite often.",
+            },
+          },
+        },
+        q1_purpose: {
+          title: "What is the main purpose of your visit?",
+          options: {
+            leisure: {
+              label: "Holiday/Leisure",
+              description: "Visiting for personal relaxation and enjoyment.",
+            },
+            friends: {
+              label: "Visiting friends/family",
+              description: "I came to meet people I know.",
+            },
+          },
+        },
+        r19hap: {
+          title: "What type of accommodation do you prefer?",
+          options: {
+            h1: {
+              label: "Luxury Hotel",
+              description: "I prefer top-tier facilities and services.",
+            },
+            h2: {
+              label: "Value Hotel",
+              description: "I prefer clean hotels at a reasonable price.",
+            },
+            h3: {
+              label: "Guesthouse/Hostel",
+              description: "I enjoy interacting with other travelers.",
+            },
+            h4: {
+              label: "Airbnb/Residence",
+              description: "I value the experience of living like a local.",
+            },
+            h5: {
+              label: "Other",
+              description: "I use other accommodations like a friend's house.",
+            },
+          },
+        },
+        cost: {
+          title:
+            "What is your average daily travel budget? (excluding accommodation)",
+          options: {
+            c1: {
+              label: "Less than $50",
+              description: "I plan a frugal and practical trip.",
+            },
+            c2: {
+              label: "$50 - $100",
+              description: "I prefer reasonable spending.",
+            },
+            c3: {
+              label: "$100 - $200",
+              description: "I enjoy investing in various experiences.",
+            },
+            c4: {
+              label: "$200 - $300",
+              description:
+                "I tend to enjoy myself without worrying about cost.",
+            },
+            c5: {
+              label: "More than $300",
+              description: "I prefer luxury experiences and shopping.",
+            },
+          },
+        },
+        considered: {
+          title: "What activities are you interested in?",
+          options: {
+            nature: {
+              label: "Nature",
+              description: "Enjoying scenery like mountains, sea, parks",
+            },
+            heritage: {
+              label: "Cultural Heritage",
+              description: "Exploring palaces, museums, historical sites",
+            },
+            food: {
+              label: "Gastronomy",
+              description: "Visiting famous restaurants, cafes, street food",
+            },
+            shopping: {
+              label: "Shopping",
+              description: "Enjoying shopping for fashion, beauty, souvenirs",
+            },
+            relaxation: {
+              label: "Relaxation",
+              description: "Resting at spas, beaches, quiet places",
+            },
+            tradition: {
+              label: "Traditional Culture",
+              description:
+                "Experiencing Hanbok, traditional performances, Hanok villages",
+            },
+            museum: {
+              label: "Art/Museum",
+              description: "Viewing artworks and exhibitions",
+            },
+            kpop: {
+              label: "K-POP",
+              description: "Concerts, fan meetings, pilgrimage tours",
+            },
+            arts: {
+              label: "Performance/Arts",
+              description: "Watching musicals, plays, exhibitions",
+            },
+            festival: {
+              label: "Festivals/Events",
+              description:
+                "Participating in local festivals and seasonal events",
+            },
+            nightlife: {
+              label: "Nightlife",
+              description: "Enjoying clubs, bars, night markets",
+            },
+            themepark: {
+              label: "Theme Park",
+              description: "Visiting amusement parks and theme parks",
+            },
+            beauty: {
+              label: "Beauty/Wellness",
+              description: "Experiencing K-beauty like hair, nail, skin care",
+            },
+            medical: {
+              label: "Medical",
+              description: "Using medical services like health check-ups",
+            },
+            sports_view: {
+              label: "Spectator Sports",
+              description: "Watching pro sports like baseball, soccer",
+            },
+            sports_play: {
+              label: "Active Sports",
+              description: "Participating in sports like skiing, surfing",
+            },
+          },
+        },
+      },
+      // --- [Add End] ---
     },
     SurvivalKit: {
       // Hero 섹션
@@ -2178,6 +2587,7 @@ const resources = {
       gift_modal_list_1: "Give and receive with both hands",
       gift_modal_list_2:
         "Exchange gifts in various situations like holidays, housewarming, gratitude",
+      modal_close: "Close",
     },
     VisionOCR: {
       image_upload: "Image Upload",
@@ -2477,6 +2887,104 @@ const resources = {
       viewDetails: "📝 View Details",
       selectPlace: "Select a place",
     },
+    planner: {
+      new_activity: "New Activity",
+      no_saved_plans: "No saved travel plans.",
+      create_or_modify_plan:
+        "Create a new plan or modify an existing plan to manage.",
+      new_plan: "New Trip",
+      places: "Places",
+      days: "Days",
+      load_plan: "Load This Plan",
+      delete_plan: "Delete This Plan",
+      login_to_start_plan: "Please log in to start planning your trip.",
+      login: "Login",
+      creating_sample_plan: "Creating sample trip...",
+      no_plan: "No travel plan.",
+      create_sample_plan: "Create Sample Trip",
+      saved_schedule: "Saved Schedule",
+      travel_planner: "Travel Itinerary Planner",
+      saving: "Saving...",
+      travel_plan: "Travel Plan",
+      saved_plans: "Saved Plans",
+      activity_editor: "Activity Editor",
+      time_info: "Time Information",
+      time: "Time",
+      stay_time: "Stay Duration (minutes)",
+      place_info: "Place Information",
+      place_name: "Place Name",
+      search_place_placeholder:
+        "Enter search terms to get place recommendations",
+      place_type: "Place Type",
+      road_address: "Road Address",
+      address: "Address",
+      latitude: "Latitude",
+      longitude: "Longitude",
+      additional_info: "Additional Information",
+      description: "Description",
+      description_placeholder: "Enter notes related to the activity",
+      cost_estimate: "Estimated Cost (KRW)",
+      cancel: "Cancel",
+      save: "Save",
+      add_activity: "Add Activity",
+      day: "Day",
+      activity: "Activity",
+      transport: "Transport",
+      total_days_travel: "Total {{days}} days travel",
+    },
+    data: {
+      live_info: "Live Info",
+      now: "Now",
+      is: " is",
+      data_update: "Data Update",
+      real_time_population: "Real-time Population",
+      about: "About",
+      people: " people",
+      real_time_commercial: "Real-time Commercial",
+      overall_commercial: "Overall Commercial",
+      subway_arrival_info: "Subway Arrival Info",
+      recommended_tour_products: "Recommended Tour Products",
+      nearby_cultural_events: "Nearby Cultural Events",
+      traffic_conditions: "Traffic Conditions",
+      weather: "Weather",
+      humidity: "Humidity",
+      wind_speed: "Wind Speed",
+      precipitation: "Precipitation",
+      feels_like: "Feels Like",
+    },
+    mypage: {
+      mypage: "My Page",
+      mypage_description: "Check and manage your activities and information",
+      logout: "Logout",
+      saved_travel_plans: "Saved Travel Plans",
+      liked_travel_products: "Liked Travel Products",
+      my_posts: "My Posts",
+      liked_posts: "Liked Posts",
+      travel_plans: "Travel Plans",
+      travel_products: "Travel Products",
+      likes: "Likes",
+      loading_travel_plans: "Loading travel plans...",
+      no_saved_travel_plans: "No saved travel plans",
+      create_travel_plan_message: "Create and save your travel plan!",
+      no_liked_products: "No liked travel products",
+      like_products_message: "Like travel products you're interested in!",
+      loading: "Loading...",
+      no_posts_written: "No posts written",
+      write_first_post: "Write your first post!",
+      no_liked_posts: "No liked posts",
+      like_posts_message: "Like posts you find interesting!",
+      delete: "Delete",
+      travel_plan: "Travel Plan",
+      destination_undecided: "Destination Undecided",
+      day_schedule: "-day schedule",
+      saved: "Saved",
+      last_updated: "Last Updated",
+      loading_details: "Loading details...",
+      time_undecided: "Time Undecided",
+      activity: "Activity",
+      no_registered_activities: "No registered activities",
+      no_saved_schedule_info: "No saved schedule information",
+    },
   },
   ja: {
     tour: {
@@ -2485,7 +2993,7 @@ const resources = {
         tour: "ツアー",
         subtitle: "プレミアムパーソナルツアー",
       },
-      list: { title: "Klover ツアー" },
+      list: { title: "K-lover ツアー" },
       search: { placeholder: "ツアーを検索..." },
       categories: {
         all: "すべて",
@@ -2494,18 +3002,6 @@ const resources = {
         sports: "スポーツ",
         beauty: "ビューティー",
         culture: "歴史",
-        location: "撮影地",
-        goods: "グッズ",
-        food: "グルメ",
-        adventure: "アドベンチャー",
-        entertainment: "エンターテイメント",
-        other: "その他",
-      },
-      actions: {
-        like: "いいね",
-        unlike: "いいねを取り消し",
-        view: "見る",
-        viewDetail: "詳細を見る",
       },
       pagination: { prev: "前へ", next: "次へ" },
       empty: {
@@ -3060,7 +3556,7 @@ const resources = {
       "login.welcome": "ようこそ！",
       "login.logout": "ログアウト",
       "login.login": "ログイン",
-      "main.title.k_travel": "K-旅行",
+      "main.title.k_travel": "旅行",
       "main.title.connector": "を",
       "main.title.ai_creates": "AIが作ります",
       "main.subtitle":
@@ -3094,8 +3590,8 @@ const resources = {
       "footer.terms_of_service": "利用規約",
       "footer.customer_center": "カスタマーセンター",
       "footer.partnership": "パートナーシップ",
-      "footer.copyright": "© 2024 TravelK. All rights reserved.",
-      "modal.welcome": "TravelKへようこそ",
+      "footer.copyright": "© 2024 Klover. All rights reserved.",
+      "modal.welcome": "Kloverへようこそ",
       "modal.instruction":
         "AIカスタム旅行プランナーを開始するにはログインしてください",
       "modal.continue_google": "Googleで続行",
@@ -3293,6 +3789,154 @@ const resources = {
       travel_budget: "旅行予算",
       visit_purpose: "訪問目的",
       interests_activities: "関心活動",
+      // --- [Add Start] Persona Question Translations ---
+      questions: {
+        rvit: {
+          title: "韓国への訪問回数は何回ですか？",
+          options: {
+            v1: {
+              label: "初めてです",
+              description: "今回が初めての韓国旅行です。",
+            },
+            v2: { label: "2回目", description: "一度来たことがあります。" },
+            v3: { label: "3回目", description: "少し慣れてきました。" },
+            v4plus: { label: "4回以上", description: "頻繁に訪れる方です。" },
+          },
+        },
+        q1_purpose: {
+          title: "今回の旅行の主な目的は何ですか？",
+          options: {
+            leisure: {
+              label: "休暇/レジャー",
+              description: "個人的な休息と楽しみのために訪れます。",
+            },
+            friends: {
+              label: "友人/家族訪問",
+              description: "知人に会いに来ました。",
+            },
+          },
+        },
+        r19hap: {
+          title: "どのタイプの宿泊施設を好みますか？",
+          options: {
+            h1: {
+              label: "高級ホテル",
+              description: "最高級の施設とサービスを好みます。",
+            },
+            h2: {
+              label: "コストパフォーマンスの良いホテル",
+              description: "手頃な価格で清潔なホテルを好みます。",
+            },
+            h3: {
+              label: "ゲストハウス/ホステル",
+              description: "他の旅行者との交流を楽しみます。",
+            },
+            h4: {
+              label: "Airbnb/レジデンス",
+              description: "地元の人々のように生活する体験を重視します。",
+            },
+            h5: {
+              label: "その他",
+              description: "友人の家など、他の宿泊施設を利用します。",
+            },
+          },
+        },
+        cost: {
+          title: "1日あたりの平均旅行予算はいくらですか？（宿泊費を除く）",
+          options: {
+            c1: {
+              label: "5万ウォン未満",
+              description: "節約志向で実用的な旅行を計画します。",
+            },
+            c2: {
+              label: "5万～10万ウォン",
+              description: "合理的な消費を好みます。",
+            },
+            c3: {
+              label: "10万～20万ウォン",
+              description: "様々な体験に投資することを楽しんでいます。",
+            },
+            c4: {
+              label: "20万～30万ウォン",
+              description: "費用を気にせず楽しむタイプです。",
+            },
+            c5: {
+              label: "30万ウォン以上",
+              description: "豪華な体験とショッピングを好みます。",
+            },
+          },
+        },
+        considered: {
+          title: "どのようなアクティビティに興味がありますか？",
+          options: {
+            nature: {
+              label: "自然",
+              description: "山、海、公園などの自然景観を楽しむ",
+            },
+            heritage: {
+              label: "文化遺産",
+              description: "古宮、博物館、歴史的遺跡の探訪",
+            },
+            food: {
+              label: "美食",
+              description: "有名なレストラン、カフェ、屋台料理巡り",
+            },
+            shopping: {
+              label: "ショッピング",
+              description: "ファッション、コスメ、お土産などの買い物",
+            },
+            relaxation: {
+              label: "リラクゼーション",
+              description: "スパ、ビーチ、静かな場所での休息",
+            },
+            tradition: {
+              label: "伝統文化",
+              description: "韓服、伝統公演、韓屋村の体験",
+            },
+            museum: {
+              label: "美術館/博物館",
+              description: "芸術作品や展示の鑑賞",
+            },
+            kpop: {
+              label: "K-POP",
+              description: "コンサート、ファンミーティング、聖地巡礼など",
+            },
+            arts: {
+              label: "公演/芸術",
+              description: "ミュージカル、演劇、展示会の鑑賞",
+            },
+            festival: {
+              label: "祭り/イベント",
+              description: "地域のお祭りや季節のイベントへの参加",
+            },
+            nightlife: {
+              label: "ナイトライフ",
+              description: "クラブ、バー、夜市などの夜遊び",
+            },
+            themepark: {
+              label: "テーマパーク",
+              description: "遊園地やテーマパークの訪問",
+            },
+            beauty: {
+              label: "ビューティー/ウェルネス",
+              description: "ヘア、ネイル、スキンケアなどのK-ビューティー体験",
+            },
+            medical: {
+              label: "医療",
+              description: "健康診断などの医療サービスの利用",
+            },
+            sports_view: {
+              label: "スポーツ観戦",
+              description: "野球、サッカーなどのプロスポーツ観戦",
+            },
+            sports_play: {
+              label: "スポーツ体験",
+              description: "スキー、サーフィンなどのアクティブなスポーツ",
+            },
+          },
+        },
+      },
+      // --- [Add End] ---
     },
     playlists: {
       title: "K-pop旅行プレイリスト",
@@ -3506,6 +4150,7 @@ const resources = {
       gift_modal_list_1: "両手でやり取りする",
       gift_modal_list_2:
         "名節・引っ越し祝い・感謝挨拶など様々な状況で贈り物のやり取り",
+      modal_close: "閉じる",
     },
     VisionOCR: {
       image_upload: "画像アップロード",
@@ -3697,11 +4342,108 @@ const resources = {
       start_set: "出発地が設定されます。",
       end_set: "到着地が設定されます。",
     },
+    planner: {
+      new_activity: "新しい活動",
+      no_saved_plans: "保存された旅行計画がありません。",
+      create_or_modify_plan:
+        "新しい計画を作成するか、既存の計画を修正して管理してください。",
+      new_plan: "新しい旅行",
+      places: "場所",
+      days: "日",
+      load_plan: "この計画を読み込む",
+      delete_plan: "この計画を削除",
+      login_to_start_plan: "ログインして旅行計画を開始してください。",
+      login: "ログイン",
+      creating_sample_plan: "サンプル旅行を作成中...",
+      no_plan: "旅行計画がありません。",
+      create_sample_plan: "サンプル旅行作成",
+      saved_schedule: "保存されたスケジュール",
+      travel_planner: "旅行日程プランナー",
+      saving: "保存中...",
+      travel_plan: "旅行計画",
+      saved_plans: "保存された計画",
+      activity_editor: "活動編集",
+      time_info: "時間情報",
+      time: "時間",
+      stay_time: "滞在時間（分）",
+      place_info: "場所情報",
+      place_name: "場所名",
+      search_place_placeholder: "検索語を入力すると場所をおすすめします",
+      place_type: "場所タイプ",
+      road_address: "道路名住所",
+      address: "地番住所",
+      latitude: "緯度",
+      longitude: "経度",
+      additional_info: "追加情報",
+      description: "説明",
+      description_placeholder: "活動に関連するメモを入力してください",
+      cost_estimate: "予想費用（ウォン）",
+      cancel: "キャンセル",
+      save: "保存",
+      add_activity: "活動追加",
+      day: "日",
+      activity: "活動",
+      transport: "交通",
+      total_days_travel: "合計{{days}}日間の旅行",
+    },
+    data: {
+      live_info: "ライブ情報",
+      now: "今",
+      is: "は",
+      data_update: "データ更新",
+      real_time_population: "リアルタイム人口",
+      about: "約",
+      people: "人",
+      real_time_commercial: "リアルタイム商業",
+      overall_commercial: "全体商業",
+      subway_arrival_info: "地下鉄到着情報",
+      recommended_tour_products: "おすすめツアー商品",
+      nearby_cultural_events: "周辺文化イベント",
+      traffic_conditions: "交通状況",
+      weather: "天気",
+      humidity: "湿度",
+      wind_speed: "風速",
+      precipitation: "降水量",
+      feels_like: "体感",
+    },
+    mypage: {
+      mypage: "マイページ",
+      mypage_description: "あなたの活動と情報を確認・管理してください",
+      logout: "ログアウト",
+      saved_travel_plans: "保存した旅行計画",
+      liked_travel_products: "いいねした旅行商品",
+      my_posts: "私が書いた投稿",
+      liked_posts: "いいねした投稿",
+      travel_plans: "旅行計画",
+      travel_products: "旅行商品",
+      likes: "いいね",
+      loading_travel_plans: "旅行計画を読み込み中...",
+      no_saved_travel_plans: "保存した旅行計画がありません",
+      create_travel_plan_message: "旅行計画を作成して保存してみてください！",
+      no_liked_products: "いいねした旅行商品がありません",
+      like_products_message: "気に入った旅行商品にいいねを押してみてください！",
+      loading: "読み込み中...",
+      no_posts_written: "書いた投稿がありません",
+      write_first_post: "最初の投稿を書いてみてください！",
+      no_liked_posts: "いいねした投稿がありません",
+      like_posts_message: "気に入った投稿にいいねを押してみてください！",
+      delete: "削除",
+      travel_plan: "旅行計画",
+      destination_undecided: "目的地未定",
+      day_schedule: "日のスケジュール",
+      saved: "保存",
+      last_updated: "最近の更新",
+      loading_details: "詳細情報を読み込み中...",
+      time_undecided: "時間未定",
+      activity: "活動",
+      no_registered_activities: "登録された活動がありません",
+      no_saved_schedule_info: "保存されたスケジュール情報がありません",
+    },
   },
   zh: {
     tour: {
-      header: { klover: "Klover", tour: "旅行", subtitle: "高端私人定制旅行" },
-      list: { title: "Klover 旅行" },
+      header: { klover: "K-lover", tour: "旅行", subtitle: "高端私人定制旅行" },
+      list: { title: "K-lover 旅行" },
       search: { placeholder: "搜索旅行…" },
       categories: {
         all: "全部",
@@ -3710,18 +4452,6 @@ const resources = {
         sports: "运动",
         beauty: "美妆",
         culture: "历史",
-        location: "拍摄地",
-        goods: "商品",
-        food: "美食",
-        adventure: "冒险",
-        entertainment: "娱乐",
-        other: "其他",
-      },
-      actions: {
-        like: "喜欢",
-        unlike: "取消喜欢",
-        view: "查看",
-        viewDetail: "查看详情",
       },
       pagination: { prev: "上一页", next: "下一页" },
       empty: { title: "没有结果", description: "请尝试其他搜索或筛选条件。" },
@@ -4260,7 +4990,7 @@ const resources = {
       "login.welcome": "欢迎！",
       "login.logout": "登出",
       "login.login": "登录",
-      "main.title.k_travel": "K-旅行",
+      "main.title.k_travel": "旅行",
       "main.title.connector": "",
       "main.title.ai_creates": "AI为您打造",
       "main.subtitle":
@@ -4292,8 +5022,8 @@ const resources = {
       "footer.terms_of_service": "服务条款",
       "footer.customer_center": "客户中心",
       "footer.partnership": "合作伙伴",
-      "footer.copyright": "© 2024 TravelK. All rights reserved.",
-      "modal.welcome": "欢迎来到TravelK",
+      "footer.copyright": "© 2024 Klover. All rights reserved.",
+      "modal.welcome": "欢迎来到Klover",
       "modal.instruction": "请登录以开始您的AI定制旅行规划师",
       "modal.continue_google": "使用Google继续",
       "modal.continue_microsoft": "使用Microsoft继续",
@@ -4578,6 +5308,133 @@ const resources = {
       travel_budget: "旅行预算",
       visit_purpose: "访问目的",
       interests_activities: "兴趣活动",
+      // --- [Add Start] Persona Question Translations ---
+      questions: {
+        rvit: {
+          title: "您访问过韩国几次？",
+          options: {
+            v1: { label: "第一次", description: "这是我第一次来韩国旅行。" },
+            v2: { label: "第二次", description: "我以前来过一次。" },
+            v3: { label: "第三次", description: "我现在对这里越来越熟悉了。" },
+            v4plus: { label: "4次或以上", description: "我经常来访。" },
+          },
+        },
+        q1_purpose: {
+          title: "您这次访问的主要目的是什么？",
+          options: {
+            leisure: {
+              label: "度假/休闲",
+              description: "为了个人放松和享受而来。",
+            },
+            friends: { label: "探亲访友", description: "我来见我认识的人。" },
+          },
+        },
+        r19hap: {
+          title: "您喜欢哪种类型的住宿？",
+          options: {
+            h1: { label: "豪华酒店", description: "我偏爱顶级的设施和服务。" },
+            h2: {
+              label: "经济型酒店",
+              description: "我喜欢价格合理且干净的酒店。",
+            },
+            h3: {
+              label: "旅馆/青年旅社",
+              description: "我喜欢与其他旅行者互动。",
+            },
+            h4: {
+              label: "爱彼迎/公寓",
+              description: "我重视像当地人一样生活的体验。",
+            },
+            h5: { label: "其他", description: "我使用其他住宿，比如朋友家。" },
+          },
+        },
+        cost: {
+          title: "您每天的平均旅行预算是多少？（不含住宿）",
+          options: {
+            c1: {
+              label: "低于50美元",
+              description: "我计划一次经济实惠的旅行。",
+            },
+            c2: {
+              label: "50美元 - 100美元",
+              description: "我偏爱合理的消费。",
+            },
+            c3: {
+              label: "100美元 - 200美元",
+              description: "我喜欢在各种体验上投资。",
+            },
+            c4: {
+              label: "200美元 - 300美元",
+              description: "我倾向于不考虑费用，尽情享受。",
+            },
+            c5: {
+              label: "超过300美元",
+              description: "我偏爱奢华的体验和购物。",
+            },
+          },
+        },
+        considered: {
+          title: "您对哪些活动感兴趣？",
+          options: {
+            nature: {
+              label: "自然",
+              description: "欣赏山、海、公园等自然风光",
+            },
+            heritage: {
+              label: "文化遗产",
+              description: "探索宫殿、博物馆、历史遗迹",
+            },
+            food: {
+              label: "美食",
+              description: "探访著名餐厅、咖啡馆、街头小吃",
+            },
+            shopping: {
+              label: "购物",
+              description: "享受时尚、美妆、纪念品购物",
+            },
+            relaxation: {
+              label: "休闲",
+              description: "在水疗中心、海滩、安静的地方休息",
+            },
+            tradition: {
+              label: "传统文化",
+              description: "体验韩服、传统表演、韩屋村",
+            },
+            museum: { label: "艺术/博物馆", description: "观赏艺术品和展览" },
+            kpop: {
+              label: "K-POP",
+              description: "演唱会、粉丝见面会、朝圣之旅",
+            },
+            arts: { label: "表演/艺术", description: "观看音乐剧、话剧、展览" },
+            festival: {
+              label: "节日/活动",
+              description: "参加当地节日和季节性活动",
+            },
+            nightlife: {
+              label: "夜生活",
+              description: "享受俱乐部、酒吧、夜市",
+            },
+            themepark: {
+              label: "主题公园",
+              description: "参观游乐园和主题公园",
+            },
+            beauty: {
+              label: "美容/健康",
+              description: "体验韩式美容，如美发、美甲、护肤",
+            },
+            medical: { label: "医疗", description: "使用医疗服务，如健康检查" },
+            sports_view: {
+              label: "观看体育比赛",
+              description: "观看职业体育比赛，如棒球、足球",
+            },
+            sports_play: {
+              label: "体育活动",
+              description: "参加滑雪、冲浪等体育活动",
+            },
+          },
+        },
+      },
+      // --- [Add End] ---
     },
     SurvivalKit: {
       // Hero 섹션
@@ -4672,6 +5529,7 @@ const resources = {
       gift_modal_paragraphs_2: "送礼物和接受礼物时必须使用双手是礼仪。",
       gift_modal_list_1: "用双手给予和接受",
       gift_modal_list_2: "在节日、乔迁、感谢等各种情况下交换礼物",
+      modal_close: "关闭",
     },
     VisionOCR: {
       image_upload: "图片上传",
@@ -4703,10 +5561,8 @@ const resources = {
       menu_select_desc_3: "将",
       menu_select_desc_4: "显示",
       new_start: "重新开始",
-      // 파일 선택 관련 번역
       file_select: "文件选择",
       no_file_selected: "未选择文件",
-      // 안내 문구
       disclaimer:
         "※ 提供的信息仅供参考。关于成分、过敏等菜单的准确信息，请联系餐厅！",
       file_selected: "已选择文件",
@@ -4755,20 +5611,25 @@ const resources = {
       transportation_modal_list_4: "不要在地铁或公交车上吃东西。",
       transportation_modal_list_5: "拥挤时把包背在前面是礼貌的。",
       transportation_modal_link_1: "韩国的公共交通礼仪",
-      shopping: "购物礼仪",
-      shopping_content:
-        "购物时要排队等候，不要插队。试穿衣服后要整理好放回原处。",
-      shopping_extra: "在商店里不要大声说话，要尊重其他顾客。",
-      shopping_modal_title: "韩国的购物礼仪",
-      shopping_modal_paragraphs: "韩国的购物文化注重秩序和礼貌。",
-      shopping_modal_paragraphs_2:
-        "在商场和商店里要遵守基本礼仪，这样购物体验会更好。",
-      shopping_modal_list_1: "购物时要排队等候，不要插队。",
-      shopping_modal_list_2: "试穿衣服后要整理好放回原处。",
-      shopping_modal_list_3: "不要大声说话或打电话。",
-      shopping_modal_list_4: "购物袋要小心携带，不要碰到其他顾客。",
-      shopping_modal_list_5: "结账时要准备好现金或卡。",
-      shopping_modal_link_1: "韩国的购物礼仪",
+      tip: "小费文化",
+      tip_content: "韩国没有小费文化。服务费已经包含在内。",
+      tip_extra: "旅游区的一些酒店可能例外地接受少量小费，但不是必须的。",
+      tip_modal_title: "韩国的小费文化",
+      tip_modal_paragraphs: "韩国的小费文化与西方不同，几乎不存在。",
+      tip_modal_list_1: "餐厅·咖啡厅：不需要小费",
+      tip_modal_list_2: "出租车：只支付规定费用",
+      tip_modal_list_3: "美容院·按摩等服务行业：没有小费文化",
+      footwear: "脱鞋",
+      footwear_content: "在韩国家庭或一些餐厅要脱鞋进入。",
+      footwear_extra: "鞋柜通常在入口处，经常准备室内拖鞋。",
+      footwear_modal_title: "韩国的脱鞋文化",
+      footwear_modal_paragraphs: "在韩国，进入家中时脱鞋是理所当然的文化。",
+      footwear_modal_paragraphs_2:
+        "这是为了保持室内清洁和保护家人健康的传统习惯。",
+      footwear_modal_paragraphs_3:
+        "在室内经常穿拖鞋而不是鞋子，或者只穿袜子生活。",
+      footwear_modal_list_1: "家庭：在玄关脱鞋进入",
+      footwear_modal_list_2: "传统韩餐厅·韩屋：由于坐式结构经常脱鞋",
       gift: "礼物礼仪",
       gift_content: "送礼物时要用双手递送，收到礼物时要表示感谢。",
       gift_extra: "在韩国，礼物包装也很重要，要选择漂亮的包装纸。",
@@ -4840,6 +5701,99 @@ const resources = {
       start_set: "将设置出发地。",
       end_set: "将设置目的地。",
     },
+    planner: {
+      new_activity: "新活动",
+      no_saved_plans: "没有保存的旅行计划。",
+      create_or_modify_plan: "创建新计划或修改现有计划进行管理。",
+      new_plan: "新旅行",
+      places: "地点",
+      days: "天",
+      load_plan: "加载此计划",
+      delete_plan: "删除此计划",
+      login_to_start_plan: "请登录开始规划您的旅行。",
+      login: "登录",
+      creating_sample_plan: "正在创建示例旅行...",
+      no_plan: "没有旅行计划。",
+      create_sample_plan: "创建示例旅行",
+      saved_schedule: "已保存的日程",
+      travel_planner: "旅行日程规划器",
+      saving: "保存中...",
+      travel_plan: "旅行计划",
+      saved_plans: "已保存的计划",
+      activity_editor: "活动编辑",
+      time_info: "时间信息",
+      time: "时间",
+      stay_time: "停留时间（分钟）",
+      place_info: "地点信息",
+      place_name: "地点名称",
+      search_place_placeholder: "输入搜索词以获取地点推荐",
+      place_type: "地点类型",
+      road_address: "道路地址",
+      address: "地址",
+      latitude: "纬度",
+      longitude: "经度",
+      additional_info: "附加信息",
+      description: "描述",
+      description_placeholder: "请输入与活动相关的备注",
+      cost_estimate: "预计费用（韩元）",
+      cancel: "取消",
+      save: "保存",
+      add_activity: "添加活动",
+      total_days_travel: "总共{{days}}天旅行",
+    },
+    data: {
+      live_info: "实时信息",
+      now: "现在",
+      is: "是",
+      data_update: "数据更新",
+      real_time_population: "实时人口",
+      about: "约",
+      people: "人",
+      real_time_commercial: "实时商业",
+      overall_commercial: "整体商业",
+      subway_arrival_info: "地铁到达信息",
+      recommended_tour_products: "推荐旅游产品",
+      nearby_cultural_events: "周边文化活动",
+      traffic_conditions: "交通状况",
+      weather: "天气",
+      humidity: "湿度",
+      wind_speed: "风速",
+      precipitation: "降水量",
+      feels_like: "体感",
+    },
+    mypage: {
+      mypage: "我的页面",
+      mypage_description: "查看和管理您的活动和信息",
+      logout: "登出",
+      saved_travel_plans: "保存的旅行计划",
+      liked_travel_products: "喜欢的旅行产品",
+      my_posts: "我写的文章",
+      liked_posts: "喜欢的文章",
+      travel_plans: "旅行计划",
+      travel_products: "旅行产品",
+      likes: "喜欢",
+      loading_travel_plans: "正在加载旅行计划...",
+      no_saved_travel_plans: "没有保存的旅行计划",
+      create_travel_plan_message: "创建并保存您的旅行计划！",
+      no_liked_products: "没有喜欢的旅行产品",
+      like_products_message: "为您感兴趣的旅行产品点赞！",
+      loading: "加载中...",
+      no_posts_written: "没有写过的文章",
+      write_first_post: "写您的第一篇文章！",
+      no_liked_posts: "没有喜欢的文章",
+      like_posts_message: "为您感兴趣的文章点赞！",
+      delete: "删除",
+      travel_plan: "旅行计划",
+      destination_undecided: "目的地未定",
+      day_schedule: "天行程",
+      saved: "保存",
+      last_updated: "最近更新",
+      loading_details: "正在加载详细信息...",
+      time_undecided: "时间未定",
+      activity: "活动",
+      no_registered_activities: "没有注册的活动",
+      no_saved_schedule_info: "没有保存的行程信息",
+    },
   },
 };
 
@@ -4861,6 +5815,9 @@ i18n.use(initReactI18next).init({
     "directions",
     "tour",
     "tourDetail",
+    "planner",
+    "data",
+    "mypage",
   ],
   defaultNS: "common",
 });

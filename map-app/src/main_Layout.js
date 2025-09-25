@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -70,11 +70,6 @@ export default function Layout({ children, currentPageName }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // 터치 이벤트를 위한 ref
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const touchStartTime = useRef(0);
-
   // 모바일 감지
   useEffect(() => {
     const checkMobile = () => {
@@ -92,39 +87,6 @@ export default function Layout({ children, currentPageName }) {
 
   const closeSidebar = () => {
     setIsSidebarOpen(false);
-  };
-
-  // 메인 콘텐츠 클릭/터치 핸들러 (사이드 메뉴가 열려있을 때만)
-  const handleMainContentClick = (e) => {
-    if (isSidebarOpen) {
-      closeSidebar();
-    }
-  };
-
-  // 터치 이벤트 핸들러
-  const handleTouchStart = (e) => {
-    if (!isSidebarOpen) return;
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    touchStartTime.current = Date.now();
-  };
-
-  const handleTouchEnd = (e) => {
-    if (!isSidebarOpen) return;
-
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-    const deltaX = touchStartX.current - touchEndX;
-    const deltaY = Math.abs(touchStartY.current - touchEndY);
-    const deltaTime = Date.now() - touchStartTime.current;
-
-    // 왼쪽으로 스와이프 조건:
-    // 1. 최소 50px 이상 왼쪽으로 이동
-    // 2. 수직 움직임은 100px 이하 (수평 스와이프임을 보장)
-    // 3. 1초 이내에 완료 (빠른 스와이프)
-    if (deltaX > 50 && deltaY < 100 && deltaTime < 1000) {
-      closeSidebar();
-    }
   };
 
   // 사이드바 애니메이션 variants
@@ -164,11 +126,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div
-      className="layout-container"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="layout-container">
       {/* 네온 스타일 토글 버튼 */}
       <motion.button
         className="neon-menu-toggle"
@@ -204,30 +162,6 @@ export default function Layout({ children, currentPageName }) {
           variants={sidebarVariants}
           initial="closed"
           animate={isSidebarOpen ? "open" : "closed"}
-          onTouchStart={(e) => {
-            e.stopPropagation();
-            // 사이드바 내부에서 터치 시작 시 좌표 저장
-            touchStartX.current = e.touches[0].clientX;
-            touchStartY.current = e.touches[0].clientY;
-            touchStartTime.current = Date.now();
-          }}
-          onTouchEnd={(e) => {
-            e.stopPropagation();
-            // 사이드바 내부에서 좌측 스와이프 감지
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-            const deltaX = touchStartX.current - touchEndX;
-            const deltaY = Math.abs(touchStartY.current - touchEndY);
-            const deltaTime = Date.now() - touchStartTime.current;
-
-            // 왼쪽으로 스와이프 조건:
-            // 1. 최소 50px 이상 왼쪽으로 이동
-            // 2. 수직 움직임은 100px 이하 (수평 스와이프임을 보장)
-            // 3. 1초 이내에 완료 (빠른 스와이프)
-            if (deltaX > 50 && deltaY < 100 && deltaTime < 1000) {
-              closeSidebar();
-            }
-          }}
         >
           <Sidebar className="neon-sidebar-content">
             <SidebarHeader className="neon-sidebar-header">
@@ -329,8 +263,6 @@ export default function Layout({ children, currentPageName }) {
             stiffness: 300,
             damping: 40,
           }}
-          onClick={handleMainContentClick}
-          onTouchStart={handleMainContentClick}
         >
           {children}
         </motion.main>

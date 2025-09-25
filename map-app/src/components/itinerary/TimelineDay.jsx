@@ -29,6 +29,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { NeonButton, GradientText } from "components/ui/NeonTheme";
+import { useTranslation } from "react-i18next";
 
 const activityIcons = {
   attraction: MapPin,
@@ -54,6 +55,7 @@ export default function TimelineDay({
   isActive = false,
 }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const { t } = useTranslation("planner");
   const handleSelectDay = () => {
     if (typeof onSelectDay === "function") {
       onSelectDay(dayIndex);
@@ -86,9 +88,9 @@ export default function TimelineDay({
         </Avatar>
         <Box>
           <Title order={isMobile ? 4 : 3}>
-            <GradientText>{dayLabel(day.day_number)} 날</GradientText>
+            <GradientText dynamic="true">{dayLabel(day.day_number)} 날</GradientText>
           </Title>
-          <Text size="sm" c="gray.5">
+          <Text size="sm" c="gray.5" dynamic="true">
             {day.date
               ? format(new Date(day.date), "yyyy년 M월 d일")
               : "날짜 미정"}
@@ -206,11 +208,11 @@ export default function TimelineDay({
                               </ActionIcon>
                             </Group>
                           </Group>
-                          <Title order={5} mt="xs" c="gray.1" truncate>
+                          <Title order={5} mt="xs" c="gray.1" truncate dynamic="true">
                             {activity.place_name}
                           </Title>
                           {(activity.description || activity.address) && (
-                            <Text size="sm" mt={4} c="gray.5" truncate>
+                            <Text size="sm" mt={4} c="gray.5" truncate dynamic="true">
                               {activity.description || activity.address}
                             </Text>
                           )}
@@ -232,7 +234,7 @@ export default function TimelineDay({
           leftSection={<Plus size={16} />}
           onClick={() => onAddActivity(day.activities.length)}
         >
-          활동 추가
+          {t("add_activity")}
         </NeonButton>
       </Box>
     </motion.div>

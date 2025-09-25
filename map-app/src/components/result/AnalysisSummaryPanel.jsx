@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CalendarDays, Wallet, Repeat, Sparkles, HelpCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // 코드값을 사람이 읽는 한글로 변환
 const CODE_MAP = {
@@ -63,21 +64,23 @@ const SummaryItem = ({ icon, label, value }) => (
     <div className="mt-1 flex-shrink-0 text-indigo-400">{icon}</div>
     <div>
       <div className="text-xs text-slate-400">{label}</div>
-      <div className="text-sm font-semibold text-slate-100">{value}</div>
+      <div className="text-sm font-semibold text-slate-100" dynamic="true">{value}</div>
     </div>
   </motion.div>
 );
 
 export default function AnalysisSummaryPanel({ profile }) {
+  const { t } = useTranslation("dashboard");
+  
   if (!profile) return null;
 
   // ResultDashboard에서 analysis_result.inputs가 병합되어 전달됩니다.
   const summaryItems = [
-    { icon: <Repeat size={18} />, label: "방문 횟수", value: humanizeCode("rvit", profile.rvit) },
-    { icon: <CalendarDays size={18} />, label: "체류 기간", value: humanizeCode("stay", profile.stay) },
-    { icon: <Wallet size={18} />, label: "여행 예산", value: humanizeCode("budget", profile.budget) },
-    { icon: <HelpCircle size={18} />, label: "방문 목적", value: humanizeCode("q1", profile.q1) },
-    { icon: <Sparkles size={18} />, label: "관심 활동", value: (profile.considered || []).map((c) => humanizeCode("considered", c)).join(", ") },
+    { icon: <Repeat size={18} />, label: t("visit_count"), value: humanizeCode("rvit", profile.rvit) },
+    { icon: <CalendarDays size={18} />, label: t("stay_period"), value: humanizeCode("stay", profile.stay) },
+    { icon: <Wallet size={18} />, label: t("travel_budget"), value: humanizeCode("budget", profile.budget) },
+    { icon: <HelpCircle size={18} />, label: t("visit_purpose"), value: humanizeCode("q1", profile.q1) },
+    { icon: <Sparkles size={18} />, label: t("interests_activities"), value: (profile.considered || []).map((c) => humanizeCode("considered", c)).join(", ") },
   ];
 
   return (

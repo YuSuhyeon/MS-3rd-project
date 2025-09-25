@@ -169,6 +169,20 @@ const MobileTourCard = ({ item, onDetailClick }) => {
 
   const categoryInfo = getCategoryInfo(t, item.category);
 
+  // 다국어 설명 우선순위: data.listDescription → products.description → data.description → item.description
+  let descriptionText = item.description;
+  const descriptionKeys = [
+    `data.${item.id}.listDescription`,
+    `products.${item.id}.description`,
+    `data.${item.id}.description`,
+  ];
+  for (const key of descriptionKeys) {
+    if (i18nextInstance.exists(key, { ns: "tourDetail" })) {
+      descriptionText = t(key);
+      break;
+    }
+  }
+
   return (
     <motion.div
       layout
@@ -210,13 +224,31 @@ const MobileTourCard = ({ item, onDetailClick }) => {
           <Bookmark size={12} fill={isBookmarked ? "currentColor" : "none"} />
         </button>
 
-        {item.kpopGroup && (
-          <div className="absolute bottom-1.5 left-1.5">
-            <span className="text-white text-xs font-medium bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
-              {item.kpopGroup}
-            </span>
-          </div>
-        )}
+        {/* K-pop 그룹/파트너십 배지 */}
+        {(() => {
+          const partnershipPrimary = t(`data.${item.id}.partnership.primary`, {
+            defaultValue: "",
+          });
+          const hasPartnership = Boolean(partnershipPrimary);
+          const hasKpopGroup = Boolean(item.kpopGroup);
+          if (!hasPartnership && !hasKpopGroup) return null;
+          return (
+            <div className="absolute bottom-1.5 left-1.5 flex flex-col gap-1">
+              {hasPartnership && (
+                <span className="text-white text-xs font-medium bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                  {partnershipPrimary}
+                </span>
+              )}
+              {hasKpopGroup && (
+                <span className="text-white text-xs font-medium bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                  {t(`data.${item.id}.kpopGroup`, {
+                    defaultValue: item.kpopGroup,
+                  })}
+                </span>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* 모바일 최적화 컨텐츠 섹션 */}
@@ -242,9 +274,7 @@ const MobileTourCard = ({ item, onDetailClick }) => {
           </div>
 
           <p className="text-xs sm:text-sm text-gray-400 line-clamp-2">
-            {t(`data.${item.id}.listDescription`, {
-              defaultValue: item.description,
-            })}
+            {descriptionText}
           </p>
         </div>
 

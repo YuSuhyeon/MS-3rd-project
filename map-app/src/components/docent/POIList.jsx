@@ -25,21 +25,21 @@ export default function POIList({
           <button
             key={poi.id || poi.name}
             onClick={() => onSelectPOI?.(poi)}
-            className={`w-full text-left p-3 rounded-lg border ${
+            className={`w-full text-left p-3 rounded-xl border backdrop-blur-sm transition-transform hover:-translate-y-0.5 shadow hover:shadow-purple-500/10 ${
               selectedPOI?.id === poi.id
-                ? "border-blue-400 bg-blue-50"
-                : "border-gray-200 bg-white"
-            } hover:bg-gray-50`}
+                ? "border-purple-400 bg-black/50"
+                : "border-purple-500/20 bg-black/30"
+            }`}
           >
             <div className="flex items-center justify-between">
-              <div className="font-medium text-gray-900">{poi.name}</div>
+              <div className="font-medium text-gray-100">{poi.name}</div>
               {nears.has(poi._raw?.poi_id || poi.id) && (
-                <Badge className="bg-green-50 text-green-700 border-green-200">
+                <Badge className="bg-emerald-500/20 text-emerald-200 border-emerald-400/30">
                   근처
                 </Badge>
               )}
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-gray-400 mt-1">
               {poi.address || ""}
             </div>
           </button>
@@ -70,21 +70,23 @@ export function POIListJH({
           <button
             key={poi.id || poi.name}
             onClick={() => onSelectPOI?.(poi)}
-            className={`w-full text-left p-2 rounded-md border ${
+            className={`w-full text-left p-2 rounded-lg border backdrop-blur-sm transition-transform hover:-translate-y-0.5 shadow hover:shadow-purple-500/10 ${
               selectedPOI?.id === poi.id
-                ? "border-blue-400 bg-blue-50"
-                : "border-gray-200 bg-white"
-            } hover:bg-gray-50`}
+                ? "border-purple-400 bg-black/50"
+                : "border-purple-500/20 bg-black/30"
+            }`}
           >
             <div className="flex items-center justify-between">
-              <div className="font-medium text-gray-900 text-sm">{poi.name}</div>
+              <div className="font-medium text-gray-100 text-sm">
+                {poi.name}
+              </div>
               {nears.has(poi._raw?.poi_id || poi.id) && (
-                <Badge className="bg-green-50 text-green-700 border-green-200 text-xs">
+                <Badge className="bg-emerald-500/20 text-emerald-200 border-emerald-400/30 text-xs">
                   근처
                 </Badge>
               )}
             </div>
-            <div className="text-xs text-gray-500 mt-0.5">
+            <div className="text-xs text-gray-400 mt-0.5">
               {poi.address || ""}
             </div>
           </button>

@@ -46,6 +46,7 @@ import TimelineDay from "../components/itinerary/TimelineDay";
 import { Itinerary } from "../Entities/Itinerary";
 import { useItineraryStore } from "../store/useItineraryStore";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const WaveAndParticleEffect = () => {
   // ... (이 컴포넌트는 수정할 내용이 없습니다) ...
@@ -182,6 +183,7 @@ const deepClone = (value) => {
 };
 
 export default function ItineraryView() {
+  const { t } = useTranslation("planner");
   const isDesktop = useMediaQuery("(min-width: 992px)");
   const {
     itinerary,
@@ -646,7 +648,7 @@ export default function ItineraryView() {
         id: `activity_${Date.now()}`,
         time: "12:00",
         duration: 60,
-        place_name: "새로운 활동",
+        place_name: t("new_activity"),
         place_type: "activity",
         description: "",
         tips: "",
@@ -798,10 +800,10 @@ export default function ItineraryView() {
         <Center h={120}>
           <Stack align="center" gap={4}>
             <Text c="gray.5" size="sm">
-              저장된 여행 계획이 없습니다.
+              {t("no_saved_plans")}
             </Text>
             <Text c="gray.6" size="xs">
-              새로운 계획을 만들거나 기존 계획을 수정하여 관리하세요.
+              {t("create_or_modify_plan")}
             </Text>
           </Stack>
         </Center>
@@ -817,7 +819,7 @@ export default function ItineraryView() {
             return acc + activities;
           }, 0);
           const updatedAt = plan.updated_at || plan.updatedAt;
-          const title = plan.itinerary_name || plan.name || "새로운 여행";
+          const title = plan.itinerary_name || plan.name || t("new_plan");
           return (
             <Paper
               key={plan.id}
@@ -828,7 +830,7 @@ export default function ItineraryView() {
             >
               <Stack gap="md">
                 <Stack gap="xs">
-                  <Text fw={600} c="gray.1" size="lg" truncate>
+                  <Text fw={600} c="gray.1" size="lg" truncate dynamic="true">
                     {title}
                   </Text>
                   <Group gap="md" wrap="nowrap">
@@ -852,7 +854,7 @@ export default function ItineraryView() {
                       style={{ display: "flex", alignItems: "center", gap: 4 }}
                     >
                       <MapPin size={14} />
-                      {stopCount}개 장소
+                      {stopCount} {t("places")}
                     </Text>
                     <Text
                       size="xs"
@@ -860,7 +862,7 @@ export default function ItineraryView() {
                       style={{ display: "flex", alignItems: "center", gap: 4 }}
                     >
                       <Bookmark size={14} />
-                      {plan.days?.length || 0}일
+                      {plan.days?.length || 0} {t("days")}
                     </Text>
                   </Group>
                 </Stack>
@@ -869,14 +871,14 @@ export default function ItineraryView() {
                     size="sm"
                     onClick={() => handleApplyRoutePlan(plan)}
                   >
-                    이 계획 불러오기
+                    {t("load_plan")}
                   </NeonButton>
                   <NeonButton
                     size="sm"
                     variant="secondary"
                     onClick={() => handleDeleteRoutePlan(plan.id)}
                   >
-                    삭제
+                    {t("delete_plan")}
                   </NeonButton>
                 </Group>
               </Stack>
@@ -939,19 +941,19 @@ export default function ItineraryView() {
         <Loader color="grape" />
       ) : !isAuthenticated ? (
         <Stack align="center">
-          <Text>로그인하여 여행 계획을 시작하세요.</Text>
-          <NeonButton onClick={() => login && login()}>로그인</NeonButton>
+          <Text>{t("login_to_start_plan")}</Text>
+          <NeonButton onClick={() => login && login()}>{t("login")}</NeonButton>
         </Stack>
       ) : isGenerating ? (
         <Stack align="center">
           <Loader color="grape" />
-          <Text>샘플 여행을 만드는 중...</Text>
+          <Text>{t("creating_sample_plan")}</Text>
         </Stack>
       ) : (
         <Stack align="center">
-          <Text>여행 계획이 없습니다.</Text>
+          <Text>{t("no_plan")}</Text>
           <NeonButton onClick={generateSampleItinerary} loading={isGenerating}>
-            샘플 여행 만들기
+            {t("create_sample_plan")}
           </NeonButton>
         </Stack>
       )}
@@ -961,7 +963,7 @@ export default function ItineraryView() {
   const savedPlansContent = (
     <Box>
       <Title order={isDesktop ? 2 : 4} mb="xl">
-        <GradientText>저장된 일정</GradientText>
+        <GradientText>{t("saved_schedule")}</GradientText>
       </Title>
       {renderSavedPlans()}
     </Box>
@@ -1023,11 +1025,11 @@ export default function ItineraryView() {
             size="lg"
             style={{ marginLeft: "clamp(44px, 13vw, 80px)" }}
           >
-            여행 일정 플래너
+            {t("travel_planner")}
           </GradientText>
           {(isSaving || autoSaving) && (
             <Text size="xs" c="grape.3">
-              저장 중...
+              {t("saving")}
             </Text>
           )}
         </Group>
@@ -1059,10 +1061,10 @@ export default function ItineraryView() {
         >
           <Tabs.List grow>
             <Tabs.Tab value="itinerary" leftSection={<List size={16} />}>
-              여행 계획
+              {t("travel_plan")}
             </Tabs.Tab>
             <Tabs.Tab value="savedPlans" leftSection={<Bookmark size={16} />}>
-              저장된 계획
+              {t("saved_plans")}
             </Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="itinerary" pt="lg">

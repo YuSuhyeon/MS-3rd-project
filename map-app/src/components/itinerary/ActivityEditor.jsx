@@ -16,6 +16,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { Save, Clock, DollarSign, Info } from "lucide-react";
 import PlaceSearchInput from "../directions/PlaceSearchInput";
 import { NeonButton, GradientText } from "components/ui/NeonTheme";
+import {useTranslation} from "react-i18next";
 
 const categoryCodeMap = {
   FD6: "restaurant",
@@ -35,6 +36,7 @@ const deepClone = (value) => {
 
 export default function ActivityEditor({ activity, opened, onClose, onSave }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const { t } = useTranslation("planner");
   const [formData, setFormData] = useState(activity);
   const [placeQuery, setPlaceQuery] = useState(activity?.place_name || "");
 
@@ -97,7 +99,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
     <Modal
       opened={opened}
       onClose={onClose}
-      title={<GradientText size="xl">활동 편집</GradientText>}
+      title={<GradientText size="xl">{t("activity_editor")}</GradientText>}
       size="xl"
       radius="md"
       fullScreen={isMobile}
@@ -120,7 +122,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
           <Divider
             label={
               <Text size="xs" fw={500} c="grape.3">
-                시간 정보
+                {t("time_info")}
               </Text>
             }
             labelPosition="left"
@@ -128,7 +130,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
           />
           <SimpleGrid cols={isMobile ? 1 : 2}>
             <TextInput
-              label="시간"
+              label={t("time")}
               type="time"
               value={formData.time || ""}
               onChange={(e) => handleChange("time", e.currentTarget.value)}
@@ -136,7 +138,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               styles={neonInputStyles}
             />
             <NumberInput
-              label="체류 시간 (분)"
+              label={t("stay_time")}
               value={formData.duration ?? 60}
               onChange={(val) => handleChange("duration", Number(val) || 0)}
               min={0}
@@ -149,13 +151,13 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
           <Divider
             label={
               <Text size="xs" fw={500} c="grape.3">
-                장소 정보
+                {t("place_info")}
               </Text>
             }
             labelPosition="left"
             styles={{ label: { color: "#d8b4fe" } }}
           />
-          <Input.Wrapper label="장소명" styles={neonInputStyles}>
+          <Input.Wrapper label={t("place_name")} styles={neonInputStyles}>
             <PlaceSearchInput
               value={placeQuery}
               onChange={(value) => {
@@ -169,7 +171,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
                 }
               }}
               onSelect={handlePlaceSelect}
-              placeholder="검색어를 입력하면 장소를 추천해드려요"
+              placeholder={t("search_place_placeholder")}
               className="itinerary-place-input"
               appearance="dark"
               inputClassName="border-[rgba(168,85,247,0.35)] focus:border-[rgba(236,72,153,0.8)] focus:ring-[rgba(236,72,153,0.45)]"
@@ -178,7 +180,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
           </Input.Wrapper>
           <SimpleGrid cols={isMobile ? 1 : 2}>
             <TextInput
-              label="장소 유형"
+              label={t("place_type")}
               placeholder="attraction / restaurant ..."
               value={formData.place_type || ""}
               onChange={(e) =>
@@ -188,7 +190,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               styles={neonInputStyles}
             />
             <TextInput
-              label="도로명 주소"
+              label={t("road_address")}
               value={formData.roadAddress || ""}
               onChange={(e) =>
                 handleChange("roadAddress", e.currentTarget.value)
@@ -197,14 +199,14 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
             />
           </SimpleGrid>
           <TextInput
-            label="지번 주소"
+            label={t("address")}
             value={formData.address || ""}
             onChange={(e) => handleChange("address", e.currentTarget.value)}
             styles={neonInputStyles}
           />
           <SimpleGrid cols={isMobile ? 1 : 2}>
             <TextInput
-              label="위도"
+              label={t("latitude")}
               value={
                 typeof formData.lat === "number" ? formData.lat.toFixed(6) : ""
               }
@@ -217,7 +219,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
               styles={neonInputStyles}
             />
             <TextInput
-              label="경도"
+              label={t("longitude")}
               value={
                 typeof formData.lng === "number" ? formData.lng.toFixed(6) : ""
               }
@@ -235,15 +237,15 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
           <Divider
             label={
               <Text size="xs" fw={500} c="grape.3">
-                추가 정보
+                {t("additional_info")}
               </Text>
             }
             labelPosition="left"
             styles={{ label: { color: "#d8b4fe" } }}
           />
           <Textarea
-            label="설명"
-            placeholder="활동과 관련된 메모를 입력하세요"
+            label={t("description")}
+            placeholder={t("description_placeholder")}
             value={formData.description || ""}
             onChange={(e) => handleChange("description", e.currentTarget.value)}
             autosize
@@ -251,7 +253,7 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
             styles={neonInputStyles}
           />
           <NumberInput
-            label="예상 비용 (원)"
+            label={t("cost_estimate")}
             value={formData.cost_estimate || 0}
             onChange={(val) => handleChange("cost_estimate", Number(val) || 0)}
             min={0}
@@ -262,10 +264,10 @@ export default function ActivityEditor({ activity, opened, onClose, onSave }) {
         </Stack>
         <Group justify="flex-end" mt="xl">
           <NeonButton variant="secondary" onClick={onClose}>
-            취소
+            {t("cancel")}
           </NeonButton>
           <NeonButton onClick={handleSave} leftSection={<Save size={16} />}>
-            저장
+            {t("save")}
           </NeonButton>
         </Group>
       </Stack>

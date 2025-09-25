@@ -139,7 +139,7 @@ const UI = {
     },
     chatbotPlaceholder: "궁금한 것을 물어보세요...",
     chatbotInitialMessage:
-      "안녕하세요! 저는 서울 관광 안내 챗봇 Klover AI 예요. 서울 여행에 대해 궁금한 점이 있나요? 🤗 ",
+      "안녕하세요! 저는 서울 관광 안내 챗봇 Klover AI 예요. 서울 여행에 대해 궁금한 점이 있나요? 🤗",
     imageQueryText: "이 장소에 대해 알려주세요",
     voiceRecStart: "음성 녹음을 시작합니다...",
     voiceRecResult: "음성 인식 결과:",
@@ -1764,63 +1764,35 @@ export default function Layout({ children }) {
               </motion.div>
 
               {/* 모바일: 홈 대신 스마트 뒤로가기 (홈 경로 '/'에서는 숨김) */}
-              {isMobile ? (
-                location.pathname !== "/" && (
-                  <motion.button
-                    onClick={handleSmartBack}
-                    className="text-white hover:text-purple-300 transition-colors p-2"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    title="뒤로가기"
-                  >
-                    <ArrowLeft className="w-6 h-6" />
-                  </motion.button>
-                )
-              ) : // 데스크탑: 투어 상세에서만 뒤로, 그 외 홈 유지
-              location.pathname.startsWith("/tour/") ? (
-                <motion.button
-                  onClick={() => {
-                    try {
-                      if (window.history.length > 1) navigate(-1);
-                      else navigate("/tour");
-                    } catch (e) {
-                      navigate("/tour");
-                    }
-                  }}
-                  className="text-white hover:text-purple-300 transition-colors p-2"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  title="뒤로가기"
-                >
-                  <ArrowLeft className="w-6 h-6" />
-                </motion.button>
-              ) : (
-                <motion.button
-                  onClick={() => navigate("/")}
-                  className="neon-menu-toggle"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  style={{ width: 45, height: 45 }}
-                  title="홈으로 이동"
-                >
-                  <img
-                    src="/img/Home.png"
-                    alt="홈"
-                    className="menu-icon"
-                    style={{ filter: "brightness(0) invert(1)" }}
-                  />
-                  <div className="neon-glow" />
-                </motion.button>
-              )}
+              {isMobile
+                ? location.pathname !== "/" && (
+                    <motion.button
+                      onClick={handleSmartBack}
+                      className="text-white hover:text-purple-300 transition-colors p-2"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      title="뒤로가기"
+                    >
+                      <ArrowLeft className="w-6 h-6" />
+                    </motion.button>
+                  )
+                : location.pathname !== "/" && (
+                    <motion.button
+                      onClick={handleSmartBack}
+                      className="text-white hover:text-purple-300 transition-colors p-2"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      title="뒤로가기"
+                    >
+                      <ArrowLeft className="w-6 h-6" />
+                    </motion.button>
+                  )}
             </div>
           )}
         </div>
