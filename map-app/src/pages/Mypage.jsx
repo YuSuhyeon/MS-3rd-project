@@ -567,13 +567,13 @@ const PostCard = ({ post, onEdit, onDelete }) => {
   return (
     <NeonCard className="p-6 cursor-pointer" onClick={() => onEdit(post)}>
       <div className="flex gap-4">
-        {post.pictures && post.pictures.length > 0 && (
+        {/* {post.pictures && post.pictures.length > 0 && (
           <img
             src={post.pictures[0].image_url}
             alt={post.title}
             className="w-20 h-20 object-cover rounded-lg"
           />
-        )}
+        )} */}
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-white text-lg mb-1 truncate">
             {post.title}

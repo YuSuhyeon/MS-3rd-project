@@ -516,19 +516,21 @@ const OverviewTab = ({ itinerary, included, tourId }) => {
                   </div>
                 ))
               : [
-                  t("overview.includedItems.guide", { defaultValue: "Guide" }),
-                  t("overview.includedItems.lunch", { defaultValue: "Lunch" }),
+                  t("overview.includedItems.guide", {
+                    defaultValue: "가이드북",
+                  }),
+                  t("overview.includedItems.lunch", { defaultValue: "점심" }),
                   t("overview.includedItems.souvenirs", {
-                    defaultValue: "Souvenirs",
+                    defaultValue: "기념품",
                   }),
                   t("overview.includedItems.transportation", {
-                    defaultValue: "Transportation",
+                    defaultValue: "전용 교통수단",
                   }),
                   t("overview.includedItems.activities", {
-                    defaultValue: "Activities",
+                    defaultValue: "특별 할인쿠폰",
                   }),
                   t("overview.includedItems.insurance", {
-                    defaultValue: "Insurance",
+                    defaultValue: "보험",
                   }),
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-3">

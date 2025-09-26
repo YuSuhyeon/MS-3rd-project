@@ -110,17 +110,7 @@ const KPopTravelHome = () => {
   // 랜덤 이름과 애니메이션을 위한 상태들
   const [displayName, setDisplayName] = useState("'s");
   const [isNameAnimating, setIsNameAnimating] = useState(false);
-  const randomNames = [
-    "수현",
-    "진희",
-    "정훈",
-    "연수",
-    "주영",
-    "봉현",
-    "Sammy",
-    "Sunny",
-    "Nour",
-  ];
+  const randomNames = ["주영", "수현", "영미", "현진", "봉현", "연수", "sammy"];
 
   const getRandomName = () => {
     return randomNames[Math.floor(Math.random() * randomNames.length)];
@@ -815,7 +805,7 @@ const useSeoulRoute = () => {
       { key: "1", name: "명동", lat: 37.5609, lng: 126.9863 },
       { key: "2", name: "이태원1동", lat: 37.5345, lng: 126.9946 },
       { key: "3", name: "서교동(홍대)", lat: 37.5521, lng: 126.9226 },
-      { key: "E", name: "역삼1동(강남)", lat: 37.5010, lng: 127.0366 }, // End
+      { key: "E", name: "역삼1동(강남)", lat: 37.501, lng: 127.0366 }, // End
     ],
     []
   );
@@ -879,8 +869,7 @@ const haversineKm = (a, b) => {
     2 *
     Math.asin(
       Math.sqrt(
-        sinDLat * sinDLat +
-          Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon
+        sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon
       )
     );
   return R * c;
@@ -1007,17 +996,18 @@ const AnimatedSeoulRouteCard = () => {
   const [minLat, maxLat, minLng, maxLng] = useMemo(() => {
     const lats = waypoints.map((w) => w.lat);
     const lngs = waypoints.map((w) => w.lng);
-    return [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)];
+    return [
+      Math.min(...lats),
+      Math.max(...lats),
+      Math.min(...lngs),
+      Math.max(...lngs),
+    ];
   }, [waypoints]);
 
   const project = (lat, lng) => {
-    const x =
-      P +
-      ((lng - minLng) / (maxLng - minLng || 1)) * (W - P * 2);
+    const x = P + ((lng - minLng) / (maxLng - minLng || 1)) * (W - P * 2);
     // y는 lat이 클수록 위로 가도록 반전
-    const y =
-      P +
-      (1 - (lat - minLat) / (maxLat - minLat || 1)) * (H - P * 2);
+    const y = P + (1 - (lat - minLat) / (maxLat - minLat || 1)) * (H - P * 2);
     return { x, y };
   };
 
@@ -1267,7 +1257,9 @@ const AnimatedSeoulRouteCard = () => {
             </div>
             <div className="flex items-center gap-2">
               <Plane className="h-4 w-4" />
-              <span>{totalKm.toFixed(2)} km · {formatDuration(etaHours)}</span>
+              <span>
+                {totalKm.toFixed(2)} km · {formatDuration(etaHours)}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Flag className="h-4 w-4" />

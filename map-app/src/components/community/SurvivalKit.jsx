@@ -182,7 +182,7 @@ export default function SurvivalKit() {
               {t("hero_tagline")}
             </div>
             <GradientText
-              size="3xl"
+              size="2xl"
               variant="primary"
               className="leading-tight"
             >
