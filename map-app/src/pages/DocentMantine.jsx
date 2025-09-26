@@ -810,18 +810,50 @@ export default function DocentMantine() {
     [csvData]
   );
 
+  const [nameTr, setNameTr] = useState({});
+  const [addrTr, setAddrTr] = useState({});
+  useEffect(() => {
+    (async () => {
+      if (!csvPois.length || selectedLang === "ko") {
+        setNameTr({});
+        setAddrTr({});
+        return;
+      }
+      const names = csvPois.map((c) => c.name_ko);
+      const addrs = csvPois.map((c) => c.address_ko);
+      try {
+        const [nOut, aOut] = await Promise.all([
+          translateText(names, selectedLang),
+          translateText(addrs, selectedLang),
+        ]);
+        const nMap = {},
+          aMap = {};
+        csvPois.forEach((c, i) => {
+          nMap[c.id] = nOut[i] || c.name_ko;
+          aMap[c.id] = aOut[i] || c.address_ko;
+        });
+        setNameTr(nMap);
+        setAddrTr(aMap);
+      } catch (e) {
+        setNameTr({});
+        setAddrTr({});
+      }
+    })();
+  }, [csvPois, selectedLang]);
+
   const listData = useMemo(() => {
     if (!csvPois.length)
       return (pois || []).map((p) => ({ ...p, category: "landmark" }));
     return csvPois.map((c) => ({
       id: c.id,
-      name: c.name_ko,
-      address: c.address_ko,
+      name: selectedLang === "ko" ? c.name_ko : nameTr[c.id] || c.name_ko,
+      address:
+        selectedLang === "ko" ? c.address_ko : addrTr[c.id] || c.address_ko,
       description: c.description_ko,
       category: c.category,
       location: c.location,
     }));
-  }, [csvPois, pois]);
+  }, [csvPois, pois, selectedLang, nameTr, addrTr]);
 
   useEffect(() => {
     if (csvPois.length) return;
@@ -1243,7 +1275,7 @@ export default function DocentMantine() {
             </div>
           </div>
         </div>
-
+  
         <div className="flex-1 flex flex-col min-h-0">
           <div className="h-[60%] flex min-h-0">
             <div className="w-80 flex-shrink-0 min-w-0">
@@ -1270,7 +1302,7 @@ export default function DocentMantine() {
                 </div>
               </NeonCardJH>
             </div>
-
+            
             {/* ★★★ 여기가 진짜 수정 지점입니다! ★★★ */}
             {/* 지도 패널의 너비를 w-[520px] 대신 flex-1로 변경하여 남은 공간을 모두 차지하게 합니다. */}
             <div className="flex-1 relative min-w-0 min-h-0 m-3">
@@ -1292,7 +1324,7 @@ export default function DocentMantine() {
                 />
               </div>
             </div>
-
+            
             <div className="w-80 flex-shrink-0 min-w-0">
               <NeonCardJH className="h-full">
                 <div className="p-3 pb-0 h-full">
