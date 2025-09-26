@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Globe, BookOpen, Camera } from "lucide-react";
 import VisionOCR from "../../pages/VisionOCR";
 import QuickTranslator from "./QuickTranslator";
+import OCR from "../../pages/VisionOCR_final";
 import {
   NeonCard,
   NeonButton,
@@ -94,9 +95,10 @@ export default function SurvivalKit() {
 
       {/* Vision OCR  */}
       {activeSection === "menu" && (
-        <NeonCard>
-          <VisionOCR />
-        </NeonCard>
+        <OCR />
+        // <NeonCard>
+        //   <VisionOCR />
+        // </NeonCard>
       )}
 
       {/* 빠른 통역 */}

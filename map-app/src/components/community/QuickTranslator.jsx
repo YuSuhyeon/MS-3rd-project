@@ -234,8 +234,19 @@ export default function QuickTranslator() {
       }
     } catch (error) {
       console.error("Translation error:", error);
+      
+      let errorMessage = "번역 중 오류가 발생했습니다.";
+      
+      if (error.message.includes("할당량이 초과되었습니다")) {
+        errorMessage = "번역 API 할당량이 초과되었습니다. 다음 달까지 기다리거나 유료 플랜으로 업그레이드하세요.";
+      } else if (error.message.includes("인증에 실패했습니다")) {
+        errorMessage = "번역 API 인증에 실패했습니다. 시스템이 자동으로 대안 서비스를 사용합니다.";
+      } else if (error.message.includes("translator error")) {
+        errorMessage = "번역 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.";
+      }
+      
       setTranslationResults({
-        error: "번역 중 오류가 발생했습니다.",
+        error: errorMessage,
       });
       setIsTranslating(false);
 
@@ -505,11 +516,62 @@ export default function QuickTranslator() {
               </div>
 
               {translationResults.error ? (
-                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="text-red-300 text-sm">
-                    {translationResults.error}
-                  </span>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="text-red-300 text-sm">
+                      {translationResults.error}
+                    </span>
+                  </div>
+                  
+                  {translationResults.error.includes("할당량이 초과되었습니다") && (
+                    <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                        <div className="flex-1">
+                          <h4 className="text-yellow-300 text-sm font-semibold mb-2">
+                            💡 해결 방법
+                          </h4>
+                          <div className="text-yellow-200 text-xs space-y-1">
+                            <p>• Azure Portal에서 Translator 리소스의 사용량을 확인하세요</p>
+                            <p>• 무료 할당량은 월 200만자입니다</p>
+                            <p>• 다음 달 1일에 할당량이 리셋됩니다</p>
+                            <p>• 유료 플랜으로 업그레이드하면 즉시 사용 가능합니다</p>
+                            <div className="mt-2 p-2 bg-black/30 rounded text-xs">
+                              <strong>자동 대안 서비스:</strong> 시스템이 자동으로 다른 무료 번역 서비스를 시도합니다
+                            </div>
+                            <div className="mt-1 p-2 bg-green-500/10 rounded text-xs">
+                              <strong>현재 상태:</strong> Azure Translator 할당량 초과로 대안 서비스 사용 중
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {translationResults.error.includes("인증에 실패했습니다") && (
+                    <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        <div className="flex-1">
+                          <h4 className="text-blue-300 text-sm font-semibold mb-2">
+                            🔑 API 키 문제
+                          </h4>
+                          <div className="text-blue-200 text-xs space-y-1">
+                            <p>• Azure Translator API 키가 유효하지 않거나 만료되었습니다</p>
+                            <p>• Azure Portal에서 새로운 API 키를 생성하세요</p>
+                            <p>• 환경 변수(.env.local)의 API 키를 업데이트하세요</p>
+                            <div className="mt-2 p-2 bg-black/30 rounded text-xs">
+                              <strong>자동 대안 서비스:</strong> 시스템이 자동으로 다른 무료 번역 서비스를 사용합니다
+                            </div>
+                            <div className="mt-1 p-2 bg-green-500/10 rounded text-xs">
+                              <strong>현재 상태:</strong> Azure Translator 인증 실패로 대안 서비스 사용 중
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : translationResults.sourceLanguage === "ko" ? (
                 // 한국어 → 다국어 번역 결과
